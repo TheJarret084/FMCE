@@ -2,7 +2,6 @@
   <img src="art/github/banner-new.png" alt="Le debo esto a cubick" width="100%">
 </p>
 
-
 <table>
   <tr>
     <td width="200">
@@ -44,6 +43,5 @@ Credits
 check Credits in the game.
 
 See ""LICENSE"" (LICENSE) for licensing information.
-
 
 <footer>JarretLabs 2026</footer>
