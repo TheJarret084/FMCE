@@ -1,0 +1,47 @@
+[general]
+# OpenAL Soft configuration shipped with FMCE desktop builds.
+#
+# Project.xml copies this file to:
+#   plugins/alsoft.ini   (windows)
+#   plugins/alsoft.conf  (linux / mac)
+# so the C++ runtime picks it up automatically at startup.
+
+# Force the software implementation. The FMCE audio path is a plain
+# music + sfx mix with no HRTF or per-listener effects, so the software
+# renderer is deterministic across the GPUs we support and avoids the
+# "failed to create context" hard failures the hardware path gives us
+# on VMs, remote desktop and some hybrid-GPU laptops.
+drivers=software
+
+# Keep the default device. Setting this to a hardcoded name breaks
+# everyone whose sound card is not literally called "OpenAL Soft".
+device=Default
+
+# Request only what we actually mix: mono/stereo sources resampled to the
+# 48 kHz the exported music and sfx are encoded at.
+frequency=48000
+channels=stereo
+
+# No HRTF / no ambience. The engine does positional mixing at all, and the
+# extra pass costs CPU for a result nobody can hear.
+hrtf=false
+ambisonics=false
+
+# The game ramps its own volume through Flixel (ClientPrefs masterVolume /
+# musicVolume / sfxVolume). Letting OpenAL apply a second attenuation here
+# would make the in-game sliders fight the mixer and clip on loud charts.
+volume=1.0
+compatibility=0
+
+# FMCE never plays anything longer than a few minutes and never streams
+# from a URL, so the source pool stays small. A bigger one just delays the
+# first allocation during the countdown.
+sources=32
+
+# Keep the buffer count modest; raising it trades latency for memory and we
+# are not chasing sub-10 ms audio over a rhythm game's own input latency.
+buffers=16
+
+# Our music files are Ogg Vorbis decoded fully into memory on load, so
+# decoding asynchronously buys nothing and can stall the first few frames.
+async=0

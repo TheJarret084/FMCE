@@ -1,0 +1,256 @@
+package advanced;
+
+
+import flixel.FlxG;
+import flixel.FlxSprite;
+import flixel.FlxState;
+import flixel.text.FlxText;
+import flixel.text.FlxText.FlxTextAlign;
+import haxe.Json;
+import haxe.io.Path;
+import funky.api.DiscordClient;
+import funky.core.KeyBinds;
+import funky.core.Log;
+import funky.core.Paths;
+import funky.core.TransitionHandler;
+import advanced.ui.CodeStudio;
+import advanced.ui.CodeStudioFile;
+
+import sys.FileSystem;
+import sys.io.File;
+
+class AdvancedEditorState extends FlxState
+{
+	var levelName:String;
+	var levelDir:String;
+	var studio:CodeStudio;
+	var chosen:Bool = false;
+
+	public function new(levelName:String)
+	{
+		super();
+		this.levelName = levelName;
+		this.levelDir = Path.join([Paths.levelsRoot(), levelName]);
+	}
+
+	override public function create():Void
+	{
+		super.create();
+		prepareLevel();
+
+		studio = new CodeStudio(loadFiles(), saveFile, prepareRun, openSpritePreview, createScript);
+		add(studio);
+
+		DiscordClient.customPresence("Modo Avanzado", "Editando " + levelName, "fmce", "", false);
+		TransitionHandler.playIn(this);
+	}
+
+	function prepareLevel():Void
+	{
+		#if sys
+		try
+		{
+			if (!FileSystem.exists(levelDir)) FileSystem.createDirectory(levelDir);
+			var scripts = Path.join([levelDir, "scripts"]);
+			if (!FileSystem.exists(scripts)) FileSystem.createDirectory(scripts);
+		}
+		catch (e:Dynamic)
+		{
+			Log.error('[Advanced] no se pudo preparar ' + levelDir + ': ' + Std.string(e));
+		}
+		#end
+	}
+
+	function loadFiles():Array<CodeStudioFile>
+	{
+		var result:Array<CodeStudioFile> = [];
+		var foundHx:Bool = false;
+		#if sys
+		collectFiles(levelDir, "", result);
+		for (file in result)
+			if (file.kind == "haxe") foundHx = true;
+
+		if (!foundHx)
+		{
+			var path = Path.join([levelDir, "scripts", "script.hx"]);
+			result.push(new CodeStudioFile("scripts/script.hx", defaultScript(), path, true, "haxe"));
+		}
+		#end
+		result.sort(function(a, b)
+		{
+			if (a.kind != b.kind)
+				return a.kind == "haxe" ? -1 : 1;
+			return Reflect.compare(a.name.toLowerCase(), b.name.toLowerCase());
+		});
+		return result;
+	}
+
+	#if sys
+	function collectFiles(absDir:String, relDir:String, out:Array<CodeStudioFile>):Void
+	{
+		if (!FileSystem.exists(absDir) || !FileSystem.isDirectory(absDir)) return;
+
+		var entries = FileSystem.readDirectory(absDir);
+		entries.sort(Reflect.compare);
+		for (entry in entries)
+		{
+			if (entry == "." || entry == "..") continue;
+			var abs = Path.join([absDir, entry]);
+			var rel = relDir == "" ? entry : relDir + "/" + entry;
+			if (FileSystem.isDirectory(abs))
+			{
+				collectFiles(abs, rel, out);
+				continue;
+			}
+
+			var lower = entry.toLowerCase();
+			if (StringTools.endsWith(lower, ".hx"))
+			{
+				if (isScriptPath(rel))
+					out.push(new CodeStudioFile(rel, safeRead(abs), abs, true, "haxe"));
+			}
+			else if (StringTools.endsWith(lower, ".json"))
+			{
+				var readOnly = isSpriteJson(rel);
+				out.push(new CodeStudioFile(rel, safeRead(abs), abs, !readOnly, "json",
+					readOnly ? "sprite.json pertenece al atlas del sprite y se protege contra escritura." : ""));
+			}
+		}
+	}
+
+	static function isScriptPath(rel:String):Bool
+	{
+		var lower = StringTools.replace(rel, "\\", "/").toLowerCase();
+		return lower == "scripts" || StringTools.startsWith(lower, "scripts/");
+	}
+
+	static function isSpriteJson(rel:String):Bool
+	{
+		var normalized = StringTools.replace(rel, "\\", "/").toLowerCase();
+		return StringTools.startsWith(normalized, "sprites/") && Path.withoutDirectory(normalized) == "sprite.json";
+	}
+
+	static function safeRead(path:String):String
+	{
+		try return File.getContent(path) catch (e:Dynamic) return "";
+	}
+
+	static function defaultScript():String
+	{
+		return "// FMCE Advanced\n// Este script se guarda en levels/<nivel>/scripts/.\n// Runtime de HScript pendiente: por ahora se edita y guarda.\n\nfunction onCreate()\n{\n    trace(\"FMCE: script cargado\");\n}\n";
+	}
+	#end
+
+	function saveFile(file:CodeStudioFile):Bool
+	{
+		#if sys
+		if (file == null || !file.editable) return false;
+		if (!isInsideLevel(file.path))
+		{
+			studio.log("[FMCE] Save bloqueado: ruta fuera del nivel.");
+			return false;
+		}
+		if (file.kind == "haxe" && !isScriptPath(relativeToLevel(file.path)))
+		{
+			studio.log("[FMCE] Save bloqueado: los .hx solo viven dentro de scripts/.");
+			return false;
+		}
+		if (file.kind == "json")
+		{
+			try
+			{
+				Json.parse(file.content);
+			}
+			catch (e:Dynamic)
+			{
+				studio.log("[FMCE] JSON invalido: " + Std.string(e));
+				return false;
+			}
+		}
+		try
+		{
+			var dir = Path.directory(file.path);
+			if (!FileSystem.exists(dir)) FileSystem.createDirectory(dir);
+			File.saveContent(file.path, file.content);
+		}
+		catch (e:Dynamic)
+		{
+			studio.log("[FMCE] Save error: " + Std.string(e));
+			return false;
+		}
+		return true;
+		#end
+		return false;
+	}
+
+	function createScript():CodeStudioFile
+	{
+		#if sys
+		var scripts = Path.join([levelDir, "scripts"]);
+		var index = 0;
+		while (true)
+		{
+			var name = index == 0 ? "script.hx" : "script" + index + ".hx";
+			var path = Path.join([scripts, name]);
+			var alreadyUsed = FileSystem.exists(path);
+			if (!alreadyUsed && studio != null)
+				for (file in studio.files)
+					if (file.path == path) alreadyUsed = true;
+			if (!alreadyUsed)
+				return new CodeStudioFile("scripts/" + name, defaultScript(), path, true, "haxe");
+			index++;
+		}
+		#end
+		return null;
+	}
+
+	function prepareRun(file:CodeStudioFile):Void
+	{
+		if (file == null || file.kind != "haxe") return;
+		studio.log("[FMCE] HScript runtime aun no esta conectado a PlayState.");
+		studio.log("[FMCE] El archivo queda preparado en " + file.path);
+	}
+
+	function openSpritePreview():Void
+	{
+		// el editor de sprites es solo de escritorio
+		if (funky.core.TouchNav.MOBILE) return;
+		chosen = true;
+		TransitionHandler.switchState(new advanced.editors.SpriteEditorState(levelName));
+	}
+
+	#if sys
+	function isInsideLevel(path:String):Bool
+	{
+		var root = Path.normalize(levelDir + "/");
+		var normalized = Path.normalize(path);
+		return normalized == Path.normalize(levelDir) || StringTools.startsWith(normalized, root);
+	}
+
+	function relativeToLevel(path:String):String
+	{
+		var normalizedRoot = StringTools.replace(Path.normalize(levelDir), "\\", "/");
+		var normalized = StringTools.replace(Path.normalize(path), "\\", "/");
+		if (StringTools.startsWith(normalized, normalizedRoot + "/"))
+			return normalized.substr(normalizedRoot.length + 1);
+		return normalized;
+	}
+	#end
+
+	override public function update(elapsed:Float):Void
+	{
+		super.update(elapsed);
+		if (chosen) return;
+		if (KeyBinds.justPressed(KeyBinds.BACK) || FlxG.keys.justPressed.ESCAPE)
+		{
+			chosen = true;
+			TransitionHandler.switchState(new AdvancedModeState());
+		}
+	}
+
+	override public function destroy():Void
+	{
+		studio = null;
+		super.destroy();
+	}
+}

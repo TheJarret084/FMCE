@@ -1,0 +1,406 @@
+package funky.menus;
+
+import flixel.FlxG;
+import flixel.FlxSprite;
+import flixel.FlxSubState;
+import flixel.math.FlxMath;
+import flixel.text.FlxText;
+import flixel.text.FlxText.FlxTextAlign;
+import flixel.text.FlxText.FlxTextBorderStyle;
+import flixel.tweens.FlxEase;
+import flixel.tweens.FlxTween;
+import flixel.util.FlxColor;
+import funky.core.ClientPrefs;
+import funky.core.CoolUtil;
+import funky.core.KeyBinds;
+import funky.core.Log;
+import funky.core.Paths;
+import funky.core.NavPad;
+import funky.core.TouchNav;
+import funky.game.PlayState;
+import funky.menus.options.BackButton;
+import funky.menus.options.ConfigSubState;
+
+private enum Page
+{
+	MAIN;
+	CONFIRM;
+}
+
+private typedef Row =
+{
+	var text:String;
+	var action:String;
+}
+
+/**
+ * Pausa estilo Impostor Legacy: fondo que se oscurece, opciones grandes con borde pegadas a la
+ * izquierda que se deslizan al elegirlas, titulo de la cancion arriba a la derecha y un boton para
+ * "echar un vistazo" al juego sin salir de la pausa (el `looksie` de Legacy; TAB o tocar en
+ * movil).
+ */
+class PauseSubState extends FlxSubState
+{
+	/** Acciones que piden confirmacion. */
+	static final CONFIRMED = ["convert", "freeplay", "quit"];
+
+	/** Escala del Among Us bailarin (el frame original mide 17x15). */
+	static inline var DANCER_SCALE:Int = 4;
+
+	static var font:Null<String> = null;
+	static var fontLoaded:Bool = false;
+
+	var playState:PlayState;
+	var page:Page = MAIN;
+	var selected:Int = 0;
+	var rows:Array<Row> = [];
+	var labels:Array<FlxText> = [];
+	var alphas:Array<Float> = [];
+
+	var bg:FlxSprite;
+	var strip:FlxSprite;
+	var infoTitle:FlxText;
+	var infoSub:FlxText;
+	var peekButton:FlxText;
+	var dancer:Null<FlxSprite>;
+	var backIcon:BackButton;
+	var navPad:Null<NavPad>;
+
+	var uiAlpha:Float = 0;
+	var viewing:Bool = false;
+	var chosen:Bool = false;
+	var pending:String = null;
+	var grace:Int = 0;
+
+	public function new(playState:PlayState)
+	{
+		super();
+		this.playState = playState;
+		playState.pauseSong();
+	}
+
+	override public function create():Void
+	{
+		super.create();
+
+		if (!fontLoaded)
+		{
+			fontLoaded = true;
+			font = Paths.fontPath("Akira_Expanded_Demo.otf");
+		}
+
+		bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
+		bg.scrollFactor.set();
+		bg.alpha = 0;
+		add(bg);
+
+		// Franja lateral a la derecha, donde Legacy pone el retrato del rival.
+		strip = new FlxSprite(FlxG.width, 0).makeGraphic(420, FlxG.height, 0xFFFFFFFF);
+		strip.scrollFactor.set();
+		strip.alpha = 0;
+		add(strip);
+		FlxTween.tween(strip, {x: FlxG.width - 420}, 0.3, {ease: FlxEase.circOut});
+
+		var pad = 15;
+		infoTitle = new FlxText(0, pad, FlxG.width - pad, playState.songLabel(), 36);
+		infoTitle.setFormat(font, 36, FlxColor.WHITE, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		infoTitle.borderSize = 2;
+		add(infoTitle);
+
+		infoSub = new FlxText(0, pad + 44, FlxG.width - pad, "", 22);
+		infoSub.setFormat(font, 22, 0xFFD8D8E0, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		add(infoSub);
+
+		peekButton = new FlxText(20, FlxG.height - 56, 0, TouchNav.MOBILE ? "VER JUEGO" : "TAB: VER JUEGO", 22);
+		peekButton.setFormat(font, 22, FlxColor.WHITE, FlxTextAlign.LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		add(peekButton);
+
+		dancer = makeDancer();
+		if (dancer != null) add(dancer);
+
+		// En movil no hay tecla BACK: el boton hace lo mismo (reanudar / volver desde la confirmacion).
+		if (TouchNav.MOBILE && BackButton.available())
+		{
+			backIcon = new BackButton(14, 10);
+			add(backIcon);
+		}
+
+		navPad = NavPad.make(() -> navigate(-1), () -> navigate(1));
+		if (navPad != null) add(navPad);
+
+		CoolUtil.playSound("swoosh", 0.5);
+		openPage(MAIN);
+	}
+
+	/** El mini Among Us de `menus/pause/texture` (animacion "dance", en bucle), abajo a la derecha. */
+	function makeDancer():Null<FlxSprite>
+	{
+		var atlas = Paths.getFrames("menus/pause/texture");
+		if (atlas == null)
+		{
+			Log.warn("[PauseSubState] falta menus/pause/texture, no hay bailarin");
+			return null;
+		}
+
+		var sprite = new FlxSprite();
+		sprite.frames = atlas;
+		sprite.animation.addByPrefix("dance", "dance", 24, true);
+		if (sprite.animation.getByName("dance") == null)
+		{
+			Log.warn("[PauseSubState] menus/pause/texture no tiene la animacion \"dance\"");
+			sprite.destroy();
+			return null;
+		}
+
+		sprite.animation.play("dance");
+		sprite.antialiasing = false; // pixel art
+		sprite.scale.set(DANCER_SCALE, DANCER_SCALE);
+		sprite.updateHitbox();
+		sprite.scrollFactor.set();
+		sprite.setPosition(FlxG.width - sprite.width - 28, FlxG.height - sprite.height - 22);
+		return sprite;
+	}
+
+	function openPage(next:Page):Void
+	{
+		page = next;
+		selected = 0;
+		rows = switch (next)
+		{
+			case MAIN:
+				[
+					{text: "REANUDAR", action: "resume"},
+					{text: "REINICIAR", action: "restart"},
+					{text: "OPCIONES", action: "options"},
+					{text: "CONVERTIDOR", action: "convert"},
+					{text: "VOLVER AL FREEPLAY", action: "freeplay"}
+				];
+			case CONFIRM:
+				[
+					{text: "NO, VOLVER", action: "no"},
+					{text: "SI, " + describe(pending), action: "yes"}
+				];
+		}
+		infoSub.text = next == MAIN ? "PAUSA" : "SE PIERDE EL PROGRESO DE LA CANCION";
+		buildLabels();
+	}
+
+	function buildLabels():Void
+	{
+		for (label in labels)
+		{
+			remove(label, true);
+			label.destroy();
+		}
+		labels = [];
+		alphas = [];
+
+		var scale = Math.min(300 / (rows.length * 60), 1);
+		for (i in 0...rows.length)
+		{
+			var item = new FlxText(-640, 0, 0, rows[i].text, Std.int(48 * scale));
+			item.setFormat(font, Std.int(48 * scale), FlxColor.WHITE, FlxTextAlign.LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			item.borderSize = 2;
+			item.y = FlxG.height / 2 + i * 60 * scale - item.height;
+			add(item);
+			labels.push(item);
+			alphas.push(0.3);
+		}
+	}
+
+	override public function update(elapsed:Float):Void
+	{
+		super.update(elapsed);
+
+		var r = FlxMath.bound(elapsed * 15.6, 0, 1);
+		uiAlpha = FlxMath.lerp(uiAlpha, viewing ? 0 : 1, r);
+		bg.alpha = FlxMath.lerp(bg.alpha, viewing ? 0 : 0.8, r);
+		strip.alpha = 0.16 * uiAlpha;
+		infoTitle.alpha = uiAlpha;
+		infoSub.alpha = uiAlpha;
+		peekButton.alpha = FlxMath.lerp(peekButton.alpha, viewing ? 0.3 : 1, r);
+		if (dancer != null) dancer.alpha = uiAlpha;
+		if (backIcon != null) backIcon.alpha = uiAlpha;
+		if (navPad != null) navPad.visible = !viewing;
+
+		for (i in 0...labels.length)
+		{
+			var label = labels[i];
+			label.x = FlxMath.lerp(label.x, (i == selected ? 75 : 55) + (navPad != null ? NavPad.WIDTH : 0), r);
+			alphas[i] = FlxMath.lerp(alphas[i], i == selected ? 1 : 0.3, r);
+			label.alpha = alphas[i] * uiAlpha;
+		}
+
+		// Ignorar input una vez elegida una salida (la cortina va a tomar el control) o justo al volver de Opciones.
+		if (chosen) return;
+		if (grace > 0)
+		{
+			grace--;
+			return;
+		}
+
+		#if desktop
+		if (FlxG.keys.justPressed.TAB) setViewing(!viewing);
+		#end
+		if (TouchNav.hit(peekButton)) setViewing(!viewing);
+
+		if (viewing)
+		{
+			// Cualquier toque, ENTER o BACK vuelve al menu.
+			if (KeyBinds.justPressed(KeyBinds.BACK) || KeyBinds.justPressed(KeyBinds.ACCEPT) || TouchNav.tapped()) setViewing(false);
+			return;
+		}
+
+		if (KeyBinds.justPressed(KeyBinds.UP)) changeSelection(-1);
+		if (KeyBinds.justPressed(KeyBinds.DOWN)) changeSelection(1);
+
+		var backTapped = backIcon != null && TouchNav.hit(backIcon);
+		if (backTapped) backIcon.press();
+		if (KeyBinds.justPressed(KeyBinds.BACK) || backTapped)
+		{
+			switch (page)
+			{
+				case MAIN:
+					CoolUtil.playMenuSound("cancel", 0.5);
+					choose("resume");
+				case CONFIRM:
+					openPage(MAIN);
+			}
+			return;
+		}
+		if (KeyBinds.justPressed(KeyBinds.ACCEPT)) choose(rows[selected].action);
+
+		var tapped = TouchNav.rowTapped(labels);
+		if (tapped >= 0 && (navPad == null || !navPad.tapped()))
+		{
+			if (tapped == selected) choose(rows[selected].action);
+			else
+			{
+				selected = tapped;
+				CoolUtil.playMenuSound("scroll", 0.5);
+			}
+		}
+	}
+
+	/** Botones arriba/abajo del movil (mismas reglas que el teclado: no mientras se mira el juego o se sale). */
+	function navigate(by:Int):Void
+	{
+		if (chosen || grace > 0 || viewing) return;
+		changeSelection(by);
+	}
+
+	function changeSelection(by:Int):Void
+	{
+		selected = (selected + by + rows.length) % rows.length;
+		CoolUtil.playMenuSound("scroll", 0.5);
+	}
+
+	function setViewing(value:Bool):Void
+	{
+		if (viewing == value) return;
+		viewing = value;
+		CoolUtil.playMenuSound("scroll", 0.5);
+	}
+
+	function choose(action:String):Void
+	{
+		switch (action)
+		{
+			case "resume":
+				chosen = true;
+				playState.resumeSong();
+				close();
+			case "restart":
+				chosen = true;
+				FlxG.sound.music?.stop();
+		playState.stopVoices();
+				// The substate is torn down by the state switch, so go through
+				// the parent's transition rather than opening a second curtain.
+				playState.transitionTo(new PlayState());
+			case "options":
+				openOptions();
+			case "no":
+				pending = null;
+				openPage(MAIN);
+			case "convert" | "freeplay" | "quit":
+				pending = action;
+				openPage(CONFIRM);
+			case "yes":
+				leave(pending);
+		}
+	}
+
+	function openOptions():Void
+	{
+		// Las opciones traen su propio fondo: esconder el nuestro mientras estan abiertas.
+		setPauseVisible(false);
+		var options = new ConfigSubState();
+		options.closeCallback = () ->
+		{
+			setPauseVisible(true);
+			grace = 2;
+		};
+		options.cameras = cameras;
+		openSubState(options);
+	}
+
+	function setPauseVisible(value:Bool):Void
+	{
+		bg.visible = value;
+		strip.visible = value;
+		infoTitle.visible = value;
+		infoSub.visible = value;
+		peekButton.visible = value;
+		if (dancer != null) dancer.visible = value;
+		if (backIcon != null) backIcon.visible = value;
+		if (navPad != null) navPad.visible = value;
+		for (label in labels) label.visible = value;
+	}
+
+	/** Salida definitiva ya confirmada. */
+	function leave(action:String):Void
+	{
+		chosen = true;
+		switch (action)
+		{
+			case "convert":
+				FlxG.sound.music?.stop();
+		playState.stopVoices();
+				playState.transitionTo(new ConverterMenuState());
+			case "freeplay":
+				FlxG.sound.music?.stop();
+		playState.stopVoices();
+				playState.transitionTo(PlayState.menuState());
+			case "quit":
+				#if sys
+				ClientPrefs.save();
+				lime.system.System.exit(0);
+				#else
+				// There is no exit on this platform. Keep the menu usable
+				// rather than leaving the game paused with input locked out.
+				chosen = false;
+				openPage(MAIN);
+				#end
+			default:
+				chosen = false;
+				openPage(MAIN);
+		}
+	}
+
+	static function describe(action:String):String
+	{
+		return switch (action)
+		{
+			case "convert": "IR AL CONVERTIDOR";
+			case "freeplay": "VOLVER AL FREEPLAY";
+			default: "CONTINUAR";
+		}
+	}
+
+	override public function destroy():Void
+	{
+		super.destroy();
+		labels = [];
+		// Log.info('[PauseSubState] closed');
+	}
+}

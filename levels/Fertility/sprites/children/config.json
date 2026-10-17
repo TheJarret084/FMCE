@@ -1,0 +1,35 @@
+{
+  "bilinear": true,
+  "data": [
+    {
+      "index": 0,
+      "bilinear": true,
+      "num": 1,
+      "spd": 1,
+      "anim": "anim0",
+      "loop": true,
+      "name": "idle",
+      "offset": {
+        "x": 189,
+        "y": 37
+      },
+      "scale": 1.36
+    },
+    {
+      "index": 1,
+      "bilinear": true,
+      "num": 1,
+      "spd": 1,
+      "anim": "anim1",
+      "loop": true,
+      "name": "anim1",
+      "offset": {
+        "x": 133,
+        "y": 37
+      },
+      "scale": 1.5
+    }
+  ],
+  "type": "item",
+  "scale": 1
+}

@@ -1,0 +1,77 @@
+{
+  "bilinear": false,
+  "data": [
+    {
+      "index": 0,
+      "bilinear": false,
+      "num": 12,
+      "spd": 1,
+      "anim": "anim0",
+      "loop": true,
+      "name": "idle",
+      "offset": {
+        "x": 252,
+        "y": 142
+      },
+      "scale": 1
+    },
+    {
+      "index": 1,
+      "bilinear": false,
+      "num": 7,
+      "spd": 1,
+      "anim": "anim1",
+      "loop": true,
+      "name": "anim0",
+      "offset": {
+        "x": 253,
+        "y": 142
+      },
+      "scale": 1
+    },
+    {
+      "index": 2,
+      "bilinear": false,
+      "num": 7,
+      "spd": 1,
+      "anim": "anim2",
+      "loop": true,
+      "name": "anim1",
+      "offset": {
+        "x": 234,
+        "y": 118
+      },
+      "scale": 1
+    },
+    {
+      "index": 3,
+      "bilinear": false,
+      "num": 7,
+      "spd": 1,
+      "anim": "anim3",
+      "loop": true,
+      "name": "anim2",
+      "offset": {
+        "x": 253,
+        "y": 142
+      },
+      "scale": 1
+    },
+    {
+      "index": 4,
+      "bilinear": false,
+      "num": 7,
+      "spd": 1,
+      "anim": "anim4",
+      "loop": true,
+      "name": "anim3",
+      "offset": {
+        "x": 252,
+        "y": 142
+      },
+      "scale": 1
+    }
+  ],
+  "type": "character",
+  "scale": 1
+}

@@ -1,0 +1,22 @@
+{
+  "objects": [],
+  "landscape": true,
+  "width": 2160,
+  "height": 1920,
+  "cameras": [
+    {
+      "scale": 0.5,
+      "position": {
+        "x": 1080,
+        "y": 960
+      }
+    },
+    {
+      "scale": 0.5,
+      "position": {
+        "x": 1080,
+        "y": 960
+      }
+    }
+  ]
+}

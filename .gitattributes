@@ -1,0 +1,58 @@
+# Line endings are a hard contract on Windows, so pin them here instead of
+# trusting whatever editor or OS touched the file last.
+#
+# Why this file exists: building\build.bat was committed with LF-only line
+# endings. cmd.exe cannot parse a batch file whose blocks span LF-only lines,
+# so on the runner the script aborted before printing a single line and the
+# job failed with a bare "Process completed with exit code 2". The same applies
+# to fmce-windows.bat and setup-windows.bat.
+#
+# After changing these rules run:  git add --renormalize .
+
+# Default: normalize to LF in the repository, LF in the working tree.
+* text=auto eol=lf
+
+# Windows scripts MUST be CRLF in the working tree on every platform, so a
+# Windows runner always gets a parseable file.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Keep the build inputs byte-stable: Haxe compiles these, and a stray CRLF in
+# an .hx/.hxml is at best noise and at worst a parse error.
+*.hx    text eol=lf
+*.hxml  text eol=lf
+*.xml   text eol=lf
+*.yml   text eol=lf
+*.json  text eol=lf
+*.sh    text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.ini   text eol=lf
+*.conf  text eol=lf
+
+# Binaries: never touch, never normalize.
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.webp     binary
+*.ogg      binary
+*.mp3      binary
+*.wav      binary
+*.flac     binary
+*.ttf      binary
+*.otf      binary
+*.fnt      binary
+*.exe      binary
+*.dll      binary
+*.so       binary
+*.dylib    binary
+*.a        binary
+*.lib      binary
+*.pdb      binary
+*.zip      binary
+*.7z       binary
+*.keystore binary
+*.mp4      binary
+*.ogv      binary

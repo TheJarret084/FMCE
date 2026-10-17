@@ -1,0 +1,19 @@
+{
+    "params": [
+        {
+            "name": "Vida Minima - lock al llegar a vida X",
+            "type": "Float(0, 30, 0.01, 2)",
+            "defaultValue": 0.0
+        },
+        {
+            "name": "Operacion",
+            "type": "DropDown('suma', 'resta')",
+            "defaultValue": "suma"
+        },
+        {
+            "name": "Valor",
+            "type": "Float(0, 30, 0.01, 2)",
+            "defaultValue": 0.5
+        }
+    ]
+}

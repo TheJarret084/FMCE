@@ -1,0 +1,81 @@
+name: Build escritorio (Linux + Windows)
+
+# Tags:  v* / release-v*  -> HL release   |   debug-v*  -> HL debug     (publica en el release del tag)
+# Manual: elige target (hl/cpp) y tipo (debug/release)                  (publica en el ultimo release)
+on:
+  push:
+    tags: ["v*", "release-v*", "debug-v*"]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Target
+        type: choice
+        options: [cpp, hl]
+        default: cpp
+      type:
+        description: Tipo
+        type: choice
+        options: [release, debug]
+        default: release
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04, name: Linux }
+          - { os: windows-latest, name: Windows }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: krdlab/setup-haxe@v2
+        with:
+          haxe-version: 4.3.7
+
+      - name: Resolver target y tipo
+        id: cfg
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            target="${{ inputs.target }}"; type="${{ inputs.type }}"
+          else
+            target=hl; type=release
+            [[ "${GITHUB_REF_NAME}" == debug-v* ]] && type=debug
+          fi
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+          echo "type=$type" >> "$GITHUB_OUTPUT"
+
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: bash building/build.sh ${{ steps.cfg.outputs.target }} ${{ steps.cfg.outputs.type }}
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: call building\build.bat ${{ steps.cfg.outputs.target }} ${{ steps.cfg.outputs.type }}
+
+      - name: Resolver tag del release
+        id: rel
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            tag="${GITHUB_REF_NAME}"
+          else
+            tag="$(gh release view --json tagName -q .tagName 2>/dev/null || true)"
+            [[ -z "$tag" ]] && tag="manual-${{ steps.cfg.outputs.type }}"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Publicar en el release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.rel.outputs.tag }}
+          files: building/artifacts/FMCE-${{ matrix.name }}-x64-${{ steps.cfg.outputs.target }}-${{ steps.cfg.outputs.type }}.zip
+          fail_on_unmatched_files: true

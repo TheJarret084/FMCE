@@ -1,0 +1,14 @@
+{
+    "params": [
+        {
+            "name": "Objeto (strumline origen)",
+            "type": "StrumLine",
+            "defaultValue": 0
+        },
+        {
+            "name": "Strumline destino",
+            "type": "StrumLine",
+            "defaultValue": 1
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+{
+  "icons": {
+    "P1": "icon-meimei",
+    "P2": "icon-fatalbob"
+  },
+  "color": "#9C70FF",
+  "stepsPerBeat": 12,
+  "displayName": "Fertility",
+  "song": "music.ogg",
+  "stage": "scene",
+  "validScore": true,
+  "bpm": 120,
+  "lanes": 4
+}

@@ -1,0 +1,73 @@
+{
+	"frames": [
+		{
+			"rotated": false,
+			"spriteSourceSize": {
+				"h": 28,
+				"w": 339,
+				"x": 19,
+				"y": 20
+			},
+			"frame": {
+				"h": 28,
+				"w": 339,
+				"x": 2,
+				"y": 2
+			},
+			"duration": 42,
+			"trimmed": true,
+			"sourceSize": {
+				"h": 74,
+				"w": 379
+			},
+			"filename": "anim00000"
+		},
+		{
+			"rotated": false,
+			"spriteSourceSize": {
+				"h": 28,
+				"w": 226,
+				"x": 19,
+				"y": 20
+			},
+			"frame": {
+				"h": 28,
+				"w": 226,
+				"x": 343,
+				"y": 2
+			},
+			"duration": 42,
+			"trimmed": true,
+			"sourceSize": {
+				"h": 74,
+				"w": 266
+			},
+			"filename": "anim10000"
+		}
+	],
+	"meta": {
+		"image": "sprite.png",
+		"format": "RGBA8888",
+		"app": "FMCE",
+		"frameTags": [
+			{
+				"to": 0,
+				"direction": "forward",
+				"from": 0,
+				"name": "anim0"
+			},
+			{
+				"to": 1,
+				"direction": "forward",
+				"from": 1,
+				"name": "anim1"
+			}
+		],
+		"size": {
+			"h": 32,
+			"w": 571
+		},
+		"scale": "1",
+		"version": "2.0"
+	}
+}

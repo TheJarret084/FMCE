@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	<!-- _________________________ Application Settings _________________________ -->
+
+	<app title="FUNKYAKER" file="FMCE" main="Main" version="0.0.3"
+	packageName="com.jarretlabs.fmce" package="com.jarretlabs.fmce" company="JarretLabs" /> <!-- puse mal el package tío, llore -->
+
+	<app preloader="flixel.system.FlxPreloader" />
+
+	<set name="SWF_VERSION" value="11.8" />
+
+	<!-- ____________________________ Window Settings ___________________________ -->
+
+	<window width="1280" height="720" background="#000000" hardware="true" vsync="false" />
+
+	<window if="html5" resizable="true" />
+
+	<window if="desktop" orientation="landscape" fullscreen="false" resizable="true" vsync="false" />
+	<window if="mac" allow-high-dpi="true" />
+
+	<window if="mobile" orientation="landscape" fullscreen="true" width="0" height="0" resizable="false" />
+
+	<window if="switch" orientation="landscape" fullscreen="true" width="0" height="0" resizable="true" />
+
+	<!-- _____________________________ Path Settings ____________________________ -->
+
+	<set name="BUILD_DIR" value="export/debug" if="debug" />
+	<set name="BUILD_DIR" value="export/release" unless="debug" />
+	<set name="BUILD_DIR" value="export/debug-32bit" if="debug 32bit" />
+	<set name="BUILD_DIR" value="export/release-32bit" if="32bit" unless="debug" />
+
+	<source name="source" />
+
+	<define name="PRELOAD_ALL" unless="web" />
+	<define name="NO_PRELOAD_ALL" unless="PRELOAD_ALL" />
+
+	<!-- _________________________________ Assets ________________________________ -->
+
+	<section unless="TEST_BUILD">
+		<assets path="assets" rename="assets" exclude="*.ogg" if="web" />
+		<assets path="assets" rename="assets" exclude="*.mp3" unless="web" />
+
+		<assets path="LICENSE" rename="LICENSE.txt" />
+
+		<assets path="assets/fonts" embed="true" />
+	</section>
+
+	<!-- _______________________________ Libraries ______________________________ -->
+
+	<haxelib name="flixel" />
+	<haxelib name="flixel-addons" />
+	<haxelib name="flixel-animate" />
+	<!-- hscript-improved (fork de Codename): clases, import, using. Es un git, ver building/libs.txt.
+	     NO lo mezcles con el `hscript` normal de haxelib: comparten paquete y chocan. -->
+	<haxelib name="hscript-improved" />
+
+	<!-- Android: carpeta publica /storage/emulated/0/.JarretLabs-FMCE (ver funky/core/Storage.hx).
+	     OJO: definir permisos reemplaza la lista por defecto de lime, por eso van tambien los 4 de siempre. -->
+	<section if="android">
+		<java path="java" />
+		<config:android permission="android.permission.WAKE_LOCK" />
+		<config:android permission="android.permission.INTERNET" />
+		<config:android permission="android.permission.VIBRATE" />
+		<config:android permission="android.permission.ACCESS_NETWORK_STATE" />
+		<config:android permission="android.permission.MANAGE_EXTERNAL_STORAGE" />
+		<config:android permission="android.permission.READ_EXTERNAL_STORAGE" />
+		<config:android permission="android.permission.WRITE_EXTERNAL_STORAGE" />
+	</section>
+
+	<!-- Video (FunkinVideoSprite, sin audio). hxvlc solo existe en C++: HashLink usa un stub.
+	     Android lo trae por defecto (el splash lo necesita); si hxvlc da problemas en CI, apagalo con -DFMCE_NO_VIDEO_ANDROID. -->
+	<define name="FMCE_VIDEO" if="cpp desktop" />
+	<define name="FMCE_VIDEO" if="android" unless="FMCE_NO_VIDEO_ANDROID" />
+	<haxelib name="hxvlc" if="FMCE_VIDEO" />
+
+	<!-- ______________________________ Haxedefines _____________________________ -->
+
+	<!-- Scripts: clases propias en hscript (`class Boss extends FunkinSprite`) y lineas de error. -->
+	<define name="CUSTOM_CLASSES" />
+	<haxedef name="hscriptPos" />
+	<!-- El charter portado de Codename (source/funkin/) envuelve codigo en `#if REGION`. -->
+	<haxedef name="REGION" />
+	<!-- Opcional (compila MUCHO mas lento): permite `import` de CUALQUIER clase de Flixel/OpenFL desde los scripts.
+	     Sin esto solo funcionan las clases que ya vienen en `Scripts.baseGlobals` o que el juego usa por su cuenta. -->
+	<haxeflag name="-dce" value="no" if="FMCE_FULL_IMPORTS" />
+
+	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN" />
+	<haxedef name="FLX_NO_DEBUG" unless="debug" />
+	<haxedef name="NAPE_RELEASE_BUILD" if="release" />
+
+	<!-- _________________________________ Custom _______________________________ -->
+
+	<!-- Iconos para Android (por tamaño) -->
+	<icon path="art/icon-android32.png" size="32" if="android" />
+	<icon path="art/icon-android64.png" size="64" if="android" />
+	<icon path="art/icon-android128.png" size="128" if="android" />
+	<icon path="art/icon-android512.png" size="512" if="android" />
+    <icon path="art/icon-androidOG.png" if="android" />
+
+	<!-- Iconos para Desktop (Windows / Linux / Mac) -->
+	<icon path="art/icon-16.png" size="16" if="desktop" />
+	<icon path="art/icon-windows.png" if="windows" />
+	<icon path="art/icon-linuxOG.png" if="linux" />
+
+	<!-- Fallback general si no entra en ninguna condición específica -->
+	<icon path="art/icon-OGALT.png" unless="desktop || android" />
+
+
+	<!-- ______________________________ OpenAL Soft ______________________________ -->
+
+	<section if="desktop">
+		<assets path="building/alsoft.txt" rename="plugins/alsoft.ini" type="text" if="windows" />
+		<assets path="building/alsoft.txt" rename="plugins/alsoft.conf" type="text" unless="windows" />
+	</section>
+
+	<!-- <haxedef name="SKIP_TO_PLAYSTATE" if="debug" /> -->
+	<!-- <haxedef name="NG_LOGIN" if="newgrounds" /> -->
+
+</project>
