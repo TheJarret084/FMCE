@@ -56,6 +56,7 @@ class ConfigState extends FlxState
 		{
 			leaving = true;
 			ClientPrefs.save();
+			TransitionHandler.switchState(new AdvancedModeState());
 		}
 	}
 

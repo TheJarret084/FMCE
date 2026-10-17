@@ -52,13 +52,10 @@ class AdvancedToolsState extends FlxState
 		add(sub);
 
 		addOption("CODE STUDIO", "Scripts (.hx) y archivos .json del nivel", function() go(new AdvancedEditorState(levelName)));
-		// los editores visuales son solo de escritorio (en celular queda Code Studio)
-		if (!TouchNav.MOBILE)
-		{
-			addOption("CHART EDITOR", "Notas, sustains, strumlines, eventos globales y waveform", function() go(funkin.editors.charter.CharterLauncher.open(levelName)));
-			addOption("SPRITE EDITOR", "config.json de cada sprite: tipo, escala, animaciones, velocidad, loop y pivote", function() go(new advanced.editors.SpriteEditorState(levelName)));
-			addOption("SCENE EDITOR", "scene.json: objetos, capas, parallax, fixed, strumlines y camaras", function() go(new advanced.editors.SceneEditorState(levelName)));
-		}
+		// antiGay = true bloquea todo el modo avanzado (para el release); si no, los editores salen en todas las plataformas
+		addOption("CHART EDITOR", "Notas, sustains, strumlines, eventos globales y waveform", function() go(funkin.editors.charter.CharterLauncher.open(levelName)));
+		addOption("SPRITE EDITOR", "config.json de cada sprite: tipo, animaciones, indices, velocidad, loop, escala y pivote", function() go(new advanced.editors.SpriteEditorState(levelName)));
+		addOption("SCENE EDITOR", "scene.json: objetos, capas, parallax, fixed, strumlines y camaras", function() go(new advanced.editors.SceneEditorState(levelName)));
 		addOption("VOLVER", "Elegir otro nivel", function() go(new AdvancedModeState()));
 
 		info = new FlxText(0, FlxG.height - 115, FlxG.width, "", 15);

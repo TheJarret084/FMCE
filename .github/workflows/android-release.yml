@@ -50,6 +50,13 @@ jobs:
           ANDROID_NDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}/ndk/21.4.7075529
         run: bash building/android-build.sh release
 
+      - name: Upload APK as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FMCE-Android-release
+          path: building/artifacts/FMCE-Android-release.apk
+          if-no-files-found: error
+
       - name: Publish build to release
         uses: softprops/action-gh-release@v2
         with:

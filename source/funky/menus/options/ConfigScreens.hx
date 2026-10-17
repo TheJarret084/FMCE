@@ -193,7 +193,7 @@ class ConfigScreens
 		{
 			name: "ENGINE",
 			desc: "Equipo de desarrollo, y sus artistas",
-            background: "startbg",
+            background: "credits_1",
 			menu: [
 				{
 					name: "TheJarret084",
@@ -229,43 +229,44 @@ class ConfigScreens
 			name: "Basado en",
             background: "othersEngines",
 			desc: "Proyectos en los que se apoya este Engine",
-            menu: [
+			menu: [
                 {
-                    name: "Funky Maker!: Mobile (de KingGC)",
-                    desc: "Literalmente usamos su nombre, base principal de todo (nota de creador: espero algún día ser revisor, es mi único sueño en ese juego)",
-                    url: "https://play.google.com/store/apps/details?id=com.kingamescreator.fnmm",
-                    // No ponemos avatar porque el fallback usa el icono de FMCE lelelel
-                    color: FlxColor.fromRGB(242, 255, 119)
-                },
-                {
-                    name: "Codename Engine",
-                    desc: "Referencia de editores, charts y menús",
-                    url: "https://github.com/CodenameCrew/CodenameEngine",
-                    avatar: "https://raw.githubusercontent.com/CodenameCrew/CodenameEngine/main/assets/images/icon.png",
-                    color: 0xFFFFC107
-                },
-                {
-                    name: "Friday Night Funkin'",
-                    desc: "El juego original",
-                    url: "https://ninja-muffin24.itch.io/funkin",
-                    avatar: "https://raw.githubusercontent.com/FunkinCrew/funkin.art/main/icons/bf-iOS-Default-1024x1024.png",
+					name: "Funky Maker!: Mobile (de KingGC)",
+					desc: "Literalmente usamos su nombre, base principal de todo (nota de creador: espero algun dia ser revisor, es mi unico sueño en ese juego)",
+					url: "https://play.google.com/store/apps/details?id=com.kingamescreator.fnmm",
+					color: FlxColor.fromRGB(242,255,119)  // DORADO rgb(242,255,119)
+                    // no ponemos avatar porque en fallback es el icon de el GGs
+				},
+				{
+					name: "Codename Engine",
+					desc: "Referencia de editores, charts y menus",
+					url: "https://github.com/CodenameCrew/CodenameEngine",
+                    avatar: "https://github.com/CodenameCrew/CodenameEngine/blob/main/assets%2Fimages%2Ficon.png",
+					color: 0xFFFFC107
+				},
+				{
+					name: "Friday Night Funkin'",
+					desc: "El juego original",
+					url: "https://ninja-muffin24.itch.io/funkin",
+                    avatar: "https://github.com/FunkinCrew/funkin.art/blob/main/icons%2Fbf-iOS-Default-1024x1024.png",
                     color: FlxColor.YELLOW
-                },
+				},
                 {
-                    name: "KADE ENGINE: Mobile",
-                    desc: "Engine modificado, más modificado, pero de aquí saqué la hitbox para mobile y más utilidades",
-                    url: "https://github.com/TheLeerName/Kade-Engine-android",
-                    avatar: "https://raw.githubusercontent.com/TheLeerName/Kade-Engine-android/master/art/icon16.png",
+					name: "KADE ENGINE: Mobile",
+					desc: "Engine modificado, mas modificado, pero de aqui saque la Hitbox para mobile, y mas utilidades",
+					url: "https://github.com/TheLeerName/Kade-Engine-android",
+                    avatar: "https://github.com/TheLeerName/Kade-Engine-android/blob/master/art/icon16.png",
                     color: FlxColor.GRAY
-                },
-                {
-                    name: "HaxeFlixel",
-                    desc: "El framework sobre el que corre todo",
-                    url: "https://haxeflixel.com",
-                    avatar: "https://raw.githubusercontent.com/HaxeFlixel/flixel/dev/assets/images/logo/logo.png",
+                    
+				},
+				{
+					name: "HaxeFlixel",
+					desc: "El framework sobre el que corre todo",
+					url: "https://haxeflixel.com",
+                    avatar: "https://github.com/HaxeFlixel/flixel/blob/dev/assets/images/logo/logo.png",
                     color: FlxColor.ORANGE
-                }
-            ]
+				}
+			]
 		}
 	];
 

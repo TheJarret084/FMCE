@@ -213,8 +213,6 @@ class AdvancedEditorState extends FlxState
 
 	function openSpritePreview():Void
 	{
-		// el editor de sprites es solo de escritorio
-		if (funky.core.TouchNav.MOBILE) return;
 		chosen = true;
 		TransitionHandler.switchState(new advanced.editors.SpriteEditorState(levelName));
 	}
