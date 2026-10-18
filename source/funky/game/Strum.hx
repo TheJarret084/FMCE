@@ -46,7 +46,7 @@ class Strum extends FlxSprite
 		else makeGraphic(100, 100, 0xFF888888);
 		// Fit the receptor to its lane slot instead of a hardcoded 0.7, otherwise
 		// 5-9 lane charts draw the receptors on top of each other.
-		setGraphicSize(slotWidth, 0);
+		setGraphicSize(Std.int(slotWidth), 0);
 		updateHitbox();
 		alpha = ClientPrefs.getStrumAlpha();
 		applyColor(false);

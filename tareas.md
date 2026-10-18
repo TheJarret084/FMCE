@@ -37,21 +37,21 @@
 
 - [ ] limpiar scene y events, a esto refiero abrirlo y no dejarlo aplastado que no se puede leer bien
 
-- [X] Logger tipo legacy.
+- [X] Logger bonito en pantalla (`LogOverlay`, hijo de `Main` como el contador de FPS): tarjetas con fondo negro que entran y salen por la izquierda con alpha + X, apiladas abajo, duplicados "xN", errores duran mas. F2 lo enciende/apaga (tambien en Pausa > Opciones). Falta verlo en pantalla.
 
 - [X] Iconos: nunca se voltean (`flipX = false` en `HealthIcon`). Ademas el mapeo de estados estaba corrido (anim0 normal salia como "perdiendo"): ahora anim0 normal, anim1 perdiendo, anim2 ganando.
 
-- [X ] Sprites `fixed` (Stage), error de escalado y de Camara
+- [ ] Sprites `fixed` (Stage), error de escalado y de Camara
 
 ---
 
 (9 oct):
-- [X] Pausa estilo Impostor Legacy.
+- [X] Pausa estilo Impostor Legacy (opciones a la izquierda con slide, titulo arriba a la derecha, TAB/toque = ver juego). Opciones abre encima de la pausa.
 - [X] Opciones estilo Codename (`funky/menus/options/`): CONTROLES (rebind de carriles), GAMEPLAY, AUDIO, APARIENCIA, MISCELANEA.
-- [X] Creditos 
+- [X] Creditos estilo Codename hardcodeados en el array `ConfigScreens.CREDITS` [nombre, url imagen]; si la imagen falla usa `assets/images/credits/<nombre>.png`.
 - [X] Menu principal: OPCIONES + CREDITOS; el modo avanzado queda detras de la tecla 7 (tambien desde Opciones).
 - [X] Compilar y probar en movil
-- [X] GameOverSubState
+- [X] GameOverSubState (`funky/menus/`): BF muerto de `menus/gameover`, musica en bucle, ENTER/toque reintenta, BACK sale. PlayState lo abre con vida 0 (no con botplay).
 - [X] poner lo que pidio papas, (el among us bailando en la pausa)
 
 ---
@@ -60,7 +60,6 @@
 
 - [X] arreglar sobrecarga de sprites al usar solo un spritesheet demaciado grande
 - [ ] pulir en convertidor
-
 ---
 
 (13 oct):

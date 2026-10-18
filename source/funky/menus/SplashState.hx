@@ -118,6 +118,6 @@ class SplashState extends FlxState
 		#if hxvlc
 		if (video != null) video.stop();
 		#end
-		FlxG.switchState(TitleState.new);
+		FlxG.switchState(new TitleState());
 	}
 }

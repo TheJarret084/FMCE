@@ -703,7 +703,7 @@ class Stage extends FlxGroup
 
 		try
 		{
-			return Json.parse(File.getContent(path));
+			return funky.core.JsonLoose.parse(File.getContent(path));
 		}
 		catch (e:Dynamic)
 		{

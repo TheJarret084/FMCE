@@ -55,8 +55,8 @@ class ConfigRepair
 		var spritePath = Path.join([dir, "sprite.json"]);
 		if (!FileSystem.exists(configPath) || !FileSystem.exists(spritePath)) return -1;
 
-		var config:Dynamic = Json.parse(File.getContent(configPath));
-		var atlas:Dynamic = Json.parse(File.getContent(spritePath));
+		var config:Dynamic = funky.core.JsonLoose.parse(File.getContent(configPath));
+		var atlas:Dynamic = funky.core.JsonLoose.parse(File.getContent(spritePath));
 		if (!Std.isOfType(config.data, Array) || atlas.meta == null || !Std.isOfType(atlas.meta.frameTags, Array)) return -1;
 
 		// Tags por orden de aparicion en el atlas: el N-esimo es la animacion `index` N de la tira original.

@@ -28,6 +28,9 @@ class UIState extends MusicBeatState {
 	public var hoveredSprite:UISprite = null;
 	public var currentFocus:IUIFocusable = null;
 
+	/** El teclado en pantalla (Android) y el texto de lime solo llegan con `textInputEnabled`: se prende al enfocar un campo de texto. */
+	var __textInputOn:Bool = false;
+
 	public var currentCursor:CodeCursor = ARROW;
 
 	public var uiCameras:Array<FlxCamera> = [];
@@ -115,6 +118,11 @@ class UIState extends MusicBeatState {
 			currentFocus = (hoveredSprite is IUIFocusable) ? (cast hoveredSprite) : null;
 
 		var keysAllowed = currentFocus != null ? !(currentFocus is UITextBox) : true;
+		var wantsText = currentFocus != null && (currentFocus is UITextBox);
+		if (wantsText != __textInputOn) {
+			__textInputOn = wantsText;
+			FlxG.stage.window.textInputEnabled = wantsText;
+		}
 		FlxG.sound.muteKeys = keysAllowed ? [flixel.input.keyboard.FlxKey.ZERO, flixel.input.keyboard.FlxKey.NUMPADZERO] : null;
 		FlxG.sound.volumeUpKeys = keysAllowed ? [flixel.input.keyboard.FlxKey.PLUS, flixel.input.keyboard.FlxKey.NUMPADPLUS] : null;
 		FlxG.sound.volumeDownKeys = keysAllowed ? [flixel.input.keyboard.FlxKey.MINUS, flixel.input.keyboard.FlxKey.NUMPADMINUS] : null;
@@ -149,6 +157,8 @@ class UIState extends MusicBeatState {
 		FlxG.stage.window.onKeyUp.remove(onKeyUp);
 		FlxG.stage.window.onTextInput.remove(onTextInput);
 		FlxG.stage.window.onTextEdit.remove(onTextEdit);
+		if (__textInputOn) FlxG.stage.window.textInputEnabled = false;
+		__textInputOn = false;
 	}
 
 	public function closeCurrentContextMenu() {

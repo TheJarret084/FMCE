@@ -231,7 +231,8 @@ class SpritePages
 			if (part == null) return null;
 
 			if (atlas == null) atlas = part;
-			else atlas.addAtlas(part);
+			else
+				for (frame in part.frames) atlas.pushFrame(frame); // (flixel 5.3 del fork de Codename no trae addAtlas)
 		}
 		return atlas;
 	}

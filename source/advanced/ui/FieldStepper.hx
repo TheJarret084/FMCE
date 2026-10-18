@@ -16,4 +16,20 @@ class FieldStepper extends UINumericStepper
 			if (onValue != null && !Math.isNaN(Std.parseFloat(text))) onValue(this.value);
 		};
 	}
+
+	/** Un campo numerico solo recibe digitos, signo y punto (la coma cuenta como punto); lo demas se descarta. */
+	override public function onTextInput(text:String):Void
+	{
+		var clean = "";
+		for (i in 0...text.length)
+		{
+			var c = text.charAt(i);
+			if (c == ",") c = ".";
+			if ("0123456789-.".indexOf(c) >= 0) clean += c;
+		}
+		if (clean != "") super.onTextInput(clean);
+	}
+
+	/** El texto en composicion (teclados predictivos / IME) no es un valor: se ignora, solo cuenta lo confirmado. */
+	override public function onTextEdit(text:String, start:Int, end:Int):Void {}
 }

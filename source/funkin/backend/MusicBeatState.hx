@@ -36,5 +36,5 @@ class MusicBeatState extends FlxState implements IBeatCancellableReceiver {
 
 	/** Cambia de state (sin las cortinas de FMCE: el editor sale directo). */
 	public static function swapState(next:FlxState):Void
-		FlxG.switchState(() -> next);
+		FlxG.switchState(next);
 }

@@ -41,7 +41,7 @@ class Main extends Sprite
 		MemoryUtil.enable();
 		FlxG.signals.postStateSwitch.add(() -> MemoryUtil.clearMajor());
 
-		addChild(new FlxGame(GAME_WIDTH, GAME_HEIGHT, SplashState.new, 60, 60, true));
+		addChild(new FlxGame(GAME_WIDTH, GAME_HEIGHT, SplashState, 60, 60, true));
 		addChild(new Framerate());
 		addChild(new LogOverlay()); // logs en pantalla (F2)
 		Log.info("Juego iniciado :happy:");

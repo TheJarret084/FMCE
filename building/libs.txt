@@ -1,11 +1,13 @@
 # Dependencias de FMCE: "nombre [version]". Sin version = la ultima de haxelib.
 # Para un repo git: "nombre git <url> [rama]".
 # Las lee building/build.sh y building/build.bat antes de compilar.
-lime
-openfl
-flixel 6.2.0
-flixel-addons
-flixel-animate
+# OpenFL + Flixel: los forks de Codename (la UI de los editores esta portada de ahi y depende de su comportamiento).
+# Ojo: es Flixel 5.3.x, NO el 6.x de haxelib. Si ya tenias flixel/openfl de haxelib, los scripts los reemplazan por el fork.
+lime 8.1.2
+openfl git https://github.com/CodenameCrew/cne-openfl old
+flixel git https://github.com/CodenameCrew/cne-flixel old
+flixel-addons git https://github.com/CodenameCrew/cne-flixel-addons old
+flixel-animate git https://github.com/CodenameCrew/cne-flixel-animate old
 hxcpp
 hscript-improved git https://github.com/CodenameCrew/hscript-improved.git codename-dev
 hxvlc

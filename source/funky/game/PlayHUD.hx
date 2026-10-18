@@ -93,7 +93,7 @@ class PlayHUD extends FlxGroup
 		timeText.borderSize = 2;
 		timeText.alpha = 0;
 		timeBar = new FlxBar(FlxG.width / 2 - 200, timeText.y + timeText.height / 4, FlxBarFillDirection.LEFT_TO_RIGHT, 400, 18, this, "songTime", 0, this.songLength);
-		timeBar.createFilledBar(0xFF000000, 0xFFFFFFFF, true, 0xFF000000, 2);
+		timeBar.createFilledBar(0xFF000000, 0xFFFFFFFF, true, 0xFF000000); // (el flixel del fork no trae el grosor del borde)
 		timeBar.alpha = 0;
 		add(timeBar);
 		add(timeText);

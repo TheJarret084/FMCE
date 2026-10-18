@@ -132,7 +132,7 @@ class LevelLoader
 	static function parseObject(raw:String, path:String):Dynamic
 	{
 		var parsed:Dynamic = null;
-		try parsed = Json.parse(raw) catch (e:Dynamic) throw 'JSON invalido en $path: ' + Std.string(e);
+		try parsed = funky.core.JsonLoose.parse(raw) catch (e:Dynamic) throw 'JSON invalido en $path: ' + Std.string(e);
 		if (parsed == null || !Reflect.isObject(parsed)) throw '$path no contiene un objeto JSON';
 		return parsed;
 	}
@@ -143,7 +143,7 @@ class LevelLoader
 		if (!FileSystem.exists(path)) return {};
 		try
 		{
-			var parsed:Dynamic = Json.parse(File.getContent(path));
+			var parsed:Dynamic = funky.core.JsonLoose.parse(File.getContent(path));
 			return Reflect.isObject(parsed) ? parsed : {};
 		}
 		catch (e:Dynamic)
@@ -175,7 +175,7 @@ class LevelLoader
 		if (!FileSystem.exists(path)) return [];
 		try
 		{
-			var parsed:Dynamic = Json.parse(File.getContent(path));
+			var parsed:Dynamic = funky.core.JsonLoose.parse(File.getContent(path));
 			var list = parsed == null ? null : Reflect.field(parsed, "icons");
 			if (!Std.isOfType(list, Array)) return [];
 			return [for (item in (cast list:Array<Dynamic>)) text(item, "")];
@@ -215,7 +215,7 @@ class LevelLoader
 		if (!FileSystem.exists(path)) return null;
 		try
 		{
-			var parsed:Dynamic = Json.parse(File.getContent(path));
+			var parsed:Dynamic = funky.core.JsonLoose.parse(File.getContent(path));
 			return Reflect.isObject(parsed) && !Std.isOfType(parsed, Array) ? parsed : null;
 		}
 		catch (e:Dynamic)

@@ -3,6 +3,8 @@ package funky.backend;
 import flixel.FlxSprite;
 import funky.core.Log;
 import funky.core.Paths;
+
+using StringTools;
 #if hxvlc
 import hxvlc.flixel.FlxVideoSprite;
 #end
@@ -75,7 +77,7 @@ class FunkinVideoSprite extends VideoBase
 		var info = readInfo(dir);
 		if (info == null)
 		{
-			Log.warn('[FunkinVideoSprite] "$dir" no tiene meta.fmce.video en sprite.json');
+			Log.warn('[FunkinVideoSprite] "$dir" no es una carpeta de video (ni meta.fmce.video en sprite.json, ni config.json "type": "video" con un .mp4)');
 			return false;
 		}
 		videoCount = info.count;
@@ -85,7 +87,13 @@ class FunkinVideoSprite extends VideoBase
 			return false;
 		}
 
-		var ok = loadVideo(haxe.io.Path.join([dir, "video" + index + EXTENSION]), info.loop);
+		var file = videoFile(dir, index);
+		if (file == null)
+		{
+			Log.warn('[FunkinVideoSprite] "$dir": no hay un .mp4 para el video $index');
+			return false;
+		}
+		var ok = loadVideo(file, info.loop);
 		if (ok && info.scale != 1) scale.set(info.scale, info.scale);
 		return ok;
 	}
@@ -100,9 +108,9 @@ class FunkinVideoSprite extends VideoBase
 			if (!sys.FileSystem.exists(path)) continue;
 			try
 			{
-				var json:Dynamic = haxe.Json.parse(sys.io.File.getContent(path));
+				var json:Dynamic = funky.core.JsonLoose.parse(sys.io.File.getContent(path));
 				var video:Dynamic = json?.meta?.fmce?.video;
-				if (video == null) return null;
+				if (video == null) break;
 				var count = Std.parseInt(Std.string(video.count));
 				return {
 					count: count != null && count > 0 ? count : 1,
@@ -115,6 +123,64 @@ class FunkinVideoSprite extends VideoBase
 				Log.warn('[FunkinVideoSprite] json invalido ($path): $e');
 			}
 		}
+		// Sprite de tipo video sin sprite.json: `config.json` con "type": "video" y un .mp4 en la carpeta
+		// (sprite.mp4, o video0.mp4, video1.mp4... si son varios). loop / escala salen de la primera animacion de `data`.
+		var files = videoFiles(dir);
+		if (files.length == 0) return null;
+		var config:Dynamic = null;
+		var configPath = haxe.io.Path.join([dir, "config.json"]);
+		if (sys.FileSystem.exists(configPath))
+		{
+			try
+			{
+				config = funky.core.JsonLoose.parse(sys.io.File.getContent(configPath));
+			}
+			catch (e:Dynamic)
+			{
+				Log.warn('[FunkinVideoSprite] json invalido ($configPath): $e');
+			}
+		}
+		var isVideoType = config != null && Std.string(config.type) == "video";
+		// una carpeta con atlas (sprite.png) y un .mp4 suelto sigue siendo un sprite normal
+		if (!isVideoType && sys.FileSystem.exists(haxe.io.Path.join([dir, "sprite.png"]))) return null;
+		if (!isVideoType && config != null) return null;
+		var data:Array<Dynamic> = config != null && Std.isOfType(config.data, Array) ? config.data : [];
+		var first:Dynamic = data.length > 0 ? data[0] : null;
+		var scale:Float = first != null && first.scale != null ? Std.parseFloat(Std.string(first.scale)) : 1;
+		return {
+			count: files.length,
+			loop: first == null || first.loop == null ? true : first.loop == true,
+			scale: Math.isNaN(scale) || scale <= 0 ? 1 : scale
+		};
+		#end
+		return null;
+	}
+
+	/** Los .mp4 de una carpeta de sprite, ordenados por nombre (`sprite.mp4`, o `video0.mp4`, `video1.mp4`...). */
+	public static function videoFiles(dir:String):Array<String>
+	{
+		var out:Array<String> = [];
+		#if sys
+		try
+		{
+			if (sys.FileSystem.exists(dir) && sys.FileSystem.isDirectory(dir))
+				for (file in sys.FileSystem.readDirectory(dir))
+					if (file.toLowerCase().endsWith(EXTENSION)) out.push(file);
+		}
+		catch (e:Dynamic) {}
+		out.sort(Reflect.compare);
+		#end
+		return out;
+	}
+
+	/** Ruta del video `index`: `video<index>.mp4` si existe (formato viejo), si no el `index`-esimo .mp4 de la carpeta. */
+	public static function videoFile(dir:String, index:Int):Null<String>
+	{
+		#if sys
+		var legacy = haxe.io.Path.join([dir, "video" + index + EXTENSION]);
+		if (sys.FileSystem.exists(legacy)) return legacy;
+		var files = videoFiles(dir);
+		if (index >= 0 && index < files.length) return haxe.io.Path.join([dir, files[index]]);
 		#end
 		return null;
 	}

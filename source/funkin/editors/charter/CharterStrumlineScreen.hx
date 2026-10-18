@@ -1,40 +1,24 @@
 package funkin.editors.charter;
 
-import funkin.game.StrumLine;
-import flixel.math.FlxPoint;
+import funkin.backend.chart.Chart;
 import funkin.backend.chart.ChartData.ChartStrumLine;
 import funkin.game.Character;
-import funkin.game.Note;
-import funkin.game.HudCamera;
 import funkin.game.HealthIcon;
-import flixel.tweens.FlxTween;
+import haxe.io.Path;
 
+/**
+ * Ventana de strumline del charter de FMCE. El chart de un nivel solo guarda las notas de cada strumline
+ * (lane/time/length); lo unico editable aca es el sufijo de voces (<nivel>/music/Voices<sufijo>.ogg).
+ * El resto (personajes, tipo, posicion, escala, velocidad...) lo define el nivel, no el chart.
+ */
 class CharterStrumlineScreen extends UISubstateWindow {
 	public var strumLineID:Int = -1;
 	public var strumLine:ChartStrumLine;
 
-	public var charactersList:UIButtonList<CharacterButton>;
-	public var typeDropdown:UIDropDown;
 	public var vocalsSuffixDropDown:UIDropDown;
-	public var stagePositionDropdown:UIDropDown;
-	public var hudScaleStepper:UINumericStepper;
-	public var hudXStepper:UINumericStepper;
-	public var hudYStepper:UINumericStepper;
-	public var visibleCheckbox:UICheckbox;
-	public var scrollSpeedStepper:UINumericStepper;
-	public var usesChartScrollSpeed:UICheckbox;
-	public var keyCountStepper:UINumericStepper;
-	public var hudSpacingStepper:UINumericStepper;
-
-	public var characterIcons:Array<HealthIcon> = [];
 
 	public var saveButton:UIButton;
 	public var closeButton:UIButton;
-
-	public var strumLineCam:HudCamera;
-	public var previewStrumLine:CharterPreviewStrumLine;
-	public var previewBorder:Array<FlxSprite> = [];
-	private final borderGap:Int = 5;
 
 	private var onSave:ChartStrumLine -> Void = null;
 
@@ -59,91 +43,38 @@ class CharterStrumlineScreen extends UISubstateWindow {
 			};
 
 		winTitle = TU.translate("charterStrumlineScreen.win-title" + (creatingStrumLine ? "-creating" : "-editing"), ["#" + strumLineID]);
-		winWidth = 720; winHeight = 400;
+		winWidth = 420; winHeight = 240;
 
-		// sin musica/voces (nivel sin audio) no hay nada que pausar: antes esto reventaba al abrir la ventana
+		// sin musica/voces (nivel sin audio) no hay nada que pausar
 		if (FlxG.sound.music != null) FlxG.sound.music.pause();
 		if (Charter.instance.vocals != null) Charter.instance.vocals.pause();
 		for (strumLine in Charter.instance.strumLines.members) if (strumLine.vocals != null) strumLine.vocals.pause();
 
 		super.create();
 
-		function addLabelOn(ui:UISprite, text:String)
-			add(new UIText(ui.x, ui.y - 24, 0, text));
-
 		var title:UIText;
 		add(title = new UIText(windowSpr.x + 20, windowSpr.y + 30 + 16, 0, TU.translate("charterStrumlineScreen.title" + (creatingStrumLine ? "-creating" : "-editing")), 28));
 
-		var charFileList = Character.getList(true);
-		if (charFileList.length == 0) charFileList = Character.getList(false);
-
-		charactersList = new UIButtonList<CharacterButton>(15, title.y + title.height + 36, 250, 269, null, FlxPoint.get(250, 54), null, 0);
-		charactersList.addButton.callback = () -> charactersList.add(new CharacterButton(0, 0, TU.translate("charterStrumLine.newChar"), charFileList, charactersList));
-		charactersList.cameraSpacing = 0;
-		for (i in strumLine.characters)
-			charactersList.add(new CharacterButton(0, 0, i, charFileList, charactersList));
-		add(charactersList);
-		addLabelOn(charactersList, TU.translate("charterStrumLine.characters"));
-
-		charactersList.frames = Paths.getFrames('editors/ui/inputbox');
-
-		typeDropdown = new UIDropDown(charactersList.x + charactersList.bWidth + 16, charactersList.y, 200, 32, ["OPPONENT", "PLAYER", "ADDITIONAL"], strumLine.type);
-		add(typeDropdown);
-		addLabelOn(typeDropdown, TU.translate("charterStrumLine.type"));
-
-		usesChartScrollSpeed = new UICheckbox(typeDropdown.x + 104, typeDropdown.y + 135, TU.translate("charterStrumLine.useChartScrollSpeed"), strumLine.scrollSpeed == null);
-		usesChartScrollSpeed.onChecked = function(b) {
-			if(b)
-			{
-				scrollSpeedStepper.value = PlayState.SONG.scrollSpeed;
-				scrollSpeedStepper.selectable = false;
-			} else {
-				scrollSpeedStepper.selectable = true;
+		// Voices<sufijo>.ogg en <nivel>/music (o en la raiz del nivel)
+		var suffixList = ["NONE"];
+		#if sys
+		for (dir in [Path.join([Chart.levelDir, "music"]), Chart.levelDir]) {
+			if (!sys.FileSystem.exists(dir) || !sys.FileSystem.isDirectory(dir)) continue;
+			for (file in sys.FileSystem.readDirectory(dir)) {
+				if (!StringTools.startsWith(file, "Voices")) continue;
+				var suffix = Path.withoutExtension(file.substr("Voices".length));
+				if (suffix == "") continue;
+				suffixList.pushOnce(suffix);
 			}
 		}
-		add(usesChartScrollSpeed);
+		#end
+		var current = strumLine.vocalsSuffix;
+		if (current != null && current != "") suffixList.pushOnce(current);
+		var currentIndex = current != null && current != "" ? suffixList.indexOf(current) : 0;
 
-		scrollSpeedStepper = new UINumericStepper(typeDropdown.x, typeDropdown.y + 128, usesChartScrollSpeed.checked ? PlayState.SONG.scrollSpeed : strumLine.scrollSpeed, 0.1, 2, 0, 10, 82);
-		if(usesChartScrollSpeed.checked)
-		{
-			scrollSpeedStepper.selectable = false;
-		} else {
-			scrollSpeedStepper.selectable = true;
-		}
-		add(scrollSpeedStepper);
-		addLabelOn(scrollSpeedStepper, TU.translate("charterStrumLine.scrollSpeed"));
-
-		var stagePositionI = strumLine.position == null ? strumLine.type : ["DAD", "BOYFRIEND", "GIRLFRIEND"].indexOf(strumLine.position.toUpperCase());
-
-		stagePositionDropdown = new UIDropDown(typeDropdown.x + 200 - 32 + 26, typeDropdown.y, 200, 32, ["DAD", "BOYFRIEND", "GIRLFRIEND"], stagePositionI);
-		add(stagePositionDropdown);
-		addLabelOn(stagePositionDropdown, TU.translate("charterStrumLine.stagePos"));
-
-		hudScaleStepper = new UINumericStepper(typeDropdown.x, typeDropdown.y + 64, strumLine.strumScale == null ? 1 : strumLine.strumScale, 0.001, 2, null, null, 84);
-		add(hudScaleStepper);
-		addLabelOn(hudScaleStepper, TU.translate("charterStrumLine.scale"));
-
-		hudSpacingStepper = new UINumericStepper(hudScaleStepper.x + 80 - 32 + 26, hudScaleStepper.y, strumLine.strumSpacing != null ? strumLine.strumSpacing : 1, 0.001, 10, null, null, 84);
-		add(hudSpacingStepper);
-		addLabelOn(hudSpacingStepper, TU.translate("charterStrumLine.spacing"));
-
-		var strOffset:Float = strumLine.strumLinePos == null ? (strumLine.type == 1 ? 0.75 : 0.25) : strumLine.strumLinePos;
-
-		var startingPos:FlxPoint = strumLine.strumPos == null ?
-			FlxPoint.get(strOffset, 50) :
-			FlxPoint.get(strOffset, strumLine.strumPos[1]);
-
-		hudXStepper = new UINumericStepper(hudSpacingStepper.x + 80, hudScaleStepper.y, startingPos.x, 0.01, 2, 0, 2, 84);
-		add(hudXStepper);
-		addLabelOn(hudXStepper, TU.translate("charterStrumLine.hudPos"));
-
-		add(new UIText(hudXStepper.x + 84 - 32 + 0, hudXStepper.y + 9, 0, ",", 22));
-
-		hudYStepper = new UINumericStepper(hudXStepper.x + 84 - 32 + 26, hudXStepper.y, startingPos.y, 0.001, 2, null, null, 84);
-		add(hudYStepper);
-
-		visibleCheckbox = new UICheckbox(hudYStepper.x + hudYStepper.bWidth + 42, hudYStepper.y + 9, TU.translate("charterStrumLine.visible"), strumLine.visible);
-		add(visibleCheckbox);
+		vocalsSuffixDropDown = new UIDropDown(windowSpr.x + 20, title.y + title.height + 40, 200, 32, suffixList, currentIndex);
+		add(vocalsSuffixDropDown);
+		add(new UIText(vocalsSuffixDropDown.x, vocalsSuffixDropDown.y - 24, 0, TU.translate("charterStrumLine.vocalSuffix")));
 
 		saveButton = new UIButton(windowSpr.x + windowSpr.bWidth - 20 - 125, windowSpr.y + windowSpr.bHeight - 16 - 32, TU.translate("editor.saveClose"), function() {
 			saveStrumline();
@@ -158,108 +89,16 @@ class CharterStrumlineScreen extends UISubstateWindow {
 		}, 125);
 		add(closeButton);
 		closeButton.color = 0xFFFF0000;
-
-		var suffixList = ["NONE"];
-		for (i in Paths.getFolderContent('songs/${Charter.__song.toLowerCase()}/song'))
-		if (i.startsWith("Voices")) {
-			i = haxe.io.Path.withoutExtension(i.substr("Voices".length));
-			if (i == "") continue;
-			suffixList.pushOnce(i);
-		}
-
-		vocalsSuffixDropDown = new UIDropDown(typeDropdown.x, hudScaleStepper.y + 128, 200, 32, suffixList, strumLine.vocalsSuffix != null && strumLine.vocalsSuffix != "" && Assets.exists(Paths.voices(Charter.__song.toLowerCase(), "", strumLine.vocalsSuffix)) ? suffixList.indexOf(strumLine.vocalsSuffix) : 0);
-		add(vocalsSuffixDropDown);
-		addLabelOn(vocalsSuffixDropDown, TU.translate("charterStrumLine.vocalSuffix"));
-
-		// FMCE esta fijo en 4K: el campo se muestra pero no se puede cambiar
-		keyCountStepper = new UINumericStepper(stagePositionDropdown.x, vocalsSuffixDropDown.y, 4, 1, 0, 4, 4, 84);
-		keyCountStepper.selectable = false;
-		add(keyCountStepper);
-		addLabelOn(keyCountStepper, TU.translate("charterStrumLine.keyCount"));
-
-		strumLineCam = new HudCamera();
-		strumLineCam.downscroll = Options.downscroll;
-		strumLineCam.bgColor = 0;
-		strumLineCam.alpha = 0;
-		FlxG.cameras.add(strumLineCam, false);
-		updateStrumlineCam(FlxG.width, FlxG.height);
-
-		previewStrumLine = new CharterPreviewStrumLine(0, 0, 0, 1, 4, 0);
-		previewStrumLine.camera = strumLineCam;
-		add(previewStrumLine);
-		FlxTween.tween(strumLineCam, {alpha: 1}, 0.25, {ease: FlxEase.cubeOut});
-
-		//preview border
-		previewBorder.push(new FlxSprite(-borderGap, -borderGap).makeSolid(FlxG.initialWidth + (borderGap*2), borderGap, 0x88FFFFFF));
-		previewBorder.push(new FlxSprite(-borderGap, 0).makeSolid(borderGap, FlxG.initialHeight, 0x88FFFFFF));
-		previewBorder.push(new FlxSprite(FlxG.initialWidth, 0).makeSolid(borderGap, FlxG.initialHeight, 0x88FFFFFF));
-		previewBorder.push(new FlxSprite(-borderGap, FlxG.initialHeight).makeSolid(FlxG.initialWidth + (borderGap*2), borderGap, 0x88FFFFFF));
-		for (border in previewBorder) {
-			border.camera = strumLineCam;
-			add(border);
-		}
 	}
 
 	function saveStrumline() {
 		UIUtil.confirmUISelections(this);
 
-		var newStrumLine:ChartStrumLine = {
-			characters: [
-				for (char in charactersList.buttons.members)
-					char.textBox.label.text.trim()
-			],
-			type: typeDropdown.index,
-			notes: strumLine.notes,
-			position: ["DAD", "BOYFRIEND", "GIRLFRIEND"][stagePositionDropdown.index].toLowerCase(),
-			visible: visibleCheckbox.checked,
-			strumPos: [0, hudYStepper.value],
-			strumLinePos: hudXStepper.value,
-			strumScale: hudScaleStepper.value,
-			strumSpacing: hudSpacingStepper.value,
-			vocalsSuffix: vocalsSuffixDropDown.options[vocalsSuffixDropDown.index] != "NONE" ? vocalsSuffixDropDown.options[vocalsSuffixDropDown.index] : "",
-			keyCount: 4
-		};
-		if(!usesChartScrollSpeed.checked) newStrumLine.scrollSpeed = scrollSpeedStepper.value;
+		// se conserva todo lo que ya traia la strumline; solo cambia el sufijo de voces
+		var picked = vocalsSuffixDropDown.options[vocalsSuffixDropDown.index];
+		var newStrumLine:ChartStrumLine = Reflect.copy(strumLine);
+		newStrumLine.vocalsSuffix = picked != "NONE" ? picked : "";
 		if (onSave != null) onSave(newStrumLine);
-	}
-
-	override public function update(elapsed:Float) {
-		var scrollSpeed:Float = 0.0;
-		if (usesChartScrollSpeed.hovered || scrollSpeedStepper.hovered || scrollSpeedStepper.focused)
-			scrollSpeed = scrollSpeedStepper.value;
-
-		previewStrumLine.visible = visibleCheckbox.checked;
-
-		var xOffset:Float = StrumLine.calculateStartingXPosFromInitialWidth(hudXStepper.value, hudScaleStepper.value, hudSpacingStepper.value, Std.int(keyCountStepper.value));
-		previewStrumLine.updatePos(xOffset, hudYStepper.value, hudScaleStepper.value, hudSpacingStepper.value, Std.int(keyCountStepper.value), scrollSpeed);
-
-		super.update(elapsed);
-	}
-
-	override public function destroy() {
-		super.destroy();
-		FlxTween.cancelTweensOf(strumLineCam);
-		FlxG.cameras.remove(strumLineCam);
-	}
-
-	public override function onResize(width:Int, height:Int) {
-		super.onResize(width, height);
-		if (!UIState.resolutionAware) return;
-
-		if ((width < FlxG.initialWidth || height < FlxG.initialHeight) && !Options.bypassEditorsResize) {
-			width = FlxG.initialWidth; height = FlxG.initialHeight;
-		}
-
-		updateStrumlineCam(width, height);
-	}
-
-	private function updateStrumlineCam(windowWidth:Int, windowHeight:Int) {
-		strumLineCam.width = FlxG.initialWidth + (borderGap*2);
-		strumLineCam.height = FlxG.initialHeight + (borderGap*2);
-		strumLineCam.x = (windowWidth/2) - (strumLineCam.width/2);
-		strumLineCam.y = (windowHeight/2) - (strumLineCam.height/2);
-		strumLineCam.scroll.x = -borderGap;
-		strumLineCam.scroll.y = -borderGap;
 	}
 }
 

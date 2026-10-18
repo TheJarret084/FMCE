@@ -20,8 +20,10 @@ import haxe.io.Path;
 
 /**
  * Editor de sprites (solo escritorio), con la interfaz de los editores de Codename.
- * Edita el `config.json` de cada carpeta de `sprites/`: tipo, escala y bilinear del sprite, y por animacion
- * el nombre, el tag del atlas, velocidad, escala, loop y pivote (`offset`). El atlas nunca se modifica y lo que
+ * Edita el `config.json` de cada carpeta de `sprites/`: tipo y bilinear del sprite, y por animacion
+ * el nombre, el tag del atlas, indices, velocidad, escala, loop y pivote (`offset`). Como en el editor de personajes de
+ * Codename, el pivote de la animacion va clavado en la cruz del lienzo (igual que lo coloca el juego) y se pueden
+ * dejar animaciones como ghost para alinear las demas contra ellas. El atlas nunca se modifica y lo que
  * el editor no conoce de `config.json` (`index`, `num`...) se conserva tal cual.
  */
 class SpriteEditorState extends UIState
@@ -29,12 +31,15 @@ class SpriteEditorState extends UIState
 	static inline var TOP:Int = 25;
 	static inline var LEFT_W:Int = 230;
 	static inline var RIGHT_W:Int = 300;
-	static final TYPES:Array<String> = ["item", "character", "stage", "icon", "atlas"];
+	static final TYPES:Array<String> = ["item", "character", "stage", "icon", "atlas", "video"];
 
 	var levelName:String;
 	var levelDir:String;
 
 	var uiCamera:FlxCamera;
+	var mouseP:FlxPoint = FlxPoint.get();
+	var wasPressed:Bool = false;
+	var debugText:UIText;
 	var topMenu:Array<UIContextMenuOption>;
 	var topMenuSpr:UITopMenu;
 
@@ -55,6 +60,7 @@ class SpriteEditorState extends UIState
 	var loopCheck:UICheckbox;
 	var spdFpsCheck:UICheckbox;
 	var indicesBox:UITextBox;
+	var ghostCheck:UICheckbox;
 	var animWidgets:Array<UISprite> = [];
 
 	var cfgPath:String = "";
@@ -72,6 +78,13 @@ class SpriteEditorState extends UIState
 	var crossH:FlxSprite;
 	var crossV:FlxSprite;
 	var frameBars:Array<FlxSprite> = [];
+
+	/** Nombres de las animaciones que se dibujan como ghost (solo del editor, no se guardan). */
+	var ghostNames:Array<String> = [];
+	var ghostSprites:Array<FlxSprite> = [];
+	var ghostEntries:Array<Dynamic> = [];
+	var dragStart:FlxPoint = FlxPoint.get();
+	var dragPivot:FlxPoint = FlxPoint.get();
 
 	public function new(levelName:String)
 	{
@@ -125,6 +138,7 @@ class SpriteEditorState extends UIState
 		buildRight();
 
 		infoText = ui(new UIText(LEFT_W + 12, FlxG.height - 44, canvasW - 24, "", 12));
+		debugText = ui(new UIText(LEFT_W + 12, TOP + 6, canvasW - 24, "", 12));
 		infoText.alpha = 0.8;
 
 		sprites = SpriteBuilder.listSprites(levelDir);
@@ -185,7 +199,10 @@ class SpriteEditorState extends UIState
 				childs: [
 					{label: "Acercar", onSelect: function(_) setZoom(zoom + 0.5)},
 					{label: "Alejar", onSelect: function(_) setZoom(zoom - 0.5)},
-					{label: "Zoom 100%", onSelect: function(_) setZoom(1)}
+					{label: "Zoom 100%", onSelect: function(_) setZoom(1)},
+					null,
+					{label: "Ghost de la animacion actual", keybind: [G], onSelect: function(_) setGhost(entry(), !isGhost(entry()))},
+					{label: "Quitar todos los ghosts", onSelect: function(_) clearGhosts()}
 				]
 			}
 		];
@@ -229,7 +246,7 @@ class SpriteEditorState extends UIState
 		};
 
 		var y1 = y0 + 160;
-		ui(new UIWindow(x0, y1, RIGHT_W, 440, "Animacion"));
+		ui(new UIWindow(x0, y1, RIGHT_W, 470, "Animacion"));
 		label(x0 + 20, y1 + 38, "Nombre en el juego");
 		nameBox = ui(new UITextBox(x0 + 20, y1 + 58, "", RIGHT_W - 40));
 		nameBox.onChange = renameAnim;
@@ -269,7 +286,10 @@ class SpriteEditorState extends UIState
 			notify("Los indices se ven al guardar.");
 		};
 
-		animWidgets = [nameBox, tagBox, speedStep, animScaleStep, pivotXStep, pivotYStep, loopCheck, spdFpsCheck, indicesBox, play];
+		ghostCheck = ui(new UICheckbox(x0 + 20, y1 + 430, "Ghost (alinear las demas contra esta)", false));
+		ghostCheck.onChecked = function(b:Bool) setGhost(entry(), b);
+
+		animWidgets = [nameBox, tagBox, speedStep, animScaleStep, pivotXStep, pivotYStep, loopCheck, spdFpsCheck, indicesBox, ghostCheck, play];
 	}
 
 	// ───────────────────────── listas ─────────────────────────
@@ -297,6 +317,7 @@ class SpriteEditorState extends UIState
 			var b:EditorListButton = null;
 			b = new EditorListButton(0, 0, Std.string(Reflect.field(e, "name")), function() selectAnim(entries.indexOf(b.item)), LEFT_W - 30, 28);
 			b.item = e;
+			b.ghost = isGhost(e);
 			animList.add(b);
 		}
 		markAnims();
@@ -305,7 +326,11 @@ class SpriteEditorState extends UIState
 	function markAnims():Void
 	{
 		for (b in animList.buttons.members)
-			if (b != null) b.mark(entry() == b.item);
+			if (b != null)
+			{
+				b.ghost = isGhost(b.item);
+				b.mark(entry() == b.item);
+			}
 	}
 
 	/** Si se arrastro un boton para cambiar el orden, el orden de los datos lo sigue. */
@@ -336,6 +361,7 @@ class SpriteEditorState extends UIState
 	{
 		if (sprites.length == 0) return;
 		spriteIdx = (index + sprites.length) % sprites.length;
+		ghostNames = [];
 		markSprites();
 		loadCurrent(0);
 	}
@@ -384,6 +410,7 @@ class SpriteEditorState extends UIState
 		syncSpriteWidgets();
 		refreshAnimList();
 		syncAnimWidgets();
+		rebuildGhosts();
 		playCurrent();
 	}
 
@@ -459,6 +486,7 @@ class SpriteEditorState extends UIState
 		pivotXStep.value = JsonFile.num(Reflect.field(offset, "x"), 0);
 		pivotYStep.value = JsonFile.num(Reflect.field(offset, "y"), 0);
 		loopCheck.checked = Reflect.field(e, "loop") != false;
+		ghostCheck.checked = isGhost(e);
 	}
 
 	function touch():Void
@@ -516,6 +544,8 @@ class SpriteEditorState extends UIState
 		}
 		// `anim` es el tag del atlas: solo cambia `name` (el nombre que usa el juego)
 		if (Reflect.field(e, "anim") == null) Reflect.setField(e, "anim", Reflect.field(e, "name"));
+		var ghostAt = ghostNames.indexOf(Std.string(Reflect.field(e, "name")));
+		if (ghostAt >= 0) ghostNames[ghostAt] = name;
 		Reflect.setField(e, "name", name);
 		touch();
 		refreshAnimList();
@@ -524,11 +554,13 @@ class SpriteEditorState extends UIState
 	function deleteAnim():Void
 	{
 		if (entries.length == 0) return;
-		entries.splice(animIdx, 1);
+		var removed = entries.splice(animIdx, 1)[0];
+		ghostNames.remove(Std.string(Reflect.field(removed, "name")));
 		animIdx = Std.int(Math.max(0, Math.min(entries.length - 1, animIdx)));
 		touch();
 		refreshAnimList();
 		syncAnimWidgets();
+		rebuildGhosts();
 		playCurrent();
 	}
 
@@ -560,7 +592,7 @@ class SpriteEditorState extends UIState
 		{
 			var spd = Math.max(0.05, JsonFile.num(Reflect.field(e, "spd"), 24));
 			cur.frameRate = Reflect.field(e, "spd_fps") == false ? spd * funky.core.Conductor.bpm / 60 : spd;
-			cur.looped = Reflect.field(e, "loop") != false;
+			@:privateAccess cur.looped = Reflect.field(e, "loop") != false; // (looped es de solo lectura en el flixel del fork)
 		}
 		place();
 	}
@@ -571,7 +603,78 @@ class SpriteEditorState extends UIState
 		place();
 	}
 
-	/** Centra el frame en el lienzo y mueve la cruz al pivote de la animacion. */
+	inline function pivotXOf(e:Dynamic):Float
+		return JsonFile.num(Reflect.field(Reflect.field(e, "offset"), "x"), 0);
+
+	inline function pivotYOf(e:Dynamic):Float
+		return JsonFile.num(Reflect.field(Reflect.field(e, "offset"), "y"), 0);
+
+	inline function scaleOf(e:Dynamic):Float
+		return zoom * Math.max(0.01, JsonFile.num(Reflect.field(e, "scale"), 1));
+
+	// ───────────────────────── ghosts ─────────────────────────
+
+	function isGhost(e:Dynamic):Bool
+		return e != null && ghostNames.contains(Std.string(Reflect.field(e, "name")));
+
+	function setGhost(e:Dynamic, on:Bool):Void
+	{
+		if (e == null) return;
+		if (atlas)
+		{
+			notify("Los ghosts no estan disponibles en atlas de Animate.");
+			ghostCheck.checked = false;
+			return;
+		}
+		var name = Std.string(Reflect.field(e, "name"));
+		ghostNames.remove(name);
+		if (on) ghostNames.push(name);
+		ghostCheck.checked = on;
+		rebuildGhosts();
+		markAnims();
+	}
+
+	function clearGhosts():Void
+	{
+		ghostNames = [];
+		ghostCheck.checked = false;
+		rebuildGhosts();
+		markAnims();
+	}
+
+	/** Un FlxSprite por ghost con el ULTIMO frame de su animacion (como los ghosts del editor de personajes de Codename). */
+	function rebuildGhosts():Void
+	{
+		for (g in ghostSprites)
+		{
+			remove(g, true);
+			g.destroy();
+		}
+		ghostSprites = [];
+		ghostEntries = [];
+		if (sprite == null || !sprite.loaded || atlas || sprite.frames == null) return;
+
+		var at = members.indexOf(sprite);
+		for (name in ghostNames)
+		{
+			var e = Lambda.find(entries, o -> Std.string(Reflect.field(o, "name")) == name);
+			var data = sprite.animation.getByName(name);
+			if (e == null || data == null || data.frames.length == 0) continue;
+			var g = new FlxSprite();
+			g.frames = sprite.frames;
+			g.frame = sprite.frames.frames[data.frames[data.frames.length - 1]];
+			g.scrollFactor.set();
+			g.alpha = 0.4;
+			g.color = 0xFFAEAEAE;
+			g.antialiasing = sprite.antialiasing;
+			insert(at, g);
+			at++;
+			ghostSprites.push(g);
+			ghostEntries.push(e);
+		}
+	}
+
+	/** El pivote de la animacion va clavado en la cruz (centro del lienzo), igual que `placePivot` en el juego. */
 	function place():Void
 	{
 		var e = entry();
@@ -579,12 +682,27 @@ class SpriteEditorState extends UIState
 		{
 			crossH.visible = crossV.visible = false;
 			for (b in frameBars) b.visible = false;
+			for (g in ghostSprites) g.visible = false;
 			return;
 		}
-		var s = zoom * Math.max(0.01, JsonFile.num(Reflect.field(e, "scale"), 1));
+		var ax = centerX();
+		var ay = centerY();
+		var s = scaleOf(e);
 		sprite.scale.set(s, s);
 		sprite.updateHitbox();
-		sprite.setPosition(centerX() - sprite.width / 2, centerY() - sprite.height / 2);
+		sprite.setPosition(ax - pivotXOf(e) * s, ay - pivotYOf(e) * s);
+
+		for (i in 0...ghostSprites.length)
+		{
+			var g = ghostSprites[i];
+			var ge = ghostEntries[i];
+			var gs = scaleOf(ge);
+			g.visible = true;
+			g.antialiasing = sprite.antialiasing;
+			g.scale.set(gs, gs);
+			g.updateHitbox();
+			g.setPosition(ax - pivotXOf(ge) * gs, ay - pivotYOf(ge) * gs);
+		}
 
 		var rects = [[sprite.x, sprite.y, sprite.width, 1.0], [sprite.x, sprite.y + sprite.height - 1, sprite.width, 1.0], [sprite.x, sprite.y, 1.0, sprite.height], [sprite.x + sprite.width - 1, sprite.y, 1.0, sprite.height]];
 		for (i in 0...4)
@@ -595,12 +713,9 @@ class SpriteEditorState extends UIState
 			frameBars[i].setPosition(rects[i][0], rects[i][1]);
 		}
 
-		var offset = Reflect.field(e, "offset");
-		var px = sprite.x + JsonFile.num(Reflect.field(offset, "x"), 0) * s;
-		var py = sprite.y + JsonFile.num(Reflect.field(offset, "y"), 0) * s;
 		crossH.visible = crossV.visible = true;
-		crossH.setPosition(px - 13, py - 1);
-		crossV.setPosition(px - 1, py - 13);
+		crossH.setPosition(ax - 13, ay - 1);
+		crossV.setPosition(ax - 1, ay - 13);
 	}
 
 	// ───────────────────────── guardar / salir ─────────────────────────
@@ -625,18 +740,18 @@ class SpriteEditorState extends UIState
 	{
 		if (!dirty)
 		{
-			FlxG.switchState(() -> new AdvancedToolsState(levelName));
+			FlxG.switchState(new AdvancedToolsState(levelName));
 			return;
 		}
 		openSubState(new UIWarningSubstate("Cambios sin guardar", "Hay cambios en el config.json de este sprite que todavia no guardaste.", [
 			{label: "Cancelar", color: 0x969533, onClick: function(_) {}},
 			{label: "Salir sin guardar", color: 0x969533, onClick: function(_) {
 				SaveWarning.showWarning = false;
-				FlxG.switchState(() -> new AdvancedToolsState(levelName));
+				FlxG.switchState(new AdvancedToolsState(levelName));
 			}},
 			{label: "Guardar y salir", color: 0x969533, onClick: function(_) {
 				save();
-				FlxG.switchState(() -> new AdvancedToolsState(levelName));
+				FlxG.switchState(new AdvancedToolsState(levelName));
 			}}
 		], false));
 	}
@@ -651,17 +766,28 @@ class SpriteEditorState extends UIState
 		var typing = currentFocus != null;
 		if (FlxG.keys.justPressed.ANY && !typing && curContextMenu == null && !topMenuSpr.anyMenuOpened) UIUtil.processShortcuts(topMenu);
 
-		var mx = FlxG.mouse.screenX;
-		var my = FlxG.mouse.screenY;
+		// Mismo origen de coordenadas que usa el hover de todos los botones (camara de la UI).
+		FlxG.mouse.getScreenPosition(uiCamera, mouseP);
+		var mx = mouseP.x;
+		var my = mouseP.y;
+		var pressedNow = FlxG.mouse.pressed;
+		var pressEdge = FlxG.mouse.justPressed || (pressedNow && !wasPressed);
+		wasPressed = pressedNow;
 		var inCanvas = mx >= LEFT_W && mx <= FlxG.width - RIGHT_W && my >= TOP && !topMenuSpr.anyMenuOpened && curContextMenu == null;
 
 		if (inCanvas && FlxG.mouse.wheel != 0) setZoom(zoom + FlxG.mouse.wheel * 0.25 * Math.max(1, zoom * 0.5));
-		if (FlxG.mouse.justPressed && inCanvas) dragging = true;
+		if (pressEdge && inCanvas && entry() != null)
+		{
+			dragging = true;
+			dragStart.set(mx, my);
+			dragPivot.set(pivotXOf(entry()), pivotYOf(entry()));
+		}
 		if (!FlxG.mouse.pressed) dragging = false;
 		if (dragging && entry() != null && sprite != null && sprite.loaded)
 		{
-			var s = Math.max(0.0001, Math.abs(sprite.scale.x));
-			setPivot(Math.round((mx - sprite.x) / s * 10) / 10, Math.round((my - sprite.y) / s * 10) / 10);
+			// arrastrar mueve el sprite (el pivote cambia al reves, porque la cruz queda quieta)
+			var s = Math.max(0.0001, scaleOf(entry()));
+			setPivot(Math.round((dragPivot.x - (mx - dragStart.x) / s) * 10) / 10, Math.round((dragPivot.y - (my - dragStart.y) / s) * 10) / 10);
 			syncPivotSteppers();
 		}
 
@@ -672,11 +798,15 @@ class SpriteEditorState extends UIState
 			var dy = (FlxG.keys.justPressed.DOWN ? 1 : 0) - (FlxG.keys.justPressed.UP ? 1 : 0);
 			if (dx != 0 || dy != 0)
 			{
-				var offset = JsonFile.obj(entry(), "offset");
-				setPivot(JsonFile.num(Reflect.field(offset, "x"), 0) + dx * step, JsonFile.num(Reflect.field(offset, "y"), 0) + dy * step);
+				// la flecha mueve el sprite en esa direccion
+				setPivot(pivotXOf(entry()) - dx * step, pivotYOf(entry()) - dy * step);
 				syncPivotSteppers();
 			}
 		}
+
+		if (debugText != null)
+			debugText.text = 'DEBUG mouse screen=${FlxG.mouse.screenX},${FlxG.mouse.screenY} ui=${Std.int(mx)},${Std.int(my)} juego=${FlxG.width}x${FlxG.height} camUI=${uiCamera.width}x${uiCamera.height}\n'
+				+ 'lienzo=${LEFT_W}..${FlxG.width - RIGHT_W} dentro=$inCanvas presionado=$pressedNow borde=$pressEdge menu=${topMenuSpr.anyMenuOpened} ctx=${curContextMenu != null} anim=${entry() != null}';
 
 		if (sprite != null && sprite.loaded) place();
 		refreshInfo();
@@ -693,7 +823,7 @@ class SpriteEditorState extends UIState
 	{
 		var frame = sprite != null && sprite.loaded ? Std.int(sprite.frameWidth) + " x " + Std.int(sprite.frameHeight) : "-";
 		infoText.text = "Zoom " + Std.int(zoom * 100) + "%   Frame " + frame + (dirty ? "   * sin guardar" : "") + (sprite != null && !sprite.loaded ? "   (el sprite no cargo: revisa sprite.png y sprite.json)" : "")
-			+ "\nArrastra en el lienzo o usa las flechas (SHIFT x10) para mover el pivote. Rueda: zoom. Q/E sprite, A/D animacion.";
+			+ "\nArrastra el sprite o usa las flechas (SHIFT x10) para mover el pivote (la cruz). G: ghost de esta animacion. Rueda: zoom. Q/E sprite, A/D animacion.";
 	}
 
 	override public function destroy():Void

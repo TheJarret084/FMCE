@@ -70,14 +70,14 @@ class MobileControls extends FlxGroup
 		{
 			// Pausa: vale al tocar o al soltar encima del boton (un toque muy rapido a veces solo
 			// deja el "soltar"), y siempre se descarta para las lanes.
-			if ((touch.justPressed || touch.justReleased) && inPause(touch.viewX, touch.viewY)) pauseRequested = true;
-			if (inPause(touch.viewX, touch.viewY)) continue;
-			if (!touch.pressed || touch.viewY < hitbox.zoneTop) continue;
-			held[hitbox.laneAt(touch.viewX)] = true;
+			if ((touch.justPressed || touch.justReleased) && inPause(touch.screenX, touch.screenY)) pauseRequested = true;
+			if (inPause(touch.screenX, touch.screenY)) continue;
+			if (!touch.pressed || touch.screenY < hitbox.zoneTop) continue;
+			held[hitbox.laneAt(touch.screenX)] = true;
 		}
 		#end
 		// Algunos Android mandan el toque tambien como raton: se acepta igual.
-		if (FlxG.mouse.justPressed && inPause(FlxG.mouse.viewX, FlxG.mouse.viewY)) pauseRequested = true;
+		if (FlxG.mouse.justPressed && inPause(FlxG.mouse.screenX, FlxG.mouse.screenY)) pauseRequested = true;
 		for (lane in 0...laneCount)
 		{
 			pressedNow[lane] = held[lane] && !previous[lane];

@@ -9,6 +9,6 @@ class CharterSelection extends FlxState {
 	public override function create() {
 		super.create();
 		var level = Chart.levelName;
-		FlxG.switchState(() -> new advanced.AdvancedToolsState(level));
+		FlxG.switchState(new advanced.AdvancedToolsState(level));
 	}
 }

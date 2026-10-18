@@ -17,7 +17,7 @@ where haxelib >nul 2>nul || (echo build.bat: haxe/haxelib no estan en PATH ^(Hax
 echo =^> Dependencias ^(building\libs.txt^)
 for /f "usebackq eol=# tokens=1,2,3,4" %%a in ("building\libs.txt") do (
 	if /i "%%b"=="git" (
-		haxelib path %%a >nul 2>nul || (echo    instalando %%a ^(git^) & haxelib git %%a %%c %%d --always >nul || exit /b 1)
+		haxelib list %%a 2>nul | findstr /c:"git:%%c" >nul || (echo    instalando %%a ^(git^) & haxelib git %%a %%c %%d --always >nul || exit /b 1)
 	) else if "%%b"=="" (
 		haxelib path %%a >nul 2>nul || (echo    instalando %%a & haxelib install %%a --always >nul || exit /b 1)
 	) else (

@@ -112,7 +112,7 @@ class NavPad extends FlxGroup
 	{
 		#if FLX_TOUCH
 		for (touch in FlxG.touches.list)
-			if (touch.justPressed && covers(touch.viewX, touch.viewY)) return true;
+			if (touch.justPressed && covers(touch.screenX, touch.screenY)) return true;
 		#end
 		return false;
 	}

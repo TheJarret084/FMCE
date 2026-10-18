@@ -164,11 +164,11 @@ class MainMenuState extends FlxState
 		for (touch in FlxG.touches.list)
 		{
 			if (!touch.justPressed) continue;
-			if (navPad != null && navPad.covers(touch.viewX, touch.viewY)) continue;
+			if (navPad != null && navPad.covers(touch.screenX, touch.screenY)) continue;
 			for (spr in menuItems)
 			{
 				// Margen generoso (dedo gordo) y se ignora el offset: los botones son scrollFactor 0, x/y ya son de pantalla.
-				if (touch.viewX >= spr.x - 24 && touch.viewX <= spr.x + spr.width + 24 && touch.viewY >= spr.y - 16 && touch.viewY <= spr.y + spr.height + 16)
+				if (touch.screenX >= spr.x - 24 && touch.screenX <= spr.x + spr.width + 24 && touch.screenY >= spr.y - 16 && touch.screenY <= spr.y + spr.height + 16)
 					return spr.ID;
 			}
 		}

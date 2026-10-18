@@ -33,7 +33,7 @@ echo "==> Dependencias (building/libs.txt)"
 while read -r name ver url ref; do
 	case "$name" in ""|\#*) continue;; esac
 	if [ "$ver" = "git" ]; then
-		haxelib path "$name" >/dev/null 2>&1 </dev/null && continue
+		haxelib list "$name" 2>/dev/null </dev/null | grep -q "\\[git:$url" && continue
 		echo "   instalando $name (git)"
 		haxelib git "$name" "$url" ${ref:+"$ref"} --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name (git)" >&2; exit 1; }
 	elif [ -n "$ver" ]; then

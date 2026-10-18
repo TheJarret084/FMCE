@@ -87,6 +87,10 @@ class Charter extends UIState {
 	public var noteTypes:Array<String> = [];
 	public var noteTypeText:UIText;
 
+	/** TEMPORAL: muestra el estado del input del grid (para encontrar por que no se mueven/ponen/borran notas). Ponerlo en false para quitarlo. */
+	static inline var DEBUG_INPUT:Bool = true;
+	public var inputDebugText:UIText;
+
 	public var strumLines:CharterStrumLineGroup = new CharterStrumLineGroup();
 	public var notesGroup:CharterNoteGroup = new CharterNoteGroup();
 
@@ -451,6 +455,10 @@ class Charter extends UIState {
 		noteTypeText = new UIText(0, 0, 0, "(0) " + translate("noteTypes.default"));
 		noteTypeText.cameras = [uiCamera];
 
+		inputDebugText = new UIText(8, FlxG.height - 78, 0, "", 13);
+		inputDebugText.cameras = [uiCamera];
+		inputDebugText.active = true;
+
 		scrollBar = new UIScrollBar(FlxG.width - 20, topMenuSpr.bHeight, 1000, 0, 100);
 		scrollBar.cameras = [uiCamera];
 		scrollBar.onChange = function(v) {
@@ -527,6 +535,7 @@ class Charter extends UIState {
 		// add the top menu last OUT of the ui group so that it stays on top
 		add(topMenuSpr);
 		add(noteTypeText);
+		if (DEBUG_INPUT) add(inputDebugText);
 		// add the ui group
 		add(uiGroup);
 
@@ -1099,6 +1108,14 @@ class Charter extends UIState {
 		}
 		addEventSpr.sprAlpha = lerp(addEventSpr.sprAlpha, !addEventSpr.incorporeal ? 0.75 : 0, 0.25);
 		noteHoverer.showHoverer = Charter.instance.gridBackdropDummy.hovered;
+
+		if (DEBUG_INPUT) {
+			var hoveredNotes = 0;
+			for (n in notesGroup.members) if (n != null && (n.hovered || n.sustainDraggable)) hoveredNotes++;
+			inputDebugText.text = 'accion=$gridActionType  grid.hovered=${gridBackdropDummy.hovered}  grid.hoveredByChild=${gridBackdropDummy.hoveredByChild}\n'
+				+ 'mouse mundo=${Std.int(mousePos.x)},${Std.int(mousePos.y)}  presionado=${FlxG.mouse.pressed}  notas bajo mouse=$hoveredNotes\n'
+				+ 'seleccion=${selection.length}  notas=${notesGroup.members.length}  teclas=${strumLines.totalKeyCount}  endStep=${Std.int(__endStep)}  subState=${subState != null}';
+		}
 	}
 
 	public function quantStep(step:Float):Float {
@@ -1313,7 +1330,6 @@ class Charter extends UIState {
 				shader.data.time.value = [__timer];
 		}
 
-		updateNoteLogic(elapsed);
 		updateAutoSaving(elapsed);
 
 		for (bs in __bookmarkObjects)
@@ -1371,6 +1387,10 @@ class Charter extends UIState {
 		noteTypeText.text = '($noteType) ' + (noteTypes[noteType-1] == null ? translate("noteTypes.default") : noteTypes[noteType-1]);
 
 		super.update(elapsed);
+
+		// Despues de super.update: ahi se resuelve que sprite esta bajo el mouse. Antes, la logica leia el hover del frame
+		// anterior (con un toque en pantalla el puntero salta y ese hover es de otro lugar: solo sonaba el click).
+		updateNoteLogic(elapsed);
 
 		scrollBar.size = (FlxG.height / 40 / charterCamera.zoom);
 		scrollBar.start = Conductor.curStepFloat - (scrollBar.size / 2);

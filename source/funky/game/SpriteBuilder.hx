@@ -97,6 +97,8 @@ class SpriteBuilder
 		if (levelDir == null || name == null || name == "") return false;
 		if (isAtlas(levelDir, name)) return true;
 		var dir = spriteDir(levelDir, name);
+		// carpeta de video: un .mp4 + config.json con "type": "video" (o `meta.fmce.video` en sprite.json)
+		if (FunkinVideoSprite.readInfo(dir) != null) return true;
 		return FileSystem.exists(Path.join([dir, "sprite.png"]))
 			&& (FileSystem.exists(Path.join([dir, "sprite.json"])) || FileSystem.exists(Path.join([dir, "sprite.xml"])));
 		#else
@@ -117,7 +119,11 @@ class SpriteBuilder
 			for (entry in FileSystem.readDirectory(root))
 			{
 				if (!FileSystem.isDirectory(Path.join([root, entry])) || !exists(levelDir, entry)) continue;
-				if (type != null && (isAtlas(levelDir, entry) ? readAtlasConfig(levelDir, entry) : readConfig(levelDir, entry)).type != type) continue;
+				if (type != null)
+				{
+					var kind = videoCount(levelDir, entry) > 0 ? "video" : (isAtlas(levelDir, entry) ? readAtlasConfig(levelDir, entry) : readConfig(levelDir, entry)).type;
+					if (kind != type) continue;
+				}
 				out.push(entry);
 			}
 		}
@@ -138,7 +144,7 @@ class SpriteBuilder
 		return sprite;
 	}
 
-	/** Carpeta de video (`sprite.json` con `meta.fmce.video`): cuantos videos son, o 0 si no lo es. */
+	/** Carpeta de video (`config.json` con "type": "video" y un .mp4, o `sprite.json` con `meta.fmce.video`): cuantos videos son, o 0 si no lo es. */
 	public static function videoCount(levelDir:Null<String>, name:Null<String>):Int
 	{
 		if (levelDir == null || name == null || name == "") return 0;
@@ -310,7 +316,7 @@ class SpriteBuilder
 		if (!FileSystem.exists(path)) return null;
 		try
 		{
-			return Json.parse(File.getContent(path));
+			return funky.core.JsonLoose.parse(File.getContent(path));
 		}
 		catch (e:Dynamic)
 		{

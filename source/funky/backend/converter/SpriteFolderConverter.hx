@@ -66,7 +66,7 @@ class SpriteFolderConverter
 			var configPath = Path.join([dir, "config.json"]);
 			if (FileSystem.exists(configPath))
 			{
-				try config = Json.parse(File.getContent(configPath))
+				try config = funky.core.JsonLoose.parse(File.getContent(configPath))
 				catch (e:Dynamic) result.warnings.push("config.json ilegible: " + Std.string(e));
 			}
 

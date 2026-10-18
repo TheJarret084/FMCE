@@ -300,6 +300,12 @@ class PlayState extends MusicBeatState
 		for (line in allLines())
 			line.finishQueue();
 
+		// El nivel dura lo que dura la musica, no lo que dura el chart: el final sale del audio (sin musica, del ultimo
+		// note + cola). Asi la escena, los eventos y los videos siguen hasta que la cancion termina de verdad.
+		var musicSound = song.musicPath != null ? LevelLoader.loadSound(song.musicPath) : null;
+		if (musicSound != null && musicSound.length > 0)
+			song.endTime = musicSound.length;
+
 		hud = new PlayHUD(
 			song.name,
 			song.endTime,
@@ -317,7 +323,7 @@ class PlayState extends MusicBeatState
 
 		if (song.musicPath != null)
 		{
-			var sound = LevelLoader.loadSound(song.musicPath);
+			var sound = musicSound;
 
 			if (sound != null)
 			{

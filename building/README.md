@@ -23,6 +23,13 @@ Salida en `building/artifacts/`: `FMCE-<OS>-x64-<target>-<tipo>.zip` o `FMCE-And
 Sin `building/android.keystore` el release sale firmado en debug (instalable). Para uno real:
 `keytool -genkey -v -keystore building/android.keystore -alias fmce -keyalg RSA -keysize 2048 -validity 10000`.
 
+## Flixel / OpenFL (forks de Codename)
+
+`libs.txt` instala `cne-flixel` (Flixel **5.3.x**), `cne-flixel-addons`, `cne-openfl` y `cne-flixel-animate` (rama `old`), igual que Codename Engine:
+la UI de los editores (charter, hover, seleccion) esta portada de ahi. Si ya tenias flixel/openfl de haxelib, los scripts los reemplazan por el fork
+(haxelib los marca como `git`; vuelve al normal con `haxelib install flixel`). Como ese Flixel es mas viejo que el 6.x:
+no hay `FlxG.switchState(X.new)` (usa `new X()`), el mouse/touch usa `screenX/screenY` (no `viewX/viewY`) y `FlxRuntimeShader` va vendido en `source/flixel/addons/display/`.
+
 ## Video (hxvlc)
 
 `FunkinVideoSprite` usa hxvlc, que solo existe en C++: Windows/Linux lo traen, HashLink usa un stub.

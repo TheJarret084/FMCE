@@ -291,11 +291,11 @@ class FreeplayState extends FlxState
 		for (touch in FlxG.touches.list)
 		{
 			if (!touch.justPressed) continue;
-			if (navPad != null && navPad.covers(touch.viewX, touch.viewY)) continue;
+			if (navPad != null && navPad.covers(touch.screenX, touch.screenY)) continue;
 			for (index in 0...rows.length)
 			{
 				var row = rows[index];
-				if (touch.viewX >= row.x - 14 && touch.viewX <= row.x + row.width + 14 && touch.viewY >= row.y - 8 && touch.viewY <= row.y + row.height + 8)
+				if (touch.screenX >= row.x - 14 && touch.screenX <= row.x + row.width + 14 && touch.screenY >= row.y - 8 && touch.screenY <= row.y + row.height + 8)
 					return index;
 			}
 		}

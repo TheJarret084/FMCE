@@ -45,6 +45,9 @@ class SceneEditorState extends UIState
 	var objects:Array<Dynamic> = [];
 
 	var uiCamera:FlxCamera;
+	var mouseP:FlxPoint = FlxPoint.get();
+	var wasPressed:Bool = false;
+	var debugText:UIText;
 	var camScene:FlxCamera;
 	var viewX:Int;
 	var viewY:Int;
@@ -74,7 +77,15 @@ class SceneEditorState extends UIState
 	var objWidgets:Array<UISprite> = [];
 	var lastWheelColor:Int = 0xFFFFFF;
 
-	var camDrop:UIDropDown;
+	var camDel:UIButton;
+	var camList:UIButtonList<EditorListButton>;
+	var camListCount:Int = -1;
+	var tabObjects:UIButton;
+	var tabCams:UIButton;
+	/** 0 = Objetos, 1 = Camaras. */
+	var mode:Int = 0;
+	var objPanel:Array<FlxBasic> = [];
+	var camPanel:Array<FlxBasic> = [];
 	var camX:FieldStepper;
 	var camY:FieldStepper;
 	var camZoom:FieldStepper;
@@ -153,6 +164,7 @@ class SceneEditorState extends UIState
 		buildRight();
 
 		infoText = ui(new UIText(viewX, viewY + viewH + 10, viewW, "", 12));
+		debugText = ui(new UIText(viewX + 6, viewY + 4, viewW, "", 12));
 		infoText.alpha = 0.8;
 
 		spriteNames = SpriteBuilder.listSprites(levelDir);
@@ -218,16 +230,26 @@ class SceneEditorState extends UIState
 
 	function buildLeft():Void
 	{
-		objectList = new UIButtonList<EditorListButton>(0, TOP, LEFT_W, FlxG.height - TOP, "Objetos (la lista es el orden de capas)", FlxPoint.get(LEFT_W - 30, 28), null, 4);
+		tabObjects = ui(new UIButton(6, TOP + 4, "Objetos", function() setMode(0), 108, 26));
+		tabCams = ui(new UIButton(118, TOP + 4, "Camaras", function() setMode(1), 106, 26));
+
+		var listY = TOP + 36;
+		objectList = new UIButtonList<EditorListButton>(0, listY, LEFT_W, FlxG.height - listY, "Objetos (la lista es el orden de capas)", FlxPoint.get(LEFT_W - 30, 28), null, 4);
 		objectList.cameras = [uiCamera];
 		objectList.addButton.callback = addObject;
 		add(objectList);
+
+		camList = new UIButtonList<EditorListButton>(0, listY, LEFT_W, FlxG.height - listY, "Camaras (la 1 es el origen del mundo)", FlxPoint.get(LEFT_W - 30, 28), null, 4);
+		camList.cameras = [uiCamera];
+		camList.addButton.callback = addCamera;
+		add(camList);
 	}
 
 	function buildRight():Void
 	{
 		var x0 = FlxG.width - RIGHT_W;
 		var y0 = TOP;
+		var objStart = members.length;
 		ui(new UIWindow(x0, y0, RIGHT_W, 440, "Objeto"));
 
 		label(x0 + 20, y0 + 36, "Sprite");
@@ -275,21 +297,28 @@ class SceneEditorState extends UIState
 
 		objWidgets = [spriteDrop, posX, posY, scaleX, scaleY, scrollX, scrollY, opacityStep, strumStep, fixedCheck, visibleCheck, colorWheel, dup, del];
 
-		var y1 = y0 + 450;
-		ui(new UIWindow(x0, y1, RIGHT_W, FlxG.height - y1 - 6, "Camara"));
-		label(x0 + 20, y1 + 36, "Punto de camara (la vista usa el elegido)");
-		camDrop = ui(new UIDropDown(x0 + 20, y1 + 54, RIGHT_W - 40, 32, [""], 0));
-		camDrop.onChange = function(i:Int) setCamera(i);
-		label(x0 + 20, y1 + 92, "X");
-		camX = ui(new FieldStepper(x0 + 20, y1 + 110, 0, 10, 2, null, null, 120));
+		objPanel = members.slice(objStart);
+
+		// ── pestaña Camaras ──
+		var camStart = members.length;
+		ui(new UIWindow(x0, y0, RIGHT_W, 250, "Camara"));
+		label(x0 + 20, y0 + 38, "Posicion X");
+		camX = ui(new FieldStepper(x0 + 20, y0 + 58, 0, 10, 2, null, null, 120));
 		camX.onValue = function(v:Float) setCameraField("x", v);
-		label(x0 + 156, y1 + 92, "Y");
-		camY = ui(new FieldStepper(x0 + 156, y1 + 110, 0, 10, 2, null, null, 120));
+		label(x0 + 156, y0 + 38, "Posicion Y");
+		camY = ui(new FieldStepper(x0 + 156, y0 + 58, 0, 10, 2, null, null, 120));
 		camY.onValue = function(v:Float) setCameraField("y", v);
-		label(x0 + 20, y1 + 148, "Zoom");
-		camZoom = ui(new FieldStepper(x0 + 20, y1 + 166, 1, 0.05, 3, 0.05, 20, 120));
+		label(x0 + 20, y0 + 100, "Zoom");
+		camZoom = ui(new FieldStepper(x0 + 20, y0 + 120, 1, 0.05, 3, 0.05, 20, 120));
 		camZoom.onValue = function(v:Float) setCameraField("scale", v);
-		refreshCameraWidgets();
+		camDel = ui(new UIButton(x0 + 156, y0 + 118, "Borrar camara", deleteCamera, 120, 28));
+		camDel.color = 0xFFFF8080;
+		var camHelp = label(x0 + 20, y0 + 170, "En la vista: arrastra para mover la camara,\nrueda para el zoom. Flechas: mover (SHIFT x10,\nCTRL fino). Solo se borra la ultima camara.");
+		camHelp.alpha = 0.8;
+		camPanel = members.slice(camStart);
+
+		refreshCameraWidgets(true);
+		setMode(0);
 	}
 
 	// ───────────────────────── datos ─────────────────────────
@@ -358,17 +387,86 @@ class SceneEditorState extends UIState
 		touch();
 	}
 
-	function refreshCameraWidgets():Void
+	function panCamera(dx:Float, dy:Float):Void
 	{
-		var names = [for (i in 0...camCount()) "Camara " + (i + 1) + (i == 0 ? " (origen del mundo)" : "")];
-		camDrop.items = [for (i => n in names) {label: n, value: i}];
-		camDrop.options = names;
-		camDrop.index = camIdx;
-		camDrop.label.text = names[camIdx];
+		var c = camObject();
+		var p = Reflect.field(c, "position");
+		Reflect.setField(p, "x", JsonFile.round(JsonFile.num(Reflect.field(p, "x"), 0) + dx));
+		Reflect.setField(p, "y", JsonFile.round(JsonFile.num(Reflect.field(p, "y"), 0) + dy));
+		touch();
+		refreshCameraWidgets();
+	}
+
+	function zoomCamera(delta:Float):Void
+	{
+		var c = camObject();
+		Reflect.setField(c, "scale", JsonFile.round(Math.max(0.05, JsonFile.num(Reflect.field(c, "scale"), 1) + delta)));
+		touch();
+		refreshCameraWidgets();
+	}
+
+	function addCamera():Void
+	{
+		camObject();
+		var c = camPoint(camIdx);
+		(scene.cameras : Array<Dynamic>).push({position: {x: c.x, y: c.y}, scale: c.scale});
+		camIdx = camCount() - 1;
+		touch();
+		refreshCameraWidgets(true);
+	}
+
+	function deleteCamera():Void
+	{
+		var n = camCount();
+		if (camIdx != n - 1 || camIdx == 0)
+		{
+			notify("Solo se puede borrar la ultima camara (la 1 es el origen del mundo): los eventos las usan por numero.");
+			return;
+		}
+		(scene.cameras : Array<Dynamic>).pop();
+		camIdx = n - 2;
+		touch();
+		refreshCameraWidgets(true);
+	}
+
+	/** Los widgets siguen a la camara elegida; la lista se rearma solo si cambio la cantidad (o se pide). */
+	function refreshCameraWidgets(rebuildList:Bool = false):Void
+	{
 		var c = camPoint(camIdx);
 		camX.value = c.x;
 		camY.value = c.y;
 		camZoom.value = c.scale;
+		if (rebuildList || camListCount != camCount())
+		{
+			for (b in camList.buttons.members.copy())
+				if (b != null) camList.remove(b);
+			for (i in 0...camCount())
+			{
+				var index = i;
+				var b = new EditorListButton(0, 0, "Camara " + (i + 1) + (i == 0 ? " (origen)" : ""), function() setCamera(index), LEFT_W - 30, 28);
+				b.item = i;
+				camList.add(b);
+			}
+			camListCount = camCount();
+		}
+		for (b in camList.buttons.members)
+			if (b != null) b.mark(b.item == camIdx);
+	}
+
+	/** Pestaña de arriba a la izquierda: Objetos o Camaras (lista, panel y herramientas del lienzo cambian juntos). */
+	function setMode(m:Int):Void
+	{
+		mode = m;
+		var objs = m == 0;
+		currentFocus = null;
+		dragging = false;
+		objectList.exists = objectList.visible = objs;
+		camList.exists = camList.visible = !objs;
+		for (o in objPanel) o.exists = objs;
+		for (o in camPanel) o.exists = !objs;
+		tabObjects.color = objs ? 0xFF8CC4FF : 0xFFFFFFFF;
+		tabCams.color = objs ? 0xFFFFFFFF : 0xFF8CC4FF;
+		if (!objs) for (b in selBars) b.visible = false;
 	}
 
 	// ───────────────────────── vista ─────────────────────────
@@ -776,7 +874,8 @@ class SceneEditorState extends UIState
 		objects = scene.objects;
 		dirty = false;
 		SaveWarning.showWarning = false;
-		setCamera(0);
+		camIdx = 0;
+		refreshCameraWidgets(true);
 		rebuild();
 		select(objects.length > 0 ? 0 : -1);
 		notify("Recargado desde el disco.");
@@ -786,18 +885,18 @@ class SceneEditorState extends UIState
 	{
 		if (!dirty)
 		{
-			FlxG.switchState(() -> new AdvancedToolsState(levelName));
+			FlxG.switchState(new AdvancedToolsState(levelName));
 			return;
 		}
 		openSubState(new UIWarningSubstate("Cambios sin guardar", "Hay cambios en scene.json que todavia no guardaste.", [
 			{label: "Cancelar", color: 0x969533, onClick: function(_) {}},
 			{label: "Salir sin guardar", color: 0x969533, onClick: function(_) {
 				SaveWarning.showWarning = false;
-				FlxG.switchState(() -> new AdvancedToolsState(levelName));
+				FlxG.switchState(new AdvancedToolsState(levelName));
 			}},
 			{label: "Guardar y salir", color: 0x969533, onClick: function(_) {
 				save();
-				FlxG.switchState(() -> new AdvancedToolsState(levelName));
+				FlxG.switchState(new AdvancedToolsState(levelName));
 			}}
 		], false));
 	}
@@ -815,24 +914,31 @@ class SceneEditorState extends UIState
 		var keys = FlxG.keys;
 		var shift = keys.pressed.SHIFT;
 		var ctrl = keys.pressed.CONTROL;
-		var mx = FlxG.mouse.screenX;
-		var my = FlxG.mouse.screenY;
+		// Mismo origen de coordenadas que usa el hover de todos los botones (camara de la UI).
+		FlxG.mouse.getScreenPosition(uiCamera, mouseP);
+		var mx = mouseP.x;
+		var my = mouseP.y;
+		// Un toque rapido puede traer press y release en el mismo frame: se detecta el borde a mano.
+		var pressedNow = FlxG.mouse.pressed;
+		var pressEdge = FlxG.mouse.justPressed || (pressedNow && !wasPressed);
+		var tapEdge = FlxG.mouse.justReleased && !wasPressed && !pressEdge;
+		wasPressed = pressedNow;
 		var lx = mx - viewX;
 		var ly = my - viewY;
 		var inView = lx >= 0 && lx <= viewW && ly >= 0 && ly <= viewH && !topMenuSpr.anyMenuOpened && curContextMenu == null;
 
 		// la vista: elegir, arrastrar y escalar con la rueda
-		if (FlxG.mouse.justPressed && inView)
+		if (mode == 0 && (pressEdge || tapEdge) && inView)
 		{
 			var hit = pick(lx, ly);
 			if (hit >= 0)
 			{
 				select(hit);
-				dragging = true;
+				dragging = pressEdge;
 			}
 		}
 		if (!FlxG.mouse.pressed) dragging = false;
-		if (dragging && sel >= 0)
+		if (mode == 0 && dragging && sel >= 0)
 		{
 			var dx = mx - lastMX;
 			var dy = my - lastMY;
@@ -846,13 +952,30 @@ class SceneEditorState extends UIState
 				}
 			}
 		}
+		// pestaña Camaras: arrastrar mueve la camara elegida, la rueda cambia el zoom, las flechas la mueven
+		if (mode == 1)
+		{
+			if (pressEdge && inView) dragging = true;
+			if (!FlxG.mouse.pressed) dragging = false;
+			var camPpu = Stage.CAM_PRESET * viewW / (Stage.VIEW_WORLD_WIDTH * Math.max(0.001, camPoint(camIdx).scale));
+			if (dragging && (mx != lastMX || my != lastMY)) panCamera(-(mx - lastMX) / camPpu, -(my - lastMY) / camPpu);
+			if (inView && FlxG.mouse.wheel != 0) zoomCamera(FlxG.mouse.wheel * (shift ? 0.25 : ctrl ? 0.01 : 0.05));
+			if (!typing && !topMenuSpr.anyMenuOpened)
+			{
+				var cx = (keys.justPressed.RIGHT ? 1 : 0) - (keys.justPressed.LEFT ? 1 : 0);
+				var cy = (keys.justPressed.DOWN ? 1 : 0) - (keys.justPressed.UP ? 1 : 0);
+				if (cx != 0 || cy != 0) panCamera(cx * (shift ? 100 : ctrl ? 1 : 10), cy * (shift ? 100 : ctrl ? 1 : 10));
+			}
+		}
+		debugText.text = 'DEBUG mouse screen=${FlxG.mouse.screenX},${FlxG.mouse.screenY} ui=${Std.int(mx)},${Std.int(my)} juego=${FlxG.width}x${FlxG.height} camUI=${uiCamera.width}x${uiCamera.height}\n'
+			+ 'vista=$viewX,$viewY,$viewW,$viewH dentro=$inView presionado=$pressedNow borde=$pressEdge toque=$tapEdge menu=${topMenuSpr.anyMenuOpened} ctx=${curContextMenu != null} sel=$sel';
 		lastMX = mx;
 		lastMY = my;
-		if (inView && FlxG.mouse.wheel != 0 && sel >= 0)
+		if (mode == 0 && inView && FlxG.mouse.wheel != 0 && sel >= 0)
 			rescale(sel, FlxG.mouse.wheel * (shift ? 0.25 : ctrl ? 0.01 : 0.05));
 
 		// flechas: mover el objeto elegido (SHIFT x10, CTRL fino)
-		if (!typing && !topMenuSpr.anyMenuOpened && sel >= 0 && sel < objects.length)
+		if (mode == 0 && !typing && !topMenuSpr.anyMenuOpened && sel >= 0 && sel < objects.length)
 		{
 			var ax = (keys.justPressed.RIGHT ? 1 : 0) - (keys.justPressed.LEFT ? 1 : 0);
 			var ay = (keys.justPressed.DOWN ? 1 : 0) - (keys.justPressed.UP ? 1 : 0);
@@ -865,7 +988,7 @@ class SceneEditorState extends UIState
 		}
 
 		// el color se elige en el widget: se aplica cuando cambia
-		if (sel >= 0 && sel < objects.length && colorWheel.curColor != null)
+		if (mode == 0 && sel >= 0 && sel < objects.length && colorWheel.curColor != null)
 		{
 			var c:Int = colorWheel.curColor & 0xFFFFFF;
 			if (c != lastWheelColor)
@@ -880,7 +1003,7 @@ class SceneEditorState extends UIState
 		}
 
 		for (i in 0...objects.length) place(i);
-		drawSelection();
+		if (mode == 0) drawSelection();
 		refreshInfo();
 	}
 
@@ -888,8 +1011,9 @@ class SceneEditorState extends UIState
 	{
 		var extra = 0;
 		if (sel >= 0 && sel < objects.length) extra = (cast Reflect.field(objects[sel], "transform") : Array<Dynamic>).length - 1;
-		infoText.text = "Vista de la camara " + (camIdx + 1) + "/" + camCount() + (dirty ? "   * sin guardar" : "") + (extra > 0 ? "   (+" + extra + " transform extra: no se editan)" : "")
-			+ "\nClick y arrastra para mover. Rueda: escala. Flechas: mover (SHIFT x10, CTRL fino). Arrastra los botones de la lista para cambiar las capas.";
+		infoText.text = "Vista de la camara " + (camIdx + 1) + "/" + camCount() + (dirty ? "   * sin guardar" : "") + (mode == 0 && extra > 0 ? "   (+" + extra + " transform extra: no se editan)" : "")
+			+ (mode == 0 ? "\nClick y arrastra para mover. Rueda: escala. Flechas: mover (SHIFT x10, CTRL fino). Arrastra los botones de la lista para cambiar las capas."
+				: "\nPestaña Camaras: arrastra para mover la camara elegida, rueda: zoom, flechas: mover (SHIFT x10, CTRL fino).");
 	}
 
 	override public function destroy():Void
