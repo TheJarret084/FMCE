@@ -71,3 +71,21 @@
 - [X] Splash: el video ya se escala al llegar `onFormatSetup`, termina al acabar el video (o error / 6 s sin arrancar) y no se salta solo en el primer frame. Video activo en Android (`-DFMCE_NO_VIDEO_ANDROID` lo apaga).
 - [X] Freeplay: icono del oponente (meta.json icons.P2 o scene.json icons[0]) a la derecha de cada nivel.
 - [X] Android: `latest.log`/`previous.log` van en `<carpeta del juego>/logs` y los crashes en `<carpeta del juego>/crashes` (`.JarretLabs-FMCE`, o `Android/media/<package>` sin permiso), no en la carpeta privada de la app.
+
+
+---
+
+(18 oct):
+
+### ERRORES URGENTES DE ARREGLAR!
+
+- [ ] sprite tipo video no detectado en gamaplay ni editor
+- [ ] ventanas crashean el juego, especificamente advertencias o mendajes en editores
+- [ ] crashhandler no inicia, en mobile peta el juego (ademas que ni da crash.txt, debo revisar esto)
+
+Hecho hoy (sin probar, no se compilo):
+- [X] Colores de notas al reves: `ClientPrefs.colorIndexForLane` (4K = morado, celeste, verde, rojo; multikey tambien)
+- [X] `NOTE_assets.xml` renombrado a `left note`, `left receptor`, `left hold piece/tail`... e `imagePath` corregido
+- [X] Video: se busca `<carpeta>/<anim>.mp4` (`FunkinVideoSprite`); `SpriteEditorState` ya no pide sprite.png y previsualiza el video
+- [X] Popup nativo en escritorio ante cualquier crash (`CrashHandler`); en Android los avisos van al log en pantalla (`NativeAPI`)
+- [X] `UISubstateWindow` blindado (blur con respaldo, sin null en `update`/`destroy`)

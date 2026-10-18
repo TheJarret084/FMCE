@@ -25,7 +25,11 @@ class NativeAPI
     /** Shows a message box. */
     public static function showMessageBox(caption:String, message:String, icon:MessageBoxIcon = MSG_WARNING):Void
     {
-        #if windows
+        #if android
+        // No hay cuadro nativo usable en Android: se muestra en el log en pantalla.
+        if (icon == MSG_ERROR) Log.error('$caption: $message');
+        else Log.warn('$caption: $message');
+        #elseif windows
         try
         {
             Windows.showMessageBox(caption, message, icon);

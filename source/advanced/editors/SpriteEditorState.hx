@@ -14,6 +14,7 @@ import funkin.editors.SaveWarning;
 import funkin.editors.ui.*;
 import funkin.editors.ui.UIContextMenu.UIContextMenuOption;
 import funkin.editors.ui.notifications.UIBaseNotification;
+import funky.backend.FunkinVideoSprite;
 import funky.game.LevelSprite;
 import funky.game.SpriteBuilder;
 import haxe.io.Path;
@@ -70,6 +71,12 @@ class SpriteEditorState extends UIState
 	var atlas:Bool = false;
 
 	var sprite:LevelSprite = null;
+
+	/** Sprite de tipo video: NO usa sprite.png, el video de cada animacion es `<carpeta>/<anim>.mp4`. */
+	var isVideo:Bool = false;
+	var video:FunkinVideoSprite = null;
+	/** `<anim>.mp4` que se esperaba y no esta (para avisarlo en la barra de info). */
+	var videoMissing:Null<String> = null;
 	var zoom:Float = 1;
 	var dirty:Bool = false;
 	var dragging:Bool = false;
@@ -402,7 +409,10 @@ class SpriteEditorState extends UIState
 			sprite.destroy();
 			sprite = null;
 		}
-		sprite = SpriteBuilder.build(levelDir, name);
+		clearVideo();
+		isVideo = Std.string(Reflect.field(cfg, "type")) == "video" || SpriteBuilder.videoCount(levelDir, name) > 0;
+		// un sprite de video no tiene atlas: se evita buscar sprite.png/sprite.json
+		sprite = isVideo ? new LevelSprite() : SpriteBuilder.build(levelDir, name);
 		sprite.scrollFactor.set();
 		insert(members.indexOf(crossH), sprite);
 
@@ -575,15 +585,73 @@ class SpriteEditorState extends UIState
 
 	function playCurrent():Void
 	{
+		if (isVideo)
+		{
+			playVideo();
+			return;
+		}
 		var e = entry();
 		if (sprite == null || !sprite.loaded || e == null) return;
 		sprite.playAnim(Std.string(Reflect.field(e, "name")), true);
 		applyLive();
 	}
 
+	function clearVideo():Void
+	{
+		if (video != null)
+		{
+			remove(video, true);
+			video.destroy();
+			video = null;
+		}
+		videoMissing = null;
+	}
+
+	/** Carga `<carpeta del sprite>/<anim>.mp4` de la animacion seleccionada (sin audio). */
+	function playVideo():Void
+	{
+		clearVideo();
+		var e = entry();
+		if (e == null)
+		{
+			place();
+			return;
+		}
+		var dir = SpriteBuilder.spriteDir(levelDir, sprites[spriteIdx]);
+		var anim = Std.string(Reflect.field(e, "anim"));
+		var file = FunkinVideoSprite.animFile(dir, anim);
+		if (file == null)
+		{
+			videoMissing = anim + FunkinVideoSprite.EXTENSION;
+			place();
+			return;
+		}
+		video = new FunkinVideoSprite();
+		if (video.loadVideo(file, Reflect.field(e, "loop") != false))
+		{
+			video.scrollFactor.set();
+			insert(members.indexOf(crossH), video);
+			#if hxvlc
+			video.play();
+			#end
+		}
+		else
+		{
+			video.destroy();
+			video = null;
+			videoMissing = anim + FunkinVideoSprite.EXTENSION + " (no se pudo abrir)";
+		}
+		place();
+	}
+
 	/** Velocidad y loop se aplican en vivo (los atlas de Animate lo toman al volver a reproducir). */
 	function applyLive():Void
 	{
+		if (isVideo)
+		{
+			place();
+			return;
+		}
 		var e = entry();
 		if (sprite == null || !sprite.loaded || e == null) return;
 		sprite.antialiasing = Reflect.field(cfg, "bilinear") == true;
@@ -677,6 +745,11 @@ class SpriteEditorState extends UIState
 	/** El pivote de la animacion va clavado en la cruz (centro del lienzo), igual que `placePivot` en el juego. */
 	function place():Void
 	{
+		if (isVideo)
+		{
+			placeVideo();
+			return;
+		}
 		var e = entry();
 		if (sprite == null || !sprite.loaded || e == null)
 		{
@@ -713,6 +786,37 @@ class SpriteEditorState extends UIState
 			frameBars[i].setPosition(rects[i][0], rects[i][1]);
 		}
 
+		crossH.visible = crossV.visible = true;
+		crossH.setPosition(ax - 13, ay - 1);
+		crossV.setPosition(ax - 1, ay - 13);
+	}
+
+	function placeVideo():Void
+	{
+		for (g in ghostSprites) g.visible = false;
+		var e = entry();
+		if (video == null || e == null)
+		{
+			crossH.visible = crossV.visible = false;
+			for (b in frameBars) b.visible = false;
+			return;
+		}
+		var ax = centerX();
+		var ay = centerY();
+		var s = scaleOf(e);
+		video.scale.set(s, s);
+		video.updateHitbox();
+		video.setPosition(ax - pivotXOf(e) * s, ay - pivotYOf(e) * s);
+		video.antialiasing = Reflect.field(cfg, "bilinear") == true;
+
+		var rects = [[video.x, video.y, video.width, 1.0], [video.x, video.y + video.height - 1, video.width, 1.0], [video.x, video.y, 1.0, video.height], [video.x + video.width - 1, video.y, 1.0, video.height]];
+		for (i in 0...4)
+		{
+			frameBars[i].visible = true;
+			frameBars[i].scale.set(Math.max(1, rects[i][2]), Math.max(1, rects[i][3]));
+			frameBars[i].updateHitbox();
+			frameBars[i].setPosition(rects[i][0], rects[i][1]);
+		}
 		crossH.visible = crossV.visible = true;
 		crossH.setPosition(ax - 13, ay - 1);
 		crossV.setPosition(ax - 1, ay - 13);
@@ -783,7 +887,7 @@ class SpriteEditorState extends UIState
 			dragPivot.set(pivotXOf(entry()), pivotYOf(entry()));
 		}
 		if (!FlxG.mouse.pressed) dragging = false;
-		if (dragging && entry() != null && sprite != null && sprite.loaded)
+		if (dragging && entry() != null && ((sprite != null && sprite.loaded) || (isVideo && video != null)))
 		{
 			// arrastrar mueve el sprite (el pivote cambia al reves, porque la cruz queda quieta)
 			var s = Math.max(0.0001, scaleOf(entry()));
@@ -808,7 +912,7 @@ class SpriteEditorState extends UIState
 			debugText.text = 'DEBUG mouse screen=${FlxG.mouse.screenX},${FlxG.mouse.screenY} ui=${Std.int(mx)},${Std.int(my)} juego=${FlxG.width}x${FlxG.height} camUI=${uiCamera.width}x${uiCamera.height}\n'
 				+ 'lienzo=${LEFT_W}..${FlxG.width - RIGHT_W} dentro=$inCanvas presionado=$pressedNow borde=$pressEdge menu=${topMenuSpr.anyMenuOpened} ctx=${curContextMenu != null} anim=${entry() != null}';
 
-		if (sprite != null && sprite.loaded) place();
+		if ((sprite != null && sprite.loaded) || isVideo) place();
 		refreshInfo();
 	}
 
@@ -821,14 +925,15 @@ class SpriteEditorState extends UIState
 
 	function refreshInfo():Void
 	{
-		var frame = sprite != null && sprite.loaded ? Std.int(sprite.frameWidth) + " x " + Std.int(sprite.frameHeight) : "-";
-		infoText.text = "Zoom " + Std.int(zoom * 100) + "%   Frame " + frame + (dirty ? "   * sin guardar" : "") + (sprite != null && !sprite.loaded ? "   (el sprite no cargo: revisa sprite.png y sprite.json)" : "")
+		var frame = isVideo ? (video != null ? Std.int(video.frameWidth) + " x " + Std.int(video.frameHeight) : "-") : (sprite != null && sprite.loaded ? Std.int(sprite.frameWidth) + " x " + Std.int(sprite.frameHeight) : "-");
+		infoText.text = "Zoom " + Std.int(zoom * 100) + "%   Frame " + frame + (dirty ? "   * sin guardar" : "") + (isVideo ? (videoMissing != null ? "   (falta el video: " + videoMissing + ")" : "") : (sprite != null && !sprite.loaded ? "   (el sprite no cargo: revisa sprite.png y sprite.json)" : ""))
 			+ "\nArrastra el sprite o usa las flechas (SHIFT x10) para mover el pivote (la cruz). G: ghost de esta animacion. Rueda: zoom. Q/E sprite, A/D animacion.";
 	}
 
 	override public function destroy():Void
 	{
 		SaveWarning.saveFunc = null;
+		clearVideo();
 		sprite = null;
 		super.destroy();
 	}

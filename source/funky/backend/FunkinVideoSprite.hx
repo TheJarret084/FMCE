@@ -147,8 +147,10 @@ class FunkinVideoSprite extends VideoBase
 		var data:Array<Dynamic> = config != null && Std.isOfType(config.data, Array) ? config.data : [];
 		var first:Dynamic = data.length > 0 ? data[0] : null;
 		var scale:Float = first != null && first.scale != null ? Std.parseFloat(Std.string(first.scale)) : 1;
+		var withVideo = 0;
+		for (i in 0...data.length) if (animFile(dir, animOf(dir, i)) != null) withVideo++;
 		return {
-			count: files.length,
+			count: withVideo > 0 ? data.length : files.length,
 			loop: first == null || first.loop == null ? true : first.loop == true,
 			scale: Math.isNaN(scale) || scale <= 0 ? 1 : scale
 		};
@@ -177,10 +179,47 @@ class FunkinVideoSprite extends VideoBase
 	public static function videoFile(dir:String, index:Int):Null<String>
 	{
 		#if sys
+		// Lo primero: el video que dice `anim` de la entrada `index` del config.json (anim: "videotal" -> videotal.mp4).
+		var byAnim = animFile(dir, animOf(dir, index));
+		if (byAnim != null) return byAnim;
 		var legacy = haxe.io.Path.join([dir, "video" + index + EXTENSION]);
 		if (sys.FileSystem.exists(legacy)) return legacy;
 		var files = videoFiles(dir);
 		if (index >= 0 && index < files.length) return haxe.io.Path.join([dir, files[index]]);
+		#end
+		return null;
+	}
+
+	/** `anim` de la entrada `index` de `<dir>/config.json` (null si no hay). */
+	public static function animOf(dir:String, index:Int):Null<String>
+	{
+		#if sys
+		var configPath = haxe.io.Path.join([dir, "config.json"]);
+		if (!sys.FileSystem.exists(configPath)) return null;
+		try
+		{
+			var config:Dynamic = funky.core.JsonLoose.parse(sys.io.File.getContent(configPath));
+			var data:Array<Dynamic> = config != null && Std.isOfType(config.data, Array) ? config.data : [];
+			if (index < 0 || index >= data.length || data[index] == null || data[index].anim == null) return null;
+			var anim = Std.string(data[index].anim);
+			return anim == "" ? null : anim;
+		}
+		catch (e:Dynamic)
+		{
+			Log.warn('[FunkinVideoSprite] json invalido ($configPath): $e');
+		}
+		#end
+		return null;
+	}
+
+	/** `<dir>/<anim>.mp4` si existe, si no null. Los sprites de video NO usan sprite.png: el video es el `anim`. */
+	public static function animFile(dir:String, anim:Null<String>):Null<String>
+	{
+		#if sys
+		if (anim == null || anim == "") return null;
+		var file = anim.toLowerCase().endsWith(EXTENSION) ? anim : anim + EXTENSION;
+		var path = haxe.io.Path.join([dir, file]);
+		if (sys.FileSystem.exists(path)) return path;
 		#end
 		return null;
 	}

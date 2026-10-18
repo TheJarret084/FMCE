@@ -1037,25 +1037,29 @@ class ClientPrefs
         return colorIndexForLane(lane, total);
     }
 
+    /**
+     * Indice en la paleta `noteColors` para cada lane (izq -> der).
+     * 4K: [0 morado, 1 celeste, 2 verde, 3 rojo] = LEFT, DOWN, UP, RIGHT.
+     * Multikey: mitad izquierda usa 4..7, mitad derecha 0..3 (de afuera hacia el centro), centro impar = 8.
+     */
     static function colorIndexForLane(lane:Int, total:Int):Int
     {
-        if (total <= 4) return clampInt(total - 1 - lane, 0, 3);
+        if (total <= 4) return clampInt(lane, 0, 3);
 
         if (total == 5) return switch (lane) {
-            case 0: 3; case 1: 2; case 2: 8; case 3: 1; default: 0;
+            case 0: 0; case 1: 1; case 2: 8; case 3: 2; default: 3;
         };
 
+        var half = Std.int(total / 2);
         if (total % 2 == 1)
         {
-            var center = Std.int(Math.floor(total / 2));
-            if (lane == center) return 8;
-            if (lane < center) return clampInt(4 + (center - lane - 1), 4, 7);
-            return clampInt(4 - (lane - center), 0, 3);
+            if (lane == half) return 8;
+            if (lane < half) return clampInt(4 + lane, 4, 7);
+            return clampInt(lane - half - 1, 0, 3);
         }
 
-        var half = Std.int(total / 2);
-        if (lane < half) return clampInt(4 + (half - lane - 1), 4, 7);
-        return clampInt(4 - (lane - half + 1), 0, 3);
+        if (lane < half) return clampInt(4 + lane, 4, 7);
+        return clampInt(lane - half, 0, 3);
     }
 
     static function applyLegacyLaneFields():Void

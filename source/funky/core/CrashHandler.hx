@@ -187,6 +187,18 @@ final class CrashHandler
 		if (savedPath != "")
 			popupText += "\n\nCrash report saved to:\n" + savedPath;
 
+		// Escritorio: el popup nativo SIEMPRE sale primero (igual que Codename), tambien en errores recuperables.
+		// Antes solo salia en errores fatales y, en los demas, el juego pasaba directo a CrashState sin popup.
+		var popupShown:Bool = false;
+		#if !android
+		try
+		{
+			NativeAPI.showMessageBox("Funky Maker Crash Handler", popupText, MSG_ERROR);
+			popupShown = true;
+		}
+		catch (_:Dynamic) {}
+		#end
+
 		// Error de Haxe recuperable: pantalla de error DENTRO del juego (el cuadro nativo no sale en Android y, si el
 		// proceso se cierra enseguida, tampoco se alcanza a leer). Si ya van varios errores seguidos, o el estado no se
 		// puede cambiar, cae al cuadro nativo y sale.
@@ -196,20 +208,23 @@ final class CrashHandler
 			return;
 		}
 
-		try
+		if (!popupShown)
 		{
-			// En Windows usa el MessageBox nativo (winapi); en Linux/Mac/HTML5
-			// cae al alert de lime. Mismo comportamiento que Codename Engine.
-			NativeAPI.showMessageBox(
-				"Funky Maker Crash Handler",
-				popupText,
-				MSG_ERROR
-			);
-		}
-		catch (_:Dynamic)
-		{
-			// El archivo ya fue guardado; si el popup no esta disponible,
-			// no provocamos un segundo crash.
+			try
+			{
+				// En Windows usa el MessageBox nativo (winapi); en Linux/Mac/HTML5
+				// cae al alert de lime. Mismo comportamiento que Codename Engine.
+				NativeAPI.showMessageBox(
+					"Funky Maker Crash Handler",
+					popupText,
+					MSG_ERROR
+				);
+			}
+			catch (_:Dynamic)
+			{
+				// El archivo ya fue guardado; si el popup no esta disponible,
+				// no provocamos un segundo crash.
+			}
 		}
 
 		#if sys
