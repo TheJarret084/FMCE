@@ -87,7 +87,7 @@ final class CrashHandler
 		e.stopPropagation();
 		e.stopImmediatePropagation();
 
-		handle(message, CallStack.exceptionStack());
+		handle(message, CallStack.exceptionStack(), false);
 	}
 
 	#if ((cpp && !android) || hl)
@@ -104,7 +104,7 @@ final class CrashHandler
 
 		try
 		{
-			handle('Native error: ' + text, CallStack.callStack());
+			handle('Native error: ' + text, CallStack.callStack(), true);
 		}
 		catch (_:Dynamic)
 		{
@@ -115,7 +115,7 @@ final class CrashHandler
 	}
 	#end
 
-	private static function handle(message:String, stack:Array<StackItem>):Void
+	private static function handle(message:String, stack:Array<StackItem>, fatal:Bool):Void
 	{
 		if (handlingCrash)
 			return;
@@ -124,7 +124,7 @@ final class CrashHandler
 
 		try
 		{
-			handleInner(message, stack);
+			handleInner(message, stack, fatal);
 		}
 		catch (e:Dynamic)
 		{
@@ -148,7 +148,7 @@ final class CrashHandler
 		#end
 	}
 
-	private static function handleInner(message:String, stack:Array<StackItem>):Void
+	private static function handleInner(message:String, stack:Array<StackItem>, fatal:Bool):Void
 	{
 		var stackLabel:String = stackToString(stack);
 		var stateName:String = getStateName();
@@ -201,6 +201,38 @@ final class CrashHandler
 		{
 			// El archivo ya fue guardado; si el popup no está disponible,
 			// no provocamos un segundo crash.
+		}
+
+		recover(fatal);
+	}
+
+	/** Marcas de tiempo de los ultimos errores recuperados (para cortar un bucle de errores). */
+	private static var recentCrashes:Array<Float> = [];
+
+	/**
+	 * Un error de Haxe (excepcion, null, escritura invalida...) no mata el proceso: el reporte ya quedo guardado y
+	 * mostrado, asi que se vuelve al menu principal en vez de cerrar el juego. Solo se sale si el error es nativo
+	 * (`fatal`: el estado de C++/HL ya no es confiable), si el menu principal tambien falla, o si ya van varios errores
+	 * seguidos (un bucle).
+	 */
+	private static function recover(fatal:Bool):Void
+	{
+		if (!fatal)
+		{
+			try
+			{
+				var now = haxe.Timer.stamp();
+				recentCrashes = recentCrashes.filter(function(t) return now - t < 10);
+				recentCrashes.push(now);
+
+				if (recentCrashes.length <= 2)
+				{
+					FlxG.switchState(new funky.menus.MainMenuState());
+					handlingCrash = false;
+					return;
+				}
+			}
+			catch (_:Dynamic) {}
 		}
 
 		#if sys

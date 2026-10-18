@@ -299,9 +299,17 @@ class Stage extends FlxGroup
 			Math.min(count - 1, number(field(item, "video"), 0))
 		));
 
-		var video = SpriteBuilder.buildVideo(levelDir, name, index);
+		var video:FunkinVideoSprite = null;
+		try
+		{
+			video = SpriteBuilder.buildVideo(levelDir, name, index);
+		}
+		catch (e:Dynamic)
+		{
+			Log.error('[Stage] el video "' + name + '" fallo al cargar: ' + Std.string(e));
+		}
 
-		if (video.videoPath == null)
+		if (video == null || video.videoPath == null)
 		{
 			Log.warn(
 				'[Stage] el video "' + name + '" no se pudo cargar ('
@@ -526,7 +534,15 @@ class Stage extends FlxGroup
 	{
 		if (object.video == null) return;
 
-		object.videoPlaying = object.video.play();
+		try
+		{
+			object.videoPlaying = object.video.play();
+		}
+		catch (e:Dynamic)
+		{
+			object.videoPlaying = false;
+			Log.error('[Stage] el video "' + object.videoName + '" fallo al reproducir: ' + Std.string(e));
+		}
 	}
 
 	public function startVideos():Void

@@ -26,6 +26,9 @@ class UIState extends MusicBeatState {
 
 	public var buttonHandler:Void->Void = null;
 	public var hoveredSprite:UISprite = null;
+
+	/** El `hoveredSprite` del frame anterior (el de este se asigna recien durante el update). */
+	public var prevHoveredSprite:UISprite = null;
 	public var currentFocus:IUIFocusable = null;
 
 	/** El teclado en pantalla (Android) y el texto de lime solo llegan con `textInputEnabled`: se prende al enfocar un campo de texto. */
@@ -132,6 +135,7 @@ class UIState extends MusicBeatState {
 		} else {
 			NativeAPI.setCursorIcon(currentCursor);
 		}
+		prevHoveredSprite = hoveredSprite;
 		hoveredSprite = null;
 	}
 

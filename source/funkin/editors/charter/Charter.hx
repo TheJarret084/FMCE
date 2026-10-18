@@ -1112,7 +1112,9 @@ class Charter extends UIState {
 		if (DEBUG_INPUT) {
 			var hoveredNotes = 0;
 			for (n in notesGroup.members) if (n != null && (n.hovered || n.sustainDraggable)) hoveredNotes++;
-			inputDebugText.text = 'accion=$gridActionType  grid.hovered=${gridBackdropDummy.hovered}  grid.hoveredByChild=${gridBackdropDummy.hoveredByChild}\n'
+			var winner = UIState.state.prevHoveredSprite;
+			var winnerName = winner == null ? "ninguno" : (winner == gridBackdropDummy ? "grid(dummy)" : Type.getClassName(Type.getClass(winner)).split(".").pop() + "@" + Std.int(winner.x) + "," + Std.int(winner.y) + " " + Std.int(winner.width) + "x" + Std.int(winner.height));
+			inputDebugText.text = 'accion=$gridActionType  grid.hovered=${gridBackdropDummy.hovered}  grid.hoveredByChild=${gridBackdropDummy.hoveredByChild}  ganador=$winnerName\n'
 				+ 'mouse mundo=${Std.int(mousePos.x)},${Std.int(mousePos.y)}  presionado=${FlxG.mouse.pressed}  notas bajo mouse=$hoveredNotes\n'
 				+ 'seleccion=${selection.length}  notas=${notesGroup.members.length}  teclas=${strumLines.totalKeyCount}  endStep=${Std.int(__endStep)}  subState=${subState != null}';
 		}
@@ -1330,6 +1332,9 @@ class Charter extends UIState {
 				shader.data.time.value = [__timer];
 		}
 
+		// Antes de super.update: UIState recien asigna `hovered` (el sprite ganador) al terminar el frame, y cada UISprite lo
+		// reinicia al actualizarse; despues de super.update `hovered` siempre seria false.
+		updateNoteLogic(elapsed);
 		updateAutoSaving(elapsed);
 
 		for (bs in __bookmarkObjects)
@@ -1387,10 +1392,6 @@ class Charter extends UIState {
 		noteTypeText.text = '($noteType) ' + (noteTypes[noteType-1] == null ? translate("noteTypes.default") : noteTypes[noteType-1]);
 
 		super.update(elapsed);
-
-		// Despues de super.update: ahi se resuelve que sprite esta bajo el mouse. Antes, la logica leia el hover del frame
-		// anterior (con un toque en pantalla el puntero salta y ese hover es de otro lugar: solo sonaba el click).
-		updateNoteLogic(elapsed);
 
 		scrollBar.size = (FlxG.height / 40 / charterCamera.zoom);
 		scrollBar.start = Conductor.curStepFloat - (scrollBar.size / 2);

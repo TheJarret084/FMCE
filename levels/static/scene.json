@@ -1,0 +1,48 @@
+{
+  "objects": [
+    {
+      "transform": [
+        {
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1
+          },
+          "position": {
+            "x": 1080,
+            "y": 960
+          }
+        }
+      ],
+      "fixed": false,
+      "spr": "video",
+      "strumLine": -1,
+      "visible": true,
+      "color": {
+        "r": 255,
+        "b": 255,
+        "g": 255
+      },
+      "opacity": 1
+    }
+  ],
+  "cameras": [
+    {
+      "scale": 1,
+      "position": {
+        "x": 540,
+        "y": 960
+      }
+    },
+    {
+      "scale": 1,
+      "position": {
+        "x": 1620,
+        "y": 960
+      }
+    }
+  ]
+}

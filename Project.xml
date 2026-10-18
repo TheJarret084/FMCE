@@ -88,6 +88,12 @@
 	<haxedef name="FLX_NO_DEBUG" unless="debug" />
 	<haxedef name="NAPE_RELEASE_BUILD" if="release" />
 
+	<!-- Sin esto un null en C++ es un segfault: el juego se cierra sin pasar por el CrashHandler. Con esto el error es una
+	     excepcion normal (con archivo y linea), el CrashHandler guarda el reporte y vuelve al menu. (Igual que Codename.) -->
+	<haxedef name="HXCPP_CHECK_POINTER" />
+	<haxedef name="HXCPP_STACK_LINE" />
+	<haxedef name="HXCPP_CATCH_SEGV" />
+
 	<!-- _________________________________ Custom _______________________________ -->
 
 	<!-- Iconos para Android (por tamaño) -->

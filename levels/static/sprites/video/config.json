@@ -1,0 +1,20 @@
+{
+  "bilinear": true,
+  "data": [
+    {
+      "index": 0,
+      "bilinear": true,
+      "num": 1,
+      "spd": 1,
+      "anim": "sprite",
+      "loop": true,
+      "name": "idle",
+      "offset": {
+        "x": 0,
+        "y": 0
+      },
+      "scale": 1
+    }
+  ],
+  "type": "video"
+}

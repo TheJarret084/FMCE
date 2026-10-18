@@ -1,0 +1,11 @@
+{
+  "icons": {
+    "P1": "icon2",
+    "P2": "icon1"
+  },
+  "color": "#E5547A",
+  "stepsPerBeat": 4,
+  "displayName": "static",
+  "validScore": true,
+  "bpm": 158
+}
