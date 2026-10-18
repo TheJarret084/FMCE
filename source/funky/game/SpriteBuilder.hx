@@ -18,9 +18,9 @@ typedef SpriteAnim = {
 	var index:Int;
 	/** Indices dentro del atlas (rango `from..to` del frameTag). */
 	var frames:Array<Int>;
-	/** Velocidad tal cual sale del config: FPS crudos si `spdFps`, o frames por beat si no. */
+	/** Velocidad tal cual sale del config: FPS crudos si `spdFps`, o beats que dura la animacion si no. */
 	var spd:Float;
-	/** true = `spd` son FPS crudos; false = `spd` frames por beat (fps = spd * bpm / 60, lo sigue LevelSprite.update). */
+	/** true = `spd` son FPS crudos; false = `spd` son los beats que dura la animacion completa (lo sigue LevelSprite.update con el BPM). */
 	var spdFps:Bool;
 	/** FPS resueltos al cargar (en modo beat, con el BPM de ese momento). */
 	var fps:Float;
@@ -274,8 +274,8 @@ class SpriteBuilder
 	#if sys
 	static function resolveAnim(name:String, position:Int, frames:Array<Int>, fromConfig:Dynamic, fromFmce:Dynamic):SpriteAnim
 	{
-		// Velocidad (config.json): `spd_fps` true = `spd` son FPS crudos; false = `spd` frames por beat
-		// (fps = spd * bpm / 60). Sin `spd_fps` (config viejo) `spd` era un multiplicador de 24 fps.
+		// Velocidad (config.json): `spd_fps` true = `spd` son FPS crudos; false = `spd` son los beats que dura la
+		// animacion completa (fps = frames * bpm / (60 * spd)). Sin `spd_fps` (config viejo) `spd` era un multiplicador de 24 fps.
 		var hasFlag = fromConfig != null && Reflect.hasField(fromConfig, "spd_fps");
 		var spdFps = hasFlag ? bool(field(fromConfig, "spd_fps"), true) : true;
 		var spd:Float = spdFps ? DEFAULT_FPS : 1;
@@ -287,7 +287,8 @@ class SpriteBuilder
 		else if (fromFmce != null && Reflect.hasField(fromFmce, "fps"))
 			spd = number(field(fromFmce, "fps"), spd);
 		if (spd <= 0) spd = spdFps ? DEFAULT_FPS : 1;
-		var fps = spdFps ? spd : spd * Conductor.bpm / 60;
+		// spd_fps false: `spd` = beats que dura la animacion COMPLETA (1 = toda en un beat, 2 = repartida en dos beats).
+		var fps = spdFps ? spd : Math.max(1, frames.length) * Conductor.bpm / (60 * spd);
 
 		var offset = fromConfig != null && Reflect.hasField(fromConfig, "offset") ? field(fromConfig, "offset") : field(fromFmce, "offset");
 		return {

@@ -187,7 +187,7 @@ class FunkinSprite extends FlxAnimate
 			var gameName:String = entry.name != null ? entry.name : inAtlas;
 			// `spd_fps` true = `spd` FPS crudos; false = frames por beat (BPM actual); sin `spd_fps` (viejo) = multiplicador de 24.
 			var spdValue:Float = entry.spd != null && entry.spd > 0 ? entry.spd : 1;
-			var fps:Float = entry.spd_fps == null ? 24 * spdValue : (entry.spd_fps == true ? spdValue : spdValue * funky.core.Conductor.bpm / 60);
+			var fps:Float = entry.spd_fps == null ? 24 * spdValue : (entry.spd_fps == true ? spdValue : 1 / Math.max(0.01, spdValue) * funky.core.Conductor.bpm / 60);
 			var loop:Bool = entry.loop == null ? true : entry.loop == true;
 
 			addAnim(gameName, inAtlas, fps, loop);

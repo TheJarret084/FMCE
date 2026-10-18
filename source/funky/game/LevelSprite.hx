@@ -131,15 +131,18 @@ class LevelSprite extends FunkinSprite
 		if (firstAnim == null) firstAnim = gameName;
 	}
 
-	/** Animaciones con `spd_fps: false` van a `spd` frames por beat: se reajusta con el BPM actual. */
+	/** Animaciones con `spd_fps: false` duran `spd` beats (la animacion completa): se reajusta con el BPM actual. */
 	override public function update(elapsed:Float):Void
 	{
 		var data = currentAnim();
 		if (data != null && !data.spdFps)
 		{
 			var cur = animation.curAnim;
-			var target = data.spd * Conductor.bpm / 60;
-			if (cur != null && target > 0 && cur.frameRate != target) cur.frameRate = target;
+			if (cur != null && cur.numFrames > 0)
+			{
+				var target = cur.numFrames * Conductor.bpm / (60 * Math.max(0.01, data.spd));
+				if (target > 0 && cur.frameRate != target) cur.frameRate = target;
+			}
 		}
 		super.update(elapsed);
 	}

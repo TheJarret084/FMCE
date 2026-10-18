@@ -409,6 +409,9 @@ class Stage extends FlxGroup
 	/** Frames que se repiten mientras dura un hold (provisional). */
 	static inline var HOLD_LOOP_FRAMES:Int = 2;
 
+	/** Una anim de canto con este numero de frames o menos se queda en el primero mientras dura el hold. */
+	static inline var HOLD_SHORT_ANIM:Int = 3;
+
 	/** true = repite los ultimos frames de la anim; false = los primeros. */
 	static inline var HOLD_LOOP_LAST:Bool = false;
 
@@ -434,7 +437,8 @@ class Stage extends FlxGroup
 		if (cur == null || data == null || data.index <= 0) return; // idle no cuenta
 
 		var total = cur.numFrames;
-		var count = total < HOLD_LOOP_FRAMES ? total : HOLD_LOOP_FRAMES;
+		// pocos frames (2 o 3): repetir 2 se ve a saltos, asi que se mantiene la pose del primero
+		var count = total <= HOLD_SHORT_ANIM ? 1 : (total < HOLD_LOOP_FRAMES ? total : HOLD_LOOP_FRAMES);
 		var start = HOLD_LOOP_LAST ? total - count : 0;
 
 		if (cur.finished || cur.curFrame >= start + count)

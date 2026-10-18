@@ -272,11 +272,11 @@ class SpriteEditorState extends UIState
 		loopCheck = ui(new UICheckbox(x0 + 20, y1 + 300, "Loop", true));
 		loopCheck.onChecked = function(b:Bool) setEntry("loop", b);
 		var play = ui(new UIButton(x0 + 156, y1 + 296, "Reproducir", playCurrent, 120, 32));
-		spdFpsCheck = ui(new UICheckbox(x0 + 20, y1 + 332, "Velocidad en FPS (apagado = frames por beat)", true));
+		spdFpsCheck = ui(new UICheckbox(x0 + 20, y1 + 332, "Velocidad en FPS (apagado = beats que dura)", true));
 		spdFpsCheck.onChecked = function(b:Bool)
 		{
 			setEntry("spd_fps", b);
-			notify(b ? "spd = FPS crudos." : "spd = frames por beat (sigue al BPM). Se ve al guardar.");
+			notify(b ? "spd = FPS crudos." : "spd = beats que dura la animacion completa (sigue al BPM). Se ve al guardar.");
 		};
 		label(x0 + 20, y1 + 372, "Indices del atlas (ej: 0,1,2,5-8; vacio = frameTag)");
 		indicesBox = ui(new UITextBox(x0 + 20, y1 + 392, "", RIGHT_W - 40));
@@ -591,7 +591,7 @@ class SpriteEditorState extends UIState
 		if (cur != null && !atlas)
 		{
 			var spd = Math.max(0.05, JsonFile.num(Reflect.field(e, "spd"), 24));
-			cur.frameRate = Reflect.field(e, "spd_fps") == false ? spd * funky.core.Conductor.bpm / 60 : spd;
+			cur.frameRate = Reflect.field(e, "spd_fps") == false ? Math.max(1, cur.numFrames) * funky.core.Conductor.bpm / (60 * spd) : spd;
 			@:privateAccess cur.looped = Reflect.field(e, "loop") != false; // (looped es de solo lectura en el flixel del fork)
 		}
 		place();

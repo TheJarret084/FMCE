@@ -191,8 +191,13 @@ class FunkinVideoSprite extends VideoBase
 		var path = haxe.io.Path.extension(name) == "" ? Paths.video(name) : name;
 		#if (hxvlc && !desktop)
 		// En Android los assets viven dentro del APK: OpenFL sabe donde quedan en disco.
-		var real = openfl.utils.Assets.getPath(path);
-		if (real != null) return real;
+		// Assets.getPath lanza una excepcion ("no asset with an ID") si el archivo no es un asset empaquetado: los videos
+		// de un nivel (/storage/.../levels/<nivel>/sprites/...) son archivos sueltos y se abren por su ruta.
+		if (openfl.utils.Assets.exists(path))
+		{
+			var real = openfl.utils.Assets.getPath(path);
+			if (real != null) return real;
+		}
 		#end
 		return path;
 	}

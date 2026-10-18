@@ -187,6 +187,15 @@ final class CrashHandler
 		if (savedPath != "")
 			popupText += "\n\nCrash report saved to:\n" + savedPath;
 
+		// Error de Haxe recuperable: pantalla de error DENTRO del juego (el cuadro nativo no sale en Android y, si el
+		// proceso se cierra enseguida, tampoco se alcanza a leer). Si ya van varios errores seguidos, o el estado no se
+		// puede cambiar, cae al cuadro nativo y sale.
+		if (!fatal && showCrashScreen(message, report, savedPath))
+		{
+			handlingCrash = false;
+			return;
+		}
+
 		try
 		{
 			// En Windows usa el MessageBox nativo (winapi); en Linux/Mac/HTML5
@@ -199,45 +208,36 @@ final class CrashHandler
 		}
 		catch (_:Dynamic)
 		{
-			// El archivo ya fue guardado; si el popup no está disponible,
+			// El archivo ya fue guardado; si el popup no esta disponible,
 			// no provocamos un segundo crash.
-		}
-
-		recover(fatal);
-	}
-
-	/** Marcas de tiempo de los ultimos errores recuperados (para cortar un bucle de errores). */
-	private static var recentCrashes:Array<Float> = [];
-
-	/**
-	 * Un error de Haxe (excepcion, null, escritura invalida...) no mata el proceso: el reporte ya quedo guardado y
-	 * mostrado, asi que se vuelve al menu principal en vez de cerrar el juego. Solo se sale si el error es nativo
-	 * (`fatal`: el estado de C++/HL ya no es confiable), si el menu principal tambien falla, o si ya van varios errores
-	 * seguidos (un bucle).
-	 */
-	private static function recover(fatal:Bool):Void
-	{
-		if (!fatal)
-		{
-			try
-			{
-				var now = haxe.Timer.stamp();
-				recentCrashes = recentCrashes.filter(function(t) return now - t < 10);
-				recentCrashes.push(now);
-
-				if (recentCrashes.length <= 2)
-				{
-					FlxG.switchState(new funky.menus.MainMenuState());
-					handlingCrash = false;
-					return;
-				}
-			}
-			catch (_:Dynamic) {}
 		}
 
 		#if sys
 		Sys.exit(1);
 		#end
+	}
+
+	/** Marcas de tiempo de los ultimos errores mostrados (para cortar un bucle de errores). */
+	private static var recentCrashes:Array<Float> = [];
+
+	/**
+	 * Cambia a `CrashState`. Devuelve false si no se pudo (error nativo, bucle de errores o el cambio de estado fallo).
+	 */
+	private static function showCrashScreen(message:String, report:String, savedPath:String):Bool
+	{
+		try
+		{
+			var now = haxe.Timer.stamp();
+			recentCrashes = recentCrashes.filter(function(t) return now - t < 10);
+			recentCrashes.push(now);
+			if (recentCrashes.length > 3) return false;
+
+			FlxG.switchState(new funky.menus.CrashState(message, report, savedPath));
+			return true;
+		}
+		catch (_:Dynamic) {}
+
+		return false;
 	}
 
 	#if sys

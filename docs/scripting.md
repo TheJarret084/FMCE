@@ -1,6 +1,6 @@
 # Scripts de nivel
 
-Los scripts son `.hx` (hscript) y se cargan de `<nivel>/data/scripts/*.hx`, en orden alfabetico. Cada script
+Los scripts son `.hx` (hscript) y se cargan de `<nivel>/scripts/*.hx`, en orden alfabetico. Cada script
 define funciones con el nombre del callback y el engine las llama. Si un script falla, el error sale en el
 log una sola vez y el juego sigue.
 
@@ -94,11 +94,11 @@ function onGameOver()
 
 Las clases van en `<nivel>/source/` (**no** en `scripts/`: todo lo de `scripts/` se ejecuta solo). Se traen con `import`:
 
-`levels/MiNivel/data/source/characters/bfGay.hx`
+`levels/MiNivel/source/jefe/Boss.hx`
 ```haxe
-package characters;
+package jefe;
 
-class bfGay extends FunkinSprite
+class Boss extends FunkinSprite
 {
 	public var vida:Int = 100;
 
@@ -113,9 +113,9 @@ class bfGay extends FunkinSprite
 		y += Math.sin(Conductor.songPosition / 500) * 0.5;
 	}
 
-	public function golpe(damage:Int)
+	public function golpe(dano:Int)
 	{
-		health -= damage;
+		vida -= dano;
 		playAnim("hit", true);
 	}
 }
@@ -123,14 +123,14 @@ class bfGay extends FunkinSprite
 
 `levels/MiNivel/scripts/main.hx`
 ```haxe
-import characters.bfGay;
+import jefe.Boss;
 
 var boss;
 
 function onCreatePost()
 {
-	bfGay = new bfGay(400, 200);
-	game.add(bfGay);
+	boss = new Boss(400, 200);
+	game.add(boss);
 }
 ```
 
@@ -156,7 +156,7 @@ levels/MiNivel/sprites/boss/
     └── spritemap1.png
 ```
 
-El `type` `atlas` es uno mas de los tipos (item, character, stage, icon, video...) y no cambia nada por si mismo: solo
+El `type` `atlas` es uno mas de los tipos (item, character, stage, icon...) y no cambia nada por si mismo: solo
 marca el sprite para el futuro SpriteEditor. Convencion de todos los sprites: `anim0` es el idle y `anim1`, `anim2`... las demas (el Stage toca `anim0` en idle y
 `anim<lane + 1>` al cantar, por indice). Las animaciones salen del `name` de cada entrada de `data` en `config.json`: ese `name` es el nombre que usa el juego y
 tambien el **simbolo o label** del atlas (se prueba primero como simbolo y luego como label). `spd` multiplica 24 fps,
@@ -171,11 +171,11 @@ tambien el **simbolo o label** del atlas (se prueba primero como simbolo y luego
 Eso cubre escenas y `SpriteBuilder`. Desde un script tambien puedes cargar un spritemap suelto de cualquier carpeta:
 
 ```haxe
-var bfGay = new FunkinSprite(300, 200);
-bfGay.loadAnimate(levelDir + "/sprites/bfGay/sprite");
-bfGay.addAnim("idle", "idle", 24, true);   // 4o param = loop; ultimo param true si es un LABEL del timeline
-bfGay.playAnim("idle");
-game.add(bfGay);
+var boss = new FunkinSprite(300, 200);
+boss.loadAnimate(levelDir + "/sprites/boss/sprite");
+boss.addAnim("idle", "idle", 24, true);   // 4o param = loop; ultimo param true si es un LABEL del timeline
+boss.playAnim("idle");
+game.add(boss);
 ```
 
 Para tener spritemaps empaquetados en el juego (sin nivel), `assets/images/<carpeta>/` + `FunkinSprite.loadSprite("<carpeta>")`.
