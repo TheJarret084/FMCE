@@ -72,9 +72,11 @@ class CharterNote extends UISprite implements ICharterSelectable {
 	public var step:Float;
 	public var id:Int;
 	public var susLength:Float;
-		/** Action pack al acertar / fallar (-1 = ninguno). Solo se conservan: el charter no los edita todavia. */
-		public var onPress:Int = -1;
-		public var onMiss:Int = -1;
+	/** Action pack (events.json) a correr al acertar / fallar la nota. -1 = ninguno. Se editan en el menu Nota. */
+	public var onPress:Int = -1;
+	public var onMiss:Int = -1;
+
+	static var packBadge:FlxSprite;
 	public var type(default, set):Null<Int> = null;
 	public var typeVisible:Bool = true;
 	public var typeAlpha:Float = 1;
@@ -219,6 +221,19 @@ class CharterNote extends UISprite implements ICharterSelectable {
 		drawMembers();
 		drawSuper();
 		drawNoteTypeText();
+		drawPackBadge();
+	}
+
+	/** Puntito en la esquina de la nota: naranja = tiene onPress, azul = solo onMiss. */
+	function drawPackBadge() {
+		if (onPress < 0 && onMiss < 0) return;
+		if (packBadge == null || packBadge.graphic == null || packBadge.graphic.isDestroyed)
+			packBadge = new FlxSprite().makeGraphic(8, 8, FlxColor.WHITE);
+		packBadge.color = onPress >= 0 ? 0xFFFF8A00 : 0xFF3FA9FF;
+		packBadge.alpha = typeAlpha;
+		packBadge.cameras = cameras;
+		packBadge.setPosition(x + 29, y + 3);
+		packBadge.draw();
 	}
 
 	public inline function drawNoteTypeText() {

@@ -94,12 +94,12 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 					params: [],
 					name: eventName
 				});
-				eventsList.add(new EventButtonNew(events[events.length-1], CharterEvent.generateEventIcon(events[events.length-1]), events.length-1, this, eventsList));
+				eventsList.add(new EventButtonNew(events[events.length-1], CharterEvent.safeEventIcon(events[events.length-1]), events.length-1, this, eventsList));
 				changeTab(events.length-1);
 			}, chartEvent.step));
 		};
 		for (k=>i in events)
-			eventsList.add(new EventButtonNew(i, CharterEvent.generateEventIcon(i), k, this, eventsList));
+			eventsList.add(new EventButtonNew(i, CharterEvent.safeEventIcon(i), k, this, eventsList));
 		add(eventsList);
 
 		// this took forever to find out omg >:D -lunar
@@ -144,7 +144,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 				};
 
 				var value:Dynamic = CoolUtil.getDefault(k < curEvent.params.length ? curEvent.params[k] : null, param.defValue);
-				var lastAdded = switch(param.type) {
+				var lastAdded = try switch(param.type) {
 					case TString:
 						addLabel();
 						var textBox:UITextBox = new UITextBox(eventName.x+6, winHeight, cast value);
@@ -193,8 +193,9 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						textBox;
 					case TActionPack:
 						addLabel();
-						var packs = PlayState.SONG.actionPacks == null ? [] : PlayState.SONG.actionPacks;
-						var options = [for (i => p in packs) TU.translate("charterActionPacks.packLabel", ["" + i, "" + p.actions.length])];
+						// mientras se editan los packs, los de la ventana (aun sin guardar); si no, los del chart
+						var packs = CharterActionPacksScreen.editing != null ? CharterActionPacksScreen.editing : (PlayState.SONG.actionPacks == null ? [] : PlayState.SONG.actionPacks);
+						var options = [for (i => p in packs) '#$i ' + (p.name != null ? p.name + ' ' : '') + '(${p.actions.length})'];
 						if (options.length == 0) options = [TU.translate("charterActionPacks.none")];
 						var dropdown = new UIDropDown(eventName.x+6, winHeight, 320, 32, options, cast CoolUtil.bound(Std.int(value), 0, options.length - 1));
 						paramsPanel.add(dropdown); paramsFields.push(dropdown);
@@ -209,6 +210,12 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 					default:
 						paramsFields.push(null);
 						null;
+				} catch (e:Dynamic) {
+					// un campo roto no debe tumbar la ventana: queda en el log y el parametro conserva su valor
+					Logs.trace('Event "${curEvent.name}": param "${param.key}" could not be built: ${Std.string(e)}', ERROR);
+					while (paramsFields.length > k) paramsFields.pop();
+					paramsFields.push(null);
+					null;
 				}
 				if (lastAdded is UISliceSprite) {
 					winHeight += cast(lastAdded, UISliceSprite).bHeight + 4;
@@ -229,6 +236,12 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		winHeight = Math.max(winHeight, (eventsList.buttonSize.y * (eventsList.buttons.length + 1))-4) + 10;
 		bWidth += 10+75+10+4; // add events list width to account for event name being on a diff cam +4 because margins >:D
 		update(0);
+	}
+
+	/** true si hay algun action pack al que apuntar (si no, el dropdown solo muestra "ninguno" y se guarda -1). */
+	function hasActionPacks():Bool {
+		var packs = CharterActionPacksScreen.editing != null ? CharterActionPacksScreen.editing : PlayState.SONG.actionPacks;
+		return packs != null && packs.length > 0;
 	}
 
 	/** Valor de un parametro numerico como Float: el events.json puede traerlo como Int, Float o String. */
@@ -342,7 +355,8 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 			for(p in paramsFields) {
 				if (p is UIDropDown) {
 					var dataParams = EventsData.getEventParams(events[curEvent].name);
-					if (dataParams[paramsFields.indexOf(p)].type == TStrumLine || dataParams[paramsFields.indexOf(p)].type == TActionPack) cast(p, UIDropDown).index;
+					if (dataParams[paramsFields.indexOf(p)].type == TActionPack) (hasActionPacks() ? cast(p, UIDropDown).index : -1);
+					else if (dataParams[paramsFields.indexOf(p)].type == TStrumLine) cast(p, UIDropDown).index;
 					else cast(p, UIDropDown).label.text;
 				}
 				else if (p is UINumericStepper) {

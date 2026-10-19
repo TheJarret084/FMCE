@@ -1015,6 +1015,8 @@ class Charter extends UIState {
 											var n:CharterNote = cast s;
 											var newNote = new CharterNote();
 											newNote.updatePos(n.step, n.id, n.susLength, n.type, n.strumLine);
+											newNote.onPress = n.onPress;
+											newNote.onMiss = n.onMiss;
 											notesGroup.add(newNote);
 											newSelection.push(newNote);
 										} else if (s is CharterEvent) {
@@ -1607,7 +1609,7 @@ class Charter extends UIState {
 			for (s in selection)
 				if (s is CharterNote) {
 				var note:CharterNote = cast s;
-				CNote(note.step - minStep, note.id, note.strumLineID, note.susLength, note.type);
+				CNote(note.step - minStep, note.id, note.strumLineID, note.susLength, note.type, note.onPress, note.onMiss);
 			} else if (s is CharterEvent) {
 				var event:CharterEvent = cast s;
 				CEvent(event.step - minStep, [for (event in event.events) Reflect.copy(event)]);
@@ -1622,9 +1624,11 @@ class Charter extends UIState {
 		var sObjects:Array<ICharterSelectable> = [];
 		for(c in clipboard) {
 			switch(c) {
-				case CNote(step, id, strumLineID, susLength, type):
+				case CNote(step, id, strumLineID, susLength, type, onPress, onMiss):
 					var note = new CharterNote();
 					note.updatePos(minStep + step, id, susLength, type, strumLines.members[CoolUtil.boundInt(strumLineID, 0, strumLines.length-1)]);
+					note.onPress = onPress;
+					note.onMiss = onMiss;
 					notesGroup.add(note);
 					sObjects.push(note);
 				case CEvent(step, events):
@@ -1714,6 +1718,7 @@ class Charter extends UIState {
 				Charter.instance.updateBPMEvents();
 			case CEditActionPacks(oldPacks, newPacks):
 				PlayState.SONG.actionPacks = oldPacks;
+				buildNoteTypesUI();
 			case CEditChartData(oldData, newData):
 				PlayState.SONG.stage = oldData.stage;
 				PlayState.SONG.scrollSpeed = oldData.speed;
@@ -1725,6 +1730,8 @@ class Charter extends UIState {
 				updateBookmarks();
 			case CEditSpecNotesType(notes, oldTypes, newTypes):
 				for(i=>note in notes) note.updatePos(note.step, note.id, note.susLength, oldTypes[i]);
+			case CEditNotePacks(notes, oldPress, oldMiss, newPress, newMiss):
+				for(i=>note in notes) { note.onPress = oldPress[i]; note.onMiss = oldMiss[i]; }
 			case CChangeBundle(changes):
 				var i = changes.length - 1;
 				while (i >= 0) {
@@ -1776,6 +1783,7 @@ class Charter extends UIState {
 				Charter.instance.updateBPMEvents();
 			case CEditActionPacks(oldPacks, newPacks):
 				PlayState.SONG.actionPacks = newPacks;
+				buildNoteTypesUI();
 			case CEditChartData(oldData, newData):
 				PlayState.SONG.stage = newData.stage;
 				PlayState.SONG.scrollSpeed = newData.speed;
@@ -1787,6 +1795,8 @@ class Charter extends UIState {
 				updateBookmarks();
 			case CEditSpecNotesType(notes, oldTypes, newTypes):
 				for(i=>note in notes) note.updatePos(note.step, note.id, note.susLength, newTypes[i]);
+			case CEditNotePacks(notes, oldPress, oldMiss, newPress, newMiss):
+				for(i=>note in notes) { note.onPress = newPress[i]; note.onMiss = newMiss[i]; }
 			case CChangeBundle(changes):
 				for (change in changes) _redo(change);
 		}
@@ -2258,10 +2268,39 @@ class Charter extends UIState {
 		if(changedNotes.notes.length > 0) undos.addToUndo(CEditSpecNotesType(changedNotes.notes, changedNotes.oldTypes, changedNotes.newTypes));
 	}
 
+	/** Pone `onPress` (press = true) u `onMiss` de las notas seleccionadas al action pack `pack` (-1 = ninguno), con undo. */
+	function setNotePack(press:Bool, pack:Int) {
+		var notes:Array<CharterNote> = [for (s in selection) if (s is CharterNote) cast s];
+		if (notes.length == 0) return;
+
+		var oldPress = [for (n in notes) n.onPress];
+		var oldMiss = [for (n in notes) n.onMiss];
+		var newPress = press ? [for (n in notes) pack] : oldPress.copy();
+		var newMiss = press ? oldMiss.copy() : [for (n in notes) pack];
+
+		for (i => n in notes) { n.onPress = newPress[i]; n.onMiss = newMiss[i]; }
+		undos.addToUndo(CEditNotePacks(notes, oldPress, oldMiss, newPress, newMiss));
+	}
+
+	/** Submenu con los action packs del chart para elegir el onPress / onMiss de las notas seleccionadas. */
+	function notePackOptions(press:Bool):Array<UIContextMenuOption> {
+		var packs = PlayState.SONG.actionPacks == null ? [] : PlayState.SONG.actionPacks;
+		var options:Array<UIContextMenuOption> = [{
+			label: "(-1) " + (TU.exists("note.packNone") ? TU.translate("note.packNone") : "Ninguno"),
+			onSelect: (_) -> {setNotePack(press, -1);}
+		}];
+		for (i => p in packs)
+			options.push({
+				label: '#$i ${p.name != null ? p.name + " " : ""}(${p.actions.length})',
+				onSelect: (_) -> {setNotePack(press, i);}
+			});
+		return options;
+	}
+
 	function editNoteTypesList(_)
 		FlxG.state.openSubState(new CharterNoteTypesList());
 
-	function buildNoteTypesUI():Array<UIContextMenuOption> {
+	public function buildNoteTypesUI():Array<UIContextMenuOption> {
 		var noteTopButton:UITopMenuButton = topMenuSpr == null ? null : cast topMenuSpr.members[noteIndex];
 		var newChilds:Array<UIContextMenuOption> = [
 			{
@@ -2322,6 +2361,15 @@ class Charter extends UIState {
 			color: 0xFF959829, icon: 4,
 			onCreate: function (button:UIContextMenuOptionSpr) {button.label.offset.x = button.icon.offset.x = -2;},
 			onSelect: editNoteTypesList
+		});
+		newChilds.push(null);
+		newChilds.push({
+			label: TU.exists("note.onPress") ? TU.translate("note.onPress") : "onPress (action pack)",
+			childs: notePackOptions(true)
+		});
+		newChilds.push({
+			label: TU.exists("note.onMiss") ? TU.translate("note.onMiss") : "onMiss (action pack)",
+			childs: notePackOptions(false)
 		});
 		if (noteTopButton != null) noteTopButton.contextMenu = newChilds;
 		if (topMenu != null && topMenu[noteIndex] != null) topMenu[noteIndex].childs = newChilds;
@@ -2473,6 +2521,11 @@ class Charter extends UIState {
 							for (noteChanged in notesChanged)
 								cast(__relinkSingleSelection(noteChanged), CharterNote)
 						], oldNoteTypes, newNoteTypes);
+					case CEditNotePacks(notesChanged, oldPress, oldMiss, newPress, newMiss):
+						newChanges[i] = CEditNotePacks([
+							for (noteChanged in notesChanged)
+								cast(__relinkSingleSelection(noteChanged), CharterNote)
+						], oldPress, oldMiss, newPress, newMiss);
 					default: newChanges[i] = change;
 				}
 			}
@@ -2551,12 +2604,13 @@ enum CharterChange {
 	CEditNoteTypes(oldArray:Array<String>, newArray:Array<String>);
 	CEditBookmarks(oldArray:Array<ChartBookmark>, newArray:Array<ChartBookmark>);
 	CEditSpecNotesType(notes:Array<CharterNote>, oldNoteTypes:Array<Int>, newNoteTypes:Array<Int>);
+	CEditNotePacks(notes:Array<CharterNote>, oldPress:Array<Int>, oldMiss:Array<Int>, newPress:Array<Int>, newMiss:Array<Int>);
 
 	CChangeBundle(changes:Array<CharterChange>);
 }
 
 enum CharterCopyboardObject {
-	CNote(step:Float, id:Int, strumLineID:Int, susLength:Float, type:Int);
+	CNote(step:Float, id:Int, strumLineID:Int, susLength:Float, type:Int, onPress:Int, onMiss:Int);
 	CEvent(step:Float, events:Array<ChartEvent>);
 }
 

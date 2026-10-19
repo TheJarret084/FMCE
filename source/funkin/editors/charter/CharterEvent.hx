@@ -133,19 +133,8 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 	 * @param name The name of the event
 	 * @return The icon
 	**/
-	/** Eventos de FMCE que reutilizan un icono que ya existe en `event-icons/`. */
-	static final ICON_ALIASES:Map<String, String> = [
-		"CameraSet" => "Camera Movement",
-		"CameraZoom" => "Camera Zoom",
-		"CameraShake" => "Camera Bop",
-		"ScreenFlash" => "Camera Flash",
-		"ObjectAnimationSet" => "Play Animation",
-		"ObjectPositionSet" => "Camera Position"
-	];
-
 	private static function generateDefaultIcon(name:String) {
 		var isBase64:Bool = false;
-		if (ICON_ALIASES.exists(name)) name = ICON_ALIASES.get(name);
 		var path:String = Paths.image('editors/charter/event-icons/$name');
 		var defaultPath = Paths.image('editors/charter/event-icons/Unknown');
 		if(!Assets.exists(path)) {
@@ -219,6 +208,20 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		healthIcon.scrollFactor.set(1, 1);
 		healthIcon.active = false;
 		return healthIcon;
+	}
+
+	/**
+	 * Igual que `generateEventIcon`, pero si el icono (o su script ui) falla, devuelve un cuadro de color y deja el error en el log
+	 * en vez de tumbar el editor. El icono de un evento es `assets/images/editors/charter/event-icons/<NombreDelEvento>.png`.
+	 */
+	public static function safeEventIcon(event:ChartEvent, inMenu:Bool = true):FlxSprite {
+		var icon:FlxSprite = null;
+		try {
+			icon = generateEventIcon(event, inMenu);
+		} catch (e:Dynamic) {
+			Logs.trace('Event icon for "${event.name}" failed: ${Std.string(e)}', ERROR);
+		}
+		return icon != null ? icon : new FlxSprite().makeGraphic(16, 16, EVENT_COLOR);
 	}
 
 	public static function generateEventIcon(event:ChartEvent, inMenu:Bool = true):FlxSprite {
@@ -408,7 +411,7 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		}
 
 		for(event in events) {
-			var spr = generateEventIcon(event, false);
+			var spr = safeEventIcon(event, false);
 			icons.push(spr);
 			members.push(spr);
 		}

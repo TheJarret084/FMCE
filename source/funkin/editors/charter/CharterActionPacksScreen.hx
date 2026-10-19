@@ -13,6 +13,9 @@ class CharterActionPacksScreen extends UISubstateWindow {
 	public var packs:Array<ChartActionPack> = [];
 	public var packsList:UIButtonList<ActionPackButton>;
 
+	/** Packs en edicion (la copia de trabajo de la ventana abierta): el dropdown de RunActionPack los usa mientras tanto. */
+	public static var editing:Null<Array<ChartActionPack>> = null;
+
 	public var saveButton:UIButton;
 	public var closeButton:UIButton;
 
@@ -26,6 +29,7 @@ class CharterActionPacksScreen extends UISubstateWindow {
 	public override function create() {
 		original = PlayState.SONG.actionPacks == null ? [] : PlayState.SONG.actionPacks;
 		packs = [for (p in original) copyPack(p)];
+		editing = packs;
 
 		winTitle = TU.translate("charterActionPacks.win-title");
 		winWidth = WIN_WIDTH; winHeight = 420;
@@ -114,6 +118,9 @@ class CharterActionPacksScreen extends UISubstateWindow {
 		function check(e:ChartEvent) if (e.name == "RunActionPack" && e.params.length > 0 && Std.int(e.params[0]) >= index) n++;
 		for (e in Charter.instance.eventsGroup.members) for (a in e.events) check(a);
 		for (p in packs) for (a in p.actions) check(a);
+		// notas con onPress / onMiss apuntando a ese pack o a uno posterior
+		for (note in Charter.instance.notesGroup)
+			if (note != null && note.exists && (note.onPress >= index || note.onMiss >= index)) n++;
 		return n;
 	}
 
@@ -124,6 +131,12 @@ class CharterActionPacksScreen extends UISubstateWindow {
 		PlayState.SONG.actionPacks = neu;
 		Charter.undos.addToUndo(CEditActionPacks(old, [for (p in neu) copyPack(p)]));
 		Charter.instance.buildEvents();
+		Charter.instance.buildNoteTypesUI();
+	}
+
+	public override function destroy() {
+		if (editing == packs) editing = null;
+		super.destroy();
 	}
 
 	public override function update(elapsed:Float) {

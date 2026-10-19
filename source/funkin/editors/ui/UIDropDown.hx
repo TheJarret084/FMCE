@@ -40,6 +40,9 @@ class UIDropDown extends UISliceSprite {
 			}
 		}
 
+		// sin opciones o con un indice fuera de rango el label de abajo (items[index]) reventaba con null
+		if (_items.length == 0) _items = [{label: "-", value: 0}];
+		index = Std.int(Math.max(0, Math.min(index, _items.length - 1)));
 		this.items = _items;
 		this.options = [for(o in _items) o.label]; // backwards compatibility
 		this.index = index;
@@ -66,6 +69,7 @@ class UIDropDown extends UISliceSprite {
 	}
 
 	public function setOption(newIndex:Int) {
+		newIndex = Std.int(Math.max(0, Math.min(newIndex, items.length - 1)));
 		if (index != (index = newIndex)) {
 			label.text = items[index].label;
 			if (onChange != null)
@@ -88,7 +92,8 @@ class UIDropDown extends UISliceSprite {
 
 	public function openContextMenu() {
 		UIState.playEditorSound(Flags.DEFAULT_EDITOR_DROPDOWNAPPEAR_SOUND);
-		var screenPos = getScreenPosition(null, __lastDrawCameras[0] == null ? FlxG.camera : __lastDrawCameras[0]);
+		var drawCam = __lastDrawCameras[0] == null ? FlxG.camera : __lastDrawCameras[0];
+		var screenPos = getScreenPosition(null, drawCam);
 		curMenu = UIState.state.openContextMenu([
 			for(k=>o in items) {
 				icon: (k == index) ? 1 : 0,
@@ -96,7 +101,7 @@ class UIDropDown extends UISliceSprite {
 			}
 		], function(_, i, _) {
 			setOption(i);
-		}, __lastDrawCameras[0].x + screenPos.x, __lastDrawCameras[0].y + screenPos.y + bHeight);
+		}, drawCam.x + screenPos.x, drawCam.y + screenPos.y + bHeight);
 	}
 }
 

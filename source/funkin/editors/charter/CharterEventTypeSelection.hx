@@ -57,7 +57,7 @@ class CharterEventTypeSelection extends UISubstateWindow {
 			button.cameras = [buttonCameras];
 			buttons.push(cast add(button));
 
-			var icon = CharterEvent.generateEventIcon({
+			var icon = CharterEvent.safeEventIcon({
 				name: eventName,
 				time: 0,
 				params: []
