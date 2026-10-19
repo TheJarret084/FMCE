@@ -15,3 +15,6 @@ building/android.keystore
 # Stray build output
 *.log
 *.hxml
+
+# Backups que deja el editor al guardar un nivel
+*.bak

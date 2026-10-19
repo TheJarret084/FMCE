@@ -1,0 +1,91 @@
+{
+  "bilinear": true,
+  "data": [
+    {
+      "index": 0,
+      "bilinear": true,
+      "num": 14,
+      "spd": 1,
+      "anim": "anim0",
+      "loop": true,
+      "name": "idle",
+      "offset": {
+        "x": 265.5,
+        "y": 382.5
+      },
+      "scale": 1.11111111111111
+    },
+    {
+      "index": 1,
+      "bilinear": true,
+      "num": 7,
+      "spd": 1,
+      "anim": "anim1",
+      "loop": true,
+      "name": "anim0",
+      "offset": {
+        "x": 321.3,
+        "y": 382.5
+      },
+      "scale": 1.11111111111111
+    },
+    {
+      "index": 2,
+      "bilinear": true,
+      "num": 7,
+      "spd": 1,
+      "anim": "anim2",
+      "loop": true,
+      "name": "anim1",
+      "offset": {
+        "x": 288,
+        "y": 330.3
+      },
+      "scale": 1.11111111111111
+    },
+    {
+      "index": 3,
+      "bilinear": true,
+      "num": 7,
+      "spd": 1,
+      "anim": "anim3",
+      "loop": true,
+      "name": "anim2",
+      "offset": {
+        "x": 240.3,
+        "y": 382.5
+      },
+      "scale": 1.11111111111111
+    },
+    {
+      "index": 4,
+      "bilinear": true,
+      "num": 7,
+      "spd": 1,
+      "anim": "anim4",
+      "loop": true,
+      "name": "anim3",
+      "offset": {
+        "x": 296.1,
+        "y": 382.5
+      },
+      "scale": 1.11111111111111
+    },
+    {
+      "index": 5,
+      "bilinear": true,
+      "num": 25,
+      "spd": 24,
+      "anim": "anim5",
+      "loop": false,
+      "name": "anim4",
+      "offset": {
+        "x": 262.8,
+        "y": 382.5
+      },
+      "scale": 1.11111111111111
+    }
+  ],
+  "type": "character",
+  "scale": 1
+}

@@ -14,6 +14,9 @@ class QueueNote
 	public var isSustainNote:Bool = false;
 	public var isSustainEnd:Bool = false;
 	public var tail:Null<Array<QueueNote>> = null;
+	/** Action pack (events.json) a correr al acertar / fallar. -1 = ninguno. Solo la cabeza lo trae. */
+	public var onPress:Int = -1;
+	public var onMiss:Int = -1;
 
 	/**
 	 * @param strumTime Tiempo de inicio de la nota en ms.
@@ -43,6 +46,9 @@ class NoteSharedTailState
 	public var hit:Bool = false;
 	public var missed:Bool = false;
 	public var lastHeld:Float = 0;
+	/** Action packs de la cabeza del sustain: onMiss si se falla la nota o se suelta el sustain; onPress para saber si es trampa. */
+	public var onMiss:Int = -1;
+	public var onPress:Int = -1;
 
 	/**
 	 * @param parent Cabeza del sustain.
@@ -139,6 +145,12 @@ class Note extends FlxSprite
 			tailState.hit = false;
 			tailState.missed = false;
 			tailState.lastHeld = 0;
+		}
+
+		if (parent == null)
+		{
+			tailState.onMiss = q.onMiss;
+			tailState.onPress = q.onPress;
 		}
 
 		strumTime = q.strumTime;

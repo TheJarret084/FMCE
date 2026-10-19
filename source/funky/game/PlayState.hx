@@ -231,7 +231,8 @@ class PlayState extends MusicBeatState
 		var lineWidth = span;
 		var cpuX:Array<Float> = [for (_ in cpuIndexes) middle ? -span - 80 : SIDE_MARGIN];
 
-		playerLine = new StrumLine(strumX, strumY, false, false, song.laneCount, lineWidth);
+		// Botplay: la strumline del jugador es CPU desde que se crea (toca todo ella sola, sin tocar el score ni la vida).
+		playerLine = new StrumLine(strumX, strumY, ClientPrefs.isBotplay(), false, song.laneCount, lineWidth);
 		playerLine.index = 0;
 
 		// opponentLine siempre existe (los scripts la usan); si esta vacia no se agrega al juego.
@@ -602,6 +603,13 @@ class PlayState extends MusicBeatState
 			{
 				if (delta <= 0)
 				{
+					// el bot del jugador no pisa las trampas (notas cuyo onPress resta vida)
+					if (line == playerLine && esTrampa(note.queueNote != null ? note.queueNote.onPress : -1))
+					{
+						note.kill();
+						return;
+					}
+
 					if (Scripts.has)
 						Scripts.call("opponentNoteHitPre", [note]);
 
@@ -610,6 +618,8 @@ class PlayState extends MusicBeatState
 
 					if (stage != null)
 						stage.sing(stageSide(line), note.noteData);
+
+					runNoteEvent(note.queueNote != null ? note.queueNote.onPress : -1);
 
 					if (Scripts.has)
 						Scripts.call("opponentNoteHit", [note]);
@@ -716,6 +726,8 @@ class PlayState extends MusicBeatState
 		if (stage != null)
 			stage.sing(0, note.noteData);
 
+		runNoteEvent(note.queueNote != null ? note.queueNote.onPress : -1);
+
 		score += ratingPoints(rating);
 		totalNotesHit += ratingWeight(rating);
 		totalPlayed++;
@@ -749,7 +761,7 @@ class PlayState extends MusicBeatState
 		registerMiss(note.tailState);
 		note.alpha = 0.3;
 
-		if (Scripts.has)
+		if (Scripts.has && !esTrampa(note.tailState.onPress))
 			Scripts.call("noteMiss", [note]);
 	}
 
@@ -761,7 +773,7 @@ class PlayState extends MusicBeatState
 	{
 		registerMiss(note.tailState);
 
-		if (Scripts.has)
+		if (Scripts.has && !esTrampa(note.tailState.onPress))
 			Scripts.call("noteMiss", [note]);
 	}
 
@@ -775,12 +787,18 @@ class PlayState extends MusicBeatState
 			return;
 
 		state.missed = true;
-		misses++;
-		totalPlayed++;
-		combo = 0;
 
-		hud.addHealth(HEALTH_MISS);
-		refreshScore(true);
+		// Trampa (su onPress resta vida): dejarla pasar o soltarla NO es fallo: sin miss, sin combo roto, sin vida, sin onMiss.
+		if (!esTrampa(state.onPress))
+		{
+			runNoteEvent(state.onMiss);
+			misses++;
+			totalPlayed++;
+			combo = 0;
+
+			hud.addHealth(HEALTH_MISS);
+			refreshScore(true);
+		}
 
 		for (piece in state.tail)
 			if (piece.exists && piece.tailState == state)
@@ -805,6 +823,17 @@ class PlayState extends MusicBeatState
 			Scripts.call("onUpdateScore", [missed]);
 			Scripts.call("onRecalculateRating");
 		}
+	}
+
+	/** Nota "trampa": su onPress resta vida al jugador (ver Eventos.restaVida). */
+	function esTrampa(pack:Int):Bool
+		return pack >= 0 && eventos != null && eventos.restaVida(pack);
+
+	/** `onPressEvent` / `onMissEvent` de una nota: corre ese action pack de events.json (-1 = ninguno). */
+	function runNoteEvent(pack:Int):Void
+	{
+		if (pack >= 0 && eventos != null)
+			eventos.runPack(pack, songTime);
 	}
 
 	/** 0 = jugador, 1 = oponente. */

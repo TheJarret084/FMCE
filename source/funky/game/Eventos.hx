@@ -295,8 +295,8 @@ class Eventos
 		var objeto = buscar(props);
 		if (objeto == null) return;
 		var animacion = Std.int(numero(campo(props, "anim")));
-		// En un objeto de video, "animacion" es el numero de video (0..count-1).
-		if (objeto.video != null ? !stage.setVideo(objeto, animacion) : !objeto.sprite.playIndex(animacion, true))
+		// En un objeto de video, "animacion" es el numero de video (0..count-1). Ver Stage.setAnim.
+		if (!stage.setAnim(objeto, animacion))
 			avisar("anim:" + campo(props, "object") + ":" + animacion, 'ObjectAnimationSet: el objeto ' + campo(props, "object") + ' no tiene la animacion ' + animacion);
 	}
 
@@ -341,6 +341,42 @@ class Eventos
 		flash.alpha = alfa;
 		var ms = Math.max(FLASH_MIN_MS, song.unitToMs(numero(campo(props, "duration")), texto(campo(props, "timeUnit"), "seconds")));
 		transicion("flash", inicio, ms, FlxEase.linear, function(k) flash.alpha = alfa * (1 - k));
+	}
+
+	var restaVidaCache:Map<Int, Bool> = new Map();
+
+	/**
+	 * true si el pack `indice` resta vida al jugador (PlayerHealth remove/sub/subtract con value > 0), tambien a traves de
+	 * RunActionPack anidados. Una nota cuyo `onPress` resta vida es una "trampa": no pisarla no es fallar.
+	 */
+	public function restaVida(indice:Int, profundidad:Int = 0):Bool
+	{
+		if (indice < 0 || indice >= packs.length || profundidad >= MAX_PACK_DEPTH) return false;
+		if (profundidad == 0 && restaVidaCache.exists(indice)) return restaVidaCache.get(indice);
+
+		var resta = false;
+		for (accion in packs[indice])
+		{
+			var tipo = texto(campo(accion, "type"), "");
+			var props = campo(accion, "props");
+			if (tipo == "PlayerHealth")
+			{
+				var op = texto(campo(props, "operation"), "set").toLowerCase();
+				if ((op == "remove" || op == "sub" || op == "subtract") && numeroDe(props, ["value"], 0) > 0) resta = true;
+			}
+			else if (tipo == "RunActionPack" && restaVida(Std.int(numero(campo(props, "actionPack"))), profundidad + 1))
+				resta = true;
+		}
+
+		if (profundidad == 0) restaVidaCache.set(indice, resta);
+		return resta;
+	}
+
+	/** Corre el action pack `indice` ahora (`onPress` / `onMiss` de una nota). */
+	public function runPack(indice:Int, inicio:Float):Void
+	{
+		if (indice < 0) return;
+		correrPack({actionPack: indice}, inicio, 0);
 	}
 
 	function correrPack(props:Dynamic, inicio:Float, profundidad:Int):Void

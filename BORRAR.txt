@@ -1,7 +1,0 @@
-Borra estos archivos de tu proyecto (ya no se usan):
-source/funkin/editors/SaveSubstate.hx
-source/funkin/editors/extra/PropertyButton.hx
-source/advanced/SpritePreviewState.hx
-source/advanced/editors/CodeStudioExampleState.hx
-source/advanced/ui/ListPanel.hx
-source/advanced/ui/TextPrompt.hx

@@ -43,9 +43,11 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 	public override function create() {
 		super.create();
 
-		FlxG.sound.music.pause(); // prevent the song from continuing
-		Charter.instance.vocals.pause();
-		for (strumLine in Charter.instance.strumLines.members) strumLine.vocals.pause();
+		// prevent the song from continuing (todo con null-check: en FMCE la musica / las voces pueden no estar cargadas)
+		if (FlxG.sound.music != null) FlxG.sound.music.pause();
+		if (Charter.instance.vocals != null) Charter.instance.vocals.pause();
+		for (strumLine in Charter.instance.strumLines.members)
+			if (strumLine != null && strumLine.vocals != null) strumLine.vocals.pause();
 
 		events = chartEvent.events.copy();
 
@@ -116,9 +118,10 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 
 		// destroy old elements
 		paramsFields = [];
-		for(e in paramsPanel) {
+		for (e in paramsPanel.members.copy()) {
+			if (e == null) continue;
+			paramsPanel.remove(e, true);
 			e.destroy();
-			paramsPanel.remove(e);
 		}
 
 		winHeight = eventName.y + eventName.height + 6;
@@ -140,7 +143,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 					bWidth = Math.max(bWidth, label.x+label.width+10);
 				};
 
-				var value:Dynamic = CoolUtil.getDefault(curEvent.params[k], param.defValue);
+				var value:Dynamic = CoolUtil.getDefault(k < curEvent.params.length ? curEvent.params[k] : null, param.defValue);
 				var lastAdded = switch(param.type) {
 					case TString:
 						addLabel();
@@ -154,12 +157,12 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						checkbox;
 					case TInt(min, max, step):
 						addLabel();
-						var numericStepper = new UINumericStepper(eventName.x+6, winHeight, cast value, step.getDefault(1), 0, min, max);
+						var numericStepper = new UINumericStepper(eventName.x+6, winHeight, asFloat(value, param.defValue), step.getDefault(1), 0, min, max);
 						paramsPanel.add(numericStepper); paramsFields.push(numericStepper);
 						numericStepper;
 					case TFloat(min, max, step, precision):
 						addLabel();
-						var numericStepper = new UINumericStepper(eventName.x+6, winHeight, cast value, step.getDefault(1), precision, min, max);
+						var numericStepper = new UINumericStepper(eventName.x+6, winHeight, asFloat(value, param.defValue), step.getDefault(1), precision, min, max);
 						paramsPanel.add(numericStepper); paramsFields.push(numericStepper);
 						numericStepper;
 					case TStrumLine:
@@ -174,7 +177,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						colorWheel;
 					case TDropDown(options):
 						addLabel();
-						var optionIndex = options.indexOf(cast value);
+						var optionIndex = options.indexOf(Std.string(value));
 						if(optionIndex < 0) {
 							optionIndex = 0;
 						}
@@ -226,6 +229,14 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		winHeight = Math.max(winHeight, (eventsList.buttonSize.y * (eventsList.buttons.length + 1))-4) + 10;
 		bWidth += 10+75+10+4; // add events list width to account for event name being on a diff cam +4 because margins >:D
 		update(0);
+	}
+
+	/** Valor de un parametro numerico como Float: el events.json puede traerlo como Int, Float o String. */
+	static function asFloat(value:Dynamic, def:Dynamic):Float {
+		var n = value == null ? Math.NaN : Std.parseFloat(Std.string(value));
+		if (!Math.isNaN(n)) return n;
+		n = def == null ? Math.NaN : Std.parseFloat(Std.string(def));
+		return Math.isNaN(n) ? 0 : n;
 	}
 
 	public function boundWindow() {
@@ -370,7 +381,7 @@ class EventButtonNew extends UIButton {
 		this.icon = icon;
 		this.event = event;
 		super(0, 0, null, function() {
-			substate.changeTab(id);
+			substate.changeTab(substate.events.indexOf(event));
 			for(i in parent.buttons.members)
 				i.alpha = i == this ? 1 : 0.25;
 		}, 73, 40);
@@ -380,9 +391,12 @@ class EventButtonNew extends UIButton {
 		icon.setPosition(18 - icon.width / 2, 20 - icon.height / 2);
 
 		deleteButton = new UIButton(bWidth - 30, y + (bHeight - 26) / 2, null, function () {
-			substate.events.splice(id, 1);
-			substate.changeTab(id, false);
+			var idx = substate.events.indexOf(event);
+			if (idx < 0) return;
+			substate.saveCurTab(); // antes de que los indices se corran
+			substate.events.splice(idx, 1);
 			parent.remove(this);
+			substate.changeTab(idx < substate.events.length ? idx : substate.events.length - 1, false);
 		}, 26, 26);
 		deleteButton.color = FlxColor.RED;
 		deleteButton.autoAlpha = false;

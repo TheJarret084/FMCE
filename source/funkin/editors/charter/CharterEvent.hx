@@ -175,7 +175,13 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 				graphic = defaultPath;
 		}
 
-		return new FlxSprite(graphic);
+		// Un icono que falta o no carga no debe tumbar el charter: se cae a un cuadro de color.
+		var spr:FlxSprite = try new FlxSprite(graphic) catch (e:Dynamic) null;
+		if (spr == null || spr.graphic == null) {
+			Logs.trace('Event icon "$name" could not be loaded, using a placeholder', WARNING);
+			spr = new FlxSprite().makeGraphic(16, 16, EVENT_COLOR);
+		}
+		return spr;
 	}
 
 	/**
@@ -384,13 +390,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		group.copyColorTransformToChildren = false;
 	}
 
-	public override function onHovered() {
-		super.onHovered();
-		/*
-		if (FlxG.mouse.justReleased)
-			FlxG.state.openSubState(new CharterEventScreen(this));
-		*/
-	}
 
 	public function handleSelection(selectionBox:UISliceSprite):Bool {
 		return (selectionBox.x + selectionBox.bWidth > x) && (selectionBox.x < x + bWidth) && (selectionBox.y + selectionBox.bHeight > y) && (selectionBox.y < y + bHeight);

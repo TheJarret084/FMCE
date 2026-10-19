@@ -88,7 +88,10 @@ class Chart {
 		for (n in lv.notes) {
 			var line = n.line != null ? n.line : (n.mustPress ? 0 : 1);
 			if (line < 0) continue;
-			strumLines[line].notes.push({time: n.time, id: n.lane, type: 0, sLen: n.length});
+			var cn:ChartNote = {time: n.time, id: n.lane, type: 0, sLen: n.length};
+			if (n.onPress != null && n.onPress >= 0) cn.onPress = n.onPress;
+			if (n.onMiss != null && n.onMiss >= 0) cn.onMiss = n.onMiss;
+			strumLines[line].notes.push(cn);
 		}
 
 		var bpm:Float = lv.bpm > 0 ? lv.bpm : 120;
@@ -153,6 +156,8 @@ class Chart {
 		var params:Array<Dynamic> = [];
 		for (info in EventsData.getEventParams(type)) {
 			var v:Dynamic = props != null ? Reflect.field(props, info.key) : null;
+			// Niveles guardados con la clave vieja `chart` (antes el editor la usaba por error y perdia el valor real).
+			if (v == null && props != null && type == "ObjectChartChange" && info.key == "strumLine") v = Reflect.field(props, "chart");
 			params.push(v == null ? info.defValue : v);
 		}
 		var e:ChartEvent = {name: type, time: time, params: params};
@@ -272,6 +277,8 @@ class Chart {
 				for (n in notes) {
 					var o:Dynamic = {time: round6((n.time - offsetMs) / 1000), lane: n.id};
 					if (n.sLen > 0) Reflect.setField(o, "length", round6(n.sLen / 1000));
+					if (n.onPress != null && n.onPress >= 0) Reflect.setField(o, "onPress", n.onPress);
+					if (n.onMiss != null && n.onMiss >= 0) Reflect.setField(o, "onMiss", n.onMiss);
 					o;
 				}
 			]);

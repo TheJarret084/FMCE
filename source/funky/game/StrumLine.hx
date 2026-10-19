@@ -57,6 +57,8 @@ class StrumLine extends FlxTypedGroup<Strum>
 	public function queueChartNote(data:FNMMNote, stepMs:Float):Void
 	{
 		var q = new QueueNote(data.time, data.length, data.lane, data.mustPress);
+		q.onPress = data.onPress != null ? data.onPress : -1;
+		q.onMiss = data.onMiss != null ? data.onMiss : -1;
 		queue.push(q);
 		if (data.length <= 0 || stepMs <= 0) return;
 

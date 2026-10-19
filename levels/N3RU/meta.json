@@ -1,0 +1,14 @@
+{
+	"icons": {
+		"P2": "icon1",
+		"P1": "icon2"
+	},
+	"color": "#31A2F2",
+	"stepsPerBeat": 12,
+	"displayName": "N3RU",
+	"song": "music.ogg",
+	"stage": "scene",
+	"validScore": true,
+	"bpm": 170,
+	"lanes": 4
+}

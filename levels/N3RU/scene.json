@@ -1,0 +1,130 @@
+{
+  "objects": [
+    {
+      "transform": [
+        {
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1
+          },
+          "position": {
+            "x": 1080,
+            "y": 960
+          }
+        }
+      ],
+      "fixed": false,
+      "spr": "bg",
+      "strumLine": -1,
+      "visible": true,
+      "color": {
+        "r": 255,
+        "b": 255,
+        "g": 255
+      },
+      "opacity": 1
+    },
+    {
+      "transform": [
+        {
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "scale": {
+            "x": 0.449999999999999,
+            "y": 0.449999999999999
+          },
+          "position": {
+            "x": 1496,
+            "y": 1091
+          }
+        }
+      ],
+      "fixed": false,
+      "spr": "player",
+      "strumLine": 0,
+      "visible": true,
+      "color": {
+        "r": 255,
+        "b": 255,
+        "g": 255
+      },
+      "opacity": 1
+    },
+    {
+      "transform": [
+        {
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "scale": {
+            "x": 0.549999999999998,
+            "y": 0.549999999999998
+          },
+          "position": {
+            "x": 624,
+            "y": 1026
+          }
+        }
+      ],
+      "fixed": false,
+      "spr": "7370",
+      "strumLine": 1,
+      "visible": true,
+      "color": {
+        "r": 255,
+        "b": 255,
+        "g": 255
+      },
+      "opacity": 1
+    }
+  ],
+  "cameras": [
+    {
+      "scale": 0.65,
+      "position": {
+        "x": 860,
+        "y": 960
+      }
+    },
+    {
+      "scale": 0.55,
+      "position": {
+        "x": 1396,
+        "y": 978
+      }
+    },
+    {
+      "scale": 0.9,
+      "position": {
+        "x": 1080,
+        "y": 960
+      }
+    },
+    {
+      "scale": 0.4,
+      "position": {
+        "x": 743,
+        "y": 963
+      }
+    },
+    {
+      "scale": 0.55,
+      "position": {
+        "x": 682,
+        "y": 980
+      }
+    }
+  ],
+  "icons": [
+    "icon1",
+    "icon2"
+  ],
+  "landscape": true
+}

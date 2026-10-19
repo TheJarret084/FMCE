@@ -1,0 +1,35 @@
+{
+  "bilinear": true,
+  "data": [
+    {
+      "index": 0,
+      "bilinear": true,
+      "num": 1,
+      "spd": 1,
+      "anim": "anim0",
+      "loop": true,
+      "name": "anim0",
+      "offset": {
+        "x": 135,
+        "y": 135
+      },
+      "scale": 1.11111111111111
+    },
+    {
+      "index": 1,
+      "bilinear": true,
+      "num": 1,
+      "spd": 1,
+      "anim": "anim1",
+      "loop": true,
+      "name": "anim1",
+      "offset": {
+        "x": 135,
+        "y": 135
+      },
+      "scale": 1.11111111111111
+    }
+  ],
+  "type": "icon",
+  "scale": 1
+}

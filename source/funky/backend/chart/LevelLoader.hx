@@ -303,8 +303,17 @@ class LevelLoader
 			lane: lane,
 			length: length > 0 ? length * factor : 0,
 			mustPress: line == 0,
-			line: line
-		});
+			line: line,
+			onPress: packOf(value, "onPress"),
+			onMiss: packOf(value, "onMiss")
+			});
+	}
+
+	/** `onPress` / `onMiss` de una nota de chart.json: indice de action pack, -1 si falta. */
+	static function packOf(value:Dynamic, name:String):Int
+	{
+		var n = number(Reflect.field(value, name), -1);
+		return n >= 0 ? Std.int(n) : -1;
 	}
 
 	static function number(value:Dynamic, fallback:Float):Float

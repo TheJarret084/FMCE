@@ -1,0 +1,96 @@
+{
+  "bilinear": true,
+  "data": [
+    {
+      "anim": "anim0",
+      "spd_fps": true,
+      "scale": 1.11111111111111,
+      "index": 0,
+      "name": "idle",
+      "offset": {
+        "x": 131.4,
+        "y": 384.3
+      },
+      "bilinear": true,
+      "loop": true,
+      "num": 14,
+      "spd": 24
+    },
+    {
+      "anim": "anim1",
+      "spd_fps": true,
+      "scale": 1.11111111111111,
+      "index": 1,
+      "name": "anim1",
+      "offset": {
+        "x": 164.7,
+        "y": 381.6
+      },
+      "bilinear": true,
+      "loop": true,
+      "num": 7,
+      "spd": 24
+    },
+    {
+      "anim": "anim2",
+      "spd_fps": true,
+      "scale": 1.03333333333333,
+      "index": 2,
+      "name": "anim2",
+      "offset": {
+        "x": 242.1,
+        "y": 354.6
+      },
+      "bilinear": true,
+      "loop": true,
+      "num": 7,
+      "spd": 24
+    },
+    {
+      "anim": "anim3",
+      "spd_fps": true,
+      "scale": 1.11111111111111,
+      "index": 3,
+      "name": "anim3",
+      "offset": {
+        "x": 301.5,
+        "y": 384.3
+      },
+      "bilinear": true,
+      "loop": true,
+      "num": 7,
+      "spd": 24
+    },
+    {
+      "anim": "anim4",
+      "spd_fps": true,
+      "scale": 1.11111111111111,
+      "index": 4,
+      "name": "anim4",
+      "offset": {
+        "x": 186.9,
+        "y": 384.9
+      },
+      "bilinear": true,
+      "loop": true,
+      "num": 7,
+      "spd": 24
+    },
+    {
+      "anim": "anim5",
+      "spd_fps": true,
+      "scale": 1.04,
+      "index": 5,
+      "name": "anim5",
+      "offset": {
+        "x": 153.5,
+        "y": 406.3
+      },
+      "bilinear": true,
+      "loop": false,
+      "num": 302,
+      "spd": 576
+    }
+  ],
+  "type": "character"
+}

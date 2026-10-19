@@ -84,7 +84,7 @@ class EventsData {
 		]);
 		add("ObjectChartChange", [
 			p("object", "Objeto (scene.json)", TInt(0, 999, 1), 0),
-			p("chart", "Strumline (-1 ninguna, 0 jugador, 1 oponente)", TInt(-1, 99, 1), 0)
+			p("strumLine", "Strumline (-1 ninguna, 0 jugador, 1 oponente)", TInt(-1, 99, 1), 0)
 		]);
 		add("BarIconChange", [
 			p("target", "Icono (0 oponente, 1 jugador)", TInt(0, 1, 1), 1),

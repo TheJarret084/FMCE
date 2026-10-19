@@ -1,0 +1,46 @@
+{
+	"frames": [
+		{
+			"rotated": false,
+			"spriteSourceSize": {
+				"h": 135,
+				"w": 135,
+				"x": 0,
+				"y": 0
+			},
+			"frame": {
+				"h": 135,
+				"w": 135,
+				"x": 2,
+				"y": 2
+			},
+			"duration": 42,
+			"trimmed": false,
+			"page": 0,
+			"sourceSize": {
+				"h": 135,
+				"w": 135
+			},
+			"filename": "anim00000"
+		}
+	],
+	"meta": {
+		"image": "sprite.png",
+		"format": "RGBA8888",
+		"app": "FMCE",
+		"frameTags": [
+			{
+				"to": 0,
+				"direction": "forward",
+				"from": 0,
+				"name": "anim0"
+			}
+		],
+		"size": {
+			"h": 139,
+			"w": 139
+		},
+		"scale": "1",
+		"version": "2.0"
+	}
+}

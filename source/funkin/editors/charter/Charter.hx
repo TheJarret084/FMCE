@@ -627,6 +627,8 @@ class Charter extends UIState {
 				var n = new CharterNote();
 				var t = Conductor.getStepForTime(note.time);
 				n.updatePos(t, note.id, Conductor.getStepForTime(note.time + note.sLen) - t, note.type, strumLines.members[i]);
+				n.onPress = note.onPress != null ? note.onPress : -1;
+				n.onMiss = note.onMiss != null ? note.onMiss : -1;
 				notesGroup.members[notesCreated++] = n;
 			}
 		notesGroup.sortNotes();
@@ -1230,6 +1232,8 @@ class Charter extends UIState {
 				var n = new CharterNote();
 				var t = Conductor.getStepForTime(note.time);
 				n.updatePos(t, note.id, Conductor.getStepForTime(note.time + note.sLen) - t, note.type, cStr);
+				n.onPress = note.onPress != null ? note.onPress : -1;
+				n.onMiss = note.onMiss != null ? note.onMiss : -1;
 				notesGroup.add(n);
 			}
 			createSelection(toBeCreated, false);
@@ -1577,6 +1581,8 @@ class Charter extends UIState {
 				var n = new CharterNote();
 				var t = Conductor.getStepForTime(time);
 				n.updatePos(t, note.id, Conductor.getStepForTime(time + note.sLen) - t, note.type, strumLines.members[i]);
+				n.onPress = note.onPress != null ? note.onPress : -1;
+				n.onMiss = note.onMiss != null ? note.onMiss : -1;
 				created.push(n);
 			}
 		}
@@ -2337,12 +2343,15 @@ class Charter extends UIState {
 
 	public inline function buildNote(note:CharterNote):ChartNote {
 		var time = Conductor.getTimeForStep(note.step);
-		return {
+		var cn:ChartNote = {
 			type: note.type,
 			time: time,
 			sLen: Conductor.getTimeForStep(note.step + note.susLength) - time,
 			id: note.id
 		};
+		if (note.onPress >= 0) cn.onPress = note.onPress;
+		if (note.onMiss >= 0) cn.onMiss = note.onMiss;
+		return cn;
 	}
 
 	public function buildChart() {

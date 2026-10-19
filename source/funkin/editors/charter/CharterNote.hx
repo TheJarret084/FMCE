@@ -72,6 +72,9 @@ class CharterNote extends UISprite implements ICharterSelectable {
 	public var step:Float;
 	public var id:Int;
 	public var susLength:Float;
+		/** Action pack al acertar / fallar (-1 = ninguno). Solo se conservan: el charter no los edita todavia. */
+		public var onPress:Int = -1;
+		public var onMiss:Int = -1;
 	public var type(default, set):Null<Int> = null;
 	public var typeVisible:Bool = true;
 	public var typeAlpha:Float = 1;

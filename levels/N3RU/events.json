@@ -1,0 +1,334 @@
+{
+	"action_packs": [
+		{
+			"actions": [
+				{
+					"type": "PlayerHealth",
+					"props": {
+						"minHealth": 2,
+						"operation": "remove",
+						"value": 0.5
+					}
+				}
+			]
+		},
+		{
+			"actions": [
+				{
+					"type": "PlayerHealth",
+					"props": {
+						"minHealth": 0,
+						"operation": "set",
+						"value": 15
+					}
+				}
+			]
+		}
+	],
+	"events": [
+		{
+			"time": 1.323529,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 0,
+						"transitionTime": 1.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 4.264706,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 1,
+						"transitionTime": 1.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 7.029412,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 0,
+						"transitionTime": 1.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 9.823529,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 3,
+						"transitionTime": 10.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 11.647059,
+			"actions": [
+				{
+					"props": {
+						"object": 2,
+						"strumLine": -1
+					},
+					"type": "ObjectChartChange"
+				},
+				{
+					"props": {
+						"anim": 5,
+						"object": 2
+					},
+					"type": "ObjectAnimationSet"
+				}
+			]
+		},
+		{
+			"time": 12.529412,
+			"actions": [
+				{
+					"props": {
+						"duration": 0.4,
+						"timeUnit": "seconds",
+						"color_r": 255,
+						"color_b": 255,
+						"alpha": 0.6,
+						"color_g": 255
+					},
+					"type": "ScreenFlash"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 0,
+						"transitionTime": 0,
+						"transitionTimeUnit": "seconds",
+						"object": 1
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 0,
+						"transitionTime": 0,
+						"transitionTimeUnit": "seconds",
+						"object": 0
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 0,
+						"transitionTime": 0,
+						"transitionTimeUnit": "seconds",
+						"object": 2
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"actionPack": 1
+					},
+					"type": "RunActionPack"
+				},
+				{
+					"props": {
+						"sprite": "icon3",
+						"target": 0
+					},
+					"type": "BarIconChange"
+				}
+			]
+		},
+		{
+			"time": 12.676471,
+			"actions": [
+				{
+					"props": {
+						"sprite": "n3ru",
+						"object": 2
+					},
+					"type": "ObjectSpriteSet"
+				}
+			]
+		},
+		{
+			"time": 14.117647,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"value": 1,
+						"transitionTime": 1,
+						"transitionTimeUnit": "seconds",
+						"object": 0
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 1,
+						"transitionTime": 1,
+						"transitionTimeUnit": "seconds",
+						"object": 1
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 1,
+						"transitionTime": 1,
+						"transitionTimeUnit": "seconds",
+						"object": 2
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"target": 4,
+						"transitionTime": 3.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				},
+				{
+					"props": {
+						"anim": 5,
+						"object": 2
+					},
+					"type": "ObjectAnimationSet"
+				}
+			]
+		},
+		{
+			"time": 25.735294,
+			"actions": [
+				{
+					"props": {
+						"object": 2,
+						"strumLine": 1
+					},
+					"type": "ObjectChartChange"
+				}
+			]
+		},
+		{
+			"time": 31,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 1,
+						"transitionTime": 1.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 36.558824,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 2,
+						"transitionTime": 3.2,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 48.294118,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 0,
+						"transitionTime": 1.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 53.588235,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 2,
+						"transitionTime": 1.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 70.735294,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 0,
+						"transitionTime": 1.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 76.176471,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 2,
+						"transitionTime": 1.6,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		}
+	]
+}

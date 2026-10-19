@@ -39,6 +39,10 @@ typedef RawNote = {
 
 	/** Indice de strumline cuando el formato la trae: 0 jugador, 1 oponente, 2+ extras. */
 	@:optional var line:Null<Int>;
+
+	/** Indice de `action_packs` que corre al acertar / fallar la nota (`onPressEvent` / `onMissEvent` del .fnmm). -1 o null = ninguno. */
+	@:optional var onPress:Null<Int>;
+	@:optional var onMiss:Null<Int>;
 }
 
 /**
@@ -161,6 +165,8 @@ class FNMMToFMCEConverter
 		{
 			var entry:Dynamic = {time: round6(note.time / 1000), lane: note.lane};
 			if (note.length > 0) Reflect.setField(entry, "length", round6(note.length / 1000));
+			if (Reflect.hasField(note, "onPress")) Reflect.setField(entry, "onPress", Reflect.field(note, "onPress"));
+			if (Reflect.hasField(note, "onMiss")) Reflect.setField(entry, "onMiss", Reflect.field(note, "onMiss"));
 
 			// Las extras (2, 3, ...) conservan su indice y NO se mezclan con el oponente.
 			var extra:Int = Reflect.hasField(note, "line") ? Std.int(Reflect.field(note, "line")) : -1;
@@ -468,7 +474,8 @@ class FNMMToFMCEConverter
 						{
 							if (!isRecord(note) || !Reflect.hasField(note, "start")) continue;
 							var length = fieldNumber(note, "duration", 0) * factor;
-							out.push({t: fieldNumber(note, "start", 0) * factor, lane: laneIndex, len: length > 0 ? length : 0, mustPress: index == 0, line: index});
+							out.push({t: fieldNumber(note, "start", 0) * factor, lane: laneIndex, len: length > 0 ? length : 0, mustPress: index == 0, line: index,
+								onPress: packIndex(note, ["onPressEvent", "onPress"]), onMiss: packIndex(note, ["onMissEvent", "onMiss"])});
 						}
 					}
 				}
@@ -576,7 +583,9 @@ class FNMMToFMCEConverter
 			t: fieldNumber(value, "strumTime", fieldNumber(value, "time", 0)) * factor,
 			lane: lane,
 			len: length > 0 ? length : 0,
-			mustPress: press
+			mustPress: press,
+			onPress: packIndex(value, ["onPressEvent", "onPress"]),
+			onMiss: packIndex(value, ["onMissEvent", "onMiss"])
 		});
 	}
 
@@ -627,6 +636,22 @@ class FNMMToFMCEConverter
 		return Std.int(Math.min(count, 9));
 	}
 
+	/**
+	 * Indice de action pack de una nota. En el .fnmm viven en `note.props` (`{props: {onPressEvent: 0.0, onMissEvent: -1.0}, start, duration}`)
+	 * como float, -1.0 = ninguno; tambien se acepta en la raiz de la nota. -1 si falta o no es valido.
+	 */
+	static function packIndex(note:Dynamic, names:Array<String>):Int
+	{
+		var props = Reflect.field(note, "props");
+		for (name in names)
+		{
+			var value = isRecord(props) ? fieldNumber(props, name, -1) : -1;
+			if (value < 0) value = fieldNumber(note, name, -1);
+			if (value >= 0) return Std.int(value);
+		}
+		return -1;
+	}
+
 	static function mapNotes(raw:Array<RawNote>, laneCount:Int, result:ConversionResult):Array<Dynamic>
 	{
 		var legacyMax = -1;
@@ -652,6 +677,8 @@ class FNMMToFMCEConverter
 			if (note.len > 0) result.sustains++;
 			var entry:Dynamic = {time: note.t, lane: lane, length: note.len, mustPress: mustPress};
 			if (note.line != null && note.line >= 2) Reflect.setField(entry, "line", note.line);
+			if (note.onPress != null && note.onPress >= 0) Reflect.setField(entry, "onPress", note.onPress);
+			if (note.onMiss != null && note.onMiss >= 0) Reflect.setField(entry, "onMiss", note.onMiss);
 			out.push(entry);
 		}
 		out.sort(function(a, b) return a.time < b.time ? -1 : (a.time > b.time ? 1 : 0));

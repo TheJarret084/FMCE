@@ -47,6 +47,14 @@ class StageObject
 	public var videoPlaying:Bool = false;
 
 	public var strumLine:Int;
+
+	/** Anim (index del sprite original) a la que vuelve el objeto al soltar el canto. La cambia ObjectAnimationSet. 0 = idle. */
+	public var baseAnim:Int = 0;
+	/** Anim de canto en curso (lane + 1), o -1 si no esta cantando. Solo esa la repite un hold. */
+	public var singAnim:Int = -1;
+	/** Hasta que tiempo (ms de la musica) cuenta como "hold vivo". 0 = no hay hold. */
+	public var holdUntil:Float = 0;
+
 	public var fixed:Bool;
 	public var transforms:Array<StageTransform>;
 	public var shown:Bool;
@@ -398,8 +406,11 @@ class Stage extends FlxGroup
 
 		for (object in objects)
 		{
-			if (object.strumLine == strumLine)
-				object.sprite.playIndex(lane + 1, true);
+			if (object.strumLine != strumLine) continue;
+
+			object.holdUntil = 0;
+			// Si el objeto no tiene anim para este lane, se queda como esta (no se marca como cantando).
+			object.singAnim = object.sprite.playIndex(lane + 1, true) ? lane + 1 : -1;
 		}
 
 		singing.set(strumLine, true);
@@ -415,34 +426,56 @@ class Stage extends FlxGroup
 	/** true = repite los ultimos frames de la anim; false = los primeros. */
 	static inline var HOLD_LOOP_LAST:Bool = false;
 
+	/** true = una anim corta (<= HOLD_SHORT_ANIM frames) se queda en su primer frame durante el hold; false = se repite entera. */
+	static inline var HOLD_SHORT_FREEZE:Bool = true;
+
+	/** Cuanto dura vivo un hold despues del ultimo `hold()` (ms): cubre el desfase de orden entre PlayState y Stage. */
+	static inline var HOLD_GRACE_MS:Float = 120;
+
 	public function hold(strumLine:Int):Void
 	{
 		if (strumLine < 0) return;
 
 		for (object in objects)
 		{
-			if (object.strumLine == strumLine)
-				loopHold(object.sprite);
+			// Solo se repite la anim que puso el CANTO. Una anim puesta por un evento (ObjectAnimationSet) no se toca.
+			if (object.strumLine == strumLine && object.singAnim > 0)
+			{
+				object.holdUntil = songTime + HOLD_GRACE_MS;
+				wrapHold(object.sprite);
+			}
 		}
 
 		singing.set(strumLine, true);
 		singUntil.set(strumLine, songTime + holdMs);
 	}
 
-	/** Mantiene la anim de canto en loop sobre HOLD_LOOP_FRAMES frames mientras se sostiene el hold. */
-	function loopHold(sprite:LevelSprite):Void
+	/**
+	 * Mantiene la anim de canto en loop mientras dura el hold. No reinicia la anim con `playAnim` (eso la rebobinaba y se veia
+	 * a saltos): solo mueve el frame cuando se pasa del tramo a repetir, y tambien se llama DESPUES de avanzar la anim
+	 * (en `update`) para que el frame de mas no llegue a dibujarse.
+	 */
+	function wrapHold(sprite:LevelSprite):Void
 	{
 		var cur = sprite.animation.curAnim;
-		var data = sprite.currentAnim();
-		if (cur == null || data == null || data.index <= 0) return; // idle no cuenta
+		if (cur == null) return;
 
 		var total = cur.numFrames;
-		// pocos frames (2 o 3): repetir 2 se ve a saltos, asi que se mantiene la pose del primero
-		var count = total <= HOLD_SHORT_ANIM ? 1 : (total < HOLD_LOOP_FRAMES ? total : HOLD_LOOP_FRAMES);
+		if (total <= 1) return;
+
+		var short = total <= HOLD_SHORT_ANIM;
+		var count = short ? (HOLD_SHORT_FREEZE ? 1 : total) : Std.int(Math.min(total, HOLD_LOOP_FRAMES));
 		var start = HOLD_LOOP_LAST ? total - count : 0;
 
-		if (cur.finished || cur.curFrame >= start + count)
+		if (cur.finished)
+		{
+			// anim sin loop que ya termino: se vuelve a lanzar desde el tramo a repetir
 			sprite.playAnim(cur.name, true, sprite.lastAnimContext, false, start);
+			return;
+		}
+
+		if (cur.curFrame >= start + count || cur.curFrame < start)
+			cur.curFrame = start;
 	}
 
 	override public function update(elapsed:Float):Void
@@ -458,7 +491,12 @@ class Stage extends FlxGroup
 
 				for (object in objects)
 				{
-					if (object.strumLine == line)
+					if (object.strumLine != line) continue;
+
+					object.singAnim = -1;
+					object.holdUntil = 0;
+					// Vuelve a la anim BASE del objeto (la que dejo el ultimo ObjectAnimationSet), no siempre a idle.
+					if (!object.sprite.playIndex(object.baseAnim, true))
 						object.sprite.playIndex(0, true);
 				}
 			}
@@ -469,7 +507,12 @@ class Stage extends FlxGroup
 		if (loaded)
 		{
 			for (object in objects)
+			{
+				if (object.singAnim > 0 && songTime <= object.holdUntil)
+					wrapHold(object.sprite);
+
 				apply(object);
+			}
 		}
 	}
 
@@ -615,6 +658,13 @@ class Stage extends FlxGroup
 
 		sprite.scrollFactor.set();
 		sprite.color = old.color;
+		sprite.flipX = old.flipX;
+		sprite.flipY = old.flipY;
+		sprite.blend = old.blend;
+
+		// El sprite nuevo arranca en su primera anim: se le pone la que el objeto tenia (cantando o la base)
+		// para que el cambio no "reinicie" al objeto.
+		sprite.playIndex(object.singAnim > 0 ? object.singAnim : object.baseAnim, true);
 
 		var index = members.indexOf(old);
 		if (index >= 0)
@@ -641,7 +691,33 @@ class Stage extends FlxGroup
 		if (object.strumLine == line) return true;
 
 		object.strumLine = line;
-		object.sprite.playIndex(0, true);
+		object.singAnim = -1;
+		object.holdUntil = 0;
+		if (!object.sprite.playIndex(object.baseAnim, true))
+			object.sprite.playIndex(0, true);
+		return true;
+	}
+
+	/**
+	 * ObjectAnimationSet. En un objeto con strumLine la anim elegida pasa a ser su anim BASE: el canto la pisa mientras
+	 * suena la nota y al soltar vuelve a ella (antes volvia siempre a idle y los holds la repetian como si fuera de canto).
+	 * En un video, `index` es el numero de video.
+	 */
+	public function setAnim(object:StageObject, index:Int):Bool
+	{
+		if (object.video != null)
+			return setVideo(object, index);
+
+		if (!object.sprite.playIndex(index, true))
+			return false;
+
+		if (object.strumLine >= 0)
+		{
+			object.baseAnim = index;
+			object.singAnim = -1;
+			object.holdUntil = 0;
+		}
+
 		return true;
 	}
 
