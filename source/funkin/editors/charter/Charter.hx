@@ -2284,14 +2284,16 @@ class Charter extends UIState {
 
 	/** Submenu con los action packs del chart para elegir el onPress / onMiss de las notas seleccionadas. */
 	function notePackOptions(press:Bool):Array<UIContextMenuOption> {
-		var packs = PlayState.SONG.actionPacks == null ? [] : PlayState.SONG.actionPacks;
+		// Ojo: buildNoteTypesUI() tambien corre al armar el menu en create(), ANTES de loadSong(): PlayState.SONG aun puede ser null.
+		var song = PlayState.SONG;
+		var packs = song != null && song.actionPacks != null ? song.actionPacks : [];
 		var options:Array<UIContextMenuOption> = [{
 			label: "(-1) " + (TU.exists("note.packNone") ? TU.translate("note.packNone") : "Ninguno"),
 			onSelect: (_) -> {setNotePack(press, -1);}
 		}];
 		for (i => p in packs)
 			options.push({
-				label: '#$i ${p.name != null ? p.name + " " : ""}(${p.actions.length})',
+				label: '#$i ${p.name != null ? p.name + " " : ""}(${p.actions != null ? p.actions.length : 0})',
 				onSelect: (_) -> {setNotePack(press, i);}
 			});
 		return options;

@@ -54,8 +54,8 @@ typedef ChartNote = {
 	var id:Int; // strum id of the note
 	var type:Int; // type (int) of the note
 	var sLen:Float; // sustain length of the note (ms)
-		var ?onPress:Int; // action pack (events.json) al acertar la nota; -1 o falta = ninguno
-		var ?onMiss:Int; // action pack (events.json) al fallar la nota
+	var ?onPress:Int; // action pack (events.json) al acertar la nota; -1 o falta = ninguno
+	var ?onMiss:Int; // action pack (events.json) al fallar la nota
 }
 
 typedef ChartBookmark = {

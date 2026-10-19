@@ -306,7 +306,7 @@ class LevelLoader
 			line: line,
 			onPress: packOf(value, "onPress"),
 			onMiss: packOf(value, "onMiss")
-			});
+		});
 	}
 
 	/** `onPress` / `onMiss` de una nota de chart.json: indice de action pack, -1 si falta. */

@@ -65,8 +65,14 @@ class PlayState extends MusicBeatState
 	/** Y de las strums en upscroll: justo debajo del marcador del HUD. */
 	static inline var STRUM_TOP:Float = 96;
 
-	/** Distancia del borde inferior a la que quedan las strums en downscroll. */
-	static inline var STRUM_BOTTOM_GAP:Float = 250;
+	/**
+	 * Distancia del borde inferior a la que quedan las strums en downscroll (antes 250). Mas chico = mas abajo. Con 160 los receptores
+	 * (~105 px) terminan a ~45 px del borde, justo encima del texto del tiempo del HUD.
+	 */
+	static inline var STRUM_BOTTOM_GAP:Float = 160;
+
+	/** Tamano de la strumline CPU en middlescroll respecto a la normal (una mini, a la izquierda, sin notas). */
+	static inline var MINI_LINE_SCALE:Float = 0.5;
 
 	static inline var HEALTH_HIT:Float = 0.023;
 	static inline var HEALTH_MISS:Float = -0.0475;
@@ -229,14 +235,17 @@ class PlayState extends MusicBeatState
 		// Todas las strumlines CPU (la 1 y las extras) se apilan en la posicion de la strumline 1;
 		// solo el jugador queda aparte.
 		var lineWidth = span;
-		var cpuX:Array<Float> = [for (_ in cpuIndexes) middle ? -span - 80 : SIDE_MARGIN];
+		// En middlescroll las CPU salen en miniatura a la izquierda (antes se mandaban fuera de pantalla): sin notas, solo se ven
+		// sus receptores reaccionar (pressed / confirm) cuando "tocan".
+		var cpuWidth = middle ? span * MINI_LINE_SCALE : span;
+		var cpuX:Array<Float> = [for (_ in cpuIndexes) SIDE_MARGIN];
 
 		// Botplay: la strumline del jugador es CPU desde que se crea (toca todo ella sola, sin tocar el score ni la vida).
 		playerLine = new StrumLine(strumX, strumY, ClientPrefs.isBotplay(), false, song.laneCount, lineWidth);
 		playerLine.index = 0;
 
 		// opponentLine siempre existe (los scripts la usan); si esta vacia no se agrega al juego.
-		opponentLine = new StrumLine(cpuX[0], strumY, true, true, song.laneCount, lineWidth);
+		opponentLine = new StrumLine(cpuX[0], strumY, true, true, song.laneCount, cpuWidth);
 		opponentLine.index = 1;
 
 		var activeLines:Array<StrumLine> = [];
@@ -249,7 +258,7 @@ class PlayState extends MusicBeatState
 				continue;
 			}
 
-			var extraLine = new StrumLine(cpuX[i], strumY, true, true, song.laneCount, lineWidth);
+			var extraLine = new StrumLine(cpuX[i], strumY, true, true, song.laneCount, cpuWidth);
 			extraLine.index = cpuIndexes[i];
 			extraLines.set(cpuIndexes[i], extraLine);
 			activeLines.push(extraLine);
@@ -272,6 +281,12 @@ class PlayState extends MusicBeatState
 
 		for (line in activeLines)
 			add(line.notes);
+
+		// Mini strumline CPU de middlescroll: las notas siguen su curso (el CPU las "toca" y el receptor reacciona) pero no se dibujan.
+		if (middle)
+			for (line in activeLines)
+				if (line != playerLine)
+					line.notes.visible = false;
 
 		// todo lo que oculta el evento GUI (los fixed del stage y el boton de pausa no)
 		guiGroups = [];

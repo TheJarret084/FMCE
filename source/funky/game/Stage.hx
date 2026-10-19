@@ -463,8 +463,8 @@ class Stage extends FlxGroup
 		var total = cur.numFrames;
 		if (total <= 1) return;
 
-		var short = total <= HOLD_SHORT_ANIM;
-		var count = short ? (HOLD_SHORT_FREEZE ? 1 : total) : Std.int(Math.min(total, HOLD_LOOP_FRAMES));
+		var isShort = total <= HOLD_SHORT_ANIM;
+		var count = isShort ? (HOLD_SHORT_FREEZE ? 1 : total) : Std.int(Math.min(total, HOLD_LOOP_FRAMES));
 		var start = HOLD_LOOP_LAST ? total - count : 0;
 
 		if (cur.finished)
