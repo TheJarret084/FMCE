@@ -11,9 +11,7 @@ class CharterNoteTypesList extends UISubstateWindow {
 	public var closeButton:UIButton;
 
 	public override function create() {
-		FlxG.sound.music.pause();
-		Charter.instance.vocals.pause();
-		for (strumLine in Charter.instance.strumLines.members) strumLine.vocals.pause();
+		Charter.pauseAudio();
 
 		winTitle = TU.translate("charterNoteTypesList.title");
 		winWidth = 380; winHeight = 390;

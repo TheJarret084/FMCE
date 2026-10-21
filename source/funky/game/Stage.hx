@@ -67,7 +67,7 @@ class StageObject
 	public var scaleY:Float;
 	public var opacity:Float;
 
-	/** scrollFactor del scene.json (parallax). Los fixed lo ignoran y van 1:1. */
+	/** scrollFactor del scene.json (parallax, estilo Flixel: multiplica el scroll de la camara). Los fixed lo ignoran y van 1:1. */
 	public var scrollX:Float;
 	public var scrollY:Float;
 
@@ -552,18 +552,24 @@ class Stage extends FlxGroup
 				totalY = object.scaleY * unit;
 
 			case false:
-				// NORMAL: transformar con la camara del mundo, aplicando su
-				// scrollFactor (parallax). Con 1 es identico a (x - camX);
-				// con 0 se queda donde lo ve la camara inicial.
+				// NORMAL: transformar con la camara del mundo, con el scrollFactor
+				// (parallax) a lo Flixel: el factor multiplica el `scroll` de la
+				// camara, o sea su ESQUINA superior izquierda (centro - mitad de la
+				// vista), no el desplazamiento desde la camara inicial.
+				//
+				//   pantalla = (obj - (cam - mitadVista) * scrollFactor) * ppu
+				//
+				// Con scrollFactor 1 es identico a (obj - cam) * ppu + mitadPantalla,
+				// asi que los niveles con todo en 1 no cambian. Con otro valor (p. ej.
+				// nyaw_erect: x ~1.2, y 2.0) el objeto queda donde lo pone el FNMM
+				// original (comprobado contra capturas: error < 1 px).
 
 				var ppu = pixelsPerUnit();
+				var halfViewX = FlxG.width / 2 / ppu;
+				var halfViewY = FlxG.height / 2 / ppu;
 
-				px = (object.x - camPoints[0].x
-					- (camX - camPoints[0].x) * object.scrollX) * ppu
-					+ FlxG.width / 2;
-				py = (object.y - camPoints[0].y
-					- (camY - camPoints[0].y) * object.scrollY) * ppu
-					+ FlxG.height / 2;
+				px = (object.x - (camX - halfViewX) * object.scrollX) * ppu;
+				py = (object.y - (camY - halfViewY) * object.scrollY) * ppu;
 
 				totalX = object.scale * animScale * ppu;
 				totalY = object.scaleY * animScale * ppu;

@@ -28,8 +28,7 @@ class CharterBookmarkCreation extends UISubstateWindow {
 	}
 
 	public override function create() {
-		FlxG.sound.music.pause();
-		Charter.instance.vocals.pause();
+		Charter.pauseAudio();
 
 		function addLabelOn(ui:UISprite, text:String):UIText {
 			var text:UIText = new UIText(ui.x, ui.y - 24, 0, text);

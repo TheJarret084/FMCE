@@ -31,6 +31,8 @@ class MusicBeatState extends FlxState implements IBeatCancellableReceiver {
 	public override function openSubState(subState:FlxSubState) {
 		if (subState is MusicBeatSubstate)
 			cast(subState, MusicBeatSubstate).parent = this;
+		// Miga de pan: si un substate cierra el juego de golpe, la ultima linea del log dice cual fue.
+		funky.core.Log.info('[Substate] ' + Type.getClassName(Type.getClass(this)) + ' abre ' + Type.getClassName(Type.getClass(subState)));
 		super.openSubState(subState);
 	}
 

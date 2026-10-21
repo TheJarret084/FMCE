@@ -2302,6 +2302,16 @@ class Charter extends UIState {
 	function editNoteTypesList(_)
 		FlxG.state.openSubState(new CharterNoteTypesList());
 
+	/** Pausa la musica y las voces (null-safe: en FMCE alguna puede no estar cargada). Lo usan las ventanas del charter. */
+	public static function pauseAudio():Void {
+		if (FlxG.sound.music != null) FlxG.sound.music.pause();
+		if (instance == null) return;
+		if (instance.vocals != null) instance.vocals.pause();
+		if (instance.strumLines != null)
+			for (strumLine in instance.strumLines.members)
+				if (strumLine != null && strumLine.vocals != null) strumLine.vocals.pause();
+	}
+
 	public function buildNoteTypesUI():Array<UIContextMenuOption> {
 		var noteTopButton:UITopMenuButton = topMenuSpr == null ? null : cast topMenuSpr.members[noteIndex];
 		var newChilds:Array<UIContextMenuOption> = [

@@ -45,8 +45,11 @@ class UISubstateWindow extends MusicBeatSubstate {
 
 	public override function onSubstateOpen() {
 		super.onSubstateOpen();
-		parent.persistentUpdate = false;
-		parent.persistentDraw = true;
+		if (parent != null) {
+			parent.persistentUpdate = false;
+			parent.persistentDraw = true;
+		} else
+			funky.core.Log.warn('[UISubstateWindow] ' + Type.getClassName(Type.getClass(this)) + ' se abrio sin parent');
 	}
 
 	var winWidth:Int = 560;
@@ -56,6 +59,7 @@ class UISubstateWindow extends MusicBeatSubstate {
 
 	public override function create() {
 		super.create();
+		funky.core.Log.info('[UISubstateWindow] create: ' + Type.getClassName(Type.getClass(this)));
 
 		if(blurShader != null) {
 			try {

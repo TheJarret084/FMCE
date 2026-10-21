@@ -22,6 +22,7 @@ class CharterEventTypeSelection extends UISubstateWindow {
 	}
 
 	public override function create() {
+		funky.core.Log.info('[CharterEventTypeSelection] create: inicio');
 		winTitle = TU.translate("charterEventTypeSelection.title");
 		super.create();
 
@@ -92,6 +93,7 @@ class CharterEventTypeSelection extends UISubstateWindow {
 		downIndicator.scrollFactor.set();
 		downIndicator.borderSize = 2;
 		add(downIndicator);
+		funky.core.Log.info('[CharterEventTypeSelection] create: listo');
 	}
 
 	var sinner:Float = 0;

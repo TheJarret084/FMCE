@@ -28,15 +28,14 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		return TU.translate("charterMetaDataScreen." + id);
 
 	public override function create() {
+		funky.core.Log.info('[CharterMetaDataScreen] create: inicio');
 		winTitle = translate("title");
 		winWidth = 700;
 		winHeight = 390;
 
 		super.create();
 
-		FlxG.sound.music.pause();
-		Charter.instance.vocals.pause();
-		for (strumLine in Charter.instance.strumLines.members) strumLine.vocals.pause();
+		Charter.pauseAudio();
 
 		function addLabelOn(ui:UISprite, text:String)
 			add(new UIText(ui.x, ui.y - 24, 0, text));
@@ -85,6 +84,7 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		closeButton.x -= closeButton.bWidth;
 		add(closeButton);
 		add(saveButton);
+		funky.core.Log.info('[CharterMetaDataScreen] create: listo');
 	}
 
 	public function saveMeta() {
@@ -99,6 +99,6 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		meta.color = colorWheel.curColor;
 
 		Charter.instance.updateBPMEvents();
-		Charter.instance.vocals.volume = needsVoicesCheckbox.checked ? 1 : 0;
+		if (Charter.instance.vocals != null) Charter.instance.vocals.volume = needsVoicesCheckbox.checked ? 1 : 0;
 	}
 }

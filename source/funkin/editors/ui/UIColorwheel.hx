@@ -8,7 +8,10 @@ using flixel.util.FlxSpriteUtil;
 
 class UIColorwheel extends UISliceSprite {
 	var colorPicker:FlxSprite;
-	var colorPickerShader:CustomShader;
+	/** null en Android o si el shader no compila: entonces el cuadro de color se dibuja por CPU (ver redrawPicker). */
+	var colorPickerShader:Null<CustomShader>;
+	var pickerMask:Array<Bool>;
+	var __pickerHue:Float = -1;
 	var colorPickerSelector:UIColorWheelSelector;
 
 	var colorSlider:FlxSprite;
@@ -30,11 +33,12 @@ class UIColorwheel extends UISliceSprite {
 		curColor = cast color;
 		hue = curColor.hue; saturation = curColor.saturation; brightness = curColor.brightness;
 
-		colorPickerShader = new CustomShader("engine/colorPicker");
+		colorPickerShader = makePickerShader();
 
 		colorPicker = new FlxSprite(x + 12.5, (y + 125/2) - (100/2)).makeGraphic(100, 100, FlxColor.TRANSPARENT);
 		colorPicker.drawRoundRect(0, 0, 100, 100, 10, 10, FlxColor.WHITE);
-		colorPicker.shader = colorPickerShader;
+		if (colorPickerShader != null) colorPicker.shader = colorPickerShader;
+		else initPickerMask();
 
 		colorPickerSelector = new UIColorWheelSelector(colorPicker.x + 100 - 16, colorPicker.y);
 
@@ -90,6 +94,42 @@ class UIColorwheel extends UISliceSprite {
 		updateWheel(false);
 	}
 
+	static function makePickerShader():Null<CustomShader> {
+		#if android
+		return null; // los shaders del selector no se usan en Android (igual que el blur de UISubstateWindow)
+		#else
+		try {
+			return new CustomShader("engine/colorPicker");
+		} catch (e:Dynamic) {
+			funky.core.Log.warn('[UIColorwheel] no se pudo crear el shader, se dibuja por CPU: ' + Std.string(e));
+			return null;
+		}
+		#end
+	}
+
+	/** Guarda que pixeles del cuadro (redondeado) estan dibujados, para recolorearlos sin shader. */
+	function initPickerMask() {
+		pickerMask = [];
+		var bmp = colorPicker.pixels;
+		for (py in 0...100)
+			for (px in 0...100)
+				pickerMask.push(((bmp.getPixel32(px, py) >> 24) & 0xFF) > 0);
+	}
+
+	/** Sin shader: pinta el cuadro (saturacion en X, brillo en Y) para el tono actual. Solo repinta si el tono cambio. */
+	function redrawPicker() {
+		if (pickerMask == null || (__pickerHue >= 0 && Math.abs(hue - __pickerHue) < 0.5)) return;
+		__pickerHue = hue;
+		var bmp = colorPicker.pixels;
+		bmp.lock();
+		for (py in 0...100)
+			for (px in 0...100)
+				if (pickerMask[py * 100 + px])
+					bmp.setPixel32(px, py, FlxColor.fromHSB(hue, px / 99, 1 - py / 99));
+		bmp.unlock();
+		colorPicker.dirty = true;
+	}
+
 	public function setColor(color:FlxColor) {
 		hue = curColor.hue; saturation = curColor.saturation; brightness = curColor.brightness;
 		updateWheel(false);
@@ -110,7 +150,8 @@ class UIColorwheel extends UISliceSprite {
 
 	public function updateWheel(checkChanged:Bool = true) {
 		if(checkChanged) colorChanged = true;
-		colorPickerShader.hset("hue", hue / 360);
+		if (colorPickerShader != null) colorPickerShader.hset("hue", hue / 360);
+		else redrawPicker();
 		colorPickerSelector.curColor = color = curColor = FlxColor.fromHSB(hue, saturation, brightness); colorSliderSelector.curColor = FlxColor.fromHSB(hue, 1, 1);
 
 		updateColorPickerSelector(); updateColorSliderPickerSelector();

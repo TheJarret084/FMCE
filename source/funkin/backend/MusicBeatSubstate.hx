@@ -20,6 +20,18 @@ class MusicBeatSubstate extends FlxSubState implements IBeatReceiver {
 		closeCallback = function() onSubstateClose();
 	}
 
+	/**
+	 * Abre un substate ANIDADO (desde otro substate). MusicBeatState.openSubState le asigna `parent` a los suyos, pero este camino
+	 * no pasaba por ahi: el substate hijo se quedaba con `parent == null` y UISubstateWindow.onSubstateOpen() reventaba al tocar
+	 * "+" en la ventana de eventos (lista de tipos).
+	 */
+	public override function openSubState(subState:FlxSubState) {
+		if (subState is MusicBeatSubstate)
+			cast(subState, MusicBeatSubstate).parent = this;
+		funky.core.Log.info('[Substate] ' + Type.getClassName(Type.getClass(this)) + ' abre ' + Type.getClassName(Type.getClass(subState)));
+		super.openSubState(subState);
+	}
+
 	public function onSubstateOpen():Void {}
 	public function onSubstateClose():Void {}
 

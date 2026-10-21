@@ -9,8 +9,7 @@ class CharterBookmarkList extends UISubstateWindow {
 	public var closeButton:UIButton;
 
 	public override function create() {
-		FlxG.sound.music.pause();
-		Charter.instance.vocals.pause();
+		Charter.pauseAudio();
 
 		winTitle = TU.translate("charter.bookmarks.editBookmarkListTitle");
 		winWidth = 380;
