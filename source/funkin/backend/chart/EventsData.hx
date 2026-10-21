@@ -99,6 +99,13 @@ class EventsData {
 			p("timeUnit", "Unidad", TDropDown(UNITS), "seconds")
 		]);
 		add("RunActionPack", [p("actionPack", "Action pack", TActionPack, 0)]);
+		// Los dos que faltaban: el juego ya los ejecuta (Eventos.hx) y vienen en los niveles .fnmm (sobre todo dentro de action packs).
+		add("PlayerHealth", [
+			p("operation", "Operacion (set, add, remove)", TDropDown(["set", "add", "remove"]), "set"),
+			p("value", "Valor", TFloat(0, 9999, 0.5, 3), 0.0),
+			p("minHealth", "Vida minima (solo remove)", TFloat(0, 9999, 0.5, 3), 0.0)
+		]);
+		add("GUI", [p("visible", "Visible", TBool, true)]);
 	}
 
 	public static function getEventParams(name:String):Array<EventParamInfo> {

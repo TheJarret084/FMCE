@@ -187,7 +187,9 @@ class FunkinSprite extends FlxAnimate
 			var gameName:String = entry.name != null ? entry.name : inAtlas;
 			// `spd_fps` true = `spd` FPS crudos; false = frames por beat (BPM actual); sin `spd_fps` (viejo) = multiplicador de 24.
 			var spdValue:Float = entry.spd != null && entry.spd > 0 ? entry.spd : 1;
-			var fps:Float = entry.spd_fps == null ? 24 * spdValue : (entry.spd_fps == true ? spdValue : 1 / Math.max(0.01, spdValue) * funky.core.Conductor.bpm / 60);
+			// Modo beats (`spd_fps` false): el fps real depende de cuantos frames tiene la anim, asi que se ajusta abajo, ya registrada.
+			var beatMode:Bool = entry.spd_fps != null && entry.spd_fps != true;
+			var fps:Float = entry.spd_fps == null ? 24 * spdValue : (beatMode ? 24 : spdValue);
 			var loop:Bool = entry.loop == null ? true : entry.loop == true;
 
 			addAnim(gameName, inAtlas, fps, loop);
@@ -199,6 +201,15 @@ class FunkinSprite extends FlxAnimate
 			{
 				Log.warn('[FunkinSprite] config.json: "$inAtlas" no existe en el atlas (anim "$gameName")');
 				continue;
+			}
+
+			// `spd` = beats que dura la animacion COMPLETA: fps = frames * bpm / (60 * spd). Es la misma cuenta que SpriteBuilder
+			// (gameplay) y SpriteEditorState; antes aca faltaba multiplicar por los frames y en los editores quedaba lentisimo / "duro".
+			if (beatMode)
+			{
+				var registered = animation.getByName(gameName);
+				if (registered != null)
+					registered.frameRate = Math.max(1, registered.numFrames) * funky.core.Conductor.bpm / (60 * Math.max(0.01, spdValue));
 			}
 
 			var off = entry.offset;
