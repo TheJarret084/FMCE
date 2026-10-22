@@ -51,6 +51,7 @@ class Chart {
 	public static function load(dir:String):ChartData {
 		levelDir = dir;
 		Paths.levelDir = dir;
+		funky.core.Paths.currentLevel = dir;
 		var lv = LevelLoader.loadFolder(dir);
 		var meta:Dynamic = readJson(Path.join([dir, "meta.json"]));
 		if (meta == null) meta = {};
@@ -104,7 +105,9 @@ class Chart {
 			stepsPerBeat: spb,
 			needsVoices: voicesPath != null,
 			instSuffix: "",
-			vocalsSuffix: ""
+			vocalsSuffix: "",
+			iconPlayer: lv.iconPlayer,
+			iconOpponent: lv.iconOpponent
 		};
 		if (lv.color != null) {
 			var c = flixel.util.FlxColor.fromString(lv.color);
@@ -305,10 +308,26 @@ class Chart {
 			if (meta.stepsPerBeat != null) Reflect.setField(fresh, "stepsPerBeat", meta.stepsPerBeat);
 			if (meta.displayName != null) Reflect.setField(fresh, "displayName", meta.displayName);
 			if (meta.color != null) Reflect.setField(fresh, "color", "#" + StringTools.hex(((meta.color : Int) & 0xFFFFFF), 6));
+			saveIcons(fresh, meta);
 		}
 		if (song.stage != null) Reflect.setField(fresh, "stage", song.stage);
 		var path = levelFile("meta.json");
 		write(path, merge(path, fresh, []), true);
+	}
+
+	/** `icons.P1` / `icons.P2` de meta.json. Se parte del `icons` que ya hay para no perder otras llaves. */
+	static function saveIcons(fresh:Dynamic, meta:ChartMetaData):Void {
+		if (meta.iconPlayer == null && meta.iconOpponent == null) return;
+		var old:Dynamic = Reflect.field(readJson(levelFile("meta.json")), "icons");
+		var icons:Dynamic = {};
+		if (old != null && !Std.isOfType(old, Array))
+			for (f in Reflect.fields(old)) Reflect.setField(icons, f, Reflect.field(old, f));
+		// null = no se toco; "" = el charter lo dejo en (none) y se quita del meta.json
+		if (meta.iconPlayer == "") Reflect.deleteField(icons, "P1");
+		else if (meta.iconPlayer != null) Reflect.setField(icons, "P1", meta.iconPlayer);
+		if (meta.iconOpponent == "") Reflect.deleteField(icons, "P2");
+		else if (meta.iconOpponent != null) Reflect.setField(icons, "P2", meta.iconOpponent);
+		Reflect.setField(fresh, "icons", icons);
 	}
 
 	public static function saveAll(song:ChartData, pretty:Bool = true):Void {

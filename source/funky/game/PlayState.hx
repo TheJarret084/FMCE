@@ -174,6 +174,12 @@ class PlayState extends MusicBeatState
 	/** Un script cancelo `onEndSong`: no se vuelve a preguntar hasta `endSong(true)`. */
 	var endBlocked:Bool = false;
 
+	/** La cancion ya termino (endSong paso el chequeo de scripts): el tiempo, las notas y los eventos se congelan. */
+	var songEnded:Bool = false;
+
+	/** El audio de la musica llego a su final (`onComplete`). */
+	var musicEnded:Bool = false;
+
 	/** Estado de cada lane en el frame anterior, para `onKeyRelease`. */
 	var prevHeld:Array<Bool> = [];
 
@@ -198,6 +204,7 @@ class PlayState extends MusicBeatState
 			return;
 		}
 
+		funky.core.Paths.currentLevel = song.levelDir;
 		Scripts.load(song.levelDir, ["game" => this, "song" => song, "levelDir" => song.levelDir]);
 		Scripts.call("onLoad");
 
@@ -345,6 +352,7 @@ class PlayState extends MusicBeatState
 			{
 				FlxG.sound.playMusic(sound, 1, false);
 				FlxG.sound.music.pause();
+				FlxG.sound.music.onComplete = onMusicComplete;
 				ClientPrefs.applyAudio();
 			}
 		}
@@ -392,7 +400,7 @@ class PlayState extends MusicBeatState
 
 	override public function update(elapsed:Float):Void
 	{
-		if (KeyBinds.justPressed(KeyBinds.PAUSE) && started && subState == null)
+		if (KeyBinds.justPressed(KeyBinds.PAUSE) && started && !songEnded && subState == null)
 		{
 			requestPause();
 			return;
@@ -426,12 +434,20 @@ class PlayState extends MusicBeatState
 			return;
 		}
 
+		// Ya termino: solo corre la transicion. Sin tiempo, ni eventos, ni notas (asi nada se reinicia ni reaparece).
+		if (songEnded)
+		{
+			super.update(elapsed);
+
+			if (Scripts.has)
+				Scripts.call("onUpdatePost", [elapsed]);
+			return;
+		}
+
 		if (mobileControls != null)
 			mobileControls.poll();
 
-		songTime = FlxG.sound.music != null && FlxG.sound.music.playing
-			? FlxG.sound.music.time
-			: songTime + elapsed * 1000;
+		songTime = nextSongTime(elapsed);
 
 		// corrige la deriva de las voces respecto a la musica
 		if (voices != null && voices.playing && FlxG.sound.music != null && FlxG.sound.music.playing
@@ -512,7 +528,63 @@ class PlayState extends MusicBeatState
 			return;
 		}
 
+		songEnded = true;
+
+		if (FlxG.sound.music != null)
+			FlxG.sound.music.onComplete = null;
+
+		// las notas que queden se desvanecen y no vuelven a salir
+		for (line in allLines())
+			if (line != null)
+				line.clearNotes();
+
+		stopVoices();
+		saveScore();
 		transitionTo(menuState());
+	}
+
+	/** Lo llama el audio al llegar a su final. El fin real lo decide `update` (ver `nextSongTime`). */
+	function onMusicComplete():Void
+	{
+		musicEnded = true;
+	}
+
+	/**
+	 * Tiempo de la cancion de este frame. Sigue a la musica, pero nunca retrocede: al terminar el audio puede
+	 * devolver 0 por un frame, y eso reiniciaba el temporizador, los eventos y las notas.
+	 */
+	function nextSongTime(elapsed:Float):Float
+	{
+		var music = FlxG.sound.music;
+		var next = songTime + elapsed * 1000;
+
+		if (music != null && music.playing)
+		{
+			var t = music.time;
+
+			// un retroceso grande no es un seek (en juego no hay): es el audio reiniciandose al terminar
+			if (t + 250 < songTime)
+				musicEnded = true;
+			else
+				next = t;
+		}
+
+		if (musicEnded && next <= song.endTime)
+			next = song.endTime + 1;
+
+		return next;
+	}
+
+	/**
+	 * Guarda el puntaje del nivel (por nivel y dificultad) si es el mejor. No cuenta con botplay, ni si se probo desde un editor
+	 * o desde un punto a mitad de la cancion.
+	 */
+	function saveScore():Void
+	{
+		if (ClientPrefs.isBotplay() || returnToEditor != null || startFromMs > 0 || archivePath == null) return;
+
+		var accuracy = totalPlayed == 0 ? 0 : totalNotesHit / totalPlayed * 100;
+		funky.core.Scores.submit(funky.core.Scores.levelId(archivePath), Difficulty.current, score, accuracy, misses);
 	}
 
 	/**
@@ -807,6 +879,8 @@ class PlayState extends MusicBeatState
 		if (!esTrampa(state.onPress))
 		{
 			runNoteEvent(state.onMiss);
+			if (stage != null)
+				stage.miss(stageSide(playerLine));
 			misses++;
 			totalPlayed++;
 			combo = 0;

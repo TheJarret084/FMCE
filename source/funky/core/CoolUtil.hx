@@ -591,6 +591,32 @@ final class CoolUtil
 	/** Nombre del archivo de música de menú (`assets/music/$MENU_SONG.ogg`). */
 	public static var MENU_SONG:String = "Looping_Rooms";
 
+	/** Musica de los editores (`assets/music/breakfast.ogg`), la de Codename Engine. */
+	public static var EDITOR_SONG:String = "breakfast";
+
+	/** Ultima musica de menu / editores que se puso con playMenuSong / playEditorSong. */
+	static var currentMusic:String = null;
+
+	/** El FlxSound de esa musica: si el charter / un nivel lo reemplaza, `breakfast` se vuelve a poner al volver a un editor. */
+	static var currentSound:flixel.sound.FlxSound = null;
+
+	/** Musica de los editores (modo avanzado y sus pantallas): breakfast en vez de la del menu. No reinicia si ya suena. */
+	public static function playEditorSong():Void
+	{
+		if (FlxG.sound.music != null && FlxG.sound.music == currentSound && FlxG.sound.music.playing && currentMusic == EDITOR_SONG) return;
+
+		try
+		{
+			currentMusic = EDITOR_SONG;
+			playMusic(EDITOR_SONG, true, 1, true);
+			currentSound = FlxG.sound.music;
+		}
+		catch (e:Dynamic)
+		{
+			funky.core.Log.warn('[CoolUtil] No se pudo cargar la musica de editores ($EDITOR_SONG): $e');
+		}
+	}
+
 	/**
 	 * Música de menú (igual que `CoolUtil.playMenuSong` en Codename Engine): si ya está sonando
 	 * (porque venís de otro menú y la dejaste `persist`), NO la reinicia — sigue tal cual, sin el
@@ -598,11 +624,14 @@ final class CoolUtil
 	 */
 	public static function playMenuSong(fadeIn:Bool = false):Void
 	{
-		if (FlxG.sound.music != null && FlxG.sound.music.playing) return;
+		// Si suena la de los editores (breakfast) se cambia a la de menu; cualquier otra musica se respeta como antes.
+		if (FlxG.sound.music != null && FlxG.sound.music.playing && currentMusic != EDITOR_SONG) return;
 
 		try
 		{
+			currentMusic = MENU_SONG;
 			playMusic(MENU_SONG, true, fadeIn ? 0 : 1, true);
+			currentSound = FlxG.sound.music;
 			if (fadeIn && FlxG.sound.music != null)
 				FlxG.sound.music.fadeIn(4, 0, 1);
 		}

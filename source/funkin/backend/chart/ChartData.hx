@@ -27,6 +27,10 @@ typedef ChartMetaData = {
 
 	public var ?color:FlxColor;
 
+	/** Sprites (carpeta en `<nivel>/sprites/`) de los iconos de la barra de vida: `meta.json` > `icons.P1` / `icons.P2`. */
+	public var ?iconPlayer:String;
+	public var ?iconOpponent:String;
+
 
 	public var ?instSuffix:String;
 	public var ?vocalsSuffix:String;

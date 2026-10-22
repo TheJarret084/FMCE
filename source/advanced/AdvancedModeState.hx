@@ -6,10 +6,14 @@ import flixel.FlxState;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
 import funky.api.DiscordClient;
+import funky.backend.chart.LevelLoader;
+import funky.core.CoolUtil;
 import funky.core.KeyBinds;
 import funky.core.Paths;
 import funky.core.TouchNav;
 import funky.core.TransitionHandler;
+import funky.game.HealthIcon;
+import funky.menus.BoldText;
 import funky.menus.MainMenuState;
 
 /**
@@ -27,9 +31,20 @@ class AdvancedModeState extends FlxState
 	static inline var MUTED:Int = 0xFF858B97;
 	static inline var ACTIVE:Int = 0xFFFFFFFF;
 
+	/** Separacion vertical entre filas y posicion (en Y) del nivel seleccionado, como el arbol de editores de Codename. */
+	static inline var ROW_H:Float = 112;
+	static inline var ANCHOR_Y:Float = 290;
+	static inline var ROW_X:Float = 190;
+	static inline var SELECTED_SHIFT:Float = 36;
+
 	var levels:Array<String> = [];
-	var labels:Array<FlxText> = [];
+	var rows:Array<BoldText> = [];
+	var icons:Array<Null<HealthIcon>> = [];
+	var iconTried:Array<Bool> = [];
+	var arrow:Null<BoldText>;
+	var pattern:Null<FlxSprite>;
 	var selected:Int = 0;
+	var scrollPos:Float = 0;
 	var chosen:Bool = false;
 	var info:FlxText;
 
@@ -45,28 +60,50 @@ class AdvancedModeState extends FlxState
 
 	function createMenu():Void
 	{
-		var bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, BG);
+		// Los editores usan breakfast (la de Codename) en vez de la musica del menu.
+		CoolUtil.playEditorSong();
+
+		var bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xFF000000);
 		add(bg);
 
-		var title = new FlxText(0, 62, FlxG.width, "MODO AVANZADO", 36);
-		title.alignment = FlxTextAlign.CENTER;
-		add(title);
+		// Fondo de flechas de los editores (`editors/bgs/default`), tenue sobre negro.
+		var tile = Paths.image("editors/bgs/default");
+		if (tile != null)
+		{
+			try
+			{
+				pattern = new FlxSprite().loadGraphic(tile);
+				pattern.setGraphicSize(FlxG.width, FlxG.height);
+				pattern.updateHitbox();
+				pattern.alpha = 0.55;
+				add(pattern);
+			}
+			catch (e:Dynamic)
+			{
+				pattern = null;
+			}
+		}
 
-		var sub = new FlxText(0, 112, FlxG.width, "Selecciona el nivel que quieres editar", 17);
-		sub.color = MUTED;
-		sub.alignment = FlxTextAlign.CENTER;
-		add(sub);
+		// Titulo arriba a la izquierda + descripcion, igual que "Chart Editor >" de Codename.
+		add(new BoldText(16, 6, "MODO AVANZADO >", 0.55));
+		var desc = new FlxText(18, 50, FlxG.width - 40, "Selecciona el nivel que quieres editar.\n" + KeyBinds.label(KeyBinds.ACCEPT) + " para elegir  |  ESC volver", 15);
+		desc.color = MUTED;
+		add(desc);
 
 		levels = Paths.listLevels();
 		if (levels.length > 0)
 		{
 			for (i in 0...levels.length)
 			{
-				var label = new FlxText(180, 185 + i * 42, FlxG.width - 360, levels[i], 23);
-				label.alignment = FlxTextAlign.CENTER;
-				add(label);
-				labels.push(label);
+				var row = new BoldText(ROW_X, ANCHOR_Y + i * ROW_H, levels[i], 0.95);
+				add(row);
+				rows.push(row);
+				icons.push(null);
+				iconTried.push(false);
 			}
+
+			arrow = new BoldText(0, 0, ">", 0.95);
+			add(arrow);
 		}
 		else
 		{
@@ -76,32 +113,84 @@ class AdvancedModeState extends FlxState
 			add(empty);
 		}
 
-		info = new FlxText(0, FlxG.height - 115, FlxG.width, "", 15);
+		info = new FlxText(0, FlxG.height - 34, FlxG.width, "", 15);
 		info.color = MUTED;
 		info.alignment = FlxTextAlign.CENTER;
 		add(info);
 
-		var hint = new FlxText(0, FlxG.height - 65, FlxG.width,
-			KeyBinds.label(KeyBinds.UP) + "/" + KeyBinds.label(KeyBinds.DOWN) + " mover  |  "
-			+ KeyBinds.label(KeyBinds.ACCEPT) + " elegir nivel  |  ESC volver", 15);
-		hint.color = MUTED;
-		hint.alignment = FlxTextAlign.CENTER;
-		add(hint);
-
 		DiscordClient.customPresence("Modo Avanzado", "Seleccionando nivel", "fmce", "", false);
-		refresh();
+		scrollPos = selected;
+		layoutRows(1);
 		TransitionHandler.playIn(this);
+	}
+
+	/** Coloca las filas alrededor del seleccionado: el seleccionado queda fijo en ANCHOR_Y y el resto se desliza (scroll suave). */
+	function layoutRows(lerp:Float):Void
+	{
+		scrollPos += (selected - scrollPos) * lerp;
+
+		for (i in 0...rows.length)
+		{
+			var row = rows[i];
+			var active = i == selected;
+			var y = ANCHOR_Y + (i - scrollPos) * ROW_H;
+			var x = ROW_X + (active ? SELECTED_SHIFT : 0);
+
+			row.visible = y > -ROW_H && y < FlxG.height;
+			row.setPosition(x, y);
+			row.alpha = active ? 1 : 0.55;
+
+			var icon = iconFor(i);
+			if (icon != null)
+			{
+				icon.visible = row.visible;
+				icon.alpha = row.alpha;
+				icon.centerAt(x - 14 - HealthIcon.FIT / 2, y + row.height / 2);
+			}
+		}
+
+		if (arrow != null && selected >= 0 && selected < rows.length)
+		{
+			var sel = rows[selected];
+			arrow.visible = sel.visible;
+			arrow.setPosition(sel.x + sel.width + 24, sel.y);
+		}
+
+		if (pattern != null)
+			pattern.y = -((scrollPos * 12) % 40);
+	}
+
+	/** Icono del oponente del nivel, como en Freeplay; se carga al acercarse a la fila para no cargar todos de golpe. */
+	function iconFor(index:Int):Null<HealthIcon>
+	{
+		if (icons[index] != null) return icons[index];
+		if (iconTried[index] || Math.abs(index - selected) > 3) return null;
+		iconTried[index] = true;
+
+		#if sys
+		var path = Paths.levelsRoot() + levels[index];
+		if (LevelLoader.isArchive(path)) return null;
+		var name = LevelLoader.opponentIcon(path);
+		if (name == null) return null;
+
+		var icon = new HealthIcon(path, name, false);
+		if (!icon.loaded)
+		{
+			icon.destroy();
+			return null;
+		}
+		add(icon);
+		icons[index] = icon;
+		return icon;
+		#else
+		return null;
+		#end
 	}
 
 	function refresh():Void
 	{
-		for (i in 0...labels.length)
-		{
-			labels[i].color = i == selected ? ACTIVE : MUTED;
-			labels[i].alpha = i == selected ? 1 : 0.65;
-		}
 		if (info == null) return;
-		info.text = levels.length == 0 ? "Crea un nivel en la carpeta levels/ para usar el modo avanzado." : levels[selected];
+		info.text = levels.length == 0 ? "Crea un nivel en la carpeta levels/ para usar el modo avanzado." : (selected + 1) + " / " + levels.length;
 	}
 
 	function openSelected():Void
@@ -144,12 +233,23 @@ class AdvancedModeState extends FlxState
 		}
 		if (KeyBinds.justPressed(KeyBinds.ACCEPT)) openSelected();
 
-		var tapped = TouchNav.rowTapped(labels);
-		if (tapped >= 0)
+		// Toque / clic: sobre la fila seleccionada abre el nivel; sobre otra, la selecciona.
+		if (FlxG.mouse.justPressed)
 		{
-			selected = tapped;
-			refresh();
-			openSelected();
+			for (i in 0...rows.length)
+			{
+				if (!rows[i].visible || !FlxG.mouse.overlaps(rows[i])) continue;
+				if (i == selected)
+					openSelected();
+				else
+				{
+					selected = i;
+					refresh();
+				}
+				break;
+			}
 		}
+
+		layoutRows(Math.min(1, elapsed * 12));
 	}
 }

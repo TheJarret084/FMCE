@@ -6,11 +6,15 @@ import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
 import flixel.text.FlxText.FlxTextBorderStyle;
-import funky.core.Paths;
+import funky.backend.FunkinSprite;
 
 /**
- * Pantalla de carga: fondo oscuro, la Jazmin de `menus/Loading/JazminDeliveryMode` trabajando
+ * Pantalla de carga: fondo oscuro, la Jazmin de `menus/Loading/JazminDeliveryMode` caminando
  * (`work`), un titulo, la barra de avance y lo que se esta haciendo.
+ *
+ * Es un spritemap de Adobe Animate (FlxAnimate): `assets/images/menus/Loading/JazminDeliveryMode/` con
+ * `Animation.json` + `spritemap1.json` + `spritemap1.png`, tal cual lo exporta Animate. `work` es el simbolo
+ * `anims/walk` y `give` es `anims/give`.
  */
 class LoadingOverlay extends FlxGroup
 {
@@ -19,7 +23,18 @@ class LoadingOverlay extends FlxGroup
 	static inline var BAR_HEIGHT:Int = 14;
 	static inline var BACK_COLOR:Int = 0xF0101016;
 
-	var jazmin:Null<FlxSprite>;
+	/**
+	 * FlxAnimate pone el (x, y) del sprite en la esquina de los limites de SU simbolo, y `walk` y `give` tienen
+	 * limites distintos (en `give` la caja sale volando). Para que Jazmin no salte al cambiar, `give` se corre esto
+	 * (en pixeles del spritemap, antes de escalar): (Pwalk - Bwalk) - (Pgive - Bgive), con P = el cuerpo y B = los limites.
+	 */
+	static inline var GIVE_SHIFT_X:Float = 16.66;
+	static inline var GIVE_SHIFT_Y:Float = -105.35;
+
+	var jazmin:Null<FunkinSprite>;
+	var fit:Float = 1;
+	var homeX:Float = 0;
+	var homeY:Float = 0;
 	var fill:FlxSprite;
 	var titleText:FlxText;
 	var labelText:FlxText;
@@ -35,23 +50,24 @@ class LoadingOverlay extends FlxGroup
 		back.scrollFactor.set();
 		add(back);
 
-		var frames = Paths.getSparrowAtlas(ATLAS);
-		if (frames != null)
+		var sprite = new FunkinSprite();
+		sprite.loadSprite(ATLAS);
+		if (sprite.frames != null)
 		{
-			var sprite = new FlxSprite();
-			sprite.frames = frames;
-			sprite.animation.addByPrefix("work", "work", 6, true);
-			sprite.animation.addByPrefix("give", "give", 24, false);
-			sprite.animation.play("work");
+			// 24 fps: el ritmo del timeline original (walk = 15 frames, give = 48)
+			sprite.addAnim("work", "anims/walk", 24, true);
+			sprite.addAnim("give", "anims/give", 24, false);
+			sprite.playAnim("work", true);
 			sprite.antialiasing = true;
 			sprite.scrollFactor.set();
-			// Escala UNIFORME (el cuadro mide 300x300) para que no se deforme.
-			var k = Math.min(1.4, FlxG.height * 0.34 / Math.max(1, sprite.frameHeight));
-			sprite.scale.set(k, k);
-			sprite.updateHitbox();
-			sprite.setPosition((FlxG.width - sprite.width) / 2, FlxG.height * 0.16);
-			add(sprite);
 			jazmin = sprite;
+
+			// Escala UNIFORME, medida con los limites de `work` (la Jazmin sola): asi no se deforma.
+			fit = Math.min(1.6, FlxG.height * 0.34 / Math.max(1, sprite.frameHeight));
+			layout(false);
+			homeX = jazmin.x;
+			homeY = jazmin.y;
+			add(sprite);
 		}
 
 		var barX = (FlxG.width - BAR_WIDTH) / 2;
@@ -103,7 +119,23 @@ class LoadingOverlay extends FlxGroup
 	{
 		target = 1;
 		labelText.text = message;
-		if (jazmin != null) jazmin.animation.play("give", true);
+		if (jazmin != null)
+		{
+			jazmin.playAnim("give", true);
+			layout(true);
+		}
+	}
+
+	/** Escala y coloca a Jazmin: centrada arriba con `work`; con `give` se alinea al cuerpo (ver GIVE_SHIFT). */
+	function layout(giving:Bool):Void
+	{
+		jazmin.scale.set(fit, fit);
+		jazmin.updateHitbox();
+
+		if (giving)
+			jazmin.setPosition(homeX + GIVE_SHIFT_X * fit, homeY + GIVE_SHIFT_Y * fit);
+		else
+			jazmin.setPosition((FlxG.width - jazmin.width) / 2, FlxG.height * 0.16);
 	}
 
 	function applyFill(value:Float):Void

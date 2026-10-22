@@ -142,6 +142,49 @@ function onCreatePost()
   los mismos de `setVar` / `getVar`).
 - `#if android ... #end`, `#if desktop`, `#if mobile`, `#if debug` funcionan dentro de los scripts.
 
+## Archivos del nivel: `Paths.File(que, tipo)`
+
+`Paths.File` devuelve la ruta de cualquier archivo **dentro del nivel**. El primer valor dice *que es* (el nombre, con
+subcarpetas si hace falta) y el segundo *de que tipo es*; con eso se arma la carpeta y la extension. El nivel es el que
+se esta jugando (no hay que pasar `levelDir`).
+
+```haxe
+Paths.File("boss", "sprite");          // <nivel>/sprites/boss
+Paths.File("boss/sprite", "sprite");   // <nivel>/sprites/boss/sprite   (el spritemap de un atlas)
+Paths.File("golpe", "sound");          // <nivel>/sounds/golpe.ogg
+Paths.File("intro/corte", "video");    // <nivel>/videos/intro/corte.mp4   (subcarpetas: lo de adentro)
+Paths.File("blur", "shader");          // <nivel>/shaders/blur.frag
+Paths.File("config", "json");          // <nivel>/data/config.json
+Paths.File("mapa", "niveles");         // <nivel>/niveles/mapa   (tipo desconocido = esa carpeta)
+Paths.File("data/algo.txt");           // <nivel>/data/algo.txt  (sin tipo: desde la raiz del nivel)
+```
+
+| Tipo | Carpeta | Extension |
+| --- | --- | --- |
+| `sprite` | `sprites/` | (carpeta) |
+| `image` | `images/` | `.png` |
+| `sound` / `music` | `sounds/` / `music/` | `.ogg` |
+| `video` | `videos/` | `.mp4` |
+| `script` / `source` | `scripts/` / `source/` | `.hx` |
+| `shader` | `shaders/` | `.frag` |
+| `json` / `xml` / `txt` / `data` | `data/` | `.json` / `.xml` / `.txt` / (la que traiga) |
+| `font` | `fonts/` | (la que traiga) |
+
+Si el nombre ya trae extension no se le agrega otra, y un nombre con `..` se rechaza (no se puede salir del nivel).
+
+Extras:
+
+- `Paths.FileExists(que, tipo)`: `true` si existe en disco.
+- `Paths.FileList(tipo, ?subcarpeta)`: nombres (sin extension) de lo que hay en esa carpeta; para `sprite`, las carpetas.
+- `Paths.levelSprites()`: los sprites del nivel, los de `config.json` > `"type": "icon"` primero (lo que usa el charter).
+- Un tercer parametro opcional (`Paths.File("boss", "sprite", otroNivel)`) apunta a otro nivel.
+
+## Iconos del jugador y del enemigo
+
+Estan en `meta.json` > `icons.P1` (jugador) y `icons.P2` (enemigo); cada uno es el nombre de un sprite del nivel. En el
+charter se cambian en **Meta** con un dropdown de los sprites del nivel (`(none)` los quita). En un script, el evento
+`BarIconChange` o `hud.iconPlayer.changeIcon("nombre")` / `hud.iconOpponent.changeIcon("nombre")`.
+
 ## Spritemaps de Adobe Animate (sprites tipo atlas)
 
 Un sprite de nivel es **atlas** cuando existe `sprites/<nombre>/sprite/Animation.json`. El spritemap se deja tal cual lo

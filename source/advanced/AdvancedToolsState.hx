@@ -37,6 +37,9 @@ class AdvancedToolsState extends FlxState
 	{
 		super.create();
 
+		// Los editores usan breakfast en vez de la musica del menu (y la recuperan al volver del charter).
+		funky.core.CoolUtil.playEditorSong();
+
 		FlxG.mouse.visible = true;
 		FlxG.mouse.enabled = true;
 

@@ -299,6 +299,162 @@ class Paths
 		return sys.FileSystem.exists(p) ? sys.io.File.getContent(p) : null;
 	}
 
+	// ───────────────────────── archivos de un nivel (para scripts y editores) ─────────────────────────
+
+	/** Nivel activo: lo fija PlayState al cargar y el charter al abrir un nivel. `File` lo usa si no le pasas otro. */
+	public static var currentLevel:Null<String> = null;
+
+	/** tipo -> [carpeta dentro del nivel, extension por defecto]. Un tipo que no esta aqui se usa como nombre de carpeta. */
+	static final FILE_TYPES:Map<String, Array<String>> = [
+		"sprite" => ["sprites", ""],
+		"image"  => ["images", ".png"],
+		"sound"  => ["sounds", ".ogg"],
+		"music"  => ["music", ".ogg"],
+		"video"  => ["videos", ".mp4"],
+		"script" => ["scripts", ".hx"],
+		"source" => ["source", ".hx"],
+		"shader" => ["shaders", ".frag"],
+		"json"   => ["data", ".json"],
+		"xml"    => ["data", ".xml"],
+		"txt"    => ["data", ".txt"],
+		"data"   => ["data", ""],
+		"font"   => ["fonts", ""]
+	];
+
+	/**
+	 * Ruta de un archivo DENTRO de un nivel.
+	 *
+	 * @param name  Que es: el nombre, con subcarpetas si hace falta (`"boss"`, `"boss/sprite"`, `"efectos/golpe"`).
+	 * @param type  De que tipo es: `sprite`, `image`, `sound`, `music`, `video`, `script`, `source`, `shader`, `json`,
+	 *              `xml`, `txt`, `data` o `font`. Con otra palabra se usa como carpeta (`File("a", "mapas")` = `<nivel>/mapas/a`).
+	 *              Vacio = `name` tal cual desde la raiz del nivel.
+	 * @param level Carpeta del nivel. Por defecto el nivel activo (`currentLevel`).
+	 *
+	 * Si `name` ya trae extension no se le agrega otra. Un `name` con `..` se rechaza (devuelve la raiz del nivel).
+	 *
+	 *     Paths.File("boss", "sprite")        // <nivel>/sprites/boss
+	 *     Paths.File("golpe", "sound")        // <nivel>/sounds/golpe.ogg
+	 *     Paths.File("intro/corte", "video")  // <nivel>/videos/intro/corte.mp4
+	 *     Paths.File("blur", "shader")        // <nivel>/shaders/blur.frag
+	 *     Paths.File("config", "json")        // <nivel>/data/config.json
+	 */
+	public static function File(name:String, ?type:String, ?level:String):String
+	{
+		var root = level != null ? level : currentLevel;
+		if (root == null || root == "")
+		{
+			Log.warn('[Paths] File("$name"): no hay nivel activo');
+			return name;
+		}
+
+		root = normalizeDir(root);
+		name = StringTools.replace(name == null ? "" : name, "\\", "/");
+		while (StringTools.startsWith(name, "/")) name = name.substr(1);
+
+		for (part in name.split("/"))
+		{
+			if (part == "..")
+			{
+				Log.warn('[Paths] File("$name"): no se permite salir del nivel');
+				return root;
+			}
+		}
+
+		var folder = "";
+		var ext = "";
+		var kind = type == null ? "" : StringTools.trim(type);
+
+		if (kind != "")
+		{
+			var info = FILE_TYPES.get(kind.toLowerCase());
+			if (info != null)
+			{
+				folder = info[0];
+				ext = info[1];
+			}
+			else
+			{
+				folder = kind;
+			}
+		}
+
+		var last = name.substr(name.lastIndexOf("/") + 1);
+		if (last.indexOf(".") >= 0) ext = "";
+
+		return root + "/" + (folder == "" ? "" : folder + "/") + name + ext;
+	}
+
+	/** true si `File(name, type, level)` existe en disco (archivo o carpeta). */
+	public static function FileExists(name:String, ?type:String, ?level:String):Bool
+	{
+		#if sys
+		return sys.FileSystem.exists(File(name, type, level));
+		#else
+		return false;
+		#end
+	}
+
+	/**
+	 * Nombres de lo que hay en la carpeta de un tipo del nivel, sin extension y ordenados (no entra a subcarpetas;
+	 * para `sprite` salen las carpetas). `sub` = subcarpeta dentro del tipo.
+	 */
+	public static function FileList(type:String, ?sub:String, ?level:String):Array<String>
+	{
+		var out:Array<String> = [];
+		#if sys
+		var dir = File(sub == null ? "" : sub, type, level);
+		if (StringTools.endsWith(dir, "/")) dir = dir.substr(0, dir.length - 1);
+
+		if (sys.FileSystem.exists(dir) && sys.FileSystem.isDirectory(dir))
+		{
+			for (entry in sys.FileSystem.readDirectory(dir))
+			{
+				var isDir = sys.FileSystem.isDirectory(dir + "/" + entry);
+				if (type.toLowerCase() == "sprite" && !isDir) continue;
+				out.push(isDir ? entry : Path.withoutExtension(entry));
+			}
+		}
+		out.sort(Reflect.compare);
+		#end
+		return out;
+	}
+
+	/**
+	 * Sprites de un nivel (`<nivel>/sprites/<n>/`), con los de `config.json` > `type: "icon"` primero.
+	 * Es lo que muestran los dropdowns de iconos del charter.
+	 */
+	public static function levelSprites(?level:String):Array<String>
+	{
+		var icons:Array<String> = [];
+		var others:Array<String> = [];
+
+		for (name in FileList("sprite", null, level))
+		{
+			if (spriteKind(name, level) == "icon") icons.push(name);
+			else others.push(name);
+		}
+
+		return icons.concat(others);
+	}
+
+	/** `type` del `config.json` de un sprite del nivel ("icon", "character"...), o "" si no lo dice. */
+	public static function spriteKind(name:String, ?level:String):String
+	{
+		#if sys
+		var config = File(name + "/config.json", "sprite", level);
+		try
+		{
+			if (sys.FileSystem.exists(config))
+			{
+				var kind:Dynamic = Reflect.field(haxe.Json.parse(sys.io.File.getContent(config)), "type");
+				if (kind != null) return Std.string(kind);
+			}
+		}
+		catch (_:Dynamic) {}
+		#end
+		return "";
+	}
+
 	// Lista carpetas de levels (cada una = un nivel)
 	public static function listLevels():Array<String>
 	{

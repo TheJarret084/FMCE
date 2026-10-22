@@ -54,6 +54,8 @@ class StageObject
 	public var singAnim:Int = -1;
 	/** Hasta que tiempo (ms de la musica) cuenta como "hold vivo". 0 = no hay hold. */
 	public var holdUntil:Float = 0;
+	/** Cuando (ms de la musica) vuelve a idle una anim puesta por ObjectAnimationSet en un objeto con strumLine. 0 = no pendiente. */
+	public var revertAt:Float = 0;
 
 	public var fixed:Bool;
 	public var transforms:Array<StageTransform>;
@@ -409,6 +411,7 @@ class Stage extends FlxGroup
 			if (object.strumLine != strumLine) continue;
 
 			object.holdUntil = 0;
+			object.revertAt = 0;
 			// Si el objeto no tiene anim para este lane, se queda como esta (no se marca como cantando).
 			object.singAnim = object.sprite.playIndex(lane + 1, true) ? lane + 1 : -1;
 		}
@@ -499,6 +502,19 @@ class Stage extends FlxGroup
 					if (!object.sprite.playIndex(object.baseAnim, true))
 						object.sprite.playIndex(0, true);
 				}
+			}
+		}
+
+		// ObjectAnimationSet en un objeto con strumLine: hace la anim UNA vez y vuelve a idle (si en ese momento esta cantando, manda el canto).
+		if (loaded)
+		{
+			for (object in objects)
+			{
+				if (object.revertAt <= 0 || songTime < object.revertAt) continue;
+
+				object.revertAt = 0;
+				if (object.singAnim <= 0)
+					object.sprite.playIndex(0, true);
 			}
 		}
 
@@ -705,8 +721,9 @@ class Stage extends FlxGroup
 	}
 
 	/**
-	 * ObjectAnimationSet. En un objeto con strumLine la anim elegida pasa a ser su anim BASE: el canto la pisa mientras
-	 * suena la nota y al soltar vuelve a ella (antes volvia siempre a idle y los holds la repetian como si fuera de canto).
+	 * ObjectAnimationSet.
+	 *  - Sin strumLine: la anim se queda puesta hasta el siguiente evento.
+	 *  - Con strumLine: hace la anim una vez (lo que dura) y vuelve a idle; el canto la pisa y manda mientras suena.
 	 * En un video, `index` es el numero de video.
 	 */
 	public function setAnim(object:StageObject, index:Int):Bool
@@ -719,13 +736,42 @@ class Stage extends FlxGroup
 
 		if (object.strumLine >= 0)
 		{
-			object.baseAnim = index;
 			object.singAnim = -1;
 			object.holdUntil = 0;
+
+			// duracion de una pasada de la anim; idle (0) no vuelve a ningun lado
+			var cur = object.sprite.animation.curAnim;
+			var ms = cur != null && cur.frameRate > 0 ? cur.numFrames / cur.frameRate * 1000 : 0;
+			object.revertAt = index > 0 && ms > 0 ? songTime + ms : 0;
 		}
 
 		return true;
-	}
+		}
+
+		/** Anim de la pose de fallo (la ultima de las anims de canto: idle 0, lanes 1..4, miss 5). */
+		static inline var MISS_ANIM:Int = 5;
+
+		/**
+		 * Pose de fallo: los objetos de esa strumLine hacen SOLO la anim 5 (si la tienen) y vuelven a idle al terminar el tiempo
+		 * de canto, igual que cuando cantan una nota.
+		 */
+		public function miss(strumLine:Int):Void
+		{
+			if (strumLine < 0) return;
+
+			for (object in objects)
+			{
+				if (object.strumLine != strumLine) continue;
+
+				object.holdUntil = 0;
+				object.revertAt = 0;
+				// sin anim 5 el objeto se queda como esta
+				object.singAnim = object.sprite.playIndex(MISS_ANIM, true) ? MISS_ANIM : -1;
+			}
+
+			singing.set(strumLine, true);
+			singUntil.set(strumLine, songTime + holdMs);
+		}
 
 	function applyVideo(object:StageObject):Void
 	{

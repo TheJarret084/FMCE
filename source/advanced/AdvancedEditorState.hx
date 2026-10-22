@@ -36,6 +36,7 @@ class AdvancedEditorState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+		funky.core.CoolUtil.playEditorSong();
 		prepareLevel();
 
 		studio = new CodeStudio(loadFiles(), saveFile, prepareRun, openSpritePreview, createScript);

@@ -2,6 +2,7 @@ package funky.game;
 
 import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.tweens.FlxTween;
 import funky.backend.chart.FNMMNote;
 import funky.game.Note.QueueNote;
 import funky.scripting.Scripts;
@@ -93,6 +94,32 @@ class StrumLine extends FlxTypedGroup<Strum>
 			return 0;
 		});
 		queueIndex = 0;
+	}
+
+	/**
+	 * Fin de la cancion: no sale ninguna nota mas y las que siguen en pantalla se desvanecen y se van
+	 * (en vez de desaparecer de golpe o volver a aparecer).
+	 */
+	public function clearNotes(fadeSeconds:Float = 0.25):Void
+	{
+		queueIndex = queue.length;
+
+		for (note in notes.members)
+		{
+			if (note == null || !note.exists)
+				continue;
+
+			if (fadeSeconds <= 0)
+			{
+				note.kill();
+				continue;
+			}
+
+			var target = note;
+			FlxTween.tween(target, {alpha: 0}, fadeSeconds, {
+				onComplete: function(_) if (target != null) target.kill()
+			});
+		}
 	}
 
 	/** Activa las notas que faltan menos de `aheadMs` para llegar al receptor. */
