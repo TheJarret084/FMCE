@@ -287,7 +287,7 @@ class FreeplayState extends FlxState
 		try
 		{
 			var sprite = new FlxSprite().loadGraphic(Paths.image("menus/freeplay/banner"));
-			var height = FlxG.height - BAR_H - BANNER_MARGIN - 20;
+			var height = Std.int(FlxG.height - BAR_H - BANNER_MARGIN - 20);
 			sprite.setGraphicSize(0, height);
 			sprite.updateHitbox();
 			sprite.antialiasing = true;
