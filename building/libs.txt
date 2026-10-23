@@ -11,3 +11,4 @@ flixel-animate git https://github.com/CodenameCrew/cne-flixel-animate old
 hxcpp
 hscript-improved git https://github.com/CodenameCrew/hscript-improved.git codename-dev
 hxvlc
+hxdiscord_rpc

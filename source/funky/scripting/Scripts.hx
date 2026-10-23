@@ -26,9 +26,15 @@ import haxe.io.Path;
 import sys.FileSystem;
 #end
 
-/** Scripts de un nivel: todo `.hx` de `<nivel>/scripts/` (en orden alfabetico). hscript-improved: clases, import, using. */
+/** Scripts de un nivel: todo `.hx` de `<nivel>/data/scripts/` (en orden alfabetico). hscript-improved: clases, import, using. */
 class Scripts
 {
+	/** Carpeta de los scripts dentro del nivel. */
+	public static inline var DIR:String = "data/scripts";
+
+	/** Carpeta de antes (`<nivel>/scripts/`): se sigue leyendo para no romper niveles viejos, pero lo nuevo va en `DIR`. */
+	public static inline var LEGACY_DIR:String = "scripts";
+
 	public static inline var CONTINUE:Int = 0;
 	public static inline var STOP:Int = 1;
 
@@ -49,30 +55,36 @@ class Scripts
 		clear();
 
 		#if sys
-		var dir = Path.join([levelDir, "scripts"]);
-		if (!FileSystem.exists(dir) || !FileSystem.isDirectory(dir)) return;
+		// (carpeta, archivo): primero data/scripts y despues la carpeta vieja, cada una en orden alfabetico
+		var found:Array<{dir:String, file:String}> = [];
+		for (sub in [DIR, LEGACY_DIR])
+		{
+			var dir = Path.join([levelDir, sub]);
+			if (!FileSystem.exists(dir) || !FileSystem.isDirectory(dir)) continue;
 
-		var files = [for (entry in FileSystem.readDirectory(dir)) if (StringTools.endsWith(entry.toLowerCase(), ".hx")) entry];
-		files.sort(Reflect.compare);
-		if (files.length == 0) return;
+			var files = [for (entry in FileSystem.readDirectory(dir)) if (StringTools.endsWith(entry.toLowerCase(), ".hx")) entry];
+			files.sort(Reflect.compare);
+			for (file in files) found.push({dir: dir, file: file});
+		}
+		if (found.length == 0) return;
 
 		var globals = baseGlobals();
 		for (key => value in extra) globals.set(key, value);
 
-		for (file in files)
+		for (item in found)
 		{
 			try
 			{
-				list.push(new LevelScript(file, Path.join([dir, file]), levelDir, globals));
+				list.push(new LevelScript(item.file, Path.join([item.dir, item.file]), levelDir, globals));
 			}
 			catch (e:Dynamic)
 			{
-				Log.error('[Scripts] ' + file + ': ' + Std.string(e));
+				Log.error('[Scripts] ' + item.file + ': ' + Std.string(e));
 			}
 		}
 
 		has = list.length > 0;
-		Log.info('[Scripts] ' + list.length + ' scripts de ' + dir);
+		Log.info('[Scripts] ' + list.length + ' scripts de ' + levelDir + ' (' + DIR + ')');
 		#end
 	}
 

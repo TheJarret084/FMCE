@@ -311,7 +311,7 @@ class Paths
 		"sound"  => ["sounds", ".ogg"],
 		"music"  => ["music", ".ogg"],
 		"video"  => ["videos", ".mp4"],
-		"script" => ["scripts", ".hx"],
+		"script" => ["data/scripts", ".hx"],
 		"source" => ["source", ".hx"],
 		"shader" => ["shaders", ".frag"],
 		"json"   => ["data", ".json"],

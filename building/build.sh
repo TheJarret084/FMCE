@@ -66,6 +66,8 @@ elif [ "$MODE" = debug ]; then
 fi
 
 echo "==> FMCE $KIND $MODE ($PLATFORM)"
+# Rich Presence (Discord Social SDK): las .so del .aar para el enlace de hxcpp
+[ "$KIND" = android ] && bash building/discord-android.sh
 haxelib run lime "${ARGS[@]}" "$@"
 
 # ── Empaquetar ──────────────────────────────────────────────────

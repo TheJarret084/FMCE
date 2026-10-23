@@ -89,3 +89,8 @@ Hecho hoy (sin probar, no se compilo):
 - [X] Video: se busca `<carpeta>/<anim>.mp4` (`FunkinVideoSprite`); `SpriteEditorState` ya no pide sprite.png y previsualiza el video
 - [X] Popup nativo en escritorio ante cualquier crash (`CrashHandler`); en Android los avisos van al log en pantalla (`NativeAPI`)
 - [X] `UISubstateWindow` blindado (blur con respaldo, sin null en `update`/`destroy`)
+
+(23 oct):
+- [ ] Rich presence para mobile LEST GOOOO
+- [ ] Pulida a la pausa
+- [ ] parte de herramientas mejor trabajada

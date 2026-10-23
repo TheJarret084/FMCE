@@ -1,6 +1,6 @@
 # Scripts de nivel
 
-Los scripts son `.hx` (hscript) y se cargan de `<nivel>/scripts/*.hx`, en orden alfabetico. Cada script
+Los scripts son `.hx` (hscript) y se cargan de `<nivel>/data/scripts/*.hx`, en orden alfabetico (la carpeta vieja `<nivel>/scripts/` se sigue leyendo despues, para no romper niveles viejos). Cada script
 define funciones con el nombre del callback y el engine las llama. Si un script falla, el error sale en el
 log una sola vez y el juego sigue.
 
@@ -92,7 +92,7 @@ function onGameOver()
 
 ## Clases propias (como en Codename)
 
-Las clases van en `<nivel>/source/` (**no** en `scripts/`: todo lo de `scripts/` se ejecuta solo). Se traen con `import`:
+Las clases van en `<nivel>/source/` (**no** en `data/scripts/`: todo lo de `data/scripts/` se ejecuta solo). Se traen con `import`:
 
 `levels/MiNivel/source/jefe/Boss.hx`
 ```haxe
@@ -121,7 +121,7 @@ class Boss extends FunkinSprite
 }
 ```
 
-`levels/MiNivel/scripts/main.hx`
+`levels/MiNivel/data/scripts/main.hx`
 ```haxe
 import jefe.Boss;
 
@@ -155,6 +155,7 @@ Paths.File("golpe", "sound");          // <nivel>/sounds/golpe.ogg
 Paths.File("intro/corte", "video");    // <nivel>/videos/intro/corte.mp4   (subcarpetas: lo de adentro)
 Paths.File("blur", "shader");          // <nivel>/shaders/blur.frag
 Paths.File("config", "json");          // <nivel>/data/config.json
+Paths.File("main", "script");          // <nivel>/data/scripts/main.hx
 Paths.File("mapa", "niveles");         // <nivel>/niveles/mapa   (tipo desconocido = esa carpeta)
 Paths.File("data/algo.txt");           // <nivel>/data/algo.txt  (sin tipo: desde la raiz del nivel)
 ```
@@ -165,7 +166,7 @@ Paths.File("data/algo.txt");           // <nivel>/data/algo.txt  (sin tipo: desd
 | `image` | `images/` | `.png` |
 | `sound` / `music` | `sounds/` / `music/` | `.ogg` |
 | `video` | `videos/` | `.mp4` |
-| `script` / `source` | `scripts/` / `source/` | `.hx` |
+| `script` / `source` | `data/scripts/` / `source/` | `.hx` |
 | `shader` | `shaders/` | `.frag` |
 | `json` / `xml` / `txt` / `data` | `data/` | `.json` / `.xml` / `.txt` / (la que traiga) |
 | `font` | `fonts/` | (la que traiga) |

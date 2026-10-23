@@ -47,6 +47,11 @@ class PauseSubState extends FlxSubState
 	/** Escala del Among Us bailarin (el frame original mide 17x15). */
 	static inline var DANCER_SCALE:Int = 4;
 
+	/** Franja de la derecha y espacio del banner dentro de ella (entre el titulo de arriba y el bailarin de abajo). */
+	static inline var STRIP_W:Int = 420;
+	static inline var BANNER_TOP:Float = 112;
+	static inline var BANNER_BOTTOM:Float = 628;
+
 	static var font:Null<String> = null;
 	static var fontLoaded:Bool = false;
 
@@ -59,6 +64,8 @@ class PauseSubState extends FlxSubState
 
 	var bg:FlxSprite;
 	var strip:FlxSprite;
+	var banner:Null<FlxSprite>;
+	var bannerFrame:Null<FlxSprite>;
 	var infoTitle:FlxText;
 	var infoSub:FlxText;
 	var peekButton:FlxText;
@@ -101,6 +108,9 @@ class PauseSubState extends FlxSubState
 		add(strip);
 		FlxTween.tween(strip, {x: FlxG.width - 420}, 0.3, {ease: FlxEase.circOut});
 
+		// Banner en la franja (imagen fija `menus/pause/banner`, el mismo molde que el de Freeplay pero con su propio sprite).
+		createBanner();
+
 		var pad = 15;
 		infoTitle = new FlxText(0, pad, FlxG.width - pad, playState.songLabel(), 36);
 		infoTitle.setFormat(font, 36, FlxColor.WHITE, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -130,6 +140,51 @@ class PauseSubState extends FlxSubState
 
 		CoolUtil.playSound("swoosh", 0.5);
 		openPage(MAIN);
+	}
+
+	/** Banner fijo: marco oscuro + imagen, centrado en la franja de la derecha. Si la imagen falta, no se muestra. */
+	function createBanner():Void
+	{
+		try
+		{
+			var sprite = new FlxSprite().loadGraphic(Paths.image("menus/pause/banner"));
+			if (sprite.graphic == null || sprite.frameWidth <= 1)
+			{
+				sprite.destroy();
+				return;
+			}
+
+			sprite.setGraphicSize(0, Std.int(BANNER_BOTTOM - BANNER_TOP));
+			sprite.updateHitbox();
+			sprite.antialiasing = true;
+			sprite.scrollFactor.set();
+			sprite.alpha = 0;
+
+			var finalX = FlxG.width - STRIP_W + (STRIP_W - sprite.width) / 2;
+			sprite.setPosition(FlxG.width + (finalX - (FlxG.width - STRIP_W)), BANNER_TOP);
+
+			var frame = new FlxSprite().makeGraphic(1, 1, 0xFF000000);
+			frame.scale.set(sprite.width + 16, sprite.height + 16);
+			frame.updateHitbox();
+			frame.setPosition(sprite.x - 8, sprite.y - 8);
+			frame.scrollFactor.set();
+			frame.alpha = 0;
+
+			add(frame);
+			add(sprite);
+			banner = sprite;
+			bannerFrame = frame;
+
+			// entra junto con la franja
+			FlxTween.tween(sprite, {x: finalX}, 0.3, {ease: FlxEase.circOut});
+			FlxTween.tween(frame, {x: finalX - 8}, 0.3, {ease: FlxEase.circOut});
+		}
+		catch (e:Dynamic)
+		{
+			Log.warn('[PauseSubState] no se pudo cargar el banner: ' + Std.string(e));
+			banner = null;
+			bannerFrame = null;
+		}
 	}
 
 	/** El mini Among Us de `menus/pause/texture` (animacion "dance", en bucle), abajo a la derecha. */
@@ -216,6 +271,8 @@ class PauseSubState extends FlxSubState
 		uiAlpha = FlxMath.lerp(uiAlpha, viewing ? 0 : 1, r);
 		bg.alpha = FlxMath.lerp(bg.alpha, viewing ? 0 : 0.8, r);
 		strip.alpha = 0.16 * uiAlpha;
+		if (banner != null) banner.alpha = uiAlpha;
+		if (bannerFrame != null) bannerFrame.alpha = 0.45 * uiAlpha;
 		infoTitle.alpha = uiAlpha;
 		infoSub.alpha = uiAlpha;
 		peekButton.alpha = FlxMath.lerp(peekButton.alpha, viewing ? 0.3 : 1, r);
@@ -348,6 +405,8 @@ class PauseSubState extends FlxSubState
 	{
 		bg.visible = value;
 		strip.visible = value;
+		if (banner != null) banner.visible = value;
+		if (bannerFrame != null) bannerFrame.visible = value;
 		infoTitle.visible = value;
 		infoSub.visible = value;
 		peekButton.visible = value;

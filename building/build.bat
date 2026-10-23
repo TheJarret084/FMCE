@@ -42,6 +42,7 @@ haxelib run lime %ARGS% %EXTRA% || exit /b 1
 if /i "%KIND%"=="hl" (set "BIN=export\%MODE%\hl\bin") else (set "BIN=export\%MODE%\windows\bin")
 if not exist "%BIN%" (echo build.bat: no hay carpeta bin en %BIN% & exit /b 1)
 
+
 if not exist building\artifacts mkdir building\artifacts
 set "OUT=%CD%\building\artifacts\FMCE-Windows-x64-%KIND%-%MODE%.zip"
 if exist "%OUT%" del "%OUT%"

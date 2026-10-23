@@ -13,6 +13,7 @@ import funky.core.KeyBinds;
 import funky.core.Log;
 import funky.core.Paths;
 import funky.core.TransitionHandler;
+import funky.scripting.Scripts;
 import advanced.ui.CodeStudio;
 import advanced.ui.CodeStudioFile;
 
@@ -52,7 +53,9 @@ class AdvancedEditorState extends FlxState
 		try
 		{
 			if (!FileSystem.exists(levelDir)) FileSystem.createDirectory(levelDir);
-			var scripts = Path.join([levelDir, "scripts"]);
+			var data = Path.join([levelDir, "data"]);
+			if (!FileSystem.exists(data)) FileSystem.createDirectory(data);
+			var scripts = Path.join([levelDir, Scripts.DIR]);
 			if (!FileSystem.exists(scripts)) FileSystem.createDirectory(scripts);
 		}
 		catch (e:Dynamic)
@@ -73,8 +76,8 @@ class AdvancedEditorState extends FlxState
 
 		if (!foundHx)
 		{
-			var path = Path.join([levelDir, "scripts", "script.hx"]);
-			result.push(new CodeStudioFile("scripts/script.hx", defaultScript(), path, true, "haxe"));
+			var path = Path.join([levelDir, Scripts.DIR, "script.hx"]);
+			result.push(new CodeStudioFile(Scripts.DIR + "/script.hx", defaultScript(), path, true, "haxe"));
 		}
 		#end
 		result.sort(function(a, b)
@@ -122,7 +125,9 @@ class AdvancedEditorState extends FlxState
 	static function isScriptPath(rel:String):Bool
 	{
 		var lower = StringTools.replace(rel, "\\", "/").toLowerCase();
-		return lower == "scripts" || StringTools.startsWith(lower, "scripts/");
+		// data/scripts es la carpeta de ahora; scripts/ se sigue aceptando (niveles viejos)
+		return lower == Scripts.DIR || StringTools.startsWith(lower, Scripts.DIR + "/")
+			|| lower == Scripts.LEGACY_DIR || StringTools.startsWith(lower, Scripts.LEGACY_DIR + "/");
 	}
 
 	static function isSpriteJson(rel:String):Bool
@@ -138,7 +143,7 @@ class AdvancedEditorState extends FlxState
 
 	static function defaultScript():String
 	{
-		return "// FMCE Advanced\n// Este script se guarda en levels/<nivel>/scripts/.\n// Runtime de HScript pendiente: por ahora se edita y guarda.\n\nfunction onCreate()\n{\n    trace(\"FMCE: script cargado\");\n}\n";
+		return "// FMCE Advanced\n// Este script se guarda en levels/<nivel>/data/scripts/.\n// Runtime de HScript pendiente: por ahora se edita y guarda.\n\nfunction onCreate()\n{\n    trace(\"FMCE: script cargado\");\n}\n";
 	}
 	#end
 
@@ -153,7 +158,7 @@ class AdvancedEditorState extends FlxState
 		}
 		if (file.kind == "haxe" && !isScriptPath(relativeToLevel(file.path)))
 		{
-			studio.log("[FMCE] Save bloqueado: los .hx solo viven dentro de scripts/.");
+			studio.log("[FMCE] Save bloqueado: los .hx solo viven dentro de data/scripts/.");
 			return false;
 		}
 		if (file.kind == "json")
@@ -187,7 +192,7 @@ class AdvancedEditorState extends FlxState
 	function createScript():CodeStudioFile
 	{
 		#if sys
-		var scripts = Path.join([levelDir, "scripts"]);
+		var scripts = Path.join([levelDir, Scripts.DIR]);
 		var index = 0;
 		while (true)
 		{
@@ -198,7 +203,7 @@ class AdvancedEditorState extends FlxState
 				for (file in studio.files)
 					if (file.path == path) alreadyUsed = true;
 			if (!alreadyUsed)
-				return new CodeStudioFile("scripts/" + name, defaultScript(), path, true, "haxe");
+				return new CodeStudioFile(Scripts.DIR + "/" + name, defaultScript(), path, true, "haxe");
 			index++;
 		}
 		#end

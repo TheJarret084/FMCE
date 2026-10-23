@@ -5,7 +5,9 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
+import advanced.ui.EditorBackdrop;
 import funky.api.DiscordClient;
+import funky.backend.LevelArchive;
 import funky.backend.chart.LevelLoader;
 import funky.core.CoolUtil;
 import funky.core.KeyBinds;
@@ -42,7 +44,8 @@ class AdvancedModeState extends FlxState
 	var icons:Array<Null<HealthIcon>> = [];
 	var iconTried:Array<Bool> = [];
 	var arrow:Null<BoldText>;
-	var pattern:Null<FlxSprite>;
+	var importButton:Null<FlxText>;
+	var pendingImport:Null<String>;
 	var selected:Int = 0;
 	var scrollPos:Float = 0;
 	var chosen:Bool = false;
@@ -66,23 +69,12 @@ class AdvancedModeState extends FlxState
 		var bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xFF000000);
 		add(bg);
 
-		// Fondo de flechas de los editores (`editors/bgs/default`), tenue sobre negro.
-		var tile = Paths.image("editors/bgs/default");
-		if (tile != null)
+		// Fondo de los editores (`editors/bgs/default`): en mosaico, deslizandose de izquierda a derecha.
+		try
 		{
-			try
-			{
-				pattern = new FlxSprite().loadGraphic(tile);
-				pattern.setGraphicSize(FlxG.width, FlxG.height);
-				pattern.updateHitbox();
-				pattern.alpha = 0.55;
-				add(pattern);
-			}
-			catch (e:Dynamic)
-			{
-				pattern = null;
-			}
+			add(new EditorBackdrop());
 		}
+		catch (e:Dynamic) {}
 
 		// Titulo arriba a la izquierda + descripcion, igual que "Chart Editor >" de Codename.
 		add(new BoldText(16, 6, "MODO AVANZADO >", 0.55));
@@ -117,6 +109,12 @@ class AdvancedModeState extends FlxState
 		info.color = MUTED;
 		info.alignment = FlxTextAlign.CENTER;
 		add(info);
+
+		// Importar un nivel .FMCE (tecla I o toque aqui)
+		importButton = new FlxText(FlxG.width - 330, 14, 310, "IMPORTAR .FMCE  [I]", 20);
+		importButton.color = ACTIVE;
+		importButton.alignment = FlxTextAlign.RIGHT;
+		add(importButton);
 
 		DiscordClient.customPresence("Modo Avanzado", "Seleccionando nivel", "fmce", "", false);
 		scrollPos = selected;
@@ -156,8 +154,6 @@ class AdvancedModeState extends FlxState
 			arrow.setPosition(sel.x + sel.width + 24, sel.y);
 		}
 
-		if (pattern != null)
-			pattern.y = -((scrollPos * 12) % 40);
 	}
 
 	/** Icono del oponente del nivel, como en Freeplay; se carga al acercarse a la fila para no cargar todos de golpe. */
@@ -190,7 +186,94 @@ class AdvancedModeState extends FlxState
 	function refresh():Void
 	{
 		if (info == null) return;
+		info.color = MUTED;
 		info.text = levels.length == 0 ? "Crea un nivel en la carpeta levels/ para usar el modo avanzado." : (selected + 1) + " / " + levels.length;
+	}
+
+	/**
+	 * Importa niveles `.FMCE`: los que haya sueltos en `levels/`; si no hay, en escritorio abre el selector de archivos.
+	 * (En celular: copia el .FMCE a la carpeta `levels/` del juego y pulsa de nuevo.)
+	 */
+	function importLevels():Void
+	{
+		#if sys
+		var found = LevelArchive.listArchives();
+		if (found.length == 0)
+		{
+			#if desktop
+			var dialog = new lime.ui.FileDialog();
+			dialog.onSelect.add(function(path:String) pendingImport = path);
+			dialog.browse(lime.ui.FileDialogType.OPEN, "fmce", null, "Importar nivel .FMCE");
+			return;
+			#else
+			setInfo("No hay .FMCE en " + funky.core.Paths.levelsRoot() + " (copialo ahi y vuelve a tocar IMPORTAR)", false);
+			return;
+			#end
+		}
+
+		var messages:Array<String> = [];
+		var okCount = 0;
+		for (path in found)
+		{
+			var result = LevelArchive.importArchive(path);
+			if (result.ok)
+			{
+				okCount++;
+				LevelArchive.archiveDone(path);
+				messages.push(result.level + " (" + result.files + " archivos)");
+			}
+			else
+				messages.push(result.error);
+		}
+
+		reloadLevels();
+		setInfo((okCount > 0 ? "Importado: " : "") + messages.join(" | "), okCount > 0);
+		#end
+	}
+
+	/** Un .FMCE elegido con el selector de archivos (escritorio). */
+	function importPicked(path:String):Void
+	{
+		var result = LevelArchive.importArchive(path);
+		if (result.ok) reloadLevels();
+		setInfo(result.ok ? "Importado: " + result.level + " (" + result.files + " archivos)" : result.error, result.ok);
+	}
+
+	function setInfo(text:String, good:Bool):Void
+	{
+		if (info == null) return;
+		info.text = text;
+		info.color = good ? 0xFF8FE388 : 0xFFFF8A8A;
+	}
+
+	/** Vuelve a leer `levels/` y rehace las filas (despues de importar). */
+	function reloadLevels():Void
+	{
+		for (row in rows) remove(row, true).destroy();
+		for (icon in icons) if (icon != null) remove(icon, true).destroy();
+		if (arrow != null) remove(arrow, true).destroy();
+		rows = [];
+		icons = [];
+		iconTried = [];
+		arrow = null;
+
+		levels = Paths.listLevels();
+		for (i in 0...levels.length)
+		{
+			var row = new BoldText(ROW_X, ANCHOR_Y + i * ROW_H, levels[i], 0.95);
+			add(row);
+			rows.push(row);
+			icons.push(null);
+			iconTried.push(false);
+		}
+		if (levels.length > 0)
+		{
+			arrow = new BoldText(0, 0, ">", 0.95);
+			add(arrow);
+		}
+		selected = Std.int(Math.min(selected, Math.max(0, levels.length - 1)));
+		scrollPos = selected;
+		layoutRows(1);
 	}
 
 	function openSelected():Void
@@ -219,6 +302,19 @@ class AdvancedModeState extends FlxState
 			TransitionHandler.switchState(new MainMenuState());
 			return;
 		}
+		if (pendingImport != null)
+		{
+			var path = pendingImport;
+			pendingImport = null;
+			importPicked(path);
+		}
+
+		if (FlxG.keys.justPressed.I || (FlxG.mouse.justPressed && importButton != null && FlxG.mouse.overlaps(importButton)))
+		{
+			importLevels();
+			return;
+		}
+
 		if (levels.length == 0) return;
 
 		if (KeyBinds.justPressed(KeyBinds.UP))

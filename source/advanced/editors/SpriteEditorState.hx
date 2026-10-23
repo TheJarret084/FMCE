@@ -63,6 +63,10 @@ class SpriteEditorState extends UIState
 	var indicesBox:UITextBox;
 	var ghostCheck:UICheckbox;
 	var animWidgets:Array<UISprite> = [];
+	var deleteButton:UIButton;
+	/** Animacion que espera el segundo toque de "Borrar animacion" (y cuando se pidio). */
+	var deleteArmed:Null<Dynamic> = null;
+	var deleteArmedAt:Float = 0;
 
 	var cfgPath:String = "";
 	var cfg:Dynamic = null;
@@ -253,7 +257,7 @@ class SpriteEditorState extends UIState
 		};
 
 		var y1 = y0 + 160;
-		ui(new UIWindow(x0, y1, RIGHT_W, 470, "Animacion"));
+		ui(new UIWindow(x0, y1, RIGHT_W, 514, "Animacion"));
 		label(x0 + 20, y1 + 38, "Nombre en el juego");
 		nameBox = ui(new UITextBox(x0 + 20, y1 + 58, "", RIGHT_W - 40));
 		nameBox.onChange = renameAnim;
@@ -296,7 +300,12 @@ class SpriteEditorState extends UIState
 		ghostCheck = ui(new UICheckbox(x0 + 20, y1 + 430, "Ghost (alinear las demas contra esta)", false));
 		ghostCheck.onChecked = function(b:Bool) setGhost(entry(), b);
 
-		animWidgets = [nameBox, tagBox, speedStep, animScaleStep, pivotXStep, pivotYStep, loopCheck, spdFpsCheck, indicesBox, ghostCheck, play];
+		// Borrar la animacion elegida (tambien en el menu Archivo > Borrar animacion y con SUPR). Solo quita la entrada del
+		// config.json: el atlas nunca se toca. No se puede deshacer, asi que se pide un segundo toque para confirmar.
+		deleteButton = ui(new UIButton(x0 + 20, y1 + 468, "Borrar animacion", requestDeleteAnim, RIGHT_W - 40, 32));
+		deleteButton.color = 0xFFFF8A8A;
+
+		animWidgets = [nameBox, tagBox, speedStep, animScaleStep, pivotXStep, pivotYStep, loopCheck, spdFpsCheck, indicesBox, ghostCheck, play, deleteButton];
 	}
 
 	// ───────────────────────── listas ─────────────────────────
@@ -561,9 +570,37 @@ class SpriteEditorState extends UIState
 		refreshAnimList();
 	}
 
+	/** Primer toque: avisa y arma el borrado (el boton se pone rojo y dice "Confirmar"); segundo toque en 3 s: borra. */
+	function requestDeleteAnim():Void
+	{
+		var e = entry();
+		if (e == null) return;
+
+		if (deleteArmed == e && haxe.Timer.stamp() - deleteArmedAt < 3)
+		{
+			disarmDelete();
+			deleteAnim();
+			return;
+		}
+
+		deleteArmed = e;
+		deleteArmedAt = haxe.Timer.stamp();
+		deleteButton.field.text = "Confirmar: borrar " + Std.string(Reflect.field(e, "name"));
+		deleteButton.color = 0xFFFF4444;
+		notify("Toca otra vez para borrar la animacion (solo se quita del config.json).");
+	}
+
+	function disarmDelete():Void
+	{
+		deleteArmed = null;
+		deleteButton.field.text = "Borrar animacion";
+		deleteButton.color = 0xFFFF8A8A;
+	}
+
 	function deleteAnim():Void
 	{
 		if (entries.length == 0) return;
+		disarmDelete();
 		var removed = entries.splice(animIdx, 1)[0];
 		ghostNames.remove(Std.string(Reflect.field(removed, "name")));
 		animIdx = Std.int(Math.max(0, Math.min(entries.length - 1, animIdx)));
@@ -578,6 +615,7 @@ class SpriteEditorState extends UIState
 	{
 		if (entries.length == 0) return;
 		animIdx = (index + entries.length) % entries.length;
+		if (deleteArmed != null && deleteArmed != entry()) disarmDelete();
 		markAnims();
 		syncAnimWidgets();
 		playCurrent();

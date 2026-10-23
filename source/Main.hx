@@ -35,6 +35,9 @@ class Main extends Sprite
 
 		#if desktop
 		WindowUtils.init("FMCE");
+		#end
+
+		#if (desktop || android)
 		DiscordClient.initialize();
 		#end
 

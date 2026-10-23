@@ -13,9 +13,9 @@ import sys.io.File;
 #end
 
 /**
- * Un `.hx` de `<nivel>/scripts/`, con su propio interprete (hscript-improved: clases, `import`, `using`).
+ * Un `.hx` de `<nivel>/data/scripts/`, con su propio interprete (hscript-improved: clases, `import`, `using`).
  *
- * Las clases propias van en `<nivel>/source/` (NO en `scripts/`, porque todo lo de `scripts/` se ejecuta
+ * Las clases propias van en `<nivel>/source/` (NO en `data/scripts/`, porque todo lo de `data/scripts/` se ejecuta
  * solo): `import MiClase;` carga `<nivel>/source/MiClase.hx`, `import jefe.Boss;` carga `<nivel>/source/jefe/Boss.hx`.
  */
 class LevelScript
