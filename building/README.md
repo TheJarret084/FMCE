@@ -22,6 +22,8 @@ Salida en `building/artifacts/`: `FMCE-<OS>-x64-<target>-<tipo>.zip` o `FMCE-And
 
 Sin `building/android.keystore` el release sale firmado en debug (instalable). Para uno real:
 `keytool -genkey -v -keystore building/android.keystore -alias fmce -keyalg RSA -keysize 2048 -validity 10000`.
+El keystore solo se usa si `building/check-keystore.sh` lo da por bueno (abre con `ANDROID_KEY_ALIAS` y
+`ANDROID_STORE_PASSWORD` y se puede leer la llave); si falta o esta danado, el build sigue firmado en debug.
 
 ## Flixel / OpenFL (forks de Codename)
 

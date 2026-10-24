@@ -59,11 +59,11 @@ ARGS=(build "$PLATFORM")
 EFFECTIVE="$MODE"
 
 if [ "$KIND" = android ] && [ "$MODE" = release ]; then
-    if [ -f building/android.keystore ] &&
-       [ -n "${ANDROID_KEY_ALIAS:-}" ] &&
-       [ -n "${ANDROID_STORE_PASSWORD:-}" ]; then
+    # Solo se firma con la llave si existe y se puede leer de verdad (building/check-keystore.sh).
+    # Si falta, esta danada o los secrets no coinciden, no se aborta: se compila firmado en debug.
+    if bash building/check-keystore.sh building/android.keystore; then
 
-        echo "==> Android: usando keystore FMCE"
+        echo "==> Android: usando keystore FMCE (verificado)"
 
         ARGS+=(
             --certificate-path="$PWD/building/android.keystore"
@@ -71,7 +71,7 @@ if [ "$KIND" = android ] && [ "$MODE" = release ]; then
             --certificate-password="$ANDROID_STORE_PASSWORD"
         )
     else
-        echo "==> Sin keystore o secretos: APK debug firmado"
+        echo "==> Sin keystore valido: APK debug firmado (instalable, pero la firma cambia en cada build)"
         ARGS+=(-debug)
         EFFECTIVE=debug
     fi

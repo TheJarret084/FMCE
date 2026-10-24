@@ -41,14 +41,38 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         shell: bash
         run: |
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            mkdir -p building
-            printf '%s' "$ANDROID_KEYSTORE_BASE64" \
-              | base64 --decode > building/android.keystore
+          rm -f building/android.keystore
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "No hay keystore configurada: el APK saldra firmado en debug."
+            exit 0
+          fi
+          mkdir -p building
+          # tr quita espacios, saltos de linea y CR que se cuelan al pegar el secret.
+          if printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' \
+              | base64 --decode > building/android.keystore 2>/dev/null; then
             chmod 600 building/android.keystore
             echo "Keystore restaurada."
           else
-            echo "No hay keystore configurada; se usara debug."
+            rm -f building/android.keystore
+            echo "::warning::ANDROID_KEYSTORE_BASE64 no es base64 valido: el APK saldra firmado en debug."
+          fi
+
+      # Seguro: la llave solo se usa si abre con el alias y la contrasena y su llave privada se puede
+      # leer. Si no, se borra y el build sigue firmado en debug en vez de fallar al final.
+      - name: Check keystore
+        env:
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        shell: bash
+        run: |
+          if [ ! -f building/android.keystore ]; then
+            echo "Firma: debug (sin keystore)" >> "$GITHUB_STEP_SUMMARY"
+          elif bash building/check-keystore.sh building/android.keystore; then
+            echo "Firma: keystore FMCE (verificado)" >> "$GITHUB_STEP_SUMMARY"
+          else
+            rm -f building/android.keystore
+            echo "::warning::Keystore danado o secrets incorrectos (motivo arriba): se compila firmado en debug."
+            echo "Firma: debug (keystore invalido, revisa los secrets)" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Build Android (release)
