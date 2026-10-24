@@ -50,6 +50,38 @@ jobs:
           ANDROID_NDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}/ndk/21.4.7075529
         run: bash building/android-build.sh release
 
+      # Si el build truena, vuelve a correr Gradle sobre el proyecto que genero lime, ahora con
+      # --stacktrace, y deja todo en un artifact (gradle-stacktrace) para bajarlo desde el run.
+      # El log normal del job NO trae la causa real del fallo de packageDebug.
+      - name: Gradle stacktrace (solo si falla)
+        if: failure()
+        shell: bash
+        run: |
+          mkdir -p building/artifacts
+          OUT=building/artifacts/gradle-stacktrace.txt
+          {
+            echo "=== disco ==="; df -h
+            echo; echo "=== .so que van al APK (jniLibs) ==="
+            find export -path '*jniLibs*' -name '*.so' -exec ls -l {} + 2>/dev/null || true
+            echo; echo "=== gradlew ==="
+            GW="$(find export -name gradlew | head -n 1)"
+            echo "$GW"
+            if [ -n "$GW" ]; then
+              cd "$(dirname "$GW")"
+              chmod +x gradlew
+              ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 || true
+            fi
+          } > "$OUT" 2>&1 || true
+          tail -n 120 "$OUT"
+
+      - name: Subir stacktrace de Gradle
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-stacktrace
+          path: building/artifacts/gradle-stacktrace.txt
+          if-no-files-found: warn
+
       - name: Upload APK as workflow artifact
         uses: actions/upload-artifact@v4
         with:
