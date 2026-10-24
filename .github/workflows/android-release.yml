@@ -75,6 +75,15 @@ jobs:
             echo "Firma: debug (keystore invalido, revisa los secrets)" >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # El build se caia con OutOfMemoryError (lintVital + packageRelease) por el heap por defecto de Gradle.
+      - name: Configure Gradle memory
+        run: |
+          mkdir -p ~/.gradle
+          cat >> ~/.gradle/gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=1g
+          org.gradle.daemon=false
+          EOF
+
       - name: Build Android (release)
         env:
           ANDROID_NDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}/ndk/21.4.7075529

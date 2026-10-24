@@ -58,6 +58,8 @@
 	     OJO: definir permisos reemplaza la lista por defecto de lime, por eso van tambien los 4 de siempre. -->
 	<section if="android">
 		<java path="java" />
+		<!-- Solo arm64: la mitad de tiempo de C++ y un APK mas chico. Quita esta linea si necesitas armv7 (telefonos de 32 bits). -->
+		<architecture name="arm64" />
 		<config:android permission="android.permission.WAKE_LOCK" />
 		<config:android permission="android.permission.INTERNET" />
 		<config:android permission="android.permission.VIBRATE" />
