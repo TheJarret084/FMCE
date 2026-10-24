@@ -88,7 +88,7 @@ class Charter extends UIState {
 	public var noteTypeText:UIText;
 
 	/** TEMPORAL: muestra el estado del input del grid (para encontrar por que no se mueven/ponen/borran notas). Ponerlo en false para quitarlo. */
-	static inline var DEBUG_INPUT:Bool = true;
+	static inline var DEBUG_INPUT:Bool = false;
 	public var inputDebugText:UIText;
 
 	public var strumLines:CharterStrumLineGroup = new CharterStrumLineGroup();
@@ -787,10 +787,12 @@ class Charter extends UIState {
 		// agarrar y arrastrar en un solo gesto (sin click previo). Con CTRL/SHIFT se decide al soltar.
 		if (gridActionType == NONE && FlxG.mouse.justPressed && !FlxG.keys.pressed.CONTROL && !FlxG.keys.pressed.SHIFT) {
 			var grabbed:ICharterSelectable = null;
-			for (n in notesGroup.members)
-				if (n != null && (n.hovered || n.sustainDraggable)) grabbed = n;
-			for (e in eventsGroup.members)
-				if (e != null && e.hovered) grabbed = e;
+			notesGroup.forEach(function(n:CharterNote) {
+				if (n.hovered || n.sustainDraggable) grabbed = n;
+			});
+			eventsGroup.forEach(function(e:CharterEvent) {
+				if (e.hovered) grabbed = e;
+			});
 			if (grabbed != null && !selection.contains(grabbed)) selection = [grabbed];
 		}
 
@@ -801,10 +803,12 @@ class Charter extends UIState {
 				else if (FlxG.keys.pressed.SHIFT) selection.remove(s);
 				else selection = [s];
 			}
-			for (n in notesGroup.members)
-				if (n != null && (n.hovered || n.sustainDraggable)) select(n);
-			for (e in eventsGroup.members)
-				if (e != null && e.hovered) select(e);
+			notesGroup.forEach(function(n:CharterNote) {
+				if (n.hovered || n.sustainDraggable) select(n);
+			});
+			eventsGroup.forEach(function(e:CharterEvent) {
+				if (e.hovered) select(e);
+			});
 			selection = __fixSelection(selection);
 		}
 

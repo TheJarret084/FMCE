@@ -57,12 +57,26 @@ esac
 ARGS=(build "$PLATFORM")
 [ "$KIND" = hl ] && ARGS+=(-hl)
 EFFECTIVE="$MODE"
-if [ "$KIND" = android ] && [ "$MODE" = release ] && [ ! -f building/android.keystore ]; then
-	# Sin keystore lime no firma el release y un APK sin firmar no se instala: sale firmado en debug.
-	echo "==> sin building/android.keystore: APK debug firmado (ver building/README.md)"
-	ARGS+=(-debug); EFFECTIVE=debug
+
+if [ "$KIND" = android ] && [ "$MODE" = release ]; then
+    if [ -f building/android.keystore ] &&
+       [ -n "${ANDROID_KEY_ALIAS:-}" ] &&
+       [ -n "${ANDROID_STORE_PASSWORD:-}" ]; then
+
+        echo "==> Android: usando keystore FMCE"
+
+        ARGS+=(
+            --certificate-path="$PWD/building/android.keystore"
+            --certificate-alias="$ANDROID_KEY_ALIAS"
+            --certificate-password="$ANDROID_STORE_PASSWORD"
+        )
+    else
+        echo "==> Sin keystore o secretos: APK debug firmado"
+        ARGS+=(-debug)
+        EFFECTIVE=debug
+    fi
 elif [ "$MODE" = debug ]; then
-	ARGS+=(-debug)
+    ARGS+=(-debug)
 fi
 
 echo "==> FMCE $KIND $MODE ($PLATFORM)"

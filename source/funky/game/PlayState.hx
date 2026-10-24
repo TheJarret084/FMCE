@@ -317,7 +317,7 @@ class PlayState extends MusicBeatState
 		Scripts.call("onAddSpriteGroups");
 
 		Note.PX_PER_MS = Note.BASE_PX_PER_MS * Difficulty.speed();
-		spawnAheadMs = Math.ceil((FlxG.height + SPAWN_MARGIN_PX) / Note.PX_PER_MS);
+		spawnAheadMs = Math.ceil((camHUD.height / camHUD.zoom + SPAWN_MARGIN_PX) / Note.PX_PER_MS);
 
 		stepMs = song.beatMs / SUSTAIN_DIV;
 

@@ -52,36 +52,45 @@ class StrumLine extends FlxTypedGroup<Strum>
 	var queueIndex:Int = 0;
 
 	/**
-	 * Encola una nota del chart. Si trae sustain, arma su `tail` como el legacy: una pieza por
-	 * step (alineadas a la cuadricula) y una pieza final. No crea ningun sprite hasta `spawnDue`.
+	 * Encola una nota del chart. Solo guarda datos (una `QueueNote` por nota, sin sprites ni piezas de sustain):
+	 * el tail se arma en `spawnQueued`, cuando la nota esta por entrar a camara.
 	 */
 	public function queueChartNote(data:FNMMNote, stepMs:Float):Void
 	{
 		var q = new QueueNote(data.time, data.length, data.lane, data.mustPress);
 		q.onPress = data.onPress != null ? data.onPress : -1;
 		q.onMiss = data.onMiss != null ? data.onMiss : -1;
+		if (data.length > 0 && stepMs > 0) q.tailStepMs = stepMs;
 		queue.push(q);
-		if (data.length <= 0 || stepMs <= 0) return;
+	}
 
-		q.tail = [];
-		var endTime = data.time + data.length;
-		var step = Math.floor((data.time + 3) / stepMs);
+	/**
+	 * Piezas del sustain de `q`: una por step (alineadas a la cuadricula) y una pieza final, igual que el legacy.
+	 * Se arma al salir la nota para no tener miles de `QueueNote` de sustains que todavia no se ven.
+	 */
+	function buildTail(q:QueueNote):Array<QueueNote>
+	{
+		var stepMs = q.tailStepMs;
+		var tail:Array<QueueNote> = [];
+		var endTime = q.strumTime + q.sustainLength;
+		var step = Math.floor((q.strumTime + 3) / stepMs);
 		while (step * stepMs < endTime)
 		{
-			var time = Math.max(step * stepMs, data.time);
+			var time = Math.max(step * stepMs, q.strumTime);
 			var length = Math.min((step + 1) * stepMs, endTime) - time;
 			if (length >= 1)
 			{
-				var piece = new QueueNote(time, length, data.lane, data.mustPress);
+				var piece = new QueueNote(time, length, q.noteData, q.mustPress);
 				piece.isSustainNote = true;
-				q.tail.push(piece);
+				tail.push(piece);
 			}
 			step++;
 		}
-		var end = new QueueNote(endTime, stepMs, data.lane, data.mustPress);
+		var end = new QueueNote(endTime, stepMs, q.noteData, q.mustPress);
 		end.isSustainNote = true;
 		end.isSustainEnd = true;
-		q.tail.push(end);
+		tail.push(end);
+		return tail;
 	}
 
 	/** Llamar una vez despues de encolar todo el chart. */
@@ -136,10 +145,10 @@ class StrumLine extends FlxTypedGroup<Strum>
 		head.strumLine = this;
 		if (Scripts.has) Scripts.call("onSpawnNote", [head]);
 		head.tailState.tail.resize(0);
-		if (q.tail != null)
+		if (q.tailStepMs > 0)
 		{
 			var prev = head;
-			for (t in q.tail)
+			for (t in buildTail(q))
 			{
 				var piece = notes.recycle(Note, Note.new).preRecycle(t, head, prev, slotWidth, laneCount);
 				piece.strumLine = this;

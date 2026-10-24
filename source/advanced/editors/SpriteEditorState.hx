@@ -178,7 +178,8 @@ class SpriteEditorState extends UIState
 				childs: [
 					{label: "Guardar", keybind: [CONTROL, S], onSelect: function(_) save()},
 					{label: "Recargar desde el disco", keybind: [CONTROL, R], onSelect: function(_) reload()},
-					{label: "Importar sprites (carpeta " + SpriteImporter.INBOX + ")", onSelect: function(_) importSprites()},
+					{label: "Importar sprite...", onSelect: function(_) importSprites()},
+					{label: "Importar desde la carpeta " + SpriteImporter.INBOX, onSelect: function(_) importFromInbox()},
 					null,
 					{label: "Salir", keybind: [ESCAPE], onSelect: function(_) exit()}
 				]
@@ -326,10 +327,39 @@ class SpriteEditorState extends UIState
 	}
 
 	/**
+	 * "+" / Archivo > Importar sprite: en escritorio abre la ventana de importar (elegir imagen, ver sus animaciones,
+	 * nombre); en movil no hay selector de archivos, asi que sigue usando la carpeta `import-sprites`.
+	 */
+	function importSprites():Void
+	{
+		#if (sys && !android && !ios)
+		openSubState(new SpriteImportScreen(levelDir, function(name:String)
+		{
+			var current = sprites.length > 0 ? sprites[spriteIdx] : null;
+			sprites = SpriteBuilder.listSprites(levelDir);
+			rebuildSpriteList();
+
+			// con cambios sin guardar no se salta a otro sprite (cargarlo los perderia)
+			if (current != null && dirty)
+			{
+				spriteIdx = Std.int(Math.max(0, sprites.indexOf(current)));
+				markSprites();
+			}
+			else
+				selectSprite(Std.int(Math.max(0, sprites.indexOf(name))));
+
+			notify("Importado: " + name);
+		}));
+		#else
+		importFromInbox();
+		#end
+	}
+
+	/**
 	 * Mete en este nivel los `.png` que haya en la carpeta `import-sprites` (junto a `levels/`), cada uno como un sprite nuevo.
 	 * Si trae su `.xml` (Sparrow) o `.json` (Aseprite) con el mismo nombre, se usa de atlas; si no, queda de un solo frame.
 	 */
-	function importSprites():Void
+	function importFromInbox():Void
 	{
 		#if sys
 		var result = SpriteImporter.run(levelDir);

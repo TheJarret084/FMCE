@@ -18,3 +18,7 @@ building/android.keystore
 
 # Backups que deja el editor al guardar un nivel
 *.bak
+
+# certificados
+make-keys.sh
+.keys/

@@ -56,10 +56,7 @@ class FNMMSpriteImporter
 	/** Nombre de la animacion `index` de un sprite de rol `role`. */
 	public static function animName(role:String, index:Int):String
 	{
-		// Los iconos van SOLO con anim#: anim0 = normal, anim1 = perdiendo, anim2 = ganando.
-		if (role == ROLE_ICON) return "anim" + index;
-		if (index == 0) return "idle";
-		if (role == ROLE_CHARACTER) return "anim" + (index - 1);
+		// Todos los sprites van con anim#: anim0 = idle (en un icono, normal), anim1.. = el resto (icono: perdiendo, ganando).
 		return "anim" + index;
 	}
 
@@ -348,7 +345,7 @@ class SpriteImportTask
 		tags.push({name: atlasName, from: from, to: frames.length - 1, direction: "forward"});
 
 		// `atlasName` = tag dentro del atlas (la posicion original en la tira: anim0, anim1...);
-		// `name` = el que aplica el juego segun el rol (idle, anim<lane>...).
+		// `name` = el que aplica el juego segun el rol (anim0 = idle, anim<N>...).
 		var offset:Dynamic = Reflect.field(entry, "offset");
 		configData.push({
 			anim: atlasName,

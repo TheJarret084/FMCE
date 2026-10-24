@@ -70,8 +70,8 @@ class LevelSprite extends FunkinSprite
 		}
 		if (firstAnim == null)
 		{
-			animation.add("idle", [0], 1, false);
-			firstAnim = "idle";
+			animation.add("anim0", [0], 1, false);
+			firstAnim = "anim0";
 		}
 		animation.play(firstAnim);
 		loaded = true;

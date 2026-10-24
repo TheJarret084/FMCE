@@ -5,7 +5,10 @@ import funky.backend.converter.SpriteFolderConverter;
 import funky.core.Paths;
 import funky.game.SpriteBuilder;
 import haxe.Json;
+import haxe.io.Bytes;
 import haxe.io.Path;
+import openfl.display.BitmapData;
+import openfl.display.PNGEncoderOptions;
 #if sys
 import sys.FileSystem;
 import sys.io.File;
@@ -24,7 +27,7 @@ typedef SpriteImportResult =
  * `.JarretLabs-FMCE/import-sprites`). Cada `nombre.png` se vuelve `levels/<nivel>/sprites/<nombre>/sprite.png`:
  *  - con `nombre.xml` (atlas Sparrow) al lado: se copia como `sprite.xml` y se genera su `sprite.json`;
  *  - con `nombre.json` (Aseprite): se copia como `sprite.json`;
- *  - sin nada: queda de un solo frame (animacion `idle`).
+ *  - sin nada: queda de un solo frame (animacion `anim0`, la idle).
  * Es un "mover": lo importado se borra de la carpeta (despues de copiarlo y comprobar que quedo bien).
  * Un sprite que ya existe en el nivel no se pisa.
  */
@@ -134,8 +137,92 @@ class SpriteImporter
 		return result;
 	}
 
+	/**
+	 * Crea `sprites/<name>/` desde bytes ya cargados (ventana de importar, estilo character editor de Codename):
+	 * `sprite.png` + `sprite.xml`/`sprite.json` si trae atlas, o un solo frame `anim0`. Devuelve null si salio bien,
+	 * o el motivo del fallo. Con `overwrite` reemplaza solo `sprite.png/xml/json` y deja el resto (config.json...).
+	 */
+	public static function importBytes(levelDir:String, name:String, image:Bytes, isJpg:Bool, dataKind:Null<String>, dataText:Null<String>, overwrite:Bool = false):Null<String>
+	{
+		#if sys
+		var dest = SpriteBuilder.spriteDir(levelDir, name);
+		var existed = FileSystem.exists(dest);
+		if (existed && !overwrite) return "ya existe";
+
+		try
+		{
+			var spritesRoot = Path.join([levelDir, "sprites"]);
+			if (!FileSystem.exists(spritesRoot)) FileSystem.createDirectory(spritesRoot);
+			if (!existed) FileSystem.createDirectory(dest);
+
+			if (existed)
+				for (f in ["sprite.png", "sprite.xml", "sprite.json"])
+				{
+					var old = Path.join([dest, f]);
+					if (FileSystem.exists(old)) FileSystem.deleteFile(old);
+				}
+
+			var png:Bytes = image;
+			if (isJpg)
+			{
+				var bmp = BitmapData.fromBytes(image);
+				png = cast bmp.encode(bmp.rect, new PNGEncoderOptions());
+				bmp.dispose();
+			}
+			File.saveBytes(Path.join([dest, "sprite.png"]), png);
+
+			if (dataKind == "xml" && dataText != null)
+			{
+				var destXml = Path.join([dest, "sprite.xml"]);
+				File.saveContent(destXml, dataText);
+
+				// Sparrow -> JSON como siempre, pero con el config de nombres del juego: la idle es `anim0`, el resto `anim1..N`
+				var configPath = Path.join([dest, "config.json"]);
+				if (!FileSystem.exists(configPath))
+					File.saveContent(configPath, Json.stringify(sparrowConfig(dataText), null, "\t"));
+
+				var converted = SpriteFolderConverter.convertFile(destXml, true);
+				if (!converted.ok) throw Std.string(converted.error);
+			}
+			else if (dataKind == "json" && dataText != null)
+				File.saveContent(Path.join([dest, "sprite.json"]), dataText);
+			else
+				writeSingleFrame(dest);
+
+			if (!SpriteBuilder.exists(levelDir, name)) throw "no quedo un sprite valido";
+			return null;
+		}
+		catch (e:Dynamic)
+		{
+			if (!existed) removeDir(dest);
+			return Std.string(e);
+		}
+		#else
+		return "importar necesita un target sys";
+		#end
+	}
+
+	/**
+	 * `config.json` inicial de un atlas Sparrow: una entrada por animacion (`anim` = prefijo del atlas, `name` = `animN`).
+	 * La animacion que empieza por "idle" va primero, o sea es `anim0`; el resto sigue el orden del XML.
+	 */
+	static function sparrowConfig(xmlText:String):Dynamic
+	{
+		var list = SparrowToAseprite.prefixes(xmlText);
+		for (i in 0...list.length)
+			if (StringTools.startsWith(StringTools.trim(list[i]).toLowerCase(), "idle"))
+			{
+				if (i > 0) list.unshift(list.splice(i, 1)[0]);
+				break;
+			}
+		return {
+			type: "sprite",
+			data: [for (i in 0...list.length) {anim: list[i], name: "anim" + i, index: i, spd: 1, loop: true}]
+		};
+	}
+
 	/** Deja solo letras, numeros, `_` y `-` (los acentos y espacios pasan a `_`). */
-	static function cleanName(base:String):String
+	public static function cleanName(base:String):String
 	{
 		var name = ~/[^A-Za-z0-9_\-]+/g.replace(base, "_");
 		return ~/^_+|_+$/g.replace(name, "");
@@ -154,7 +241,7 @@ class SpriteImporter
 		}
 	}
 
-	/** `sprite.json` (estilo Aseprite) de un PNG suelto: un frame que ocupa toda la imagen y la animacion `idle`. */
+	/** `sprite.json` (estilo Aseprite) de un PNG suelto: un frame que ocupa toda la imagen y la animacion `anim0` (la idle). */
 	static function writeSingleFrame(dest:String):Void
 	{
 		var size = SpriteFolderConverter.pngSize(Path.join([dest, "sprite.png"]));
@@ -163,7 +250,7 @@ class SpriteImporter
 		var out = {
 			frames: [
 				{
-					filename: "idle",
+					filename: "anim0",
 					frame: {x: 0, y: 0, w: size.w, h: size.h},
 					rotated: false,
 					trimmed: false,
@@ -179,8 +266,8 @@ class SpriteImporter
 				format: "RGBA8888",
 				size: {w: size.w, h: size.h},
 				scale: "1",
-				frameTags: [{name: "idle", from: 0, to: 0, direction: "forward"}],
-				fmce: {source: "png", animations: {idle: {fps: 24, loop: true}}}
+				frameTags: [{name: "anim0", from: 0, to: 0, direction: "forward"}],
+				fmce: {source: "png", animations: {anim0: {fps: 24, loop: true}}}
 			}
 		};
 

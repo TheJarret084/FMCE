@@ -12,6 +12,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,21 +23,11 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      # android-actions/setup-android deja ANDROID_HOME/ANDROID_SDK_ROOT
-      # configurados y acepta las licencias del SDK (si no, gradle se cuelga
-      # pidiendo confirmacion). Por defecto instala "tools platform-tools", pero
-      # el paquete "tools" ya no existe en cmdline-tools 16 y sdkmanager falla
-      # con "Failed to find package 'tools'", asi que se pide solo platform-tools.
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: platform-tools
 
-      # hxcpp 4.3.2 (ultima release de haxelib) esta hecho para NDK <= r22: usa
-      # `arm-linux-androideabi-ar` (quitado en r23) y deduce ANDROID_HOST de
-      # toolchains/arm-linux-androideabi-*, que NDK r23+ ya no trae. Con r25c cae a
-      # "linux-x86", no encuentra el clang del NDK y usa el del sistema sin sysroot
-      # ("fatal error: typeinfo file not found"). r21e es el que Lime 8.x recomienda.
       - name: Install Android NDK
         run: sdkmanager --install "ndk;21.4.7075529"
 
@@ -45,42 +36,43 @@ jobs:
         with:
           haxe-version: 4.3.7
 
+      - name: Restore Android keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        shell: bash
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            mkdir -p building
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" \
+              | base64 --decode > building/android.keystore
+            chmod 600 building/android.keystore
+            echo "Keystore restaurada."
+          else
+            echo "No hay keystore configurada; se usara debug."
+          fi
+
       - name: Build Android (release)
         env:
           ANDROID_NDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}/ndk/21.4.7075529
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
         run: bash building/android-build.sh release
 
-      # Si el build truena, vuelve a correr Gradle sobre el proyecto que genero lime, ahora con
-      # --stacktrace, y deja todo en un artifact (gradle-stacktrace) para bajarlo desde el run.
-      # El log normal del job NO trae la causa real del fallo de packageDebug.
-      - name: Gradle stacktrace (solo si falla)
-        if: failure()
+      - name: Verify APK signature
         shell: bash
         run: |
-          mkdir -p building/artifacts
-          OUT=building/artifacts/gradle-stacktrace.txt
-          {
-            echo "=== disco ==="; df -h
-            echo; echo "=== .so que van al APK (jniLibs) ==="
-            find export -path '*jniLibs*' -name '*.so' -exec ls -l {} + 2>/dev/null || true
-            echo; echo "=== gradlew ==="
-            GW="$(find export -name gradlew | head -n 1)"
-            echo "$GW"
-            if [ -n "$GW" ]; then
-              cd "$(dirname "$GW")"
-              chmod +x gradlew
-              ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 || true
-            fi
-          } > "$OUT" 2>&1 || true
-          tail -n 120 "$OUT"
+          APK="building/artifacts/FMCE-Android-release.apk"
+          test -f "$APK"
 
-      - name: Subir stacktrace de Gradle
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gradle-stacktrace
-          path: building/artifacts/gradle-stacktrace.txt
-          if-no-files-found: warn
+          APKSIGNER="$(find "$ANDROID_SDK_ROOT/build-tools" \
+            -name apksigner -type f | sort -V | tail -n 1)"
+
+          if [ -z "$APKSIGNER" ]; then
+            echo "No se encontro apksigner."
+            exit 1
+          fi
+
+          "$APKSIGNER" verify --verbose "$APK"
 
       - name: Upload APK as workflow artifact
         uses: actions/upload-artifact@v4
@@ -95,3 +87,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           files: building/artifacts/FMCE-Android-release.apk
           fail_on_unmatched_files: true
+
+      - name: Remove temporary keystore
+        if: always()
+        run: rm -f building/android.keystore

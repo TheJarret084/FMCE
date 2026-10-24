@@ -23,6 +23,7 @@ import funky.core.TransitionHandler;
 import funky.game.HealthIcon;
 import funky.game.PlayState;
 import haxe.io.Path;
+import openfl.utils.Assets as OpenFlAssets;
 
 using StringTools;
 
@@ -49,6 +50,10 @@ class FreeplayState extends FlxState
 	/** Margen del banner (imagen fija a la derecha: `assets/images/menus/freeplay/banner.png`). */
 	private static inline var BANNER_MARGIN:Float = 36;
 
+	/** Sparrow de la Jazmin que avisa que no hay niveles (`assets/images/menus/freeplay/void.png` + `.xml`, anim `idle`). */
+	private static inline var VOID_IMAGE:String = "menus/freeplay/void";
+	private static inline var VOID_ANIM:String = "idle";
+
 	private var entries:Array<{label:String, path:String}> = [];
 	private var archiveFlags:Array<Bool> = [];
 	/** Icono del oponente de cada nivel (null si no trae); se crean al acercarse a la fila para no cargar todos de golpe. */
@@ -59,7 +64,10 @@ class FreeplayState extends FlxState
 	private var bg:FlxSprite;
 	private var scoreBG:FlxSprite;
 	private var banner:Null<FlxSprite>;
+	private var bannerFrame:Null<FlxSprite>;
 	private var bannerBaseY:Float = 0;
+	/** Jazmin "no hay niveles": solo existe mientras la lista esta vacia (el sparrow pesa mucho, no se deja en memoria). */
+	private var voidSprite:Null<FlxSprite>;
 	private var bannerTime:Float = 0;
 	private var scoreText:FlxText;
 	private var countText:FlxText;
@@ -163,6 +171,87 @@ class FreeplayState extends FlxState
 		TransitionHandler.playIn(this);
 	}
 
+	/** Lista vacia: la Jazmin `void` con un texto de ayuda abajo; sin el sparrow, solo el texto de siempre. */
+	private function showEmpty():Void
+	{
+		var hint = TouchNav.MOBILE ? "Toca CONVERTIDOR para importar un .fnmm" : "Convertí un .fnmm con la tecla C";
+		var hasVoid = false;
+		if (OpenFlAssets.exists(Paths.image(VOID_IMAGE)) && OpenFlAssets.exists(Paths.imageXml(VOID_IMAGE)))
+		{
+			statusText.size = 20;
+			statusText.y = FlxG.height - (TouchNav.MOBILE ? 160 : 110);
+			hasVoid = createVoid();
+		}
+
+		setBannerVisible(!hasVoid);
+		if (hasVoid)
+		{
+			statusText.text = hint + "\n" + Paths.levelsRoot();
+			return;
+		}
+		statusText.size = 24;
+		statusText.y = FlxG.height * 0.45;
+		statusText.text = "No hay niveles en " + Paths.levelsRoot() + "\n" + hint;
+	}
+
+	/** Crea la Jazmin animada (`idle`, en bucle) centrada entre la barra de arriba y el texto de ayuda. */
+	private function createVoid():Bool
+	{
+		try
+		{
+			var frames = Paths.getSparrowAtlas(VOID_IMAGE);
+			if (frames == null) return false;
+
+			var sprite = new FlxSprite();
+			sprite.frames = frames;
+			sprite.animation.addByPrefix(VOID_ANIM, VOID_ANIM, 24, true);
+			if (sprite.animation.getByName(VOID_ANIM) == null)
+			{
+				// Sparrow sin frames "idle0000": mientras no lo termines, reproduce todos los frames en orden.
+				Log.warn('[FreeplayState] ' + VOID_IMAGE + ' no trae frames "' + VOID_ANIM + '", uso todos');
+				sprite.animation.add(VOID_ANIM, [for (i in 0...frames.frames.length) i], 24, true);
+			}
+			sprite.animation.play(VOID_ANIM);
+			sprite.antialiasing = true;
+			sprite.scrollFactor.set();
+
+			// Escala uniforme (nunca se agranda): cabe en el area libre sin deformarse.
+			var areaTop = BAR_H + 10;
+			var areaH = statusText.y - 10 - areaTop;
+			var fit = Math.min(1, Math.min(FlxG.width * 0.8 / Math.max(1, sprite.frameWidth), areaH / Math.max(1, sprite.frameHeight)));
+			sprite.scale.set(fit, fit);
+			sprite.updateHitbox();
+			sprite.x = (FlxG.width - sprite.width) / 2;
+			sprite.y = areaTop + (areaH - sprite.height) / 2;
+
+			add(sprite);
+			voidSprite = sprite;
+			return true;
+		}
+		catch (e:Dynamic)
+		{
+			Log.warn('[FreeplayState] no se pudo cargar ' + VOID_IMAGE + ': ' + Std.string(e));
+			clearVoid();
+			return false;
+		}
+	}
+
+	/** Quita la Jazmin y libera su textura (Paths marca los atlas como persistentes, aca se suelta para que no se quede en RAM). */
+	private function clearVoid():Void
+	{
+		if (voidSprite == null) return;
+		if (voidSprite.graphic != null) voidSprite.graphic.persist = false;
+		remove(voidSprite);
+		voidSprite.destroy();
+		voidSprite = null;
+	}
+
+	private function setBannerVisible(value:Bool):Void
+	{
+		if (banner != null) banner.visible = value;
+		if (bannerFrame != null) bannerFrame.visible = value;
+	}
+
 	/** Color de fondo de un nivel: fijo por nombre, asi no cambia entre sesiones. */
 	private function colorFor(label:String):Int
 	{
@@ -186,6 +275,8 @@ class FreeplayState extends FlxState
 				icon.destroy();
 			}
 
+		clearVoid();
+
 		entries = collect();
 		archiveFlags = [];
 		icons = [];
@@ -193,12 +284,13 @@ class FreeplayState extends FlxState
 
 		if (entries.length == 0)
 		{
-			statusText.text = "No hay niveles en " + Paths.levelsRoot() + "\nConverti un .fnmm con la tecla C";
+			showEmpty();
 			countText.text = "0 NIVELES";
 			scoreText.text = "";
 			return;
 		}
 
+		setBannerVisible(true);
 		statusText.text = "";
 		selected = Std.int(Math.min(Std.int(Math.max(selected, 0)), entries.length - 1));
 
@@ -306,6 +398,7 @@ class FreeplayState extends FlxState
 			add(frame);
 			add(sprite);
 			banner = sprite;
+			bannerFrame = frame;
 		}
 		catch (e:Dynamic)
 		{
@@ -481,6 +574,7 @@ class FreeplayState extends FlxState
 
 	override public function destroy():Void
 	{
+		if (voidSprite != null && voidSprite.graphic != null) voidSprite.graphic.persist = false;
 		super.destroy();
 		rows = [];
 		entries = [];
@@ -490,6 +584,8 @@ class FreeplayState extends FlxState
 		bg = null;
 		scoreBG = null;
 		banner = null;
+		bannerFrame = null;
+		voidSprite = null;
 		scoreText = null;
 		countText = null;
 		statusText = null;

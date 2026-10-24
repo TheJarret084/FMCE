@@ -231,6 +231,23 @@ class SparrowToAseprite
 	}
 
 	/** Nombre del PNG que declara el XML (`imagePath`), o null. */
+	/** Prefijos (nombres de animacion) del atlas, en orden de aparicion: los mismos tags que genera `convert`. */
+	public static function prefixes(xmlText:String):Array<String>
+	{
+		var out:Array<String> = [];
+		var root = findAtlasRoot(xmlText);
+		if (root == null) return out;
+		for (el in root.elementsNamed("SubTexture"))
+		{
+			var name = el.get("name");
+			if (name == null || name == "") continue;
+			var prefix = TRAILING_INDEX.match(name) ? TRAILING_INDEX.matched(1) : name;
+			if (prefix == "") prefix = "frame";
+			if (!out.contains(prefix)) out.push(prefix);
+		}
+		return out;
+	}
+
 	public static function declaredImage(xmlText:String):Null<String>
 	{
 		var root = findAtlasRoot(xmlText);

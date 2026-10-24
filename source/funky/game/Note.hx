@@ -13,7 +13,10 @@ class QueueNote
 	public var mustPress:Bool;
 	public var isSustainNote:Bool = false;
 	public var isSustainEnd:Bool = false;
+	/** Piezas del sustain. Ya no se rellena al encolar: `StrumLine.spawnQueued` las arma cuando la nota entra a camara. */
 	public var tail:Null<Array<QueueNote>> = null;
+	/** > 0 si la nota tiene sustain; es el largo de un step en ms con el que se arma el tail al salir. */
+	public var tailStepMs:Float = 0;
 	/** Action pack (events.json) a correr al acertar / fallar. -1 = ninguno. Solo la cabeza lo trae. */
 	public var onPress:Int = -1;
 	public var onMiss:Int = -1;

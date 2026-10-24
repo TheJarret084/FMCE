@@ -223,7 +223,7 @@ class SpriteBuilder
 			var d = a.index - b.index;
 			return d != 0 ? d : order.indexOf(a) - order.indexOf(b);
 		});
-		if (config.anims.length == 0) config.anims.push(resolveAnim("idle", 0, [0], null, null));
+		if (config.anims.length == 0) config.anims.push(resolveAnim("anim0", 0, [0], null, null));
 		// Un icono no canta: su `singLEFT` es "perdiendo", no la lane 0, asi que no lleva alias anim#.
 		if (config.type != "icon") addLaneAliases(config.anims);
 		#end
