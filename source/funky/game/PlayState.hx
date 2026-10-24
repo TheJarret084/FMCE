@@ -20,6 +20,7 @@ import funky.backend.chart.LevelLoader;
 import funky.core.ClientPrefs;
 import funky.core.Conductor;
 import funky.core.ControlsCheck;
+import funky.api.DiscordClient;
 import funky.core.Difficulty;
 import funky.core.KeyBinds;
 import funky.core.Log;
@@ -205,6 +206,7 @@ class PlayState extends MusicBeatState
 		}
 
 		funky.core.Paths.currentLevel = song.levelDir;
+		DiscordClient.playingPresence(songLabel(), Difficulty.name());
 		Scripts.load(song.levelDir, ["game" => this, "song" => song, "levelDir" => song.levelDir]);
 		Scripts.call("onLoad");
 
@@ -982,6 +984,7 @@ class PlayState extends MusicBeatState
 			voices.resume();
 
 		Scripts.call("onResume");
+		DiscordClient.playingPresence(songLabel(), Difficulty.name());
 	}
 
 	public function songLabel():String

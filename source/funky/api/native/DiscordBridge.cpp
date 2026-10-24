@@ -11,6 +11,8 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <chrono>
+#include <thread>
 
 namespace
 {
@@ -110,7 +112,15 @@ namespace discord
 	{
 		if (!g_client) return;
 		g_client->ClearRichPresence();
-		discordpp::RunCallbacks();
+
+		// El "quitar" es asincrono: si soltamos el cliente enseguida puede no llegar a Discord y la presencia se queda
+		// pegada despues de cerrar el juego. Le damos turno al SDK ~300 ms para que lo mande.
+		for (int i = 0; i < 30; ++i)
+		{
+			discordpp::RunCallbacks();
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
+
 		g_client.reset();
 	}
 

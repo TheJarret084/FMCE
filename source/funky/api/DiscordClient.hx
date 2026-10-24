@@ -35,6 +35,15 @@ class DiscordClient
 	/** Lo ultimo que se mando, para no repetir la misma presencia (Discord limita las actualizaciones). */
 	static var lastKey:String = "";
 
+	/**
+	 * Claves de imagen que SI existen en Developer Portal > Rich Presence > Art Assets.
+	 * Discord no pinta una clave que no este ahi (la tarjeta sale con un circulo vacio), asi que lo que no
+	 * este en esta lista cae en ASSET_FALLBACK. Cuando subas mas assets, agregalos aqui.
+	 */
+	static var availableAssets:Array<String> = ["fmm"];
+
+	static inline var ASSET_FALLBACK:String = "fmm";
+
 	static var startTimestamp:Int = 0;
 	static inline var DEFAULT_ICON:String = "fmce";
 
@@ -193,16 +202,20 @@ class DiscordClient
 		if (!started)
 			return;
 
-		image      = normalizeText(image, DEFAULT_ICON);
-		smallImage = normalizeText(smallImage, DEFAULT_ICON);
+		var imageKey = normalizeText(image, DEFAULT_ICON);
+		var smallKey = normalizeText(smallImage, "");
 
-		var largeText:String = largeImageTexts.exists(image)
-			? largeImageTexts.get(image)
-			: image;
+		var largeText:String = largeImageTexts.exists(imageKey)
+			? largeImageTexts.get(imageKey)
+			: imageKey;
 
-		var smallText:String = smallImageTexts.exists(smallImage)
-			? smallImageTexts.get(smallImage)
-			: smallImage;
+		var smallText:String = smallImageTexts.exists(smallKey)
+			? smallImageTexts.get(smallKey)
+			: smallKey;
+
+		// solo se manda una imagen que exista en el portal; la pequena es opcional (vacia = no se muestra)
+		image = availableAssets.contains(imageKey) ? imageKey : ASSET_FALLBACK;
+		smallImage = availableAssets.contains(smallKey) ? smallKey : "";
 
 		var end = endTimestamp > 0 ? Std.int(endTimestamp / 1000) : 0;
 		var start = withTime ? startTimestamp : 0;

@@ -1,5 +1,6 @@
 package funky.menus;
 
+import funky.api.DiscordClient;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
@@ -69,6 +70,7 @@ class GameOverSubState extends FlxSubState
 		}
 
 		playState.pauseSong();
+		DiscordClient.gameOverPresence(playState.songLabel(), playState.misses, true);
 
 		bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 		bg.scrollFactor.set();

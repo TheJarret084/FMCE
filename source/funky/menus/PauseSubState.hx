@@ -1,5 +1,6 @@
 package funky.menus;
 
+import funky.api.DiscordClient;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
@@ -84,6 +85,7 @@ class PauseSubState extends FlxSubState
 		super();
 		this.playState = playState;
 		playState.pauseSong();
+		DiscordClient.pausePresence(playState.songLabel());
 	}
 
 	override public function create():Void

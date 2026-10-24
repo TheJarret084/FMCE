@@ -9,6 +9,7 @@ import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
+import funky.api.DiscordClient;
 import funky.core.CoolUtil;
 import funky.backend.chart.LevelLoader;
 import funky.core.Difficulty;
@@ -75,6 +76,7 @@ class FreeplayState extends FlxState
 		super.create();
 
 		CoolUtil.playMenuSong();
+		DiscordClient.freeplayPresence();
 
 		bg = new FlxSprite().loadGraphic(Paths.image("menus/menuDesat"));
 		bg.setGraphicSize(FlxG.width, FlxG.height);
