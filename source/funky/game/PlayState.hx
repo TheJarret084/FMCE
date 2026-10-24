@@ -87,6 +87,8 @@ class PlayState extends MusicBeatState
 	static inline var COYOTE_MS:Float = 120;
 
 	static inline var SUSTAIN_SCORE:Int = 20;
+	/** Puntos que resta tocar sin nota al alcance con ghost tapping apagado. */
+	static inline var GHOST_MISS_SCORE:Int = 10;
 
 	/** Margen (px) extra fuera de pantalla para que una nota ya exista antes de entrar a cuadro. */
 	static inline var SPAWN_MARGIN_PX:Float = 160;
@@ -659,8 +661,15 @@ class PlayState extends MusicBeatState
 
 			if (best != null)
 				hitNote(best, best.strumTime - songTime);
-			else if (Scripts.has)
-				Scripts.call("onGhostTap", [lane]);
+			else
+			{
+				if (Scripts.has)
+					Scripts.call("onGhostTap", [lane]);
+
+				// Opciones > Gameplay > Ghost tapping apagado: tocar sin nota delante es un fallo.
+				if (!ClientPrefs.isGhostTapping())
+					ghostMiss(lane);
+			}
 		}
 	}
 
@@ -855,6 +864,41 @@ class PlayState extends MusicBeatState
 	}
 
 	/**
+	 * Tocar un carril sin nota al alcance con ghost tapping apagado: cuenta como fallo (misses, combo, vida, puntos).
+	 * @param lane Carril que se toco.
+	 */
+	function ghostMiss(lane:Int):Void
+	{
+		if (stage != null)
+			stage.miss(stageSide(playerLine));
+
+		misses++;
+		totalPlayed++;
+		combo = 0;
+		score -= GHOST_MISS_SCORE;
+
+		hud.addHealth(HEALTH_MISS);
+		playMissSound();
+		refreshScore(true);
+
+		if (Scripts.has)
+			Scripts.call("noteMissPress", [lane]);
+	}
+
+	/** Efecto de fallo (assets/sounds/missSFX.ogg). Se apaga en Opciones > Gameplay > Sonido de fallo. */
+	function playMissSound():Void
+	{
+		if (!ClientPrefs.isMissSound())
+			return;
+
+		try
+		{
+			funky.core.CoolUtil.playSound("missSFX", 0.4);
+		}
+		catch (e:Dynamic) {}
+	}
+
+	/**
 	 * Registers a dropped sustain.
 	 * @param note Sustain piece that was dropped.
 	 */
@@ -888,6 +932,7 @@ class PlayState extends MusicBeatState
 			combo = 0;
 
 			hud.addHealth(HEALTH_MISS);
+			playMissSound();
 			refreshScore(true);
 		}
 

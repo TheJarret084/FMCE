@@ -109,6 +109,15 @@ class PlayHUD extends FlxGroup
 		comboText.alpha = 0;
 		add(comboText);
 
+		// Botplay se guarda en las opciones y no cuenta fallos ni puntos: se deja a la vista para no jugar con el sin querer.
+		if (ClientPrefs.isBotplay())
+		{
+			var botplayText = new FlxText(0, down ? FlxG.height - 100 : 76, FlxG.width, "BOTPLAY", 32);
+			botplayText.setFormat(defaultFont, 32, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			botplayText.borderSize = 2;
+			add(botplayText);
+		}
+
 		onUpdateScore(0, -1, 0);
 		updateTime(0);
 	}

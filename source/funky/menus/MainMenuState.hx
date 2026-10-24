@@ -14,7 +14,6 @@ import flixel.tweens.FlxTween;
 import funky.api.DiscordClient;
 import funky.core.CoolUtil;
 import funky.core.KeyBinds;
-import funky.core.NavPad;
 import funky.core.Paths;
 import funky.core.TouchNav;
 import funky.core.TransitionHandler;
@@ -38,7 +37,6 @@ class MainMenuState extends FlxState
 	var camFollow:FlxObject;
 	var menuItems:FlxTypedGroup<FlxSprite>;
 	var versionText:FlxText;
-	var navPad:Null<NavPad>;
 
 	override public function create():Void
 	{
@@ -106,9 +104,6 @@ class MainMenuState extends FlxState
 		versionText.scrollFactor.set();
 		add(versionText);
 
-		navPad = NavPad.make(() -> if (!selectedSomething) changeItem(-1), () -> if (!selectedSomething) changeItem(1));
-		if (navPad != null) add(navPad);
-
 		FlxG.mouse.visible = false;
 		FlxG.mouse.enabled = false;
 
@@ -164,7 +159,6 @@ class MainMenuState extends FlxState
 		for (touch in FlxG.touches.list)
 		{
 			if (!touch.justPressed) continue;
-			if (navPad != null && navPad.covers(touch.screenX, touch.screenY)) continue;
 			for (spr in menuItems)
 			{
 				// Margen generoso (dedo gordo) y se ignora el offset: los botones son scrollFactor 0, x/y ya son de pantalla.
@@ -234,6 +228,5 @@ class MainMenuState extends FlxState
 		camFollow = null;
 		menuItems = null;
 		versionText = null;
-		navPad = null;
 	}
 }

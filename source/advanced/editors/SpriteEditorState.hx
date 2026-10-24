@@ -156,7 +156,7 @@ class SpriteEditorState extends UIState
 		for (name in sprites) addSpriteButton(name);
 		SaveWarning.saveFunc = save;
 		if (sprites.length > 0) selectSprite(0);
-		else notify("Este nivel no tiene sprites validos en sprites/.");
+		else notify("Este nivel no tiene sprites validos en sprites/. Toca + para importar.");
 	}
 
 	inline function centerX():Float
@@ -178,6 +178,7 @@ class SpriteEditorState extends UIState
 				childs: [
 					{label: "Guardar", keybind: [CONTROL, S], onSelect: function(_) save()},
 					{label: "Recargar desde el disco", keybind: [CONTROL, R], onSelect: function(_) reload()},
+					{label: "Importar sprites (carpeta " + SpriteImporter.INBOX + ")", onSelect: function(_) importSprites()},
 					null,
 					{label: "Salir", keybind: [ESCAPE], onSelect: function(_) exit()}
 				]
@@ -227,8 +228,7 @@ class SpriteEditorState extends UIState
 		var listH = Std.int((FlxG.height - TOP) * 0.5);
 		spriteList = new UIButtonList<EditorListButton>(0, TOP, LEFT_W, listH, "Sprites", FlxPoint.get(LEFT_W - 30, 28), null, 4);
 		spriteList.cameras = [uiCamera];
-		spriteList.addButton.exists = false;
-		spriteList.addIcon.exists = false;
+		spriteList.addButton.callback = importSprites;
 		add(spriteList);
 
 		animList = new UIButtonList<EditorListButton>(0, TOP + listH, LEFT_W, FlxG.height - TOP - listH, "Animaciones", FlxPoint.get(LEFT_W - 30, 28), null, 4);
@@ -316,6 +316,51 @@ class SpriteEditorState extends UIState
 		b = new EditorListButton(0, 0, name, function() selectSprite(sprites.indexOf(b.item)), LEFT_W - 30, 28);
 		b.item = name;
 		spriteList.add(b);
+	}
+
+	function rebuildSpriteList():Void
+	{
+		for (b in spriteList.buttons.members.copy())
+			if (b != null) spriteList.remove(b);
+		for (name in sprites) addSpriteButton(name);
+	}
+
+	/**
+	 * Mete en este nivel los `.png` que haya en la carpeta `import-sprites` (junto a `levels/`), cada uno como un sprite nuevo.
+	 * Si trae su `.xml` (Sparrow) o `.json` (Aseprite) con el mismo nombre, se usa de atlas; si no, queda de un solo frame.
+	 */
+	function importSprites():Void
+	{
+		#if sys
+		var result = SpriteImporter.run(levelDir);
+		var parts:Array<String> = [];
+
+		if (result.imported.length > 0)
+		{
+			var current = sprites.length > 0 ? sprites[spriteIdx] : null;
+			sprites = SpriteBuilder.listSprites(levelDir);
+			rebuildSpriteList();
+
+			// con cambios sin guardar no se salta a otro sprite (cargarlo los perderia)
+			if (current != null && dirty)
+			{
+				spriteIdx = Std.int(Math.max(0, sprites.indexOf(current)));
+				markSprites();
+			}
+			else
+				selectSprite(Std.int(Math.max(0, sprites.indexOf(result.imported[0]))));
+
+			parts.push("Importados: " + result.imported.join(", "));
+		}
+
+		if (result.skipped.length > 0) parts.push("ya existian: " + result.skipped.join(", "));
+		if (result.failed.length > 0) parts.push("fallaron: " + result.failed.join(", "));
+		if (parts.length == 0) parts.push("No hay .png en " + result.inbox + " (pon ahi el .png y, si tiene atlas, su .xml o .json)");
+
+		notify(parts.join(" | "));
+		#else
+		notify("Importar necesita un target sys.");
+		#end
 	}
 
 	function markSprites():Void
