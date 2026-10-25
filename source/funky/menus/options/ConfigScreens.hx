@@ -103,7 +103,7 @@ class ConfigScreens
 	static function misc():ConfigScreen
 	{
 		var items:Array<ConfigItem> = [
-			ConfigItem.action("CONVERTIDOR .FNMM", "Convierte niveles .fnmm al formato de FMCE", () ->
+			ConfigItem.action("CONVERTIDOR .FNMM", "Convierte niveles .fnmm a FMCE y exporta niveles FMCE a .FNMM", () ->
 			{
 				ClientPrefs.save();
 				TransitionHandler.switchState(new ConverterMenuState());

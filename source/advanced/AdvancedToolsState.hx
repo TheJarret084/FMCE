@@ -33,7 +33,7 @@ class AdvancedToolsState extends FlxState
 	static inline var ACTIVE:Int = 0xFFFFFFFF;
 
 	/** Ancho de cada casilla y alto (centro) de la fila de iconos. */
-	static inline var SLOT_W:Float = 214;
+	static inline var SLOT_W:Float = 200;
 	static inline var ICON_Y:Float = 300;
 
 	var levelName:String;
@@ -86,6 +86,7 @@ class AdvancedToolsState extends FlxState
 			function() go(new advanced.editors.SpriteEditorState(levelName)));
 		addTool("SCENE EDITOR", "scene.json: objetos, capas, parallax, fixed, strumlines y camaras", "stage", function() go(new advanced.editors.SceneEditorState(levelName)));
 		addTool("EXPORTAR .FMCE", "Comprime el nivel en exports/" + levelName + ".FMCE (sin copias .bak / .bck)", "alphabet", exportLevel);
+		addTool("EXPORTAR .FNMM", "Exporta el nivel a exports/" + levelName + ".FNMM (la carpeta data/ no entra)", "alphabet", function() go(new funky.menus.FNMMExportState(levelName)));
 
 		// casillas centradas
 		var startX = (FlxG.width - tools.length * SLOT_W) / 2 + SLOT_W / 2;
