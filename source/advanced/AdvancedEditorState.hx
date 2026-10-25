@@ -14,8 +14,8 @@ import funky.core.Log;
 import funky.core.Paths;
 import funky.core.TransitionHandler;
 import funky.scripting.Scripts;
-import advanced.ui.CodeStudio;
-import advanced.ui.CodeStudioFile;
+import advanced.ui.code.CodeStudio;
+import advanced.ui.code.CodeStudioFile;
 
 import sys.FileSystem;
 import sys.io.File;
@@ -40,7 +40,8 @@ class AdvancedEditorState extends FlxState
 		funky.core.CoolUtil.playEditorSong();
 		prepareLevel();
 
-		studio = new CodeStudio(loadFiles(), saveFile, prepareRun, openSpritePreview, createScript);
+		studio = new CodeStudio(loadFiles(), saveFile, prepareRun, openSpritePreview, createScript, levelName);
+		studio.onExit = leave;
 		add(studio);
 
 		DiscordClient.customPresence("Modo Avanzado", "Editando " + levelName, "fmce", "", false);
@@ -77,7 +78,7 @@ class AdvancedEditorState extends FlxState
 		if (!foundHx)
 		{
 			var path = Path.join([levelDir, Scripts.DIR, "script.hx"]);
-			result.push(new CodeStudioFile(Scripts.DIR + "/script.hx", defaultScript(), path, true, "haxe"));
+			result.push(new CodeStudioFile(Scripts.DIR + "/script.hx", defaultScript(), path, true, "haxe", "", true));
 		}
 		#end
 		result.sort(function(a, b)
@@ -203,7 +204,7 @@ class AdvancedEditorState extends FlxState
 				for (file in studio.files)
 					if (file.path == path) alreadyUsed = true;
 			if (!alreadyUsed)
-				return new CodeStudioFile(Scripts.DIR + "/" + name, defaultScript(), path, true, "haxe");
+				return new CodeStudioFile(Scripts.DIR + "/" + name, defaultScript(), path, true, "haxe", "", true);
 			index++;
 		}
 		#end
@@ -241,15 +242,28 @@ class AdvancedEditorState extends FlxState
 	}
 	#end
 
+	var leaveWarned:Bool = false;
+
+	/** Sale al menu del modo avanzado. Si hay cambios sin guardar pide confirmar con una segunda vez. */
+	function leave():Void
+	{
+		if (chosen) return;
+		if (studio != null && studio.hasUnsaved() && !leaveWarned)
+		{
+			leaveWarned = true;
+			studio.log("[FMCE] Hay cambios sin guardar. Vuelve a salir para descartarlos o guarda con Ctrl+S.");
+			return;
+		}
+		chosen = true;
+		TransitionHandler.switchState(new AdvancedModeState());
+	}
+
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
 		if (chosen) return;
-		if (KeyBinds.justPressed(KeyBinds.BACK) || FlxG.keys.justPressed.ESCAPE)
-		{
-			chosen = true;
-			TransitionHandler.switchState(new AdvancedModeState());
-		}
+		if (studio != null && studio.escapeHandled) return;
+		if (KeyBinds.justPressed(KeyBinds.BACK) || FlxG.keys.justPressed.ESCAPE) leave();
 	}
 
 	override public function destroy():Void

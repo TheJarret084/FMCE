@@ -203,7 +203,7 @@ class SpriteImporter
 	}
 
 	/**
-	 * `config.json` inicial de un atlas Sparrow: una entrada por animacion (`anim` = prefijo del atlas, `name` = `animN`).
+	 * `config.json` inicial de un atlas Sparrow: una entrada por animacion (`anim` = prefijo del atlas; el juego la llama anim<posicion en data>).
 	 * La animacion que empieza por "idle" va primero, o sea es `anim0`; el resto sigue el orden del XML.
 	 */
 	static function sparrowConfig(xmlText:String):Dynamic
@@ -217,7 +217,7 @@ class SpriteImporter
 			}
 		return {
 			type: "sprite",
-			data: [for (i in 0...list.length) {anim: list[i], name: "anim" + i, index: i, spd: 1, loop: true}]
+			data: [for (i in 0...list.length) {anim: list[i], spd: 1, loop: true}]
 		};
 	}
 

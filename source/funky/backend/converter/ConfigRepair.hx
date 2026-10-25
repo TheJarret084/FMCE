@@ -109,6 +109,12 @@ class ConfigRepair
 				item.anim = key;
 				fixed++;
 			}
+			else if (item.name == null && (config.data : Array<Dynamic>).indexOf(item) < tagNames.length)
+			{
+				// Formato nuevo (sin `name` ni `index`): la posicion en `data` es el numero del tag.
+				item.anim = tagNames[(config.data : Array<Dynamic>).indexOf(item)];
+				fixed++;
+			}
 			else
 				orphans.push('$sprite: "${key}" no esta en el atlas');
 		}

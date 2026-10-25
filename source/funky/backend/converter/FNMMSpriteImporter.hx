@@ -344,13 +344,11 @@ class SpriteImportTask
 
 		tags.push({name: atlasName, from: from, to: frames.length - 1, direction: "forward"});
 
-		// `atlasName` = tag dentro del atlas (la posicion original en la tira: anim0, anim1...);
-		// `name` = el que aplica el juego segun el rol (anim0 = idle, anim<N>...).
+		// `anim` = tag dentro del atlas. El nombre en el juego (anim0 = idle, anim<N>...) es la posicion en `data`:
+		// las tiras se agregan en orden, asi que ya coincide.
 		var offset:Dynamic = Reflect.field(entry, "offset");
 		configData.push({
 			anim: atlasName,
-			name: FNMMSpriteImporter.animName(role, i),
-			index: i,
 			num: count,
 			// FNMM guarda un multiplicador de 24 fps; aca queda como FPS crudos (`spd_fps: true`).
 			spd: Math.round(24 * FNMMSpriteImporter.number(Reflect.field(entry, "spd"), 1) * 100) / 100,

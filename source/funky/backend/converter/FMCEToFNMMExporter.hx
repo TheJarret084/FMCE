@@ -50,10 +50,17 @@ class FMCEToFNMMExporter
 	public static inline var EXT:String = ".FNMM";
 	public static inline var MAX_BITMAP:Int = 16384;
 
+	/**
+	 * true = la celda de cada tira se recorta a la union de lo visible de sus frames (en vez de usar el `sourceSize` completo)
+	 * y el pivote (`offset`) se corre lo mismo, asi el sprite se ve igual. Las tiras salen mucho mas chicas y se codifican mas rapido.
+	 * false = celdas del tamano original del frame, como antes.
+	 */
+	public static inline var CROP_CELLS:Bool = true;
+
 	/** Eventos que solo existen en FMCE. */
-	static final FMCE_EVENTS:Array<String> = ["ObjectSpriteSet", "ObjectChartChange"];
+	public static final FMCE_EVENTS:Array<String> = ["ObjectSpriteSet", "ObjectChartChange"];
 	static final KEEP:Array<String> = ["chart.json", "meta.json", "events.json", "scene.json", "sprites"];
-	static final AUDIO:Array<String> = ["ogg", "mp3", "wav", "m4a"];
+	public static final AUDIO:Array<String> = ["ogg", "mp3", "wav", "m4a"];
 
 	public static function outputPath(levelName:String, ?destDir:String):String
 		return Path.join([destDir != null ? destDir : Paths.exportsRoot(), Path.withoutDirectory(levelName) + EXT]);
@@ -133,7 +140,7 @@ class FMCEToFNMMExporter
 	static function sameFile(a:String, b:Null<String>):Bool
 		return b != null && Path.normalize(a) == Path.normalize(b);
 
-	static function readJson(path:String):Dynamic
+	public static function readJson(path:String):Dynamic
 	{
 		if (!FileSystem.exists(path)) return null;
 		try
@@ -603,6 +610,8 @@ class FNMMSpriteExport
 	var pages:Map<Int, BitmapData> = new Map<Int, BitmapData>();
 	var anims:Array<{frames:Array<Dynamic>, cfg:Dynamic}> = [];
 	var outData:Array<Dynamic> = [];
+	/** Pagina del atlas -> ultima tira que la usa (despues de esa se libera su bitmap). */
+	var lastUse:Map<Int, Int> = new Map<Int, Int>();
 	#end
 
 	public function new(levelDir:String, name:String)
@@ -706,6 +715,8 @@ class FNMMSpriteExport
 		else fromTags(tags);
 
 		if (anims.length == 0) throw "no quedo ninguna animacion";
+		for (i in 0...anims.length)
+			for (frame in anims[i].frames) lastUse.set(pageKey(frame), i);
 		phase = 1;
 	}
 
@@ -724,24 +735,32 @@ class FNMMSpriteExport
 		{
 			var cfg = list[i];
 			var tagName = FMCEToFNMMExporter.text(Reflect.field(cfg, "anim"), FMCEToFNMMExporter.text(Reflect.field(cfg, "name"), ""));
-			var range = rangeOf(tags, tagName);
-			if (range == null && tags.length == 0 && list.length == 1) range = {from: 0, to: frames.length - 1};
-			if (range == null)
-			{
-				warnings.push("la animacion '" + tagName + "' no tiene tag en el atlas y se salta");
-				continue;
-			}
-			var slice = frames.slice(range.from, range.to + 1);
+			var slice:Array<Dynamic> = [];
 			var indices = Reflect.field(cfg, "indices");
 			if (Std.isOfType(indices, Array) && (cast indices:Array<Dynamic>).length > 0)
 			{
-				var picked:Array<Dynamic> = [];
+				// `indices` = frames del atlas tal cual (igual que en el juego): no necesita tag y pueden repetirse.
 				for (value in (cast indices:Array<Dynamic>))
 				{
 					var at = Std.int(FMCEToFNMMExporter.num(value, -1));
-					if (at >= 0 && at < slice.length) picked.push(slice[at]);
+					if (at >= 0 && at < frames.length) slice.push(frames[at]);
 				}
-				if (picked.length > 0) slice = picked;
+				if (slice.length == 0)
+				{
+					warnings.push("la animacion '" + tagName + "' tiene indices que no existen en el atlas y se salta");
+					continue;
+				}
+			}
+			else
+			{
+				var range = rangeOf(tags, tagName);
+				if (range == null && tags.length == 0 && list.length == 1) range = {from: 0, to: frames.length - 1};
+				if (range == null)
+				{
+					warnings.push("la animacion '" + tagName + "' no tiene tag en el atlas y se salta");
+					continue;
+				}
+				slice = frames.slice(range.from, range.to + 1);
 			}
 			if (slice.length > 0) anims.push({frames: slice, cfg: cfg});
 		}
@@ -796,14 +815,50 @@ class FNMMSpriteExport
 		label = "tira " + index + "/" + anims.length;
 
 		var list = anims[i].frames;
-		var cellW = 1;
-		var cellH = 1;
+
+		// Zona visible de cada frame dentro de su celda original (`spriteSourceSize`). La celda de la tira es la union de todas.
+		var minX = 1 << 30;
+		var minY = 1 << 30;
+		var maxX = 0;
+		var maxY = 0;
+		var fullW = 1;
+		var fullH = 1;
 		for (frame in list)
 		{
 			var size = Reflect.field(frame, "sourceSize");
 			var box = Reflect.field(frame, "frame");
-			cellW = Std.int(Math.max(cellW, FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(size, "w"), FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(box, "w"), 1))));
-			cellH = Std.int(Math.max(cellH, FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(size, "h"), FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(box, "h"), 1))));
+			var inner = Reflect.field(frame, "spriteSourceSize");
+			var w = Std.int(FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(box, "w"), 0));
+			var h = Std.int(FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(box, "h"), 0));
+			fullW = Std.int(Math.max(fullW, FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(size, "w"), w)));
+			fullH = Std.int(Math.max(fullH, FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(size, "h"), h)));
+			if (w < 1 || h < 1) continue;
+			var ix = Std.int(FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(inner, "x"), 0));
+			var iy = Std.int(FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(inner, "y"), 0));
+			minX = Std.int(Math.min(minX, ix));
+			minY = Std.int(Math.min(minY, iy));
+			maxX = Std.int(Math.max(maxX, ix + w));
+			maxY = Std.int(Math.max(maxY, iy + h));
+		}
+		if (maxX <= minX || maxY <= minY)
+		{
+			// todos los frames vacios: una celda de 1x1
+			minX = 0;
+			minY = 0;
+			maxX = 1;
+			maxY = 1;
+		}
+
+		var cropX = 0;
+		var cropY = 0;
+		var cellW = Std.int(Math.max(fullW, maxX));
+		var cellH = Std.int(Math.max(fullH, maxY));
+		if (FMCEToFNMMExporter.CROP_CELLS)
+		{
+			cropX = minX;
+			cropY = minY;
+			cellW = maxX - minX;
+			cellH = maxY - minY;
 		}
 		if (cellW * list.length > FMCEToFNMMExporter.MAX_BITMAP || cellH > FMCEToFNMMExporter.MAX_BITMAP)
 			throw "la tira " + i + " mide " + (cellW * list.length) + "x" + cellH + " (maximo " + FMCEToFNMMExporter.MAX_BITMAP + ")";
@@ -818,15 +873,31 @@ class FNMMSpriteExport
 			var w = Std.int(FMCEToFNMMExporter.num(Reflect.field(box, "w"), 0));
 			var h = Std.int(FMCEToFNMMExporter.num(Reflect.field(box, "h"), 0));
 			if (w < 1 || h < 1) continue;
-			var page = pageBitmap(Std.int(FMCEToFNMMExporter.num(Reflect.field(frame, "page"), 0)));
+			var page = pageBitmap(pageKey(frame));
 			var source = new Rectangle(FMCEToFNMMExporter.num(Reflect.field(box, "x"), 0), FMCEToFNMMExporter.num(Reflect.field(box, "y"), 0), w, h);
-			var at = new Point(k * cellW + FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(inner, "x"), 0), FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(inner, "y"), 0));
+			var at = new Point(k * cellW + FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(inner, "x"), 0) - cropX,
+				FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(inner, "y"), 0) - cropY);
 			strip.copyPixels(page, source, at);
 		}
 		var bytes:Bytes = strip.encode(strip.rect, new PNGEncoderOptions(true));
 		strip.dispose();
 		pending.push({path: base + i + ".png", bytes: bytes});
-		outData.push(animEntry(anims[i].cfg, list.length));
+		outData.push(animEntry(anims[i].cfg, list.length, cropX, cropY));
+
+		// una pagina del atlas que ya no usa ninguna tira de las que faltan se libera (ahorra memoria en celulares)
+		for (page in lastUse.keys())
+			if (lastUse.get(page) == i && pages.exists(page))
+			{
+				pages.get(page).dispose();
+				pages.remove(page);
+			}
+	}
+
+	/** Pagina del atlas de un frame (si apunta a una que no existe, la 0, igual que `pageBitmap`). */
+	function pageKey(frame:Dynamic):Int
+	{
+		var page = Std.int(FMCEToFNMMExporter.num(Reflect.field(frame, "page"), 0));
+		return page >= 0 && page < pageFiles.length ? page : 0;
 	}
 
 	function pageBitmap(page:Int):BitmapData
@@ -842,13 +913,14 @@ class FNMMSpriteExport
 	}
 
 	/** `spd` en FNMM es un multiplicador de 24 fps; en FMCE puede venir en fps crudos (`spd_fps`). */
-	function animEntry(cfg:Dynamic, count:Int):Dynamic
+	function animEntry(cfg:Dynamic, count:Int, cropX:Int, cropY:Int):Dynamic
 	{
 		var offset = FMCEToFNMMExporter.field(cfg, "offset");
 		var spd = FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(cfg, "spd"), 1);
 		if (FMCEToFNMMExporter.field(cfg, "spd_fps") == true) spd = spd / 24;
 		return {
-			offset: {x: FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(offset, "x"), 0), y: FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(offset, "y"), 0)},
+			// el pivote se mide desde la esquina de la celda: si la celda se recorto, se corre lo mismo
+			offset: {x: FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(offset, "x"), 0) - cropX, y: FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(offset, "y"), 0) - cropY},
 			num: count,
 			spd: spd,
 			spd_fps: false,

@@ -189,16 +189,20 @@ class SpriteBuilder
 		var skipTags:Array<String> = [];
 		for (entry in configAnims)
 		{
+			// Posicion en `data`: es el numero de la animacion (data[0] = anim0, data[1] = anim1...).
+			var pos = configAnims.indexOf(entry);
 			var list = intArray(field(entry, "indices"));
-			var gameName = text(field(entry, "name"), "");
-			if (list.length == 0 || gameName == "")
+			if (list.length == 0)
 			{
 				plain.push(entry);
 				continue;
 			}
+			// `name` e `index` solo existen en configs viejos; si estan, se respetan.
+			var gameName = text(field(entry, "name"), "anim" + pos);
 			skipTags.push(text(field(entry, "anim"), gameName));
-			config.anims.push(resolveAnim(gameName, config.anims.length, list, entry, null));
+			config.anims.push(resolveAnim(gameName, pos, list, entry, null));
 		}
+		var extra = configAnims.length;
 
 		// 2) El resto sale de los frameTags del atlas (rango from..to), como siempre.
 		var tags:Array<Dynamic> = asArray(field(meta, "frameTags"));
@@ -212,9 +216,18 @@ class SpriteBuilder
 			var indices = [for (index in first...last + 1) index];
 			if (text(field(tag, "direction"), "forward") == "reverse") indices.reverse();
 			var entry = findByName(plain, animName);
-			// `anim` = tag del atlas (animName), `name` = el nombre que aplica el juego (anim0, anim1...).
-			var applied = entry != null && field(entry, "anim") != null ? text(field(entry, "name"), animName) : animName;
-			config.anims.push(resolveAnim(applied, config.anims.length, indices, entry, field(fmceAnims, animName)));
+			// `anim` = tag del atlas (animName). El nombre que aplica el juego es anim<posicion en data>
+			// (un `name` viejo, si todavia esta, tiene prioridad). Un tag sin entrada se agrega al final con su propio nombre.
+			var applied = animName;
+			var pos = extra;
+			if (entry != null)
+			{
+				pos = configAnims.indexOf(entry);
+				if (field(entry, "anim") != null) applied = text(field(entry, "name"), "anim" + pos);
+			}
+			else
+				extra++;
+			config.anims.push(resolveAnim(applied, pos, indices, entry, field(fmceAnims, animName)));
 		}
 
 		// Orden por `index` (el de la tira original); a igual `index`, el de aparicion.
@@ -269,6 +282,56 @@ class SpriteBuilder
 		// Solo digitos: `singMISS` o `sing1x` no son lanes.
 		if (!~/^[0-9]+$/.match(rest)) return -1;
 		return Std.parseInt(rest);
+	}
+
+	/**
+	 * Formato de `data` en config.json de un sprite (no atlas): cada entrada lleva solo `anim` (el tag del atlas); el nombre
+	 * en el juego es `anim<posicion>` e `index` es esa misma posicion, asi que ya no se guardan `name` ni `index`.
+	 *
+	 * Para el editor: ordena un config viejo por su `index` (una sola vez), asegura `anim`, quita `index` y deja `name`
+	 * = anim<posicion> SOLO en memoria. Antes de guardar hay que pasar la lista por `entriesForSave`.
+	 */
+	public static function normalizeEntries(list:Array<Dynamic>):Void
+	{
+		var legacy = false;
+		for (e in list)
+			if (Reflect.hasField(e, "index")) legacy = true;
+		if (legacy)
+		{
+			var tagged = [for (i in 0...list.length) {e: list[i], pos: i}];
+			tagged.sort(function(a, b)
+			{
+				var ia = Std.parseFloat(Std.string(Reflect.field(a.e, "index")));
+				var ib = Std.parseFloat(Std.string(Reflect.field(b.e, "index")));
+				if (Math.isNaN(ia)) ia = a.pos;
+				if (Math.isNaN(ib)) ib = b.pos;
+				return ia < ib ? -1 : (ia > ib ? 1 : a.pos - b.pos);
+			});
+			list.splice(0, list.length);
+			for (t in tagged) list.push(t.e);
+		}
+		for (i in 0...list.length)
+		{
+			var e = list[i];
+			if (Reflect.field(e, "anim") == null)
+				Reflect.setField(e, "anim", Reflect.field(e, "name") != null ? Reflect.field(e, "name") : "anim" + i);
+			Reflect.deleteField(e, "index");
+			Reflect.setField(e, "name", "anim" + i);
+		}
+	}
+
+	/** Copia de la lista sin `name` ni `index`, lista para escribir en config.json. */
+	public static function entriesForSave(list:Array<Dynamic>):Array<Dynamic>
+	{
+		var out:Array<Dynamic> = [];
+		for (e in list)
+		{
+			var copy:Dynamic = {};
+			for (f in Reflect.fields(e))
+				if (f != "name" && f != "index") Reflect.setField(copy, f, Reflect.field(e, f));
+			out.push(copy);
+		}
+		return out;
 	}
 
 	#if sys

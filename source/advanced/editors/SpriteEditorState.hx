@@ -259,7 +259,7 @@ class SpriteEditorState extends UIState
 
 		var y1 = y0 + 160;
 		ui(new UIWindow(x0, y1, RIGHT_W, 514, "Animacion"));
-		label(x0 + 20, y1 + 38, "Nombre en el juego");
+		label(x0 + 20, y1 + 38, "Nombre en el juego (anim + posicion)");
 		nameBox = ui(new UITextBox(x0 + 20, y1 + 58, "", RIGHT_W - 40));
 		nameBox.onChange = renameAnim;
 		tagLabel = label(x0 + 20, y1 + 98, "Tag del sprite.json");
@@ -477,11 +477,13 @@ class SpriteEditorState extends UIState
 			{
 				// los alias anim0..3 que el juego agrega a singLEFT.. no son entradas del config
 				if (~/^anim[0-9]+$/.match(a.name) && Lambda.exists(resolved.anims, o -> SpriteBuilder.laneOfSing(o.name) == Std.parseInt(a.name.substr(4)))) continue;
-				entries.push({index: a.index, anim: a.name, name: a.name, spd: JsonFile.round(a.spd), spd_fps: a.spdFps, indices: ([] : Array<Int>), loop: a.loop, offset: {x: a.offsetX, y: a.offsetY}, scale: a.scale});
+				entries.push({anim: a.name, name: a.name, spd: JsonFile.round(a.spd), spd_fps: a.spdFps, indices: ([] : Array<Int>), loop: a.loop, offset: {x: a.offsetX, y: a.offsetY}, scale: a.scale});
 			}
 			if (Reflect.field(cfg, "type") == null) Reflect.setField(cfg, "type", resolved.type == "sprite" ? "item" : resolved.type);
 			if (Reflect.field(cfg, "bilinear") == null) Reflect.setField(cfg, "bilinear", resolved.bilinear);
 		}
+		// Sprites normales: sin `name` ni `index` en el archivo (name = anim<posicion> solo en memoria). Atlas de Animate: sin cambios.
+		if (!atlas) SpriteBuilder.normalizeEntries(entries);
 		// Formatos viejos: `spd` multiplicador -> FPS + `spd_fps`; y sin escala global (cada animacion tiene la suya).
 		for (e in entries) SpriteBuilder.migrateSpd(e);
 		Reflect.deleteField(cfg, "scale");
@@ -614,8 +616,10 @@ class SpriteEditorState extends UIState
 	{
 		var n = entries.length;
 		var name = "anim" + n;
-		while (Lambda.exists(entries, e -> Reflect.field(e, "name") == name)) name = "anim" + (++n);
-		entries.push({index: entries.length, anim: name, name: name, spd: 24, spd_fps: true, indices: ([] : Array<Int>), loop: true, offset: {x: 0, y: 0}, scale: 1});
+		if (atlas) while (Lambda.exists(entries, e -> Reflect.field(e, "name") == name)) name = "anim" + (++n);
+		var fresh:Dynamic = {anim: name, name: name, spd: 24, spd_fps: true, indices: ([] : Array<Int>), loop: true, offset: {x: 0, y: 0}, scale: 1};
+		if (atlas) Reflect.setField(fresh, "index", entries.length);
+		entries.push(fresh);
 		Reflect.setField(cfg, "data", entries);
 		animIdx = entries.length - 1;
 		touch();
@@ -628,6 +632,13 @@ class SpriteEditorState extends UIState
 	{
 		var e = entry();
 		if (e == null) return;
+		if (!atlas)
+		{
+			// el nombre es siempre anim<posicion en data>
+			notify("El nombre es automatico: anim + la posicion en data.");
+			nameBox.label.text = Std.string(Reflect.field(e, "name"));
+			return;
+		}
 		var name = StringTools.trim(text);
 		var clash = Lambda.exists(entries, o -> o != e && Reflect.field(o, "name") == name);
 		if (name == "" || clash)
@@ -672,12 +683,21 @@ class SpriteEditorState extends UIState
 		deleteButton.color = 0xFFFF8A8A;
 	}
 
+	/** Despues de borrar una animacion, las de abajo suben una posicion (anim3 pasa a anim2...). Los ghosts siguen a su animacion. */
+	function renumber():Void
+	{
+		var ghosts = [for (e in entries) if (isGhost(e)) e];
+		for (i in 0...entries.length) Reflect.setField(entries[i], "name", "anim" + i);
+		ghostNames = [for (e in ghosts) Std.string(Reflect.field(e, "name"))];
+	}
+
 	function deleteAnim():Void
 	{
 		if (entries.length == 0) return;
 		disarmDelete();
 		var removed = entries.splice(animIdx, 1)[0];
 		ghostNames.remove(Std.string(Reflect.field(removed, "name")));
+		if (!atlas) renumber();
 		animIdx = Std.int(Math.max(0, Math.min(entries.length - 1, animIdx)));
 		touch();
 		refreshAnimList();
@@ -940,8 +960,11 @@ class SpriteEditorState extends UIState
 	function save():Void
 	{
 		if (sprites.length == 0) return;
+		// sprites normales: sin `name` ni `index` en el archivo (la posicion en `data` es el numero)
+		Reflect.setField(cfg, "data", atlas ? entries : SpriteBuilder.entriesForSave(entries));
+		var written = JsonFile.write(cfgPath, cfg);
 		Reflect.setField(cfg, "data", entries);
-		if (JsonFile.write(cfgPath, cfg))
+		if (written)
 		{
 			dirty = false;
 			SaveWarning.showWarning = false;
