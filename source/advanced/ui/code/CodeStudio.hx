@@ -6,6 +6,7 @@ import flixel.FlxG;
 import flixel.group.FlxSpriteGroup;
 import flixel.input.keyboard.FlxKey;
 import flixel.text.FlxText;
+import flixel.text.FlxText.FlxTextAlign;
 import haxe.Json;
 import openfl.events.KeyboardEvent;
 import openfl.ui.Keyboard;
@@ -82,7 +83,7 @@ class CodeStudio extends FlxSpriteGroup
 		editor.onCaret = function(line, col, sel) status.setCaret(line, col, sel);
 
 		welcome = CodeDraw.label(0, bodyY + Std.int(editorH / 2) - 30, "Elige un archivo del explorador", 18, CodeTheme.DIM, mainW);
-		welcome.alignment = CENTER;
+		welcome.alignment = FlxTextAlign.CENTER;
 
 		tabs = new TabBar(tabsY, mainW);
 		tabs.onSelect = function(f) activate(f);
