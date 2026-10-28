@@ -41,6 +41,8 @@ typedef FNMMExportPlan =
 {
 	var music:Null<String>;
 	var voices:Null<String>;
+	/** Todos los audios que se juntan en un solo `music` (`music/*` del nivel). Con mas de uno se mezclan. */
+	var tracks:Array<String>;
 	var ignored:Array<String>;
 }
 
@@ -61,6 +63,9 @@ class FMCEToFNMMExporter
 	public static final FMCE_EVENTS:Array<String> = ["ObjectSpriteSet", "ObjectChartChange"];
 	static final KEEP:Array<String> = ["chart.json", "meta.json", "events.json", "scene.json", "sprites"];
 	public static final AUDIO:Array<String> = ["ogg", "mp3", "wav", "m4a"];
+
+	/** Calidad del OGG cuando hay que mezclar o convertir el audio (0 = chico, 1 = mejor). */
+	public static inline var OGG_QUALITY:Float = 0.45;
 
 	public static function outputPath(levelName:String, ?destDir:String):String
 		return Path.join([destDir != null ? destDir : Paths.exportsRoot(), Path.withoutDirectory(levelName) + EXT]);
@@ -88,7 +93,7 @@ class FMCEToFNMMExporter
 	/** Lo que el .FNMM se deja fuera. Sirve para avisar antes de exportar. */
 	public static function plan(levelName:String):FNMMExportPlan
 	{
-		var out:FNMMExportPlan = {music: null, voices: null, ignored: []};
+		var out:FNMMExportPlan = {music: null, voices: null, tracks: [], ignored: []};
 		#if sys
 		var dir = levelPath(levelName);
 		if (!FileSystem.exists(dir) || !FileSystem.isDirectory(dir)) return out;
@@ -96,6 +101,7 @@ class FMCEToFNMMExporter
 		var meta = readJson(Path.join([dir, "meta.json"]));
 		out.music = findMusic(dir, meta == null ? null : Reflect.field(meta, "song"));
 		out.voices = LevelLoader.findVoices(dir);
+		out.tracks = findTracks(dir, out.music, out.voices);
 
 		var entries = FileSystem.readDirectory(dir);
 		entries.sort(Reflect.compare);
@@ -104,8 +110,8 @@ class FMCEToFNMMExporter
 			if (entry == "." || entry == ".." || LevelArchive.isBackup(entry)) continue;
 			if (KEEP.indexOf(entry.toLowerCase()) >= 0) continue;
 			var path = Path.join([dir, entry]);
-			if (FileSystem.isDirectory(path)) collect(path, entry, out.ignored, out.music);
-			else if (!sameFile(path, out.music)) out.ignored.push(entry);
+			if (FileSystem.isDirectory(path)) collect(path, entry, out.ignored, out.tracks);
+			else if (!isTrack(path, out.tracks)) out.ignored.push(entry);
 		}
 		#end
 		return out;
@@ -123,7 +129,7 @@ class FMCEToFNMMExporter
 	}
 
 	#if sys
-	static function collect(abs:String, rel:String, out:Array<String>, skip:Null<String>):Void
+	static function collect(abs:String, rel:String, out:Array<String>, skip:Array<String>):Void
 	{
 		var entries = FileSystem.readDirectory(abs);
 		entries.sort(Reflect.compare);
@@ -133,8 +139,39 @@ class FMCEToFNMMExporter
 			var path = abs + "/" + entry;
 			var name = rel + "/" + entry;
 			if (FileSystem.isDirectory(path)) collect(path, name, out, skip);
-			else if (!sameFile(path, skip)) out.push(name);
+			else if (!isTrack(path, skip)) out.push(name);
 		}
+	}
+
+	static function isTrack(path:String, tracks:Array<String>):Bool
+	{
+		for (t in tracks)
+			if (sameFile(path, t)) return true;
+		return false;
+	}
+
+	/** El audio principal, las voces y todo lo que haya en `music/`: el FNMM tiene un solo `music`, asi que se juntan. */
+	static function findTracks(dir:String, music:Null<String>, voices:Null<String>):Array<String>
+	{
+		var tracks:Array<String> = [];
+		function push(path:Null<String>)
+		{
+			if (path != null && !isTrack(path, tracks)) tracks.push(path);
+		}
+		push(music);
+		var folder = Path.join([dir, "music"]);
+		if (FileSystem.exists(folder) && FileSystem.isDirectory(folder))
+		{
+			var files = FileSystem.readDirectory(folder);
+			files.sort(Reflect.compare);
+			for (file in files)
+			{
+				var path = Path.join([folder, file]);
+				if (!FileSystem.isDirectory(path) && AUDIO.indexOf(Path.extension(file).toLowerCase()) >= 0) push(path);
+			}
+		}
+		push(voices);
+		return tracks;
 	}
 
 	static function sameFile(a:String, b:Null<String>):Bool
@@ -482,14 +519,33 @@ class FNMMExportJob
 	function stepMusic():Void
 	{
 		label = "audio";
-		if (plan.music == null) result.warnings.push("el nivel no tiene audio: el .FNMM sale sin musica");
+		var tracks = plan.tracks;
+		if (tracks.length == 0) result.warnings.push("el nivel no tiene audio: el .FNMM sale sin musica");
+		else if (tracks.length == 1 && Path.extension(tracks[0]).toLowerCase() == "ogg")
+			add("music.ogg", File.getBytes(tracks[0]));
 		else
 		{
-			var ext = Path.extension(plan.music).toLowerCase();
-			if (FMCEToFNMMExporter.AUDIO.indexOf(ext) < 0) ext = "ogg";
-			add("music." + ext, File.getBytes(plan.music));
+			// Funky Maker: Mobile lee un solo `music.ogg`: varias pistas se mezclan, y un audio que no es OGG se convierte.
+			label = tracks.length > 1 ? "mezclando " + tracks.length + " pistas" : "convirtiendo a ogg";
+			var names = [for (t in tracks) Path.withoutDirectory(t)];
+			var mixed = AudioMixer.mix(names, [for (t in tracks) File.getBytes(t)], FMCEToFNMMExporter.OGG_QUALITY);
+			if (mixed.ogg != null)
+			{
+				add("music.ogg", mixed.ogg);
+				if (tracks.length > 1) result.warnings.push(mixed.used.length + " pistas mezcladas en music.ogg (" + mixed.used.join(", ") + ")");
+				for (name in mixed.failed) result.warnings.push("no se pudo leer " + name + ": se deja fuera de la mezcla");
+			}
+			else
+			{
+				// no hubo forma de decodificar/codificar: se manda el audio principal tal cual (si no es OGG, el FNMM no lo va a leer)
+				var main = plan.music != null ? plan.music : tracks[0];
+				var ext = Path.extension(main).toLowerCase();
+				if (FMCEToFNMMExporter.AUDIO.indexOf(ext) < 0) ext = "ogg";
+				add("music." + ext, File.getBytes(main));
+				result.warnings.push("no se pudo mezclar/convertir el audio: se exporta " + Path.withoutDirectory(main) + " tal cual"
+					+ (ext == "ogg" ? "" : " (Funky Maker: Mobile solo lee OGG)"));
+			}
 		}
-		if (plan.voices != null) result.warnings.push("el FNMM no tiene pista de voces: " + Path.withoutDirectory(plan.voices) + " se ignora");
 		stage = "sprites";
 	}
 

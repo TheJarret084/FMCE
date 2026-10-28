@@ -63,6 +63,7 @@ class SceneEditorState extends UIState
 	var spriteNames:Array<String> = [];
 
 	var spriteDrop:UIDropDown;
+	var spriteBtn:UIButton;
 	var posX:FieldStepper;
 	var posY:FieldStepper;
 	var scaleX:FieldStepper;
@@ -73,6 +74,18 @@ class SceneEditorState extends UIState
 	var strumStep:FieldStepper;
 	var fixedCheck:UICheckbox;
 	var visibleCheck:UICheckbox;
+	/** Lista de POSICIONES (`transform`) del objeto: anterior / siguiente / agregar / quitar. */
+	var posPrev:UIButton;
+	var posNext:UIButton;
+	var posAdd:UIButton;
+	var posDel:UIButton;
+	var posIdxText:UIText;
+	/** Pestanas del panel de objeto (Posicion / Apariencia / Logica) y los widgets de cada una. */
+	var objTabs:Array<UIButton> = [];
+	var objPages:Array<Array<FlxBasic>> = [[], [], []];
+	var objTab:Int = 0;
+	/** Cual de las `transform` del objeto elegido se esta editando (la lista de POSICIONES). */
+	var tIdx:Int = 0;
 	var colorWheel:ColorField;
 	var objWidgets:Array<UISprite> = [];
 	var lastWheelColor:Int = 0xFFFFFF;
@@ -252,50 +265,80 @@ class SceneEditorState extends UIState
 		var objStart = members.length;
 		ui(new UIWindow(x0, y0, RIGHT_W, 440, "Objeto"));
 
-		label(x0 + 20, y0 + 36, "Sprite");
-		spriteDrop = ui(new UIDropDown(x0 + 20, y0 + 54, RIGHT_W - 40, 32, [""], 0));
-		spriteDrop.onChange = function(i:Int) if (sel >= 0 && i >= 0 && i < spriteNames.length) setSprite(sel, spriteNames[i]);
+		// pestanas: Posicion / Apariencia / Logica (el mismo estilo de las pestanas Objetos / Camaras)
+		var tabNames = ["Posicion", "Apariencia", "Logica"];
+		var tw = Std.int((RIGHT_W - 40 - 4) / 3);
+		for (i in 0...3)
+		{
+			var index = i;
+			objTabs.push(ui(new UIButton(x0 + 20 + i * (tw + 2), y0 + 34, tabNames[i], function() setObjTab(index), tw, 24)));
+		}
+		var top = y0 + 68;
+		var half = x0 + 156;
 
-		label(x0 + 20, y0 + 92, "Posicion X");
-		posX = ui(new FieldStepper(x0 + 20, y0 + 110, 0, 1, 3, null, null, 120));
+		// ── Posicion ──
+		fixedCheck = ui(new UICheckbox(x0 + 20, top + 2, "Fixed (pegado a la pantalla)", false));
+		fixedCheck.onChecked = function(b:Bool) if (sel >= 0) setFixed(sel, b);
+
+		var l1 = label(x0 + 20, top + 36, "Posiciones (transform)");
+		posPrev = ui(new UIButton(x0 + 20, top + 56, "<", function() stepTransform(-1), 30, 28));
+		posNext = ui(new UIButton(x0 + 54, top + 56, ">", function() stepTransform(1), 30, 28));
+		posIdxText = label(x0 + 94, top + 62, "0 de 1");
+		posAdd = ui(new UIButton(x0 + RIGHT_W - 20 - 30, top + 56, "+", addTransform, 30, 28));
+		posDel = ui(new UIButton(x0 + RIGHT_W - 20 - 64, top + 56, "-", removeTransform, 30, 28));
+
+		var l2 = label(x0 + 20, top + 96, "Posicion X");
+		posX = ui(new FieldStepper(x0 + 20, top + 114, 0, 1, 3, null, null, 120));
 		posX.onValue = function(v:Float) setObjField("position", "x", v);
-		label(x0 + 156, y0 + 92, "Posicion Y");
-		posY = ui(new FieldStepper(x0 + 156, y0 + 110, 0, 1, 3, null, null, 120));
+		var l3 = label(half, top + 96, "Posicion Y");
+		posY = ui(new FieldStepper(half, top + 114, 0, 1, 3, null, null, 120));
 		posY.onValue = function(v:Float) setObjField("position", "y", v);
 
-		label(x0 + 20, y0 + 148, "Escala X");
-		scaleX = ui(new FieldStepper(x0 + 20, y0 + 166, 1, 0.05, 3, null, null, 120));
+		var l4 = label(x0 + 20, top + 152, "Escala X");
+		scaleX = ui(new FieldStepper(x0 + 20, top + 170, 1, 0.05, 3, null, null, 120));
 		scaleX.onValue = function(v:Float) setObjField("scale", "x", v);
-		label(x0 + 156, y0 + 148, "Escala Y");
-		scaleY = ui(new FieldStepper(x0 + 156, y0 + 166, 1, 0.05, 3, null, null, 120));
+		var l5 = label(half, top + 152, "Escala Y");
+		scaleY = ui(new FieldStepper(half, top + 170, 1, 0.05, 3, null, null, 120));
 		scaleY.onValue = function(v:Float) setObjField("scale", "y", v);
+		var mirrorBtn = ui(new UIButton(x0 + 20, top + 208, "Espejo X", function() mirror("x"), 120, 28));
 
-		label(x0 + 20, y0 + 204, "Parallax X");
-		scrollX = ui(new FieldStepper(x0 + 20, y0 + 222, 1, 0.05, 3, null, null, 120));
+		var l6 = label(x0 + 20, top + 248, "Parallax X");
+		scrollX = ui(new FieldStepper(x0 + 20, top + 266, 1, 0.05, 3, null, null, 120));
 		scrollX.onValue = function(v:Float) setObjField("scrollFactor", "x", v);
-		label(x0 + 156, y0 + 204, "Parallax Y");
-		scrollY = ui(new FieldStepper(x0 + 156, y0 + 222, 1, 0.05, 3, null, null, 120));
+		var l7 = label(half, top + 248, "Parallax Y");
+		scrollY = ui(new FieldStepper(half, top + 266, 1, 0.05, 3, null, null, 120));
 		scrollY.onValue = function(v:Float) setObjField("scrollFactor", "y", v);
 
-		label(x0 + 20, y0 + 260, "Opacidad");
-		opacityStep = ui(new FieldStepper(x0 + 20, y0 + 278, 1, 0.1, 2, 0, 1, 120));
+		objPages[0] = [fixedCheck, l1, posPrev, posNext, posIdxText, posAdd, posDel, l2, posX, l3, posY, l4, scaleX, l5, scaleY, mirrorBtn, l6, scrollX, l7, scrollY];
+
+		// ── Apariencia ──
+		var a1 = label(x0 + 20, top + 2, "Sprite");
+		spriteDrop = ui(new UIDropDown(x0 + 20, top + 20, RIGHT_W - 40 - 40, 32, [""], 0));
+		spriteDrop.onChange = function(i:Int) if (sel >= 0 && i >= 0 && i < spriteNames.length) setSprite(sel, spriteNames[i]);
+		spriteBtn = ui(new UIButton(x0 + RIGHT_W - 20 - 34, top + 20, "...", openSpritePack, 34, 32));
+
+		var a2 = label(x0 + 20, top + 70, "Opacidad");
+		opacityStep = ui(new FieldStepper(x0 + 20, top + 88, 1, 0.1, 2, 0, 1, 120));
 		opacityStep.onValue = function(v:Float) setTopField("opacity", JsonFile.round(v));
-		label(x0 + 156, y0 + 260, "Strumline (-1 = ninguna)");
-		strumStep = ui(new FieldStepper(x0 + 156, y0 + 278, -1, 1, 0, -1, 9, 120));
-		strumStep.onValue = function(v:Float) setTopField("strumLine", Std.int(v));
-
-		fixedCheck = ui(new UICheckbox(x0 + 20, y0 + 322, "Fixed (pegado a la pantalla)", false));
-		fixedCheck.onChecked = function(b:Bool) if (sel >= 0) setFixed(sel, b);
-		visibleCheck = ui(new UICheckbox(x0 + 20, y0 + 348, "Visible", true));
+		visibleCheck = ui(new UICheckbox(x0 + 20, top + 136, "Visible", true));
 		visibleCheck.onChecked = function(b:Bool) if (sel >= 0) setVisible(sel, b);
+		var a3 = label(x0 + 20, top + 176, "Color");
+		colorWheel = ui(new ColorField(x0 + 80, top + 168, 0xFFFFFFFF));
 
-		label(x0 + 20, y0 + 380, "Color");
-		colorWheel = ui(new ColorField(x0 + 80, y0 + 372, 0xFFFFFFFF));
+		objPages[1] = [a1, spriteDrop, spriteBtn, a2, opacityStep, visibleCheck, a3, colorWheel];
+
+		// ── Logica ──
+		var g1 = label(x0 + 20, top + 2, "Strumline (-1 = ninguna)");
+		strumStep = ui(new FieldStepper(x0 + 20, top + 20, -1, 1, 0, -1, 9, 120));
+		strumStep.onValue = function(v:Float) setTopField("strumLine", Std.int(v));
+		objPages[2] = [g1, strumStep];
+
+		// ── siempre a la vista ──
 		var dup = ui(new UIButton(x0 + 20, y0 + 402, "Duplicar", function() if (sel >= 0) duplicate(sel), 120, 28));
 		var del = ui(new UIButton(x0 + 156, y0 + 402, "Borrar", function() if (sel >= 0) deleteObject(sel), 120, 28));
 		del.color = 0xFFFF8080;
 
-		objWidgets = [spriteDrop, posX, posY, scaleX, scaleY, scrollX, scrollY, opacityStep, strumStep, fixedCheck, visibleCheck, colorWheel, dup, del];
+		objWidgets = [spriteDrop, spriteBtn, posX, posY, scaleX, scaleY, scrollX, scrollY, opacityStep, strumStep, fixedCheck, visibleCheck, colorWheel, posPrev, posNext, posAdd, posDel, mirrorBtn, dup, del];
 
 		objPanel = members.slice(objStart);
 
@@ -323,11 +366,17 @@ class SceneEditorState extends UIState
 
 	// ───────────────────────── datos ─────────────────────────
 
-	/** Primera entrada de `transform` (se crea si falta, migrando el formato viejo de x/y sueltos). */
+	/** Entrada de `transform` en uso (se crea si falta, migrando el formato viejo de x/y sueltos). */
 	function tr(o:Dynamic):Dynamic
 	{
 		var list:Dynamic = Reflect.field(o, "transform");
-		if (Std.isOfType(list, Array) && (list : Array<Dynamic>).length > 0) return (list : Array<Dynamic>)[0];
+		if (Std.isOfType(list, Array) && (list : Array<Dynamic>).length > 0)
+		{
+			// el objeto elegido usa la posicion que se esta editando; los demas, la primera
+			var all:Array<Dynamic> = list;
+			var at = (sel >= 0 && sel < objects.length && objects[sel] == o) ? tIdx : 0;
+			return all[Std.int(Math.max(0, Math.min(all.length - 1, at)))];
+		}
 		var legacyScale = JsonFile.num(Reflect.field(o, "scale"), 1);
 		var t:Dynamic = {
 			position: {x: JsonFile.num(Reflect.field(o, "x"), 0), y: JsonFile.num(Reflect.field(o, "y"), 0)},
@@ -464,6 +513,7 @@ class SceneEditorState extends UIState
 		camList.exists = camList.visible = !objs;
 		for (o in objPanel) o.exists = objs;
 		for (o in camPanel) o.exists = !objs;
+		setObjTab(objTab);
 		tabObjects.color = objs ? 0xFF8CC4FF : 0xFFFFFFFF;
 		tabCams.color = objs ? 0xFFFFFFFF : 0xFF8CC4FF;
 		if (!objs) for (b in selBars) b.visible = false;
@@ -639,7 +689,9 @@ class SceneEditorState extends UIState
 
 	function select(index:Int):Void
 	{
+		var before = sel;
 		sel = objects.length == 0 ? -1 : Std.int(Math.max(-1, Math.min(objects.length - 1, index)));
+		if (sel != before) tIdx = 0;
 		markList();
 		syncObjectWidgets();
 	}
@@ -648,19 +700,18 @@ class SceneEditorState extends UIState
 	{
 		var has = sel >= 0 && sel < objects.length;
 		for (w in objWidgets) w.selectable = has;
-		if (!has) return;
+		if (!has)
+		{
+			posIdxText.text = "-";
+			return;
+		}
 		var o = objects[sel];
 		var spr = Std.string(Reflect.field(o, "spr"));
 		var at = spriteNames.indexOf(spr);
 		spriteDrop.index = Std.int(Math.max(0, at));
 		spriteDrop.label.text = spr;
-		var p = pos(o);
-		var sc = scl(o);
+		syncPositionWidgets();
 		var sf = scroll(o);
-		posX.value = JsonFile.num(Reflect.field(p, "x"), 0);
-		posY.value = JsonFile.num(Reflect.field(p, "y"), 0);
-		scaleX.value = JsonFile.num(Reflect.field(sc, "x"), 1);
-		scaleY.value = JsonFile.num(Reflect.field(sc, "y"), 1);
 		scrollX.value = JsonFile.num(Reflect.field(sf, "x"), 1);
 		scrollY.value = JsonFile.num(Reflect.field(sf, "y"), 1);
 		opacityStep.value = JsonFile.num(Reflect.field(o, "opacity"), 1);
@@ -672,15 +723,87 @@ class SceneEditorState extends UIState
 		colorWheel.setValue(FlxColor.fromInt(0xFF000000 | lastWheelColor));
 	}
 
+	/** Lo que depende de la posicion (`transform`) en uso: indice, x / y y escala. */
 	function syncPositionWidgets():Void
 	{
-		if (sel < 0) return;
+		if (sel < 0 || sel >= objects.length) return;
 		var p = pos(objects[sel]);
 		var sc = scl(objects[sel]);
 		posX.value = JsonFile.num(Reflect.field(p, "x"), 0);
 		posY.value = JsonFile.num(Reflect.field(p, "y"), 0);
 		scaleX.value = JsonFile.num(Reflect.field(sc, "x"), 1);
 		scaleY.value = JsonFile.num(Reflect.field(sc, "y"), 1);
+		posIdxText.text = tIdx + " de " + tCount();
+		posPrev.selectable = tIdx > 0;
+		posNext.selectable = tIdx < tCount() - 1;
+		posDel.selectable = tCount() > 1;
+	}
+
+	/** Cambia de pestana del panel de objeto: solo se ven los widgets de esa pestana. */
+	function setObjTab(index:Int):Void
+	{
+		objTab = index;
+		for (p in 0...objPages.length)
+		{
+			for (w in objPages[p]) w.exists = mode == 0 && p == index;
+			objTabs[p].color = p == index ? 0xFF8CC4FF : 0xFFFFFFFF;
+		}
+	}
+
+	/** Cuantas posiciones (`transform`) tiene el objeto elegido. */
+	function tCount():Int
+	{
+		if (sel < 0 || sel >= objects.length) return 0;
+		var list:Dynamic = Reflect.field(objects[sel], "transform");
+		return Std.isOfType(list, Array) ? Std.int(Math.max(1, (list : Array<Dynamic>).length)) : 1;
+	}
+
+	function stepTransform(dir:Int):Void
+	{
+		if (sel < 0) return;
+		tr(objects[sel]);
+		tIdx = Std.int(Math.max(0, Math.min(tCount() - 1, tIdx + dir)));
+		syncPositionWidgets();
+	}
+
+	/** Agrega una posicion nueva (copia de la que se esta editando) y se pasa a ella. */
+	function addTransform():Void
+	{
+		if (sel < 0) return;
+		var current = tr(objects[sel]);
+		var copy:Dynamic = Json.parse(Json.stringify(current));
+		(cast Reflect.field(objects[sel], "transform") : Array<Dynamic>).push(copy);
+		tIdx = tCount() - 1;
+		touch();
+		syncPositionWidgets();
+		notify("Posicion " + tIdx + " agregada (copia de la anterior). Los eventos ObjectPositionSet usan estos numeros.");
+	}
+
+	function removeTransform():Void
+	{
+		if (sel < 0 || tCount() <= 1) return;
+		tr(objects[sel]);
+		(cast Reflect.field(objects[sel], "transform") : Array<Dynamic>).splice(tIdx, 1);
+		tIdx = Std.int(Math.max(0, Math.min(tCount() - 1, tIdx)));
+		touch();
+		syncPositionWidgets();
+	}
+
+	/** Abre el administrador de sprites para cambiar el sprite del objeto elegido. */
+	function openSpritePack():Void
+	{
+		if (sel < 0 || sel >= objects.length) return;
+		var index = sel;
+		openSubState(new SpritePackScreen(levelDir, Std.string(Reflect.field(objects[index], "spr")), function(name:String)
+		{
+			if (index < objects.length && name != "") setSprite(index, name);
+		}, false, false, function(_:String)
+		{
+			// se importo un sprite desde el administrador: la lista del dropdown tambien lo tiene
+			spriteNames = SpriteBuilder.listSprites(levelDir);
+			spriteDrop.items = [for (i => name in spriteNames) {label: name, value: i}];
+			spriteDrop.options = spriteNames.copy();
+		}));
 	}
 
 	function setObjField(group:String, axis:String, value:Float):Void
@@ -1009,9 +1132,7 @@ class SceneEditorState extends UIState
 
 	function refreshInfo():Void
 	{
-		var extra = 0;
-		if (sel >= 0 && sel < objects.length) extra = (cast Reflect.field(objects[sel], "transform") : Array<Dynamic>).length - 1;
-		infoText.text = "Vista de la camara " + (camIdx + 1) + "/" + camCount() + (dirty ? "   * sin guardar" : "") + (mode == 0 && extra > 0 ? "   (+" + extra + " transform extra: no se editan)" : "")
+		infoText.text = "Vista de la camara " + (camIdx + 1) + "/" + camCount() + (dirty ? "   * sin guardar" : "") + (mode == 0 && sel >= 0 && tCount() > 1 ? "   (posicion " + tIdx + " de " + tCount() + ")" : "")
 			+ (mode == 0 ? "\nClick y arrastra para mover. Rueda: escala. Flechas: mover (SHIFT x10, CTRL fino). Arrastra los botones de la lista para cambiar las capas."
 				: "\nPestaña Camaras: arrastra para mover la camara elegida, rueda: zoom, flechas: mover (SHIFT x10, CTRL fino).");
 	}

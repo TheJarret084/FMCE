@@ -4,7 +4,7 @@ import funkin.backend.chart.ChartData;
 import haxe.Json;
 
 typedef ImportResult = {
-	/** "fnmm" (data.json de un .fnmm), "codename", "legacy" (Psych/Legacy `song.notes[]`) o "fmce". */
+	/** "fnmm" (data.json de un .fnmm), "codename", "legacy" (Psych/Legacy `song.notes[]`), "fnf" (FNF base, `notes` por dificultad) o "fmce". */
 	var format:String;
 	/** Indice 0 = jugador, 1 = oponente, 2+ = extras (el orden de FMCE). */
 	var lines:Array<Array<ChartNote>>;
@@ -21,6 +21,11 @@ typedef ImportResult = {
 	var duplicates:Int;
 	/** Carriles del nivel abierto. */
 	var lanes:Int;
+	/** Solo "fnf": dificultades que trae el chart y la que se leyo. */
+	var ?difficulties:Array<String>;
+	var ?difficulty:String;
+	/** Solo "fnf": notas con tipo especial (`k`), que se importan como notas normales. */
+	var ?droppedKinds:Int;
 }
 
 /**
@@ -42,21 +47,25 @@ class ChartImporter {
 			if (arr.length > 0 && Std.isOfType(arr[0], Array)) return "fmce";
 			if (arr.length > 0 && Reflect.hasField(arr[0], "notes")) return "codename";
 		}
+		// FNF base (0.3+ / .fnfc): `notes` es un objeto con una lista por dificultad (en Legacy `notes` es una lista de secciones)
+		var fnfNotes:Dynamic = Reflect.field(raw, "notes");
+		if (fnfNotes != null && !Std.isOfType(fnfNotes, Array) && Reflect.isObject(fnfNotes) && Reflect.fields(fnfNotes).length > 0) return "fnf";
 		var song:Dynamic = Reflect.hasField(raw, "song") && !Std.isOfType(Reflect.field(raw, "song"), String) ? Reflect.field(raw, "song") : raw;
 		if (Std.isOfType(Reflect.field(song, "notes"), Array)) return "legacy";
 		return null;
 	}
 
 	/** Lanza un String con el motivo si el archivo no es un chart reconocible. */
-	public static function parse(text:String, lanes:Int = 4):ImportResult {
+	public static function parse(text:String, lanes:Int = 4, ?difficulty:String):ImportResult {
 		var raw:Dynamic = try Json.parse(text) catch (e:Dynamic) throw "No es un JSON valido.";
 		var format = detect(raw);
-		if (format == null) throw "Formato no reconocido (no es un chart de FNMM, Codename, Legacy/Psych ni FMCE).";
+		if (format == null) throw "Formato no reconocido (no es un chart de FNMM, Codename, Legacy/Psych, FNF (.fnfc) ni FMCE).";
 		var res:ImportResult = {format: format, lines: [], scrollSpeed: null, bpm: null, notes: 0, sustains: 0, droppedLanes: 0, droppedEvents: 0, duplicates: 0, lanes: lanes};
 		switch (format) {
 			case "fnmm": fromFNMM(raw, res);
 			case "codename": fromCodename(raw, res);
 			case "legacy": fromLegacy(raw, res);
+			case "fnf": fromFNF(raw, res, difficulty);
 			default: fromFMCE(raw, res);
 		}
 		for (l in res.lines) {
@@ -147,6 +156,32 @@ class ChartImporter {
 			var inner:Array<Dynamic> = Std.isOfType(e, Array) && (e:Array<Dynamic>).length > 1 && Std.isOfType((e:Array<Dynamic>)[1], Array) ? (e:Array<Dynamic>)[1] : null;
 			res.droppedEvents += inner != null ? inner.length : 1;
 		}
+	}
+
+	// ───────────── FNF base (.fnfc): notes{dificultad:[{t, d, l?, k?}]}, t y l en ms ─────────────
+	static function fromFNF(raw:Dynamic, res:ImportResult, difficulty:Null<String>):Void {
+		var all:Dynamic = Reflect.field(raw, "notes");
+		var names:Array<String> = Reflect.fields(all);
+		res.difficulties = names;
+		var pick = difficulty != null && names.indexOf(difficulty) >= 0 ? difficulty : (names.indexOf("hard") >= 0 ? "hard" : names[names.length - 1]);
+		res.difficulty = pick;
+		res.droppedKinds = 0;
+		// en FNF base d = 0..3 es el jugador y 4..7 el oponente (FMCE: linea 0 jugador, 1 oponente, 2+ extras)
+		line(res, 0); line(res, 1);
+		var list:Array<Dynamic> = Reflect.field(all, pick);
+		if (list != null) for (n in list) {
+			var d = Std.int(f(Reflect.field(n, "d"), -1));
+			if (d < 0) continue;
+			if (Reflect.field(n, "k") != null && Std.string(Reflect.field(n, "k")) != "") res.droppedKinds++;
+			add(res, Std.int(d / 4), f(Reflect.field(n, "t"), -1), d % 4, f(Reflect.field(n, "l")));
+		}
+		var speed:Dynamic = Reflect.field(raw, "scrollSpeed");
+		if (speed != null) {
+			var value:Dynamic = Reflect.isObject(speed) && !Std.isOfType(speed, Float) ? (Reflect.hasField(speed, pick) ? Reflect.field(speed, pick) : Reflect.field(speed, "default")) : speed;
+			res.scrollSpeed = value == null ? null : f(value);
+		}
+		var ev:Array<Dynamic> = Reflect.field(raw, "events");
+		res.droppedEvents = ev == null ? 0 : ev.length;
 	}
 
 	// ───────────── FNMM: data.json de un .fnmm, tiempos en segundos ─────────────

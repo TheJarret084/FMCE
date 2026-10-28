@@ -69,7 +69,7 @@ class FNMMExportState extends UIState
 		line += 34;
 		add(new UIText(x + 20, line, textW, "Destino: " + FMCEToFNMMExporter.outputPath(levelName), 14, MUTED));
 		line += 52;
-		add(new UIText(x + 20, line, textW, "Se exporta: chart, events, scene, audio y sprites (como tiras, igual que un .FNMM de Friday Night Music Maker).", 14));
+		add(new UIText(x + 20, line, textW, "Se exporta: chart, events, scene, audio y sprites (como tiras, igual que un .FNMM de Funky Maker: Mobile).", 14));
 		line += 56;
 		add(new UIText(x + 20, line, textW, ignoredSummary(), 14, plan.ignored.length > 0 ? 0xFFFFD866 : MUTED));
 		line += 62;

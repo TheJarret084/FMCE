@@ -85,7 +85,7 @@ typedef FoundChart = {
 	var parsed:Dynamic;
 }
 
-/** Converts Friday Night Music Maker (.fnmm) archives into FMCE levels. */
+/** Converts Funky Maker: Mobile (.fnmm) archives into FMCE levels. */
 @:allow(funky.backend.converter.ConversionJob)
 class FNMMToFMCEConverter
 {
@@ -103,7 +103,7 @@ class FNMMToFMCEConverter
 
 	/**
 	 * JSON del archivo que nunca son el chart. `data.json` NO esta aqui: en los .fnmm reales
-	 * (Friday Night Music Maker) el chart se llama `data.json`. Si es otra cosa (como el
+	 * (Funky Maker: Mobile) el chart se llama `data.json`. Si es otra cosa (como el
 	 * `data.json` que escribe este conversor, `{offsets}`), `looksLikeChart` lo descarta.
 	 */
 	static final RESERVED_JSON = ["meta.json", "events.json", "scene.json", "config.json", "sprite.json"];

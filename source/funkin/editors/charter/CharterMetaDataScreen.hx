@@ -76,13 +76,15 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		var row3:Float = row2 + 130;
 		var sprites = funky.core.Paths.levelSprites(funkin.backend.chart.Chart.levelDir);
 
-		playerIconDropDown = new UIDropDown(title.x, row3, 300, 32, iconItems(sprites, metadata.iconPlayer), iconIndex(sprites, metadata.iconPlayer));
+		playerIconDropDown = new UIDropDown(title.x, row3, 258, 32, iconItems(sprites, metadata.iconPlayer), iconIndex(sprites, metadata.iconPlayer));
 		add(playerIconDropDown);
 		addLabelOn(playerIconDropDown, translate("playerIcon"));
+		add(new UIButton(playerIconDropDown.x + 262, row3, "...", function() pickIcon(playerIconDropDown), 34, 32));
 
-		enemyIconDropDown = new UIDropDown(bpmStepper.x, row3, 300, 32, iconItems(sprites, metadata.iconOpponent), iconIndex(sprites, metadata.iconOpponent));
+		enemyIconDropDown = new UIDropDown(bpmStepper.x, row3, 258, 32, iconItems(sprites, metadata.iconOpponent), iconIndex(sprites, metadata.iconOpponent));
 		add(enemyIconDropDown);
 		addLabelOn(enemyIconDropDown, translate("enemyIcon"));
+		add(new UIButton(enemyIconDropDown.x + 262, row3, "...", function() pickIcon(enemyIconDropDown), 34, 32));
 
 		saveButton = new UIButton(windowSpr.x + windowSpr.bWidth - 20, windowSpr.y + windowSpr.bHeight - 20, TU.translate("editor.saveClose"), function() {
 			saveMeta();
@@ -107,6 +109,21 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		for (name in sprites) items.push(name);
 		if (current != null && current != "" && sprites.indexOf(current) < 0) items.push(current);
 		return items;
+	}
+
+	/** Abre el administrador de sprites (con los iconos a la vista) y deja lo elegido en el dropdown. */
+	function pickIcon(dropDown:UIDropDown):Void {
+		openSubState(new advanced.editors.SpritePackScreen(funkin.backend.chart.Chart.levelDir, iconValue(dropDown), function(name:String) {
+			var at = name == "" ? 0 : dropDown.options.indexOf(name);
+			if (at < 0) {
+				// un sprite que se importo desde el administrador y todavia no estaba en la lista
+				dropDown.options.push(name);
+				dropDown.items.push({label: name, value: dropDown.options.length - 1});
+				at = dropDown.options.length - 1;
+			}
+			dropDown.index = at;
+			dropDown.label.text = dropDown.options[at];
+		}, true, true));
 	}
 
 	/** Lo elegido en un dropdown de iconos: "" si es (none), si no el nombre del sprite. */

@@ -112,6 +112,7 @@ class SpriteImporter
 				else
 					writeSingleFrame(dest);
 
+				ensureConfig(dest);
 				if (!SpriteBuilder.exists(levelDir, name)) throw "no quedo un sprite valido";
 
 				result.imported.push(name);
@@ -189,6 +190,7 @@ class SpriteImporter
 			else
 				writeSingleFrame(dest);
 
+			ensureConfig(dest);
 			if (!SpriteBuilder.exists(levelDir, name)) throw "no quedo un sprite valido";
 			return null;
 		}
@@ -219,6 +221,44 @@ class SpriteImporter
 			type: "sprite",
 			data: [for (i in 0...list.length) {anim: list[i], spd: 1, loop: true}]
 		};
+	}
+
+	/**
+	 * `config.json` minimo de un sprite recien importado (si ya hay uno, no se toca): `type` y una entrada por animacion con su `anim`
+	 * (el tag del atlas), velocidad 1 y loop. La animacion que empieza por "idle" va primera (`anim0`); sin tags es una sola, `anim0`.
+	 */
+	static function ensureConfig(dest:String):Void
+	{
+		#if sys
+		var configPath = Path.join([dest, "config.json"]);
+		if (FileSystem.exists(configPath)) return;
+
+		var tags:Array<String> = [];
+		try
+		{
+			var data = Json.parse(File.getContent(Path.join([dest, "sprite.json"])));
+			var meta:Dynamic = Reflect.field(data, "meta");
+			var frameTags:Dynamic = meta == null ? null : Reflect.field(meta, "frameTags");
+			if (Std.isOfType(frameTags, Array))
+				for (tag in (frameTags : Array<Dynamic>))
+				{
+					var tagName = Reflect.field(tag, "name");
+					if (tagName != null && tags.indexOf(Std.string(tagName)) < 0) tags.push(Std.string(tagName));
+				}
+		}
+		catch (e:Dynamic) {}
+		if (tags.length == 0) tags.push("anim0");
+
+		for (i in 0...tags.length)
+			if (StringTools.startsWith(StringTools.trim(tags[i]).toLowerCase(), "idle"))
+			{
+				if (i > 0) tags.unshift(tags.splice(i, 1)[0]);
+				break;
+			}
+
+		var config = {type: "sprite", data: [for (tag in tags) {anim: tag, spd: 1, loop: true}]};
+		File.saveContent(configPath, Json.stringify(config, null, "\t"));
+		#end
 	}
 
 	/** Deja solo letras, numeros, `_` y `-` (los acentos y espacios pasan a `_`). */
