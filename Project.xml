@@ -2,7 +2,7 @@
 <project>
 	<!-- _________________________ Application Settings _________________________ -->
 
-	<app title="Funky Maker: CNE" file="FMCE" main="Main" version="0.0.3"
+	<app title="Funky Maker: CNE" file="FMCE" main="funky.Main" version="0.0.3"
 	packageName="com.jarretlabs.fmce" package="com.jarretlabs.fmce" company="JarretLabs" /> <!-- puse mal el package tío, llore -->
 
 	<app preloader="flixel.system.FlxPreloader" />

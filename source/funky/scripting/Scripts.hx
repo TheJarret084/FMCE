@@ -19,6 +19,7 @@ import funky.core.Paths;
 import funky.core.Storage;
 import funky.game.LevelSprite;
 import funky.game.SpriteBuilder;
+import funky.game.Stage;
 import haxe.Json;
 import haxe.io.Path;
 
@@ -130,6 +131,7 @@ class Scripts
 		globals.set("FunkinSprite", FunkinSprite);
 		globals.set("LevelSprite", LevelSprite);
 		globals.set("SpriteBuilder", SpriteBuilder);
+		globals.set("Stage", Stage);
 		globals.set("Storage", Storage);
 		globals.set("FlxTween", FlxTween);
 		globals.set("FlxEase", FlxEase);

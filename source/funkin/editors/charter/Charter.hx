@@ -2402,7 +2402,7 @@ class Charter extends UIState {
 		funky.game.PlayState.archivePath = Chart.levelDir;
 		funky.game.PlayState.startFromMs = here ? Conductor.songPosition : 0;
 		funky.game.PlayState.returnToEditor = Chart.levelName;
-		funky.core.TransitionHandler.switchState(new funky.game.PlayState());
+		funky.core.TransitionHandler.switchState(new funky.menus.LoadingLevelState());
 	}
 
 	public inline function buildNote(note:CharterNote):ChartNote {

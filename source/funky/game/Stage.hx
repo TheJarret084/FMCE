@@ -39,6 +39,12 @@ class StageObject
 {
 	public var sprite:LevelSprite;
 
+	/** `spr` del objeto en scene.json (el nombre de su carpeta en sprites/). Con ese nombre se busca en `Stage.get("nombre")`. */
+	public var name:String = "";
+
+	/** Posicion del objeto en `scene.json > objects`: el mismo numero que usan los eventos. `Stage.get(2)` lo busca por aqui. */
+	public var id:Int = -1;
+
 	public var video:Null<FunkinVideoSprite>;
 
 	public var videoName:String = "";
@@ -103,6 +109,41 @@ class Stage extends FlxGroup
 	public static inline var VIEW_WORLD_WIDTH:Float = 2400;
 	public static var CAM_PRESET:Float = 1.25;
 
+	/** El stage que esta en juego (los scripts lo usan sin pasar por `game.stage`). null si el nivel no tiene escena. */
+	public static var current(default, null):Null<Stage>;
+
+	/**
+	 * Un objeto de la escena para los scripts: `Stage.get("bg")` lo busca por su `spr` (el primero con ese nombre),
+	 * `Stage.get(2)` por su numero en scene.json (el mismo de los eventos). null si no existe.
+	 */
+	public static function get(key:Dynamic):Null<StageObject>
+	{
+		var stage = current;
+		if (stage == null || key == null) return null;
+		if (Std.isOfType(key, Int) || Std.isOfType(key, Float))
+		{
+			var i = Std.int(key);
+			return i >= 0 && i < stage.objects.length ? stage.objects[i] : null;
+		}
+		var text = Std.string(key);
+		for (object in stage.objects)
+			if (object.name == text) return object;
+		// "3" escrito como texto tambien vale como numero
+		var n = Std.parseInt(text);
+		return n != null && Std.string(n) == StringTools.trim(text) ? get(n) : null;
+	}
+
+	/** Todos los objetos con ese `spr` (el mismo sprite puede estar varias veces en la escena). */
+	public static function getAll(name:String):Array<StageObject>
+		return current == null ? [] : [for (object in current.objects) if (object.name == name) object];
+
+	/** Igual que `get`, pero devuelve el sprite del objeto (`LevelSprite`). */
+	public static function sprite(key:Dynamic):Null<LevelSprite>
+	{
+		var object = get(key);
+		return object == null ? null : object.sprite;
+	}
+
 	/**
 	 * Resolucion de referencia del editor para los fixed: 1920 de ancho.
 	 * Un fixed mide (px del sprite * scale) / 1920 del ancho de pantalla,
@@ -146,6 +187,7 @@ class Stage extends FlxGroup
 		super();
 
 		this.camHUD = camHUD;
+		current = this;
 
 		levelDir = song.levelDir == null ? "" : song.levelDir;
 		bpm = song.bpm <= 0 ? 120 : song.bpm;
@@ -283,6 +325,14 @@ class Stage extends FlxGroup
 			add(sprite);
 			assignCamera(object);
 			apply(object);
+		}
+
+		// cada objeto (tambien los placeholders de sprites que faltan) recuerda su `spr` y su numero en scene.json
+		var items = asArray(field(scene, "objects"));
+		for (i in 0...objects.length)
+		{
+			objects[i].id = i;
+			if (i < items.length) objects[i].name = Std.string(field(items[i], "spr"));
 		}
 
 		flash = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
@@ -695,7 +745,7 @@ class Stage extends FlxGroup
 			add(sprite);
 
 		remove(old, true);
-		old.destroy();
+		SpriteCache.give(levelDir, old);
 
 		object.sprite = sprite;
 		assignCamera(object);
@@ -891,6 +941,7 @@ class Stage extends FlxGroup
 
 	override public function destroy():Void
 	{
+		if (current == this) current = null;
 		objects = [];
 		super.destroy();
 	}

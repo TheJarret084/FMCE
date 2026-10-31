@@ -139,6 +139,17 @@ class SpriteBuilder
 	/** Sprite de cualquier tipo. Siempre devuelve un `LevelSprite`; `loaded` dice si salio bien. */
 	public static function build(levelDir:Null<String>, name:Null<String>, x:Float = 0, y:Float = 0):LevelSprite
 	{
+		// Con el nivel precargado (SpriteCache) sale de ahi ya listo; si no hay uno de repuesto, se construye normal.
+		if (name != null && name != "")
+		{
+			var spare = SpriteCache.take(levelDir, name);
+			if (spare != null)
+			{
+				spare.setPosition(x, y);
+				return spare;
+			}
+		}
+
 		var sprite = new LevelSprite(x, y);
 		if (levelDir != null && name != null && name != "") sprite.load(levelDir, name);
 		return sprite;

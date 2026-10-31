@@ -13,6 +13,16 @@ enum EventParamType {
 	TStage;
 	/** Indice dentro de `action_packs` (se elige en una lista). */
 	TActionPack;
+	/** Objeto de `scene.json > objects` (dropdown con su numero y su sprite; se guarda el numero). */
+	TObject;
+	/** Posicion (`transform`) del objeto elegido en el parametro TObject del mismo evento (se guarda el numero). */
+	TObjectTransform;
+	/** Animacion del sprite que tiene el objeto elegido (se guarda su posicion; 0 = idle). */
+	TObjectAnim;
+	/** Carpeta de `sprites/` del nivel (se guarda el nombre). */
+	TSpriteName;
+	/** Punto de `scene.json > cameras` (se guarda el numero). */
+	TCameraPoint;
 }
 
 typedef EventParamInfo = {
@@ -53,7 +63,7 @@ class EventsData {
 		}
 		add("CameraSet", [
 			p("mode", "Modo", TDropDown(["auto", "focus"]), "auto"),
-			p("target", "Punto de camara (scene.json)", TInt(0, 999, 1), 0)
+			p("target", "Punto de camara", TCameraPoint, 0)
 		].concat(transition()));
 		add("CameraZoom", [p("value", "Zoom", TFloat(0.05, 10, 0.05, 3), 1.0)].concat(transition()));
 		add("CameraShake", [
@@ -63,32 +73,32 @@ class EventsData {
 			p("strength", "Fuerza (px)", TFloat(0, 999, 1, 1), 10.0)
 		]);
 		add("ObjectPositionSet", [
-			p("object", "Objeto (scene.json)", TInt(0, 999, 1), 0),
-			p("transform", "Transformacion", TInt(0, 99, 1), 0)
+			p("object", "Objeto", TObject, 0),
+			p("transform", "Posicion del objeto", TObjectTransform, 0)
 		].concat(transition()));
 		add("ObjectVisibilitySet", [
-			p("object", "Objeto (scene.json)", TInt(0, 999, 1), 0),
+			p("object", "Objeto", TObject, 0),
 			p("value", "Visible", TBool, true)
 		]);
 		add("ObjectOpacitySet", [
-			p("object", "Objeto (scene.json)", TInt(0, 999, 1), 0),
+			p("object", "Objeto", TObject, 0),
 			p("value", "Opacidad (0 a 1)", TFloat(0, 1, 0.05, 2), 1.0)
 		].concat(transition()));
 		add("ObjectAnimationSet", [
-			p("object", "Objeto (scene.json)", TInt(0, 999, 1), 0),
-			p("anim", "Animacion (0 = idle)", TInt(0, 999, 1), 0)
+			p("object", "Objeto", TObject, 0),
+			p("anim", "Animacion", TObjectAnim, 0)
 		]);
 		add("ObjectSpriteSet", [
-			p("object", "Objeto (scene.json)", TInt(0, 999, 1), 0),
-			p("sprite", "Sprite (carpeta en sprites/)", TString, "")
+			p("object", "Objeto", TObject, 0),
+			p("sprite", "Sprite", TSpriteName, "")
 		]);
 		add("ObjectChartChange", [
-			p("object", "Objeto (scene.json)", TInt(0, 999, 1), 0),
+			p("object", "Objeto", TObject, 0),
 			p("strumLine", "Strumline (-1 ninguna, 0 jugador, 1 oponente)", TInt(-1, 99, 1), 0)
 		]);
 		add("BarIconChange", [
 			p("target", "Icono (0 oponente, 1 jugador)", TInt(0, 1, 1), 1),
-			p("sprite", "Sprite del icono", TString, "")
+			p("sprite", "Sprite del icono", TSpriteName, "")
 		]);
 		add("ScreenFlash", [
 			p("color_r", "Rojo", TInt(0, 255, 1), 255),

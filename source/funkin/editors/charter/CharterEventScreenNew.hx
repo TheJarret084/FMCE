@@ -1,9 +1,12 @@
 package funkin.editors.charter;
 
+import funky.backend.chart.SceneInfo;
 import flixel.group.FlxGroup;
 import flixel.util.FlxColor;
 import funkin.backend.chart.ChartData.ChartEvent;
+import funkin.backend.chart.Chart;
 import funkin.backend.chart.EventsData;
+import funkin.backend.chart.EventsData.EventParamInfo;
 import funkin.backend.system.Conductor;
 import funkin.game.Character;
 import funkin.game.Stage;
@@ -200,6 +203,43 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						var dropdown = new UIDropDown(eventName.x+6, winHeight, 320, 32, options, cast CoolUtil.bound(Std.int(value), 0, options.length - 1));
 						paramsPanel.add(dropdown); paramsFields.push(dropdown);
 						dropdown;
+					case TObject:
+						addLabel();
+						var labels = SceneInfo.objectLabels(Chart.levelDir);
+						var at = Std.int(asFloat(value, 0));
+						var dropdown = listDropdown(labels, at, "#%n  (no existe en scene.json)", "(el nivel no tiene objetos)");
+						paramsPanel.add(dropdown); paramsFields.push(dropdown);
+						dropdown;
+					case TObjectTransform:
+						addLabel();
+						var dropdown = listDropdown(SceneInfo.positionLabels(Chart.levelDir, objectChosen(curEvent)), Std.int(asFloat(value, 0)), "#%n  (el objeto no tiene esta posicion)", "(el objeto no tiene posiciones)");
+						paramsPanel.add(dropdown); paramsFields.push(dropdown);
+						dropdown;
+					case TObjectAnim:
+						addLabel();
+						var sprite = SceneInfo.spriteOf(Chart.levelDir, objectChosen(curEvent));
+						var dropdown = listDropdown(SceneInfo.animationLabels(Chart.levelDir, sprite), Std.int(asFloat(value, 0)), "#%n  (el sprite no tiene esta animacion)", "(sin animaciones)");
+						paramsPanel.add(dropdown); paramsFields.push(dropdown);
+						dropdown;
+					case TCameraPoint:
+						addLabel();
+						var dropdown = listDropdown(SceneInfo.cameraLabels(Chart.levelDir), Std.int(asFloat(value, 0)), "#%n  (no existe en scene.json)", "(el nivel no tiene camaras)");
+						paramsPanel.add(dropdown); paramsFields.push(dropdown);
+						dropdown;
+					case TSpriteName:
+						addLabel();
+						var sprites = SceneInfo.spriteNames(Chart.levelDir);
+						var current = Std.string(value == null ? "" : value);
+						var at = sprites.indexOf(current);
+						if (at < 0 && current != "") {
+							// un sprite que ya no esta en sprites/: se conserva para no perder el valor
+							sprites.push(current);
+							at = sprites.length - 1;
+						}
+						if (sprites.length == 0) sprites.push("");
+						var dropdown = new UIDropDown(eventName.x+6, winHeight, 320, 32, sprites, Std.int(Math.max(0, at)));
+						paramsPanel.add(dropdown); paramsFields.push(dropdown);
+						dropdown;
 					case TStage:
 						addLabel();
 						var stageFileList = Stage.getList(false);
@@ -226,6 +266,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 					bWidth = Math.max(bWidth, eventName.x + 6 + cast(lastAdded, FlxSprite).width + 6 + 10);
 				}
 			}
+			wireObjectParams(EventsData.getEventParams(events[curEvent].name));
 		} else {
 			eventName.text = "No event";
 			curEvent = -1;
@@ -236,6 +277,53 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		winHeight = Math.max(winHeight, (eventsList.buttonSize.y * (eventsList.buttons.length + 1))-4) + 10;
 		bWidth += 10+75+10+4; // add events list width to account for event name being on a diff cam +4 because margins >:D
 		update(0);
+	}
+
+	/** Numero del objeto elegido en el parametro `TObject` de un evento (0 si no tiene). */
+	function objectChosen(event:ChartEvent):Int {
+		for (k => param in EventsData.getEventParams(event.name))
+			if (param.type == TObject) return Std.int(asFloat(k < event.params.length ? event.params[k] : null, param.defValue));
+		return 0;
+	}
+
+	/** Dropdown de una lista de textos. Si el valor guardado se pasa de la lista se agregan entradas "(no existe)" para no cambiarlo. */
+	function listDropdown(options:Array<String>, selected:Int, missingText:String, emptyText:String):UIDropDown {
+		var list = options.copy();
+		if (selected < 0) selected = 0;
+		if (list.length == 0 && selected == 0) list.push(emptyText);
+		while (list.length <= selected) list.push(StringTools.replace(missingText, "%n", Std.string(list.length)));
+		return new UIDropDown(eventName.x+6, winHeight, 320, 32, list, selected);
+	}
+
+	/** Cambia las opciones de un dropdown ya creado (al elegir otro objeto cambian sus posiciones y animaciones). */
+	function setDropdownOptions(drop:UIDropDown, options:Array<String>, emptyText:String):Void {
+		var list = options.copy();
+		if (list.length == 0) list.push(emptyText);
+		drop.options = list;
+		drop.items = [for (i => o in list) {label: o, value: i}];
+		drop.index = Std.int(Math.max(0, Math.min(list.length - 1, drop.index)));
+		drop.label.text = list[drop.index];
+	}
+
+	/** La posicion y la animacion dependen del objeto: al cambiarlo se vuelven a llenar. */
+	function wireObjectParams(params:Array<EventParamInfo>):Void {
+		var objectAt = -1;
+		for (k => param in params) if (param.type == TObject) objectAt = k;
+		if (objectAt < 0 || objectAt >= paramsFields.length || !(paramsFields[objectAt] is UIDropDown)) return;
+		var objectDrop:UIDropDown = cast paramsFields[objectAt];
+		objectDrop.onChange = function(_:Int) {
+			for (k => param in params) {
+				if (k >= paramsFields.length || !(paramsFields[k] is UIDropDown)) continue;
+				var drop:UIDropDown = cast paramsFields[k];
+				switch (param.type) {
+					case TObjectTransform:
+						setDropdownOptions(drop, SceneInfo.positionLabels(Chart.levelDir, objectDrop.index), "(el objeto no tiene posiciones)");
+					case TObjectAnim:
+						setDropdownOptions(drop, SceneInfo.animationLabels(Chart.levelDir, SceneInfo.spriteOf(Chart.levelDir, objectDrop.index)), "(sin animaciones)");
+					default:
+				}
+			}
+		};
 	}
 
 	/** true si hay algun action pack al que apuntar (si no, el dropdown solo muestra "ninguno" y se guarda -1). */
@@ -356,7 +444,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 				if (p is UIDropDown) {
 					var dataParams = EventsData.getEventParams(events[curEvent].name);
 					if (dataParams[paramsFields.indexOf(p)].type == TActionPack) (hasActionPacks() ? cast(p, UIDropDown).index : -1);
-					else if (dataParams[paramsFields.indexOf(p)].type == TStrumLine) cast(p, UIDropDown).index;
+					else if (switch (dataParams[paramsFields.indexOf(p)].type) {case TStrumLine | TObject | TObjectTransform | TObjectAnim | TCameraPoint: true; default: false;}) cast(p, UIDropDown).index;
 					else cast(p, UIDropDown).label.text;
 				}
 				else if (p is UINumericStepper) {

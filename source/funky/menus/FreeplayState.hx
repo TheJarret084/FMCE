@@ -569,7 +569,7 @@ class FreeplayState extends FlxState
 		PlayState.startFromMs = 0;
 		PlayState.returnToEditor = null;
 		Log.info('[FreeplayState] launching ' + path);
-		TransitionHandler.switchState(new PlayState());
+		TransitionHandler.switchState(new LoadingLevelState());
 	}
 
 	override public function destroy():Void

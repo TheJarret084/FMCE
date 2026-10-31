@@ -48,6 +48,9 @@ class PlayState extends MusicBeatState
 	/** State al que se sale del juego: el chart editor si vino de ahi, o Freeplay. */
 	public static function menuState():FlxState
 	{
+		// salir del nivel: los sprites precargados ya no hacen falta (y los editores deben leer de disco)
+		SpriteCache.clear();
+
 		if (returnToEditor == null) return new FreeplayState();
 
 		// vuelve al charter con el mismo nivel
@@ -199,7 +202,9 @@ class PlayState extends MusicBeatState
 
 		try
 		{
-			song = SongData.fromPath(archivePath);
+			// LoadingLevelState ya lo leyo (y precargo los sprites); si se entro sin pasar por ahi, se lee aqui.
+			song = funky.menus.LoadingLevelState.takeSong();
+			if (song == null) song = SongData.fromPath(archivePath);
 		}
 		catch (error:Dynamic)
 		{

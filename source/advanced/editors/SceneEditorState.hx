@@ -21,6 +21,7 @@ import funky.game.SpriteBuilder;
 import funky.game.Stage;
 import haxe.Json;
 import haxe.ds.ObjectMap;
+import funky.backend.chart.EventRemap;
 import haxe.io.Path;
 
 /**
@@ -41,6 +42,8 @@ class SceneEditorState extends UIState
 	var levelName:String;
 	var levelDir:String;
 	var scenePath:String;
+	/** Los objetos tal como estan en el disco (por referencia): sirven para saber a donde se movio cada uno. */
+	var baseline:Array<Dynamic> = [];
 	var scene:Dynamic;
 	var objects:Array<Dynamic> = [];
 
@@ -156,6 +159,7 @@ class SceneEditorState extends UIState
 		if (scene == null || Std.isOfType(scene, Array)) scene = {objects: [], landscape: true, cameras: [{position: {x: 0, y: 0}, scale: 1}], icons: []};
 		if (!Std.isOfType(scene.objects, Array)) scene.objects = [];
 		objects = scene.objects;
+		baseline = objects.copy();
 
 		layer = new FlxGroup();
 		add(layer);
@@ -972,12 +976,26 @@ class SceneEditorState extends UIState
 
 	function save():Void
 	{
+		// donde quedo cada objeto que ya estaba guardado (-1 = se borro): los eventos apuntan a ellos por su numero
+		var moved = [for (o in baseline) objects.indexOf(o)];
 		if (JsonFile.write(scenePath, scene))
 		{
 			dirty = false;
 			SaveWarning.showWarning = false;
 			UIState.playEditorSound(funkin.backend.system.Flags.DEFAULT_EDITOR_SAVE_SOUND);
-			notify("Guardado: scene.json");
+			var message = "Guardado: scene.json";
+			try
+			{
+				var fixed = EventRemap.applyToFile(Path.join([levelDir, "events.json"]), moved);
+				if (fixed != null && fixed.changed > 0) message += " (" + fixed.changed + " eventos siguen a su objeto)";
+				if (fixed != null && fixed.orphaned > 0) message += " - " + fixed.orphaned + " eventos apuntan a un objeto borrado";
+			}
+			catch (e:Dynamic)
+			{
+				message += " - no se pudo actualizar events.json: " + Std.string(e);
+			}
+			baseline = objects.copy();
+			notify(message);
 		}
 		else
 			notify("No se pudo escribir " + scenePath);
@@ -997,6 +1015,7 @@ class SceneEditorState extends UIState
 		objects = scene.objects;
 		dirty = false;
 		SaveWarning.showWarning = false;
+		baseline = objects.copy();
 		camIdx = 0;
 		refreshCameraWidgets(true);
 		rebuild();

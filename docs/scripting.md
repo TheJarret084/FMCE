@@ -22,7 +22,15 @@ Si tenias el `hscript` normal instalado, desinstalalo (`haxelib remove hscript`)
 (las ultimas existen a partir de `onCreatePost`; antes valen null), `countdownTick` (dentro de
 `onCountdownTick`), y las clases `FlxG`, `FlxSprite`, `FlxText`, `FlxTween`, `FlxEase`, `FlxTimer`,
 `FlxColor` (constantes y `fromRGB`/`fromString`), `Math`, `Std`, `StringTools`, `Reflect`, `Json`,
-`Paths`, `Conductor`, `ClientPrefs`, `Log`.
+`Paths`, `Conductor`, `ClientPrefs`, `Log`, `Stage`.
+
+### Objetos del stage: `Stage.get`
+
+- `Stage.get("bg")` busca el objeto por su `spr` (la carpeta del sprite en `sprites/`; el primero con ese nombre).
+- `Stage.get(2)` lo busca por su numero en `scene.json > objects` (el mismo numero que usan los eventos y el editor de escena).
+- `Stage.getAll("bg")` devuelve todos los objetos con ese `spr`; `Stage.sprite("bg")` devuelve directo el sprite (`LevelSprite`).
+- Devuelve un `StageObject` (o `null` si no existe): `x`, `y`, `scale`, `scaleY`, `opacity`, `shown`, `fixed`, `scrollX/scrollY`, `transforms`, `name`, `id` y `sprite`. El stage los aplica cada frame, asi que
+  `Stage.get("bg").x += 10;` o `Stage.get(0).opacity = 0.5;` basta. Existe desde `onCreatePost`; antes `Stage.get` devuelve `null`.
 
 Funciones: `debugPrint(...)` / `trace(...)` (van al log), `setVar(nombre, valor)` / `getVar(nombre)`
 (compartir datos entre scripts), y las constantes `Function_Continue` / `Function_Stop`.

@@ -176,7 +176,7 @@ class Chart {
 			var v:Dynamic = i < e.params.length ? e.params[i] : info.defValue;
 			if (v == null) v = info.defValue;
 			Reflect.setField(props, info.key, switch (info.type) {
-				case TInt(_, _, _) | TStrumLine | TActionPack: Std.int(v);
+				case TInt(_, _, _) | TStrumLine | TActionPack | TObject | TObjectTransform | TObjectAnim | TCameraPoint: Std.int(v);
 				default: v;
 			});
 		}

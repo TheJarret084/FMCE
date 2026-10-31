@@ -7,6 +7,7 @@ import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import funkin.backend.chart.ChartData.ChartEvent;
+import funkin.backend.chart.EventsData;
 import funkin.backend.scripting.DummyScript;
 import funkin.backend.scripting.Script;
 import funkin.backend.system.Conductor;
@@ -333,7 +334,57 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 					return group;
 				}
 		}
+
+		// Eventos de FMCE con duracion (transicion, flash, sacudida): flecha que muestra cuanto dura.
+		var duration = fmceDurationSteps(event);
+		if (!inMenu && duration >= 0.55) {
+			var group = new EventIconGroup();
+			group.add(generateDefaultIcon(event.name));
+			generateEventIconDurationArrow(group, duration);
+			return group;
+		}
 		return generateDefaultIcon(event.name);
+	}
+
+	/**
+	 * Duracion en steps de un evento de FMCE, o 0 si no tiene. Los params van en el orden de `EventsData`;
+	 * en segundos cuenta con los cambios de BPM desde el tiempo del evento.
+	 */
+	static function fmceDurationSteps(event:ChartEvent):Float {
+		if (event.params == null) return 0;
+		var infos = EventsData.getEventParams(event.name);
+		if (infos.length == 0) return 0;
+
+		function value(key:String):Dynamic {
+			for (i in 0...infos.length)
+				if (infos[i].key == key) return i < event.params.length ? event.params[i] : infos[i].defValue;
+			return null;
+		}
+
+		var amount:Null<Float> = null;
+		var unit:Dynamic = null;
+		switch (event.name) {
+			case "CameraSet", "CameraZoom", "ObjectPositionSet", "ObjectOpacitySet":
+				amount = value("transitionTime");
+				unit = value("transitionTimeUnit");
+			case "ScreenFlash":
+				amount = value("duration");
+				unit = value("timeUnit");
+			case "CameraShake":
+				var shakes:Null<Float> = value("shakes");
+				var delay:Null<Float> = value("delay");
+				if (shakes != null && delay != null) amount = shakes * delay;
+				unit = value("timeUnit");
+			default:
+				return 0;
+		}
+		if (amount == null || Math.isNaN(amount) || amount <= 0) return 0;
+
+		return switch (unit == null ? "seconds" : Std.string(unit)) {
+			case "steps": amount;
+			case "beats": amount * Conductor.stepsPerBeat;
+			default: Conductor.getStepForTime(event.time + amount * 1000) - Conductor.getStepForTime(event.time);
+		};
 	}
 
 	private static function generateEventIconNumbers(group:EventIconGroup, number:Float, x:Float = 4, y:Float = 15, spacing:Float = 5, precision:Int = 3) {

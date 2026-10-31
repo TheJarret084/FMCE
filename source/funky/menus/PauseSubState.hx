@@ -375,7 +375,7 @@ class PauseSubState extends FlxSubState
 		playState.stopVoices();
 				// The substate is torn down by the state switch, so go through
 				// the parent's transition rather than opening a second curtain.
-				playState.transitionTo(new PlayState());
+				playState.transitionTo(new LoadingLevelState());
 			case "options":
 				openOptions();
 			case "no":

@@ -5,6 +5,8 @@ viene en el archivo y se compara con el tiempo de la musica. Las duraciones (`tr
 `delay`) traen su unidad (`seconds`, `beats` o `steps`). Cada transicion arranca en el tiempo DEL EVENTO,
 no del frame en que se detecto. `object` = indice en `scene.json > objects`. Los numeros llegan como Float.
 
+En el charter el objeto, su posicion (`transform`), su animacion, el sprite y el punto de camara se eligen en listas (salen de `scene.json` y `sprites/`); lo que se guarda sigue siendo el numero o el nombre. Si en el editor de escena cambias el orden de los objetos (subir/bajar capa, duplicar, borrar), al guardar se reescribe `props.object` en `events.json` y en los `action_packs` para que cada evento siga a su objeto; los que apuntaban a un objeto borrado se avisan y se dejan como estan.
+
 | Tipo | Props | Que hace |
 | --- | --- | --- |
 | `CameraSet` | `mode`, `target`, `transitionTime`, `transitionTimeUnit`, `easingType` | Mueve la camara al punto `target` de `scene.json > cameras` (`mode` "auto" y "focus" hacen lo mismo). |

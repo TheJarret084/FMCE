@@ -201,7 +201,7 @@ class GameOverSubState extends FlxSubState
 
 		new FlxTimer().start(1.6, function(_)
 		{
-			playState.transitionTo(new PlayState());
+			playState.transitionTo(new LoadingLevelState());
 		});
 	}
 

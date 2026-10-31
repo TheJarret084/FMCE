@@ -19,6 +19,7 @@ class LevelSprite extends FunkinSprite
 
 	var anims:Map<String, SpriteAnim> = new Map<String, SpriteAnim>();
 	var firstAnim:Null<String> = null;
+	var baseAntialiasing:Bool = false;
 
 	public function new(x:Float = 0, y:Float = 0)
 	{
@@ -58,6 +59,7 @@ class LevelSprite extends FunkinSprite
 		frames = atlas;
 		spriteType = config.type;
 		antialiasing = config.bilinear;
+		baseAntialiasing = antialiasing;
 
 		for (anim in config.anims)
 		{
@@ -94,6 +96,7 @@ class LevelSprite extends FunkinSprite
 		var config = SpriteBuilder.readAtlasConfig(levelDir, name);
 		spriteType = config.type;
 		antialiasing = config.bilinear;
+		baseAntialiasing = antialiasing;
 
 		for (entry in config.anims)
 		{
@@ -148,6 +151,30 @@ class LevelSprite extends FunkinSprite
 	}
 
 	public function animNames():Array<String> return [for (key in anims.keys()) key];
+
+	/**
+	 * Deja el sprite como recien cargado para devolverlo a `SpriteCache`: lo que el Stage o un evento le toquen
+	 * (color, flips, blend, escala, camara...) no debe pasar al siguiente objeto que lo use.
+	 */
+	public function recycle():Void
+	{
+		color = 0xFFFFFFFF;
+		alpha = 1;
+		visible = true;
+		angle = 0;
+		flipX = false;
+		flipY = false;
+		blend = null;
+		shader = null;
+		clipRect = null;
+		cameras = null;
+		skew.set(0, 0);
+		scrollFactor.set(1, 1);
+		scale.set(1, 1);
+		updateHitbox();
+		antialiasing = baseAntialiasing;
+		if (firstAnim != null) playAnim(firstAnim, true);
+	}
 
 	/** Toca la animacion cuyo `index` (posicion en el sprite original del .fnmm) es `index`. */
 	public function playIndex(index:Int, force:Bool = true):Bool

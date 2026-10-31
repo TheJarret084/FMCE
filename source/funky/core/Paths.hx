@@ -235,6 +235,24 @@ class Paths
 	public static function getLevelSprite(levelDir:String, name:String):FlxAtlasFrames
 	{
 		#if sys
+		// Con el nivel precargado (SpriteCache) el atlas se arma una sola vez: sin releer ni reparsear el JSON.
+		if (!funky.game.SpriteCache.active) return loadLevelSprite(levelDir, name);
+
+		var cacheKey = Path.join([levelDir, "sprites", name, "sprite.png"]);
+		var hit = funky.game.SpriteCache.frames.get(cacheKey);
+		if (hit != null && (hit.parent == null || hit.parent.bitmap != null)) return hit;
+
+		var atlas = loadLevelSprite(levelDir, name);
+		if (atlas != null) funky.game.SpriteCache.frames.set(cacheKey, atlas);
+		return atlas;
+		#else
+		return null;
+		#end
+	}
+
+	static function loadLevelSprite(levelDir:String, name:String):FlxAtlasFrames
+	{
+		#if sys
 		var dir = Path.join([levelDir, "sprites", name]);
 		var png = Path.join([dir, "sprite.png"]);
 		var json = Path.join([dir, "sprite.json"]);
