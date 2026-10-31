@@ -266,7 +266,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 					bWidth = Math.max(bWidth, eventName.x + 6 + cast(lastAdded, FlxSprite).width + 6 + 10);
 				}
 			}
-			wireObjectParams(EventsData.getEventParams(events[curEvent].name));
+			wireObjectParams(EventsData.getEventParams(curEvent.name)); // aqui `curEvent` es el ChartEvent local (linea 135), no el indice
 		} else {
 			eventName.text = "No event";
 			curEvent = -1;
