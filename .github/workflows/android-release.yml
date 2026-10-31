@@ -107,12 +107,14 @@ jobs:
 
           "$APKSIGNER" verify --verbose "$APK"
 
-      - name: Upload APK as workflow artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: FMCE-Android-release
-          path: building/artifacts/FMCE-Android-release.apk
-          if-no-files-found: error
+      # saltamos esto por petición de github
+
+      # - name: Upload APK as workflow artifact
+      #   uses: actions/upload-artifact@v4
+      #  with:
+      #    name: FMCE-Android-release
+      #    path: building/artifacts/FMCE-Android-release.apk
+      #    if-no-files-found: error
 
       - name: Publish build to release
         uses: softprops/action-gh-release@v2
