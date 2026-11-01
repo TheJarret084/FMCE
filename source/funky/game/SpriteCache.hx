@@ -8,15 +8,6 @@ import funky.core.Log;
 /**
  * Precarga de los sprites de un nivel, para que `Stage.setSprite` (ObjectSpriteSet) no tenga que leer disco,
  * parsear JSON ni subir texturas en pleno juego.
- *
- * Mientras `active` es true:
- *  - `Paths.getLevelSprite` reutiliza los `FlxAtlasFrames` ya armados (`frames`).
- *  - `SpriteBuilder.build` entrega primero un sprite de repuesto de este `pool` (`take`).
- *  - `Stage.setSprite` devuelve el sprite que reemplaza al pool (`give`) en vez de destruirlo, asi volver a un
- *    sprite anterior tambien es gratis.
- *
- * Fuera de un nivel (`active` = false) no hace nada: los editores siguen leyendo siempre de disco.
- * Lo llena `LoadingLevelState` antes de cada cancion y se vacia solo al entrar a cualquier otra pantalla.
  */
 class SpriteCache
 {
@@ -143,10 +134,10 @@ class SpriteCache
 	 * de estado solo ve lo que esta ahi, asi que no puede destruirlas. Se vuelven a poner con `attach`.
 	 */
 	public static function detach():Void
-	{
-		for (graphic in graphics)
-			if (graphic.key != null) FlxG.bitmap.removeKey(graphic.key);
-	}
+    {
+        for (graphic in graphics)
+            if (graphic.key != null) @:privateAccess FlxG.bitmap._cache.remove(graphic.key);
+    }    
 
 	/** Vuelve a registrar las imagenes en `FlxG.bitmap` (ya en el estado nuevo) para que `Paths` las encuentre. */
 	public static function attach():Void
