@@ -41,7 +41,7 @@
 
 - [X] Iconos: nunca se voltean (`flipX = false` en `HealthIcon`). Ademas el mapeo de estados estaba corrido (anim0 normal salia como "perdiendo"): ahora anim0 normal, anim1 perdiendo, anim2 ganando.
 
-- [ ] Sprites `fixed` (Stage), error de escalado y de Camara
+- [X] Sprites `fixed` (Stage), error de escalado y de Camara
 
 ---
 
@@ -59,7 +59,7 @@
 (10 oct):
 
 - [X] arreglar sobrecarga de sprites al usar solo un spritesheet demaciado grande
-- [ ] pulir en convertidor
+- [X] pulir en convertidor
 ---
 
 (13 oct):
@@ -91,6 +91,6 @@ Hecho hoy (sin probar, no se compilo):
 - [X] `UISubstateWindow` blindado (blur con respaldo, sin null en `update`/`destroy`)
 
 (23 oct):
-- [ ] Rich presence para mobile LEST GOOOO
+- [X] Rich presence para mobile LEST GOOOO
 - [ ] Pulida a la pausa
-- [ ] parte de herramientas mejor trabajada
+- [X] parte de herramientas mejor trabajada
