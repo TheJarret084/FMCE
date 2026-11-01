@@ -569,7 +569,7 @@ class FreeplayState extends FlxState
 		PlayState.startFromMs = 0;
 		PlayState.returnToEditor = null;
 		Log.info('[FreeplayState] launching ' + path);
-		TransitionHandler.switchState(new LoadingLevelState());
+		FlxG.switchState(new LoadingLevelState()); // sin cortina: solo el loading -> juego la lleva
 	}
 
 	override public function destroy():Void

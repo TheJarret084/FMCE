@@ -49,9 +49,6 @@ class LoadingLevelState extends MusicBeatState
 	{
 		super.create();
 
-		// La cortina de transicion abre un substate: sin esto el padre dejaria de actualizarse y no cargaria nada.
-		persistentUpdate = true;
-
 		add(new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xFF151722));
 
 		var barX = (FlxG.width - BAR_WIDTH) / 2;
@@ -67,7 +64,6 @@ class LoadingLevelState extends MusicBeatState
 		bar.value = 0;
 		add(bar);
 
-		transitionIn();
 	}
 
 	override public function update(elapsed:Float):Void
@@ -81,9 +77,9 @@ class LoadingLevelState extends MusicBeatState
 		shown += (progress - shown) * Math.min(1, elapsed * 12);
 		bar.value = shown;
 
-		// entra al juego cuando la barra ya se vio llena
+		// entra al juego (con cortina, la abre PlayState) cuando la barra ya se vio llena
 		if (finished && shown > 0.98)
-			FlxG.switchState(new PlayState());
+			transitionTo(new PlayState());
 	}
 
 	function work():Void

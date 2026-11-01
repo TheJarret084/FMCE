@@ -20,8 +20,13 @@ import funky.core.Log;
  */
 class SpriteCache
 {
-	/** true = tras subir una textura a la GPU se suelta su copia en RAM (la mitad de memoria). Ponlo en false si algo necesita leer pixeles. */
-	public static inline var FREE_RAM:Bool = true;
+	/**
+	 * true = tras subir una textura a la GPU se suelta su copia en RAM (la mitad de memoria).
+	 * APAGADO: en Android dejo el stage sin dibujar (los sprites precargados salian invisibles; las notas, que no se
+	 * precargan, salian bien). Probable causa: `upload` corre en el loading con `FlxG.stage.context3D` y el render usa
+	 * otro contexto, y sin la copia en RAM OpenFL no puede resubir la textura. Pruebalo con true solo en escritorio.
+	 */
+	public static inline var FREE_RAM:Bool = false;
 
 	/** true entre `begin` y `clear`. */
 	public static var active(default, null):Bool = false;
@@ -29,6 +34,7 @@ class SpriteCache
 	/** Atlas ya armados, por ruta de `sprite.png`. Lo usa `Paths.getLevelSprite`. */
 	public static var frames(default, null):Map<String, FlxAtlasFrames> = new Map();
 
+	static var hooked:Bool = false;
 	static var levelDir:Null<String> = null;
 	static var pool:Map<String, Array<LevelSprite>> = new Map();
 	static var graphics:Array<FlxGraphic> = [];
@@ -36,6 +42,17 @@ class SpriteCache
 	/** Deja el cache listo para `dir`. Si venia de otro nivel lo vacia primero. */
 	public static function begin(dir:String):Void
 	{
+		// Una sola vez: el cache solo vive mientras el estado es el loading o el juego. Cualquier otra pantalla
+		// (menus, editores) lo vacia sola, salga el jugador por donde salga (Pause, GameOver, fin de cancion...).
+		if (!hooked)
+		{
+			hooked = true;
+			FlxG.signals.preStateCreate.add(function(state:flixel.FlxState):Void
+			{
+				if (!Std.isOfType(state, funky.menus.LoadingLevelState) && !Std.isOfType(state, PlayState)) clear();
+			});
+		}
+
 		if (active && levelDir == dir) return;
 		clear();
 		levelDir = dir;

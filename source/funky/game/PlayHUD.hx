@@ -1,6 +1,7 @@
 package funky.game;
 
 import flixel.FlxG;
+import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
@@ -14,6 +15,7 @@ import flixel.util.FlxStringUtil;
 import funky.core.Paths;
 import funky.core.ClientPrefs;
 import funky.core.Conductor;
+import openfl.utils.Assets;
 
 /** HUD con la misma distribucion que `PsychHUD` del legacy: */
 class PlayHUD extends FlxGroup
@@ -33,6 +35,11 @@ class PlayHUD extends FlxGroup
 	public static inline var COMBO_POP:Float = 0.6 / 0.5;
 	public static inline var MIN_COMBO_DIGITS:Int = 3;
 
+	/** Imagenes del popup: `images/game/score/<sick|good|bad|shit>.png` y `num0.png`..`num9.png`. */
+	static inline var SCORE_DIR:String = "game/score/";
+	/** Cifras maximas que muestra el combo con imagenes (si pasa, se ven las ultimas). */
+	static inline var COMBO_SLOTS:Int = 5;
+
 	static final RATING_COLORS:Map<String, FlxColor> = [
 		"sick" => 0xFF4DC9FF,
 		"good" => 0xFF6BE06B,
@@ -46,6 +53,8 @@ class PlayHUD extends FlxGroup
 	var scoreText:FlxText;
 	var ratingText:FlxText;
 	var comboText:FlxText;
+	var ratingImages:Map<String, FlxSprite> = new Map();
+	var comboImages:Array<FlxSprite> = [];
 	var songLength:Float;
 	var barY:Float;
 	var shownSecond:Int = -1;
@@ -109,6 +118,32 @@ class PlayHUD extends FlxGroup
 		comboText.alpha = 0;
 		add(comboText);
 
+		// Rating y combo con las imagenes de images/game/score/. Lo que falte se queda con el texto de siempre.
+		for (name in ["sick", "good", "bad", "shit"])
+		{
+			var file = Paths.image(SCORE_DIR + name);
+			if (!Assets.exists(file)) continue;
+			var image = new FlxSprite().loadGraphic(file);
+			image.alpha = 0;
+			ratingImages.set(name, image);
+			add(image);
+		}
+
+		var hasNumbers = true;
+		for (digit in 0...10)
+			if (!Assets.exists(Paths.image(SCORE_DIR + "num" + digit))) hasNumbers = false;
+
+		if (hasNumbers)
+		{
+			for (_ in 0...COMBO_SLOTS)
+			{
+				var image = new FlxSprite();
+				image.alpha = 0;
+				comboImages.push(image);
+				add(image);
+			}
+		}
+
 		// Botplay se guarda en las opciones y no cuenta fallos ni puntos: se deja a la vista para no jugar con el sin querer.
 		if (ClientPrefs.isBotplay())
 		{
@@ -159,34 +194,92 @@ class PlayHUD extends FlxGroup
 		FlxTween.tween(scoreText.scale, {x: 1, y: 1}, 0.2);
 	}
 
-	/** Popup de rating + combo, como `PsychHUD.popUpScore`. */
+	/** Popup de rating + combo, como `PsychHUD.popUpScore`. Con imagenes si estan en `game/score/`, si no con texto. */
 	public function popUpScore(rating:String, combo:Int):Void
 	{
 		var posX = FlxG.width * 0.35;
 		var delay = Conductor.stepCrochet * 0.01;
 
-		ratingText.text = rating.toUpperCase() + "!";
-		ratingText.color = RATING_COLORS.exists(rating) ? RATING_COLORS.get(rating) : FlxColor.WHITE;
-		ratingText.updateHitbox();
-		ratingText.alpha = 1;
-		ratingText.setPosition(posX - 40 - ratingText.width / 2, FlxG.height / 2 - ratingText.height / 2 - 60);
-		FlxTween.cancelTweensOf(ratingText, ["alpha"]);
-		FlxTween.cancelTweensOf(ratingText.scale);
-		ratingText.scale.set(RATING_SCALE * RATING_POP, RATING_SCALE * RATING_POP);
-		FlxTween.tween(ratingText.scale, {x: RATING_SCALE, y: RATING_SCALE}, 0.5, {ease: FlxEase.expoOut});
-		FlxTween.tween(ratingText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+		var image = ratingImages.get(rating);
+		if (image != null)
+		{
+			for (other in ratingImages)
+			{
+				FlxTween.cancelTweensOf(other, ["alpha"]);
+				other.alpha = 0;
+			}
+			ratingText.alpha = 0;
+			// el origen es el centro: se coloca por el centro sin escalar y la escala crece desde ahi
+			image.setPosition(posX - 40 - image.frameWidth / 2, FlxG.height / 2 - image.frameHeight / 2 - 60);
+			image.alpha = 1;
+			FlxTween.cancelTweensOf(image.scale);
+			image.scale.set(RATING_SCALE * RATING_POP, RATING_SCALE * RATING_POP);
+			FlxTween.tween(image.scale, {x: RATING_SCALE, y: RATING_SCALE}, 0.5, {ease: FlxEase.expoOut});
+			FlxTween.tween(image, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+		}
+		else
+		{
+			ratingText.text = rating.toUpperCase() + "!";
+			ratingText.color = RATING_COLORS.exists(rating) ? RATING_COLORS.get(rating) : FlxColor.WHITE;
+			ratingText.updateHitbox();
+			ratingText.alpha = 1;
+			ratingText.setPosition(posX - 40 - ratingText.width / 2, FlxG.height / 2 - ratingText.height / 2 - 60);
+			FlxTween.cancelTweensOf(ratingText, ["alpha"]);
+			FlxTween.cancelTweensOf(ratingText.scale);
+			ratingText.scale.set(RATING_SCALE * RATING_POP, RATING_SCALE * RATING_POP);
+			FlxTween.tween(ratingText.scale, {x: RATING_SCALE, y: RATING_SCALE}, 0.5, {ease: FlxEase.expoOut});
+			FlxTween.tween(ratingText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+		}
 
 		var digits = Std.string(combo);
 		while (digits.length < MIN_COMBO_DIGITS) digits = "0" + digits;
-		comboText.text = digits;
-		comboText.updateHitbox();
-		comboText.alpha = 1;
-		comboText.setPosition(posX - comboText.width / 2, FlxG.height / 2 - comboText.height / 2 + 80);
-		FlxTween.cancelTweensOf(comboText, ["alpha"]);
-		FlxTween.cancelTweensOf(comboText.scale);
-		comboText.scale.set(COMBO_SCALE * COMBO_POP, COMBO_SCALE * COMBO_POP);
-		FlxTween.tween(comboText.scale, {x: COMBO_SCALE, y: COMBO_SCALE}, 0.5, {ease: FlxEase.expoOut});
-		FlxTween.tween(comboText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+
+		if (comboImages.length > 0)
+		{
+			comboText.alpha = 0;
+			if (digits.length > comboImages.length) digits = digits.substr(digits.length - comboImages.length);
+
+			for (slot in comboImages)
+			{
+				FlxTween.cancelTweensOf(slot, ["alpha"]);
+				FlxTween.cancelTweensOf(slot.scale);
+				slot.alpha = 0;
+			}
+
+			var centerY = FlxG.height / 2 + 80;
+			var width = 0.0;
+			for (i in 0...digits.length)
+			{
+				var slot = comboImages[i];
+				slot.loadGraphic(Paths.image(SCORE_DIR + "num" + digits.charAt(i)));
+				width += slot.frameWidth * COMBO_SCALE;
+			}
+
+			var left = posX - width / 2;
+			for (i in 0...digits.length)
+			{
+				var slot = comboImages[i];
+				var cell = slot.frameWidth * COMBO_SCALE;
+				slot.setPosition(left + cell / 2 - slot.frameWidth / 2, centerY - slot.frameHeight / 2);
+				left += cell;
+				slot.alpha = 1;
+				slot.scale.set(COMBO_SCALE * COMBO_POP, COMBO_SCALE * COMBO_POP);
+				FlxTween.tween(slot.scale, {x: COMBO_SCALE, y: COMBO_SCALE}, 0.5, {ease: FlxEase.expoOut});
+				FlxTween.tween(slot, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+			}
+		}
+		else
+		{
+			comboText.text = digits;
+			comboText.updateHitbox();
+			comboText.alpha = 1;
+			comboText.setPosition(posX - comboText.width / 2, FlxG.height / 2 - comboText.height / 2 + 80);
+			FlxTween.cancelTweensOf(comboText, ["alpha"]);
+			FlxTween.cancelTweensOf(comboText.scale);
+			comboText.scale.set(COMBO_SCALE * COMBO_POP, COMBO_SCALE * COMBO_POP);
+			FlxTween.tween(comboText.scale, {x: COMBO_SCALE, y: COMBO_SCALE}, 0.5, {ease: FlxEase.expoOut});
+			FlxTween.tween(comboText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+		}
 	}
 
 	/** "Time Left" de Psych: lo que falta de cancion, una vez por segundo. */
