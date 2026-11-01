@@ -759,13 +759,15 @@ class SceneEditorState extends UIState
 			return {px: x * viewW, py: y * viewH, tx: sx * unit, ty: sy * unit, anim: animScale, ppu: viewW};
 		}
 		var cam = camPoint(camIdx);
-		var cam0 = camPoint(0);
 		var ppu = Stage.CAM_PRESET * viewW / (Stage.VIEW_WORLD_WIDTH * Math.max(0.001, cam.scale));
 		var fx = JsonFile.num(Reflect.field(sf, "x"), 1);
 		var fy = JsonFile.num(Reflect.field(sf, "y"), 1);
+		// MISMA formula que `Stage.placementFor`: el scrollFactor multiplica la ESQUINA de la camara (centro - mitad de la vista).
+		var halfX = viewW / 2 / ppu;
+		var halfY = viewH / 2 / ppu;
 		return {
-			px: (x - cam0.x - (cam.x - cam0.x) * fx) * ppu + viewW / 2,
-			py: (y - cam0.y - (cam.y - cam0.y) * fy) * ppu + viewH / 2,
+			px: (x - (cam.x - halfX) * fx) * ppu,
+			py: (y - (cam.y - halfY) * fy) * ppu,
 			tx: sx * animScale * ppu,
 			ty: sy * animScale * ppu,
 			anim: animScale,
@@ -1014,9 +1016,10 @@ class SceneEditorState extends UIState
 		{
 			var now = compute(i);
 			var cam = camPoint(camIdx);
-			var cam0 = camPoint(0);
-			Reflect.setField(p, "x", JsonFile.round((before.px - viewW / 2) / now.ppu + cam0.x + (cam.x - cam0.x) * JsonFile.num(Reflect.field(sf, "x"), 1)));
-			Reflect.setField(p, "y", JsonFile.round((before.py - viewH / 2) / now.ppu + cam0.y + (cam.y - cam0.y) * JsonFile.num(Reflect.field(sf, "y"), 1)));
+			var halfX = viewW / 2 / now.ppu;
+			var halfY = viewH / 2 / now.ppu;
+			Reflect.setField(p, "x", JsonFile.round(before.px / now.ppu + (cam.x - halfX) * JsonFile.num(Reflect.field(sf, "x"), 1)));
+			Reflect.setField(p, "y", JsonFile.round(before.py / now.ppu + (cam.y - halfY) * JsonFile.num(Reflect.field(sf, "y"), 1)));
 		}
 		var after = compute(i);
 		var kx = after.tx == 0 ? 1 : before.tx / after.tx;
