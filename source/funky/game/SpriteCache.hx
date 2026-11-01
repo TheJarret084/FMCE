@@ -116,8 +116,44 @@ class SpriteCache
 		if (!active || dir != levelDir) return null;
 		var list = pool.get(name);
 		if (list == null || list.length == 0) return null;
+
+		var sprite = list.pop();
+		if (!alive(sprite))
+		{
+			// Sus imagenes se destruyeron (p. ej. por el cambio de estado): mejor cargarlo de nuevo que mostrar nada.
+			Log.warn('[SpriteCache] repuesto de "' + name + '" sin textura, se carga de nuevo');
+			sprite.destroy();
+			return null;
+		}
+
 		Log.info('[SpriteCache] repuesto de "' + name + '"');
-		return list.pop();
+		return sprite;
+	}
+
+	/** true si todas las imagenes del sprite siguen con su bitmap. */
+	static function alive(sprite:LevelSprite):Bool
+	{
+		for (graphic in graphicsOf(sprite))
+			if (graphic.bitmap == null) return false;
+		return true;
+	}
+
+	/**
+	 * Saca las imagenes precargadas de `FlxG.bitmap` justo antes de cambiar de estado: el `clearCache()` del cambio
+	 * de estado solo ve lo que esta ahi, asi que no puede destruirlas. Se vuelven a poner con `attach`.
+	 */
+	public static function detach():Void
+	{
+		for (graphic in graphics)
+			if (graphic.key != null) FlxG.bitmap.removeKey(graphic.key);
+	}
+
+	/** Vuelve a registrar las imagenes en `FlxG.bitmap` (ya en el estado nuevo) para que `Paths` las encuentre. */
+	public static function attach():Void
+	{
+		for (graphic in graphics)
+			if (graphic.bitmap != null && graphic.key != null && FlxG.bitmap.get(graphic.key) == null)
+				FlxG.bitmap.addGraphic(graphic);
 	}
 
 	/** Devuelve un sprite que ya no se usa para reutilizarlo; si no se puede, lo destruye. */

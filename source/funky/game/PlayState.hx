@@ -189,6 +189,7 @@ class PlayState extends MusicBeatState
 	override public function create():Void
 	{
 		super.create();
+		SpriteCache.attach();
 
 		camGame = FlxG.camera;
 		camHUD = new FlxCamera();

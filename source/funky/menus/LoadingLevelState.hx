@@ -44,6 +44,7 @@ class LoadingLevelState extends MusicBeatState
 	var read:Bool = false;
 	var next:Int = 0;
 	var finished:Bool = false;
+	var leaving:Bool = false;
 
 	override public function create():Void
 	{
@@ -77,8 +78,13 @@ class LoadingLevelState extends MusicBeatState
 		bar.value = shown;
 
 		// entra al juego (con cortina, la abre PlayState) cuando la barra ya se vio llena
-		if (finished && shown > 0.98)
+		if (finished && shown > 0.98 && !leaving)
+		{
+			leaving = true;
+			// el cambio de estado hace FlxG.bitmap.clearCache(): que no encuentre las imagenes precargadas
+			SpriteCache.detach();
 			transitionTo(new PlayState());
+		}
 	}
 
 	function work():Void
