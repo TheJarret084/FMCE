@@ -145,6 +145,7 @@ class LoadingLevelState extends MusicBeatState
 
 	function finish():Void
 	{
+		Log.info('[LoadingLevelState] sprites precargados: ' + names.length + ' (' + names.join(', ') + ')');
 		finished = true;
 		progress = 1;
 	}

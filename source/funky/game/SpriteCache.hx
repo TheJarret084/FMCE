@@ -28,6 +28,13 @@ class SpriteCache
 	 */
 	public static inline var FREE_RAM:Bool = false;
 
+	/**
+	 * true = sube las texturas a la GPU durante el loading (evita el tiron del primer dibujo).
+	 * APAGADO por ahora: es lo unico del cache que toca el estado de OpenGL fuera del render, y en Android el stage
+	 * dejo de verse. Con false el resto del cache (atlas, repuestos) sigue funcionando.
+	 */
+	public static inline var GPU_UPLOAD:Bool = false;
+
 	/** true entre `begin` y `clear`. */
 	public static var active(default, null):Bool = false;
 
@@ -93,6 +100,7 @@ class SpriteCache
 
 		if (!sprite.loaded)
 		{
+			Log.warn('[SpriteCache] no se pudo precargar "' + name + '"');
 			sprite.destroy();
 			return;
 		}
@@ -102,7 +110,7 @@ class SpriteCache
 			if (graphics.indexOf(graphic) >= 0) continue;
 			graphics.push(graphic);
 			// Los spritemaps de Animate se quedan con su copia en RAM (flixel-animate puede leer pixeles).
-			upload(graphic, !Std.isOfType(sprite.frames, animate.FlxAnimateFrames));
+			if (GPU_UPLOAD) upload(graphic, !Std.isOfType(sprite.frames, animate.FlxAnimateFrames));
 		}
 
 		if (list == null)
@@ -118,7 +126,9 @@ class SpriteCache
 	{
 		if (!active || dir != levelDir) return null;
 		var list = pool.get(name);
-		return list == null || list.length == 0 ? null : list.pop();
+		if (list == null || list.length == 0) return null;
+		Log.info('[SpriteCache] repuesto de "' + name + '"');
+		return list.pop();
 	}
 
 	/** Devuelve un sprite que ya no se usa para reutilizarlo; si no se puede, lo destruye. */
