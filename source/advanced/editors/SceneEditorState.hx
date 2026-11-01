@@ -432,12 +432,31 @@ class SceneEditorState extends UIState
 		refreshCameraWidgets();
 	}
 
+	/** Mantiene el punto de camara dentro del mundo (`Stage.limitView`). true si tuvo que moverlo. */
+	function limitCameraPoint(c:Dynamic):Bool
+	{
+		var p = Reflect.field(c, "position");
+		var x = JsonFile.num(Reflect.field(p, "x"), 0);
+		var y = JsonFile.num(Reflect.field(p, "y"), 0);
+		var scale = JsonFile.num(Reflect.field(c, "scale"), 1);
+
+		var view = Stage.limitView(x, y, scale);
+		if (view.x == x && view.y == y && view.scale == scale) return false;
+
+		Reflect.setField(p, "x", JsonFile.round(view.x));
+		Reflect.setField(p, "y", JsonFile.round(view.y));
+		Reflect.setField(c, "scale", JsonFile.round(view.scale));
+		return true;
+	}
+
 	function setCameraField(field:String, value:Float):Void
 	{
 		var c = camObject();
 		if (field == "scale") Reflect.setField(c, "scale", JsonFile.round(Math.max(0.05, value)));
 		else Reflect.setField(Reflect.field(c, "position"), field, JsonFile.round(value));
+		var moved = limitCameraPoint(c);
 		touch();
+		if (moved) refreshCameraWidgets();
 	}
 
 	function panCamera(dx:Float, dy:Float):Void
@@ -446,6 +465,7 @@ class SceneEditorState extends UIState
 		var p = Reflect.field(c, "position");
 		Reflect.setField(p, "x", JsonFile.round(JsonFile.num(Reflect.field(p, "x"), 0) + dx));
 		Reflect.setField(p, "y", JsonFile.round(JsonFile.num(Reflect.field(p, "y"), 0) + dy));
+		limitCameraPoint(c);
 		touch();
 		refreshCameraWidgets();
 	}
@@ -454,6 +474,7 @@ class SceneEditorState extends UIState
 	{
 		var c = camObject();
 		Reflect.setField(c, "scale", JsonFile.round(Math.max(0.05, JsonFile.num(Reflect.field(c, "scale"), 1) + delta)));
+		limitCameraPoint(c);
 		touch();
 		refreshCameraWidgets();
 	}

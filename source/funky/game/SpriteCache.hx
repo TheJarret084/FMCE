@@ -16,25 +16,10 @@ import funky.core.Log;
  *    sprite anterior tambien es gratis.
  *
  * Fuera de un nivel (`active` = false) no hace nada: los editores siguen leyendo siempre de disco.
- * Lo llena `LoadingLevelState` antes de cada cancion y lo vacia `PlayState.menuState()` al salir.
+ * Lo llena `LoadingLevelState` antes de cada cancion y se vacia solo al entrar a cualquier otra pantalla.
  */
 class SpriteCache
 {
-	/**
-	 * true = tras subir una textura a la GPU se suelta su copia en RAM (la mitad de memoria).
-	 * APAGADO: en Android dejo el stage sin dibujar (los sprites precargados salian invisibles; las notas, que no se
-	 * precargan, salian bien). Probable causa: `upload` corre en el loading con `FlxG.stage.context3D` y el render usa
-	 * otro contexto, y sin la copia en RAM OpenFL no puede resubir la textura. Pruebalo con true solo en escritorio.
-	 */
-	public static inline var FREE_RAM:Bool = false;
-
-	/**
-	 * true = sube las texturas a la GPU durante el loading (evita el tiron del primer dibujo).
-	 * APAGADO por ahora: es lo unico del cache que toca el estado de OpenGL fuera del render, y en Android el stage
-	 * dejo de verse. Con false el resto del cache (atlas, repuestos) sigue funcionando.
-	 */
-	public static inline var GPU_UPLOAD:Bool = false;
-
 	/** true entre `begin` y `clear`. */
 	public static var active(default, null):Bool = false;
 
@@ -76,6 +61,7 @@ class SpriteCache
 		for (graphic in graphics)
 		{
 			graphic.persist = false;
+			graphic.destroyOnNoUse = true;
 			FlxG.bitmap.removeIfNoUse(graphic);
 		}
 
@@ -109,8 +95,11 @@ class SpriteCache
 		{
 			if (graphics.indexOf(graphic) >= 0) continue;
 			graphics.push(graphic);
-			// Los spritemaps de Animate se quedan con su copia en RAM (flixel-animate puede leer pixeles).
-			if (GPU_UPLOAD) upload(graphic, !Std.isOfType(sprite.frames, animate.FlxAnimateFrames));
+
+			// Clave: al pasar del loading al juego, Flixel hace `FlxG.bitmap.clearCache()` y DESTRUYE toda imagen que
+			// no sea `persist` (da igual que un sprite la use). Sin esto los sprites precargados quedan sin textura.
+			graphic.persist = true;
+			upload(graphic);
 		}
 
 		if (list == null)
@@ -170,20 +159,15 @@ class SpriteCache
 		return out;
 	}
 
-	/**
-	 * Sube la textura ahora: si no, OpenFL la sube en el primer frame que la dibuja (ahi es el tiron del lag).
-	 * Con `freeRam` suelta ademas la copia en RAM (`disposeImage`): la textura ya esta en la GPU, y sin esto cada
-	 * imagen ocupa el doble. Despues el bitmap ya no se puede leer pixel a pixel (`getPixel`, `draw`...).
-	 */
-	static function upload(graphic:FlxGraphic, freeRam:Bool):Void
+	/** Sube la textura ahora: si no, OpenFL la sube en el primer frame que la dibuja (ahi es el tiron del lag). */
+	static function upload(graphic:FlxGraphic):Void
 	{
 		#if (openfl && !flash)
 		try
 		{
 			var context = FlxG.stage.context3D;
-			if (context == null || graphic.bitmap == null) return;
-			graphic.bitmap.getTexture(context);
-			if (freeRam && FREE_RAM) graphic.bitmap.disposeImage();
+			if (context != null && graphic.bitmap != null)
+				graphic.bitmap.getTexture(context);
 		}
 		catch (e:Dynamic)
 		{

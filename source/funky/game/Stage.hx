@@ -109,6 +109,30 @@ class Stage extends FlxGroup
 	public static inline var VIEW_WORLD_WIDTH:Float = 2400;
 	public static var CAM_PRESET:Float = 1.25;
 
+	/**
+	 * Como en FNMM: la vista de la camara nunca sale del mundo. El mundo mide `VIEW_WORLD_WIDTH` de ancho y es 16:9
+	 * (`WORLD_HEIGHT` de alto), centrado en (0, 0). Asi la vista no puede ser mas ancha que el mundo (scale maximo =
+	 * `CAM_PRESET`) y su centro se queda dentro. Ponlo en false para una camara libre (niveles con camaras fuera).
+	 */
+	public static var limitCamera:Bool = true;
+
+	public static inline var WORLD_HEIGHT:Float = VIEW_WORLD_WIDTH * 9 / 16;
+
+	/** Punto de camara ya limitado al mundo (lo usan el Stage y el SceneEditor). Sin `limitCamera` solo evita scale <= 0. */
+	public static function limitView(x:Float, y:Float, scale:Float):{x:Float, y:Float, scale:Float}
+	{
+		scale = Math.max(0.001, scale);
+		if (!limitCamera) return {x: x, y: y, scale: scale};
+
+		scale = Math.min(scale, CAM_PRESET);
+		var viewW = VIEW_WORLD_WIDTH * scale / CAM_PRESET;
+		var viewH = viewW * 9 / 16;
+		var maxX = (VIEW_WORLD_WIDTH - viewW) / 2;
+		var maxY = (WORLD_HEIGHT - viewH) / 2;
+
+		return {x: Math.max(-maxX, Math.min(maxX, x)), y: Math.max(-maxY, Math.min(maxY, y)), scale: scale};
+	}
+
 	/** El stage que esta en juego (los scripts lo usan sin pasar por `game.stage`). null si el nivel no tiene escena. */
 	public static var current(default, null):Null<Stage>;
 
@@ -174,6 +198,19 @@ class Stage extends FlxGroup
 	public var camScale:Float = 1;
 	public var zoomMul:Float = 1;
 
+	/** La camara que se dibuja de verdad: `camX/camY/camScale*zoomMul` ya limitados al mundo (`limitView`). */
+	var viewX:Float = 0;
+	var viewY:Float = 0;
+	var viewScale:Float = 1;
+
+	function updateView():Void
+	{
+		var view = limitView(camX, camY, camScale * zoomMul);
+		viewX = view.x;
+		viewY = view.y;
+		viewScale = view.scale;
+	}
+
 	// por indice de strumline (0 jugador, 1 oponente, 2+ extras)
 	var singUntil:Map<Int, Float> = new Map<Int, Float>();
 	var singing:Map<Int, Bool> = new Map<Int, Bool>();
@@ -229,6 +266,7 @@ class Stage extends FlxGroup
 		camX = camPoints[0].x;
 		camY = camPoints[0].y;
 		camScale = camPoints[0].scale;
+		updateView();
 
 		var cache = new Map<String, Bool>();
 
@@ -533,6 +571,8 @@ class Stage extends FlxGroup
 
 	override public function update(elapsed:Float):Void
 	{
+		updateView();
+
 		if (loaded)
 		{
 			for (line in singing.keys())
@@ -591,7 +631,7 @@ class Stage extends FlxGroup
 	inline function pixelsPerUnit():Float
 	{
 		return CAM_PRESET * FlxG.width
-			/ (VIEW_WORLD_WIDTH * Math.max(0.001, camScale * zoomMul));
+			/ (VIEW_WORLD_WIDTH * viewScale);
 	}
 
 	function placementFor(
@@ -634,8 +674,8 @@ class Stage extends FlxGroup
 				var halfViewX = FlxG.width / 2 / ppu;
 				var halfViewY = FlxG.height / 2 / ppu;
 
-				px = (object.x - (camX - halfViewX) * object.scrollX) * ppu;
-				py = (object.y - (camY - halfViewY) * object.scrollY) * ppu;
+				px = (object.x - (viewX - halfViewX) * object.scrollX) * ppu;
+				py = (object.y - (viewY - halfViewY) * object.scrollY) * ppu;
 
 				totalX = object.scale * animScale * ppu;
 				totalY = object.scaleY * animScale * ppu;

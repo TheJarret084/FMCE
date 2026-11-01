@@ -63,7 +63,6 @@ class LoadingLevelState extends MusicBeatState
 		bar.numDivisions = BAR_WIDTH;
 		bar.value = 0;
 		add(bar);
-
 	}
 
 	override public function update(elapsed:Float):Void
@@ -109,6 +108,7 @@ class LoadingLevelState extends MusicBeatState
 			}
 
 			SpriteCache.begin(levelDir);
+
 			// Solo lo que el nivel nombra, y que exista en sprites/ (evita cargar GBs de sprites sin usar).
 			var present = SpriteBuilder.listSprites(levelDir);
 			names = [for (name in SpriteCache.referenced(song)) if (present.indexOf(name) >= 0) name];
