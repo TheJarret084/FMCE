@@ -389,6 +389,8 @@ class FNMMExportJob
 		if (chart == null || !Reflect.isObject(chart)) throw "chart.json no es un objeto JSON";
 		var parsedMeta = FMCEToFNMMExporter.readJson(Path.join([dir, "meta.json"]));
 		if (parsedMeta != null) meta = parsedMeta;
+		// si el chart.json no trae `fmceChart: true` se detecta el tipo y se pasa a FMCE antes de exportarlo
+		chart = funky.backend.chart.ChartNormalizer.ensure(dir, chartPath, chart, meta);
 
 		plan = FMCEToFNMMExporter.plan(levelName);
 		result.ignored = plan.ignored;

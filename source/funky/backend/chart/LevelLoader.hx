@@ -38,6 +38,9 @@ class LevelLoader
 		var chart:Dynamic = parseObject(File.getContent(chartPath), chartPath);
 		var meta:Dynamic = readMeta(dir);
 
+		// `fmceChart: true` = chart del engine, se usa tal cual; si no, se detecta el tipo y se convierte (ChartNormalizer).
+		chart = ChartNormalizer.ensure(dir, chartPath, chart, meta);
+
 		var name = text(Reflect.field(chart, "name"), "");
 		if (name == "") name = text(Reflect.field(meta, "displayName"), "");
 		if (name == "") name = text(Reflect.field(meta, "levelName"), "");

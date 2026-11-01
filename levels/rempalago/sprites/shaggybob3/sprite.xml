@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="shaggyssj.png">
+	<!-- Created with Adobe Animate version 21.0.2.37893 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="ALTdown0000" x="5" y="5" width="313" height="471" pivotX="202.55" pivotY="355.35"/>
+	<SubTexture name="ALTdown0001" x="5" y="5" width="313" height="471"/>
+	<SubTexture name="ALTdown0002" x="323" y="5" width="313" height="471"/>
+	<SubTexture name="ALTdown0003" x="323" y="5" width="313" height="471"/>
+	<SubTexture name="ALTdown0004" x="323" y="5" width="313" height="471"/>
+	<SubTexture name="ALTdown0005" x="323" y="5" width="313" height="471"/>
+	<SubTexture name="ALTdown0006" x="323" y="5" width="313" height="471"/>
+	<SubTexture name="ALTdown0007" x="323" y="5" width="313" height="471"/>
+	<SubTexture name="ALTdown0008" x="323" y="5" width="313" height="471"/>
+	<SubTexture name="ALTidle0000" x="641" y="5" width="354" height="513" pivotX="151.25" pivotY="249.9"/>
+	<SubTexture name="ALTidle0001" x="1000" y="5" width="354" height="513"/>
+	<SubTexture name="ALTidle0002" x="1359" y="5" width="354" height="513"/>
+	<SubTexture name="ALTleft0000" x="5" y="523" width="580" height="446" pivotX="252.15" pivotY="244.1"/>
+	<SubTexture name="ALTleft0001" x="5" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0002" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0003" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0004" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0005" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0006" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0007" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0008" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0009" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0010" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0011" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTleft0012" x="590" y="523" width="580" height="446"/>
+	<SubTexture name="ALTright0000" x="1175" y="523" width="562" height="439" pivotX="492.8" pivotY="165.75"/>
+	<SubTexture name="ALTright0001" x="1175" y="523" width="562" height="439"/>
+	<SubTexture name="ALTright0002" x="5" y="974" width="562" height="439"/>
+	<SubTexture name="ALTright0003" x="5" y="974" width="562" height="439"/>
+	<SubTexture name="ALTright0004" x="5" y="974" width="562" height="439"/>
+	<SubTexture name="ALTright0005" x="5" y="974" width="562" height="439"/>
+	<SubTexture name="ALTright0006" x="5" y="974" width="562" height="439"/>
+	<SubTexture name="ALTright0007" x="5" y="974" width="562" height="439"/>
+	<SubTexture name="ALTright0008" x="5" y="974" width="562" height="439"/>
+	<SubTexture name="ALTup0000" x="572" y="974" width="337" height="671" pivotX="182" pivotY="340.85"/>
+	<SubTexture name="ALTup0001" x="572" y="974" width="337" height="671"/>
+	<SubTexture name="ALTup0002" x="914" y="974" width="337" height="671"/>
+	<SubTexture name="ALTup0003" x="914" y="974" width="337" height="671"/>
+	<SubTexture name="ALTup0004" x="914" y="974" width="337" height="671"/>
+	<SubTexture name="ALTup0005" x="914" y="974" width="337" height="671"/>
+	<SubTexture name="ALTup0006" x="914" y="974" width="337" height="671"/>
+	<SubTexture name="ALTup0007" x="914" y="974" width="337" height="671"/>
+	<SubTexture name="ALTup0008" x="914" y="974" width="337" height="671"/>
+</TextureAtlas>

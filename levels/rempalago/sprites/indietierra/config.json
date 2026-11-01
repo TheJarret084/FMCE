@@ -1,0 +1,11 @@
+{
+  "data": [
+    {
+      "loop": true,
+      "spd": 24,
+      "anim": "anim0",
+      "spd_fps": true
+    }
+  ],
+  "type": "sprite"
+}

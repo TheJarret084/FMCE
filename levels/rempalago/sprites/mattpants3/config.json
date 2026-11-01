@@ -1,0 +1,31 @@
+{
+  "data": [
+    {
+      "loop": true,
+      "spd": 24,
+      "anim": "getup",
+      "spd_fps": true
+    },
+    {
+      "loop": true,
+      "anim": "defeat",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 38.7,
+        "y": -28
+      }
+    },
+    {
+      "loop": true,
+      "anim": "sacudelo",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 37.3,
+        "y": -52
+      }
+    }
+  ],
+  "type": "sprite"
+}

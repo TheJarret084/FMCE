@@ -12,6 +12,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
+import flixel.util.FlxSpriteUtil;
 import funkin.editors.SaveWarning;
 import funkin.editors.ui.*;
 import funkin.editors.ui.UIContextMenu.UIContextMenuOption;
@@ -59,6 +60,10 @@ class SceneEditorState extends UIState
 	var layer:FlxGroup;
 	var views:Array<FlxSprite> = [];
 	var selBars:Array<FlxSprite> = [];
+	/** Pestana Camaras: el mundo queda fijo y la camara elegida es este marco (relleno, borde y el icono de camara al centro). */
+	var camFrame:FlxSprite;
+	var camBars:Array<FlxSprite> = [];
+	var camIcon:FlxSprite;
 
 	var topMenu:Array<UIContextMenuOption>;
 	var topMenuSpr:UITopMenu;
@@ -172,6 +177,29 @@ class SceneEditorState extends UIState
 			selBars.push(bar);
 			add(bar);
 		}
+		// marco de la camara (solo se ve en la pestana Camaras)
+		camFrame = new FlxSprite().makeGraphic(1, 1, 0x55E03030);
+		camFrame.cameras = [camScene];
+		camFrame.scrollFactor.set();
+		camFrame.visible = false;
+		add(camFrame);
+		for (i in 0...4)
+		{
+			var bar = new FlxSprite().makeGraphic(1, 1, 0xFFE03030);
+			bar.cameras = [camScene];
+			bar.scrollFactor.set();
+			bar.visible = false;
+			camBars.push(bar);
+			add(bar);
+		}
+		camIcon = new FlxSprite().makeGraphic(30, 16, FlxColor.TRANSPARENT, true);
+		FlxSpriteUtil.drawRect(camIcon, 1, 2, 19, 13, 0xFFE03030, {thickness: 2, color: FlxColor.BLACK});
+		FlxSpriteUtil.drawPolygon(camIcon, [FlxPoint.get(21, 8), FlxPoint.get(29, 2), FlxPoint.get(29, 14)], 0xFFE03030, {thickness: 2, color: FlxColor.BLACK});
+		camIcon.cameras = [camScene];
+		camIcon.scrollFactor.set();
+		camIcon.visible = false;
+		add(camIcon);
+
 		// marco de la vista
 		for (r in [[viewX - 1, viewY - 1, viewW + 2, 1], [viewX - 1, viewY + viewH, viewW + 2, 1], [viewX - 1, viewY - 1, 1, viewH + 2], [viewX + viewW, viewY - 1, 1, viewH + 2]])
 			ui(new FlxSprite(r[0], r[1]).makeGraphic(Std.int(r[2]), Std.int(r[3]), 0xFF3A4152));
@@ -432,7 +460,11 @@ class SceneEditorState extends UIState
 		refreshCameraWidgets();
 	}
 
-	/** Mantiene el punto de camara dentro del mundo (`Stage.limitView`). true si tuvo que moverlo. */
+	/**
+	 * Mantiene el marco de la camara dentro del mundo (solo en el editor; en juego la camara va tal cual).
+	 * El mundo mide `Stage.VIEW_WORLD_WIDTH` de ancho y tiene el aspecto de la pantalla, centrado en (0, 0); el marco de scale 1
+	 * mide `VIEW_WORLD_WIDTH / CAM_PRESET`, asi que el scale maximo (marco = todo el mundo) es `CAM_PRESET`. true si lo movio.
+	 */
 	function limitCameraPoint(c:Dynamic):Bool
 	{
 		var p = Reflect.field(c, "position");
@@ -440,13 +472,65 @@ class SceneEditorState extends UIState
 		var y = JsonFile.num(Reflect.field(p, "y"), 0);
 		var scale = JsonFile.num(Reflect.field(c, "scale"), 1);
 
-		var view = Stage.limitView(x, y, scale);
-		if (view.x == x && view.y == y && view.scale == scale) return false;
+		var worldW = Stage.VIEW_WORLD_WIDTH;
+		var worldH = worldW * viewH / viewW;
+		var limited = Math.max(0.05, Math.min(Stage.CAM_PRESET, scale));
+		var frameW = worldW * limited / Stage.CAM_PRESET;
+		var frameH = frameW * viewH / viewW;
+		var maxX = (worldW - frameW) / 2;
+		var maxY = (worldH - frameH) / 2;
+		var nx = Math.max(-maxX, Math.min(maxX, x));
+		var ny = Math.max(-maxY, Math.min(maxY, y));
+		if (nx == x && ny == y && limited == scale) return false;
 
-		Reflect.setField(p, "x", JsonFile.round(view.x));
-		Reflect.setField(p, "y", JsonFile.round(view.y));
-		Reflect.setField(c, "scale", JsonFile.round(view.scale));
+		Reflect.setField(p, "x", JsonFile.round(nx));
+		Reflect.setField(p, "y", JsonFile.round(ny));
+		Reflect.setField(c, "scale", JsonFile.round(limited));
 		return true;
+	}
+
+	/** Centra el marco de la camara elegida en (x, y) del mundo. */
+	function setCameraCenter(x:Float, y:Float):Void
+	{
+		var c = camObject();
+		var p = Reflect.field(c, "position");
+		Reflect.setField(p, "x", JsonFile.round(x));
+		Reflect.setField(p, "y", JsonFile.round(y));
+		limitCameraPoint(c);
+		touch();
+		refreshCameraWidgets();
+	}
+
+	/** El marco de la camara elegida sobre el mundo fijo, en px de la vista. */
+	function camFrameRect():{x:Float, y:Float, w:Float, h:Float}
+	{
+		var cam = camPoint(camIdx);
+		var ppu = viewW / Stage.VIEW_WORLD_WIDTH;
+		var w = Stage.VIEW_WORLD_WIDTH * Math.max(0.001, cam.scale) / Stage.CAM_PRESET * ppu;
+		var h = w * viewH / viewW;
+		return {x: viewW / 2 + cam.x * ppu - w / 2, y: viewH / 2 + cam.y * ppu - h / 2, w: w, h: h};
+	}
+
+	function drawCameraFrame():Void
+	{
+		var on = mode == 1;
+		camFrame.visible = camIcon.visible = on;
+		for (b in camBars) b.visible = on;
+		if (!on) return;
+
+		var f = camFrameRect();
+		camFrame.scale.set(f.w, f.h);
+		camFrame.updateHitbox();
+		camFrame.setPosition(f.x, f.y);
+
+		var rects = [[f.x, f.y, f.w, 2.0], [f.x, f.y + f.h - 2, f.w, 2.0], [f.x, f.y, 2.0, f.h], [f.x + f.w - 2, f.y, 2.0, f.h]];
+		for (i in 0...4)
+		{
+			camBars[i].scale.set(Math.max(1, rects[i][2]), Math.max(1, rects[i][3]));
+			camBars[i].updateHitbox();
+			camBars[i].setPosition(rects[i][0], rects[i][1]);
+		}
+		camIcon.setPosition(f.x + f.w / 2 - camIcon.width / 2, f.y + f.h / 2 - camIcon.height / 2);
 	}
 
 	function setCameraField(field:String, value:Float):Void
@@ -653,6 +737,20 @@ class SceneEditorState extends UIState
 		{
 			var a = (cast view : LevelSprite).currentAnim();
 			if (a != null) animScale = a.scale;
+		}
+
+		// Pestana Camaras: mundo FIJO (no depende de la camara elegida). Los objetos van en su posicion del mundo y los `fixed`
+		// se pegan al marco de la camara (como en juego se pegan a la pantalla). El parallax no se aplica en esta vista.
+		if (mode == 1)
+		{
+			var f = camFrameRect();
+			if (Reflect.field(o, "fixed") == true)
+			{
+				var fixedUnit = animScale * f.w / Stage.HUD_REF_WIDTH * Stage.defaultHudZoom;
+				return {px: f.x + x * f.w, py: f.y + y * f.h, tx: sx * fixedUnit, ty: sy * fixedUnit, anim: animScale, ppu: f.w};
+			}
+			var worldPpu = viewW / Stage.VIEW_WORLD_WIDTH;
+			return {px: x * worldPpu + viewW / 2, py: y * worldPpu + viewH / 2, tx: sx * animScale * worldPpu, ty: sy * animScale * worldPpu, anim: animScale, ppu: worldPpu};
 		}
 
 		if (Reflect.field(o, "fixed") == true)
@@ -1115,13 +1213,19 @@ class SceneEditorState extends UIState
 				}
 			}
 		}
-		// pestaña Camaras: arrastrar mueve la camara elegida, la rueda cambia el zoom, las flechas la mueven
+		// pestaña Camaras: el mundo esta fijo; arrastra el marco (o toca el mundo para llevarlo ahi), rueda: zoom, flechas: mover
 		if (mode == 1)
 		{
-			if (pressEdge && inView) dragging = true;
+			var worldPpu = viewW / Stage.VIEW_WORLD_WIDTH;
+			if (pressEdge && inView)
+			{
+				dragging = true;
+				var f = camFrameRect();
+				if (lx < f.x || lx > f.x + f.w || ly < f.y || ly > f.y + f.h)
+					setCameraCenter((lx - viewW / 2) / worldPpu, (ly - viewH / 2) / worldPpu);
+			}
 			if (!FlxG.mouse.pressed) dragging = false;
-			var camPpu = Stage.CAM_PRESET * viewW / (Stage.VIEW_WORLD_WIDTH * Math.max(0.001, camPoint(camIdx).scale));
-			if (dragging && (mx != lastMX || my != lastMY)) panCamera(-(mx - lastMX) / camPpu, -(my - lastMY) / camPpu);
+			if (dragging && !pressEdge && (mx != lastMX || my != lastMY)) panCamera((mx - lastMX) / worldPpu, (my - lastMY) / worldPpu);
 			if (inView && FlxG.mouse.wheel != 0) zoomCamera(FlxG.mouse.wheel * (shift ? 0.25 : ctrl ? 0.01 : 0.05));
 			if (!typing && !topMenuSpr.anyMenuOpened)
 			{
@@ -1167,14 +1271,15 @@ class SceneEditorState extends UIState
 
 		for (i in 0...objects.length) place(i);
 		if (mode == 0) drawSelection();
+		drawCameraFrame();
 		refreshInfo();
 	}
 
 	function refreshInfo():Void
 	{
-		infoText.text = "Vista de la camara " + (camIdx + 1) + "/" + camCount() + (dirty ? "   * sin guardar" : "") + (mode == 0 && sel >= 0 && tCount() > 1 ? "   (posicion " + tIdx + " de " + tCount() + ")" : "")
+		infoText.text = (mode == 1 ? "Mundo fijo - camara " : "Vista de la camara ") + (camIdx + 1) + "/" + camCount() + (dirty ? "   * sin guardar" : "") + (mode == 0 && sel >= 0 && tCount() > 1 ? "   (posicion " + tIdx + " de " + tCount() + ")" : "")
 			+ (mode == 0 ? "\nClick y arrastra para mover. Rueda: escala. Flechas: mover (SHIFT x10, CTRL fino). Arrastra los botones de la lista para cambiar las capas."
-				: "\nPestaña Camaras: arrastra para mover la camara elegida, rueda: zoom, flechas: mover (SHIFT x10, CTRL fino).");
+				: "\nPestaña Camaras (mundo fijo): arrastra el marco rojo o toca el mundo para mover la camara, rueda: zoom, flechas: mover (SHIFT x10, CTRL fino).");
 	}
 
 	override public function destroy():Void

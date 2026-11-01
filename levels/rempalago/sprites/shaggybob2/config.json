@@ -1,0 +1,11 @@
+{
+  "data": [
+    {
+      "loop": false,
+      "spd": 24,
+      "anim": "transform",
+      "spd_fps": true
+    }
+  ],
+  "type": "sprite"
+}

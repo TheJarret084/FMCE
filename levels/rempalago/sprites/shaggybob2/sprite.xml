@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="2.png">
+	<!-- Created with Adobe Animate version 21.0.2.37893 -->
+	<!-- http://www.adobe.com/products/animate.html -->
+	<SubTexture name="transform0000" x="5" y="5" width="366" height="526" pivotX="162.8" pivotY="248.9"/>
+	<SubTexture name="transform0001" x="376" y="5" width="366" height="526"/>
+	<SubTexture name="transform0002" x="747" y="5" width="366" height="526"/>
+	<SubTexture name="transform0003" x="747" y="5" width="366" height="526"/>
+	<SubTexture name="transform0004" x="1118" y="5" width="366" height="526"/>
+	<SubTexture name="transform0005" x="1118" y="5" width="366" height="526"/>
+	<SubTexture name="transform0006" x="1118" y="5" width="366" height="526"/>
+	<SubTexture name="transform0007" x="1489" y="5" width="366" height="526"/>
+	<SubTexture name="transform0008" x="1489" y="5" width="366" height="526"/>
+	<SubTexture name="transform0009" x="1489" y="5" width="366" height="526"/>
+	<SubTexture name="transform0010" x="1860" y="5" width="366" height="526"/>
+	<SubTexture name="transform0011" x="1860" y="5" width="366" height="526"/>
+	<SubTexture name="transform0012" x="1860" y="5" width="366" height="526"/>
+	<SubTexture name="transform0013" x="1860" y="5" width="366" height="526"/>
+	<SubTexture name="transform0014" x="1860" y="5" width="366" height="526"/>
+	<SubTexture name="transform0015" x="1860" y="5" width="366" height="526"/>
+	<SubTexture name="transform0016" x="1860" y="5" width="366" height="526"/>
+	<SubTexture name="transform0017" x="1860" y="5" width="366" height="526"/>
+	<SubTexture name="transform0018" x="1860" y="5" width="366" height="526"/>
+	<SubTexture name="transform0019" x="2231" y="5" width="366" height="526"/>
+	<SubTexture name="transform0020" x="2231" y="5" width="366" height="526"/>
+	<SubTexture name="transform0021" x="2602" y="5" width="366" height="526"/>
+	<SubTexture name="transform0022" x="2973" y="5" width="366" height="526"/>
+	<SubTexture name="transform0023" x="3344" y="5" width="366" height="526"/>
+	<SubTexture name="transform0024" x="3344" y="5" width="366" height="526"/>
+	<SubTexture name="transform0025" x="3715" y="5" width="366" height="526"/>
+	<SubTexture name="transform0026" x="3715" y="5" width="366" height="526"/>
+	<SubTexture name="transform0027" x="5" y="536" width="366" height="526"/>
+	<SubTexture name="transform0028" x="5" y="536" width="366" height="526"/>
+	<SubTexture name="transform0029" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0030" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0031" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0032" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0033" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0034" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0035" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0036" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0037" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0038" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0039" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0040" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0041" x="747" y="536" width="366" height="526"/>
+	<SubTexture name="transform0042" x="747" y="536" width="366" height="526"/>
+	<SubTexture name="transform0043" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0044" x="376" y="536" width="366" height="526"/>
+	<SubTexture name="transform0045" x="1118" y="536" width="366" height="526"/>
+	<SubTexture name="transform0046" x="1118" y="536" width="366" height="526"/>
+	<SubTexture name="transform0047" x="1489" y="536" width="366" height="526"/>
+	<SubTexture name="transform0048" x="1860" y="536" width="366" height="526"/>
+	<SubTexture name="transform0049" x="2231" y="536" width="366" height="526"/>
+	<SubTexture name="transform0050" x="2231" y="536" width="366" height="526"/>
+	<SubTexture name="transform0051" x="2231" y="536" width="366" height="526"/>
+	<SubTexture name="transform0052" x="2231" y="536" width="366" height="526"/>
+	<SubTexture name="transform0053" x="2231" y="536" width="366" height="526"/>
+	<SubTexture name="transform0054" x="2231" y="536" width="366" height="526"/>
+	<SubTexture name="transform0055" x="2231" y="536" width="366" height="526"/>
+	<SubTexture name="transform0056" x="2602" y="536" width="366" height="526"/>
+	<SubTexture name="transform0057" x="2602" y="536" width="366" height="526"/>
+	<SubTexture name="transform0058" x="2973" y="536" width="366" height="526"/>
+	<SubTexture name="transform0059" x="2973" y="536" width="366" height="526"/>
+	<SubTexture name="transform0060" x="3344" y="536" width="366" height="526"/>
+	<SubTexture name="transform0061" x="3344" y="536" width="366" height="526"/>
+	<SubTexture name="transform0062" x="3715" y="536" width="366" height="526"/>
+	<SubTexture name="transform0063" x="3715" y="536" width="366" height="526"/>
+	<SubTexture name="transform0064" x="5" y="1067" width="366" height="526"/>
+</TextureAtlas>

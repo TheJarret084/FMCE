@@ -1,0 +1,51 @@
+{
+  "type": "character",
+  "data": [
+    {
+      "loop": true,
+      "spd": 24,
+      "anim": "idle",
+      "spd_fps": true
+    },
+    {
+      "loop": true,
+      "anim": "left",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 216,
+        "y": -64
+      }
+    },
+    {
+      "loop": true,
+      "anim": "down",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": -8,
+        "y": -28
+      }
+    },
+    {
+      "loop": true,
+      "anim": "right",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": -12,
+        "y": -20
+      }
+    },
+    {
+      "loop": true,
+      "anim": "right",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 118,
+        "y": -80
+      }
+    }
+  ]
+}

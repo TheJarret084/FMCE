@@ -1,0 +1,51 @@
+{
+  "type": "character",
+  "data": [
+    {
+      "loop": true,
+      "spd": 24,
+      "anim": "ALTidle",
+      "spd_fps": true
+    },
+    {
+      "loop": true,
+      "anim": "ALTleft",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 216,
+        "y": -68
+      }
+    },
+    {
+      "loop": true,
+      "anim": "ALTdown",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": -4,
+        "y": -56
+      }
+    },
+    {
+      "loop": true,
+      "anim": "ALTup",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 34,
+        "y": 134
+      }
+    },
+    {
+      "loop": true,
+      "anim": "ALTright",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 2,
+        "y": -90
+      }
+    }
+  ]
+}

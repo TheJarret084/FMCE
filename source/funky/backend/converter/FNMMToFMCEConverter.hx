@@ -178,7 +178,7 @@ class FNMMToFMCEConverter
 			else if (note.mustPress == true) lines[0].push(entry);
 			else lines[1].push(entry);
 		}
-		return {timeUnit: DATA_TIME_UNIT, strumLines: lines};
+		return {fmceChart: true, timeUnit: DATA_TIME_UNIT, strumLines: lines};
 	}
 
 	static inline function round6(value:Float):Float return Math.round(value * 1000000) / 1000000;

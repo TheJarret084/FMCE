@@ -1,0 +1,20 @@
+{
+	"opponentModeAllowed": true,
+	"icon": "nothing",
+	"difficulties": [
+		"hard"
+	],
+	"icons": {
+		"P2": "icon1",
+		"P1": "icon2"
+	},
+	"color": "#FFFFFF",
+	"customValues": {},
+	"coopAllowed": true,
+	"stepsPerBeat": 4,
+	"displayName": "rempalago",
+	"stage": "scene",
+	"needsVoices": true,
+	"beatsPerMeasure": 4,
+	"bpm": 185
+}

@@ -1,0 +1,54 @@
+{
+	"frames": [
+		{
+			"rotated": false,
+			"spriteSourceSize": {
+				"h": 661,
+				"w": 1665,
+				"x": 0,
+				"y": 0
+			},
+			"frame": {
+				"h": 661,
+				"w": 1665,
+				"x": 0,
+				"y": 0
+			},
+			"duration": 42,
+			"trimmed": false,
+			"sourceSize": {
+				"h": 661,
+				"w": 1665
+			},
+			"filename": "anim0"
+		}
+	],
+	"meta": {
+		"image": "sprite.png",
+		"format": "RGBA8888",
+		"app": "FMCE SpriteImporter",
+		"frameTags": [
+			{
+				"to": 0,
+				"direction": "forward",
+				"from": 0,
+				"name": "anim0"
+			}
+		],
+		"fmce": {
+			"animations": {
+				"anim0": {
+					"fps": 24,
+					"loop": true
+				}
+			},
+			"source": "png"
+		},
+		"size": {
+			"h": 661,
+			"w": 1665
+		},
+		"scale": "1",
+		"version": "1.0"
+	}
+}

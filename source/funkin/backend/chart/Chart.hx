@@ -13,6 +13,8 @@ import sys.io.File;
 /**
  * Puente entre el charter (ChartData) y los archivos de un nivel de FMCE. Un nivel tiene:
  *  - chart.json:  las notas. `strumLines` = una lista de {time, lane, length} por strumline, en segundos.
+ *                 `fmceChart: true` marca que ya es de FMCE; si falta, `ChartNormalizer` detecta el tipo (FNMM, Codename,
+ *                 Psych/Legacy, FNF) y lo convierte al cargar el nivel.
  *                 Es la unica dificultad base (la dificultad del juego es la velocidad de scroll).
  *  - events.json: los eventos GLOBALES (`events`, acciones agrupadas por tiempo) + `action_packs`.
  *                 No hay eventos locales ni charts/*.json.
@@ -286,7 +288,7 @@ class Chart {
 				}
 			]);
 		}
-		var fresh:Dynamic = {timeUnit: "seconds", strumLines: lines, scrollSpeed: song.scrollSpeed};
+		var fresh:Dynamic = {fmceChart: true, timeUnit: "seconds", strumLines: lines, scrollSpeed: song.scrollSpeed};
 		if (song.bookmarks != null && song.bookmarks.length > 0) Reflect.setField(fresh, "bookmarks", song.bookmarks);
 		var path = levelFile(LevelLoader.CHART_FILE);
 		write(path, merge(path, fresh, ["notes", "strumLines", "timeUnit", "scrollSpeed", "bookmarks"]), pretty);
