@@ -17,6 +17,21 @@ import funky.core.ClientPrefs;
 import funky.core.Conductor;
 import openfl.utils.Assets;
 
+/**
+ * Resultado de tocar una nota: lo que se muestra y lo que reciben los scripts (`onNoteScored`).
+ *  - rating:    sick / good / bad / shit
+ *  - score:     puntos que dio esa pulsacion
+ *  - precision: 100 = justo en el tiempo de la nota, 0 = al borde de la ventana de golpe
+ *  - ms:        desfase de la pulsacion: negativo = temprano, positivo = tarde
+ */
+typedef PressScore =
+{
+	var rating:String;
+	var score:Int;
+	var precision:Float;
+	var ms:Float;
+}
+
 /** HUD con la misma distribucion que `PsychHUD` del legacy: */
 class PlayHUD extends FlxGroup
 {
@@ -34,6 +49,10 @@ class PlayHUD extends FlxGroup
 	public static inline var COMBO_SCALE:Float = 0.5;
 	public static inline var COMBO_POP:Float = 0.6 / 0.5;
 	public static inline var MIN_COMBO_DIGITS:Int = 3;
+	/** Escala de los digitos de puntos y precision (mas chicos que los del combo) y cuantos digitos caben en cada fila. */
+	public static inline var PRESS_SCALE:Float = 0.3;
+	static inline var SCORE_SLOTS:Int = 4;
+	static inline var PRECISION_SLOTS:Int = 3;
 
 	/** Imagenes del popup: `images/game/score/<sick|good|bad|shit>.png` y `num0.png`..`num9.png`. */
 	static inline var SCORE_DIR:String = "game/score/";
@@ -52,9 +71,15 @@ class PlayHUD extends FlxGroup
 	var timeText:FlxText;
 	var scoreText:FlxText;
 	var ratingText:FlxText;
+	/** Debajo del rating: puntos, precision y desfase de la ultima pulsacion. */
+	var pressText:FlxText;
 	var comboText:FlxText;
 	var ratingImages:Map<String, FlxSprite> = new Map();
 	var comboImages:Array<FlxSprite> = [];
+	/** Puntos y precision de la ultima pulsacion con los mismos sprites num0..9 del combo (`percent.png` es opcional). */
+	var scoreSlots:Array<FlxSprite> = [];
+	var precisionSlots:Array<FlxSprite> = [];
+	var percentImage:FlxSprite;
 	var songLength:Float;
 	var barY:Float;
 	var shownSecond:Int = -1;
@@ -117,6 +142,11 @@ class PlayHUD extends FlxGroup
 		comboText.borderSize = 3;
 		comboText.alpha = 0;
 		add(comboText);
+		pressText = new FlxText(0, 0, 0, "", 28);
+		pressText.setFormat(defaultFont, 28, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		pressText.borderSize = 2;
+		pressText.alpha = 0;
+		add(pressText);
 
 		// Rating y combo con las imagenes de images/game/score/. Lo que falte se queda con el texto de siempre.
 		for (name in ["sick", "good", "bad", "shit"])
@@ -141,6 +171,27 @@ class PlayHUD extends FlxGroup
 				image.alpha = 0;
 				comboImages.push(image);
 				add(image);
+			}
+			for (_ in 0...SCORE_SLOTS)
+			{
+				var image = new FlxSprite();
+				image.alpha = 0;
+				scoreSlots.push(image);
+				add(image);
+			}
+			for (_ in 0...PRECISION_SLOTS)
+			{
+				var image = new FlxSprite();
+				image.alpha = 0;
+				precisionSlots.push(image);
+				add(image);
+			}
+			var percentFile = Paths.image(SCORE_DIR + "percent");
+			if (Assets.exists(percentFile))
+			{
+				percentImage = new FlxSprite().loadGraphic(percentFile);
+				percentImage.alpha = 0;
+				add(percentImage);
 			}
 		}
 
@@ -195,7 +246,7 @@ class PlayHUD extends FlxGroup
 	}
 
 	/** Popup de rating + combo, como `PsychHUD.popUpScore`. Con imagenes si estan en `game/score/`, si no con texto. */
-	public function popUpScore(rating:String, combo:Int):Void
+	public function popUpScore(rating:String, combo:Int, ?press:PressScore):Void
 	{
 		var posX = FlxG.width * 0.35;
 		var delay = Conductor.stepCrochet * 0.01;
@@ -279,6 +330,97 @@ class PlayHUD extends FlxGroup
 			comboText.scale.set(COMBO_SCALE * COMBO_POP, COMBO_SCALE * COMBO_POP);
 			FlxTween.tween(comboText.scale, {x: COMBO_SCALE, y: COMBO_SCALE}, 0.5, {ease: FlxEase.expoOut});
 			FlxTween.tween(comboText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+		}
+
+		if (press != null) showPress(press, posX, delay);
+	}
+
+	/** "+350  |  91.3%  |  -12 ms" entre el rating y el combo. */
+	function showPress(press:PressScore, posX:Float, delay:Float):Void
+	{
+		// con los sprites num0..9: una fila "350  91%" entre el rating y el combo, a la escala que quepa en ese hueco
+		if (scoreSlots.length > 0)
+		{
+			pressText.alpha = 0;
+			var scorePieces = prepareDigits(scoreSlots, press.score, null);
+			var precisionPieces = prepareDigits(precisionSlots, Math.round(press.precision), percentImage);
+
+			var ratingImage = ratingImages.get(press.rating);
+			var ratingBottom = FlxG.height / 2 - 60 + (ratingImage != null ? ratingImage.frameHeight * RATING_SCALE : ratingText.height) / 2;
+			var comboTop = FlxG.height / 2 + 80 - (comboImages.length > 0 ? comboImages[0].frameHeight * COMBO_SCALE : comboText.height) / 2;
+
+			var digitHeight = 1.0;
+			for (piece in scorePieces.concat(precisionPieces)) digitHeight = Math.max(digitHeight, piece.frameHeight);
+			var scale = Math.max(0.12, Math.min(PRESS_SCALE, (comboTop - ratingBottom - 8) / digitHeight));
+
+			var scoreWidth = piecesWidth(scorePieces, scale);
+			var gap = 80 * scale;
+			var left = posX - 40 - (scoreWidth + gap + piecesWidth(precisionPieces, scale)) / 2;
+			var top = ratingBottom + 4;
+			placePieces(scorePieces, left, top, scale, delay);
+			placePieces(precisionPieces, left + scoreWidth + gap, top, scale, delay);
+			return;
+		}
+
+		var ms = Math.round(press.ms);
+		pressText.text = "+" + press.score + "  |  " + Std.string(Math.round(press.precision * 10) / 10) + "%  |  " + (ms > 0 ? "+" : "") + ms + " ms";
+		pressText.color = RATING_COLORS.exists(press.rating) ? RATING_COLORS.get(press.rating) : FlxColor.WHITE;
+		pressText.updateHitbox();
+		pressText.setPosition(posX - 40 - pressText.width / 2, FlxG.height / 2 + 15);
+		FlxTween.cancelTweensOf(pressText, ["alpha"]);
+		pressText.alpha = 1;
+		FlxTween.tween(pressText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+	}
+
+	/** Carga los sprites num0..9 de `value` en `slots` (y suma `tail` al final); devuelve las piezas en orden. Todas quedan ocultas. */
+	function prepareDigits(slots:Array<FlxSprite>, value:Int, tail:Null<FlxSprite>):Array<FlxSprite>
+	{
+		var digits = Std.string(Std.int(Math.max(0, value)));
+		if (digits.length > slots.length) digits = digits.substr(digits.length - slots.length);
+
+		for (slot in slots)
+		{
+			FlxTween.cancelTweensOf(slot, ["alpha"]);
+			FlxTween.cancelTweensOf(slot.scale);
+			slot.alpha = 0;
+		}
+		var pieces:Array<FlxSprite> = [];
+		for (i in 0...digits.length)
+		{
+			slots[i].loadGraphic(Paths.image(SCORE_DIR + "num" + digits.charAt(i)));
+			pieces.push(slots[i]);
+		}
+		if (tail != null)
+		{
+			FlxTween.cancelTweensOf(tail, ["alpha"]);
+			FlxTween.cancelTweensOf(tail.scale);
+			tail.alpha = 0;
+			pieces.push(tail);
+		}
+		return pieces;
+	}
+
+	function piecesWidth(pieces:Array<FlxSprite>, scale:Float):Float
+	{
+		var width = 0.0;
+		for (piece in pieces) width += piece.frameWidth * scale;
+		return width;
+	}
+
+	/** Pone las piezas una tras otra desde `left`, con el mismo pop y fade que el combo. */
+	function placePieces(pieces:Array<FlxSprite>, left:Float, topY:Float, scale:Float, delay:Float):Void
+	{
+		var height = 0.0;
+		for (piece in pieces) height = Math.max(height, piece.frameHeight * scale);
+		for (piece in pieces)
+		{
+			var cell = piece.frameWidth * scale;
+			piece.setPosition(left + cell / 2 - piece.frameWidth / 2, topY + height / 2 - piece.frameHeight / 2);
+			left += cell;
+			piece.alpha = 1;
+			piece.scale.set(scale * COMBO_POP, scale * COMBO_POP);
+			FlxTween.tween(piece.scale, {x: scale, y: scale}, 0.5, {ease: FlxEase.expoOut});
+			FlxTween.tween(piece, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
 		}
 	}
 

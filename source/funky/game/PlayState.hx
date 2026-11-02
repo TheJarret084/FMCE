@@ -26,6 +26,7 @@ import funky.core.KeyBinds;
 import funky.core.Log;
 import funky.core.Paths;
 import funky.game.Note.NoteSharedTailState;
+import funky.game.PlayHUD.PressScore;
 import funky.menus.FreeplayState;
 import funky.menus.GameOverSubState;
 import funky.menus.PauseSubState;
@@ -152,6 +153,11 @@ class PlayState extends MusicBeatState
 	public var misses:Int = 0;
 	var totalPlayed:Int = 0;
 	var totalNotesHit:Float = 0;
+	/** Suma de la precision (0..100) de cada nota tocada y cuantas fueron. */
+	var precisionSum:Float = 0;
+	var pressCount:Int = 0;
+	/** Ultima pulsacion puntuada (para scripts). */
+	public var lastPress:PressScore;
 	var stepMs:Float = 125;
 	var spawnAheadMs:Float = 2100;
 	var scrollDirection:Float = 1;
@@ -797,6 +803,23 @@ class PlayState extends MusicBeatState
 		killIfOffscreen(note, delta);
 	}
 
+	/** Precision de una pulsacion: 100 justo en el tiempo de la nota, bajando lineal hasta 0 en el borde de `HIT_WINDOW`. */
+	static inline function precisionFor(absMs:Float):Float
+		return Math.max(0, 1 - absMs / HIT_WINDOW) * 100;
+
+	/** Precision media de todas las notas tocadas (0..100); -1 si todavia no se toco ninguna. */
+	public var averagePrecision(get, never):Float;
+
+	inline function get_averagePrecision():Float
+		return pressCount == 0 ? -1 : precisionSum / pressCount;
+
+	/** Rating, puntos y precision de tocar una nota con ese `delta` (strumTime - songTime). */
+	function pressScore(delta:Float):PressScore
+	{
+		var rating = ratingFor(Math.abs(delta));
+		return {rating: rating, score: ratingPoints(rating), precision: precisionFor(Math.abs(delta)), ms: -delta};
+	}
+
 	static inline function ratingFor(ms:Float):String
 		return ms <= SICK_MS ? "sick" : ms <= GOOD_MS ? "good" : ms <= BAD_MS ? "bad" : "shit";
 
@@ -813,7 +836,9 @@ class PlayState extends MusicBeatState
 	 */
 	function hitNote(note:Note, delta:Float):Void
 	{
-		var rating = ratingFor(Math.abs(delta));
+		var press = pressScore(delta);
+		var rating = press.rating;
+		lastPress = press;
 
 		if (Scripts.has)
 			Scripts.call("goodNoteHitPre", [note]);
@@ -829,9 +854,11 @@ class PlayState extends MusicBeatState
 
 		runNoteEvent(note.queueNote != null ? note.queueNote.onPress : -1);
 
-		score += ratingPoints(rating);
+		score += press.score;
 		totalNotesHit += ratingWeight(rating);
 		totalPlayed++;
+		precisionSum += press.precision;
+		pressCount++;
 		combo++;
 
 		hud.addHealth(HEALTH_HIT);
@@ -839,10 +866,14 @@ class PlayState extends MusicBeatState
 		if (Scripts.has)
 			Scripts.call("onPopUpScore", [note, rating]);
 
-		hud.popUpScore(rating, combo);
+		hud.popUpScore(rating, combo, press);
 
 		if (Scripts.has)
 			Scripts.call("onPopUpScorePost", [note, rating]);
+
+		// rating, puntos, precision (0..100) y desfase en ms (negativo = temprano) de esta pulsacion
+		if (Scripts.has)
+			Scripts.call("onNoteScored", [note, rating, press.score, press.precision, press.ms]);
 
 		refreshScore(false);
 

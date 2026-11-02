@@ -113,6 +113,19 @@ class SceneEditorState extends UIState
 
 	var infoText:UIText;
 	var sel:Int = -1;
+	/** Seleccion multiple: `sel` es el objeto principal (el de los widgets) y `extra` los demas elegidos (por referencia). */
+	var extra:Array<Dynamic> = [];
+	var multiMode:Bool = false;
+	var tabMulti:UIButton;
+	var extraBars:Array<FlxSprite> = [];
+	var marqueeBox:FlxSprite;
+	var marqueeOn:Bool = false;
+	var marqueeX:Float = 0;
+	var marqueeY:Float = 0;
+	/** Objeto al que se alterna / al que se colapsa la seleccion si el toque no llega a arrastrar. */
+	var tapCandidate:Int = -1;
+	var collapseTo:Int = -1;
+	var pressTravel:Float = 0;
 	var camIdx:Int = 0;
 	var gameView:Bool = false;
 	var dirty:Bool = false;
@@ -199,6 +212,11 @@ class SceneEditorState extends UIState
 		camIcon.scrollFactor.set();
 		camIcon.visible = false;
 		add(camIcon);
+		marqueeBox = new FlxSprite().makeGraphic(1, 1, 0x558CC4FF);
+		marqueeBox.cameras = [camScene];
+		marqueeBox.scrollFactor.set();
+		marqueeBox.visible = false;
+		add(marqueeBox);
 
 		// marco de la vista
 		for (r in [[viewX - 1, viewY - 1, viewW + 2, 1], [viewX - 1, viewY + viewH, viewW + 2, 1], [viewX - 1, viewY - 1, 1, viewH + 2], [viewX + viewW, viewY - 1, 1, viewH + 2]])
@@ -239,8 +257,8 @@ class SceneEditorState extends UIState
 				label: "Objeto",
 				childs: [
 					{label: "Agregar", keybind: [INSERT], onSelect: function(_) addObject()},
-					{label: "Duplicar", keybind: [CONTROL, D], onSelect: function(_) if (sel >= 0) duplicate(sel)},
-					{label: "Borrar", keybind: [DELETE], onSelect: function(_) if (sel >= 0) deleteObject(sel)},
+					{label: "Duplicar", keybind: [CONTROL, D], onSelect: function(_) duplicateSelected()},
+					{label: "Borrar", keybind: [DELETE], onSelect: function(_) deleteSelected()},
 					null,
 					{label: "Subir capa", keybind: [CONTROL, PAGEUP], onSelect: function(_) if (sel >= 0) swap(sel, sel + 1)},
 					{label: "Bajar capa", keybind: [CONTROL, PAGEDOWN], onSelect: function(_) if (sel >= 0) swap(sel, sel - 1)},
@@ -257,7 +275,11 @@ class SceneEditorState extends UIState
 					{label: "Objeto siguiente", keybind: [PAGEDOWN], onSelect: function(_) select(objects.length == 0 ? -1 : (sel + 1) % objects.length)},
 					{label: "Objeto anterior", keybind: [PAGEUP], onSelect: function(_) select(objects.length == 0 ? -1 : (sel - 1 + objects.length) % objects.length)},
 					{label: "Sprite siguiente", keybind: [E], onSelect: function(_) cycleSprite(1)},
-					{label: "Sprite anterior", keybind: [Q], onSelect: function(_) cycleSprite(-1)}
+					{label: "Sprite anterior", keybind: [Q], onSelect: function(_) cycleSprite(-1)},
+					null,
+					{label: "Seleccion multiple (alternar)", keybind: [N], onSelect: function(_) setMulti(!multiMode)},
+					{label: "Seleccionar todo", keybind: [CONTROL, A], onSelect: function(_) selectAll()},
+					{label: "Quitar la seleccion extra", keybind: [CONTROL, SHIFT, A], onSelect: function(_) if (sel >= 0) select(sel)}
 				]
 			},
 			{
@@ -275,8 +297,10 @@ class SceneEditorState extends UIState
 
 	function buildLeft():Void
 	{
-		tabObjects = ui(new UIButton(6, TOP + 4, "Objetos", function() setMode(0), 108, 26));
-		tabCams = ui(new UIButton(118, TOP + 4, "Camaras", function() setMode(1), 106, 26));
+		tabObjects = ui(new UIButton(6, TOP + 4, "Objetos", function() setMode(0), 74, 26));
+		tabCams = ui(new UIButton(84, TOP + 4, "Camaras", function() setMode(1), 74, 26));
+		// alterna elegir varios a la vez (en pantalla tactil no hay SHIFT / CTRL)
+		tabMulti = ui(new UIButton(162, TOP + 4, "Multi", function() setMulti(!multiMode), 62, 26));
 
 		var listY = TOP + 36;
 		objectList = new UIButtonList<EditorListButton>(0, listY, LEFT_W, FlxG.height - listY, "Objetos (la lista es el orden de capas)", FlxPoint.get(LEFT_W - 30, 28), null, 4);
@@ -366,8 +390,8 @@ class SceneEditorState extends UIState
 		objPages[2] = [g1, strumStep];
 
 		// ── siempre a la vista ──
-		var dup = ui(new UIButton(x0 + 20, y0 + 402, "Duplicar", function() if (sel >= 0) duplicate(sel), 120, 28));
-		var del = ui(new UIButton(x0 + 156, y0 + 402, "Borrar", function() if (sel >= 0) deleteObject(sel), 120, 28));
+		var dup = ui(new UIButton(x0 + 20, y0 + 402, "Duplicar", function() duplicateSelected(), 120, 28));
+		var del = ui(new UIButton(x0 + 156, y0 + 402, "Borrar", function() deleteSelected(), 120, 28));
 		del.color = 0xFFFF8080;
 
 		objWidgets = [spriteDrop, spriteBtn, posX, posY, scaleX, scaleY, scrollX, scrollY, opacityStep, strumStep, fixedCheck, visibleCheck, colorWheel, posPrev, posNext, posAdd, posDel, mirrorBtn, dup, del];
@@ -625,7 +649,14 @@ class SceneEditorState extends UIState
 		setObjTab(objTab);
 		tabObjects.color = objs ? 0xFF8CC4FF : 0xFFFFFFFF;
 		tabCams.color = objs ? 0xFFFFFFFF : 0xFF8CC4FF;
-		if (!objs) for (b in selBars) b.visible = false;
+		tabMulti.exists = objs;
+		if (!objs)
+		{
+			for (b in selBars) b.visible = false;
+			for (b in extraBars) b.visible = false;
+			marqueeOn = false;
+			marqueeBox.visible = false;
+		}
 	}
 
 	// ───────────────────────── vista ─────────────────────────
@@ -686,7 +717,7 @@ class SceneEditorState extends UIState
 		for (i in 0...objects.length)
 		{
 			var b:EditorListButton = null;
-			b = new EditorListButton(0, 0, listLabel(i), function() select(objects.indexOf(b.item)), LEFT_W - 30, 28);
+			b = new EditorListButton(0, 0, listLabel(i), function() clickObject(objects.indexOf(b.item)), LEFT_W - 30, 28);
 			b.item = objects[i];
 			objectList.add(b);
 		}
@@ -696,7 +727,7 @@ class SceneEditorState extends UIState
 	function markList():Void
 	{
 		for (b in objectList.buttons.members)
-			if (b != null) b.mark(sel >= 0 && sel < objects.length && objects[sel] == b.item);
+			if (b != null) b.mark(isSel(b.item));
 	}
 
 	/** Si se arrastro un boton de la lista, el orden de capas (objetos y vistas) lo sigue. */
@@ -798,15 +829,33 @@ class SceneEditorState extends UIState
 
 	function drawSelection():Void
 	{
-		for (b in selBars) b.visible = sel >= 0 && sel < views.length;
-		if (sel < 0 || sel >= views.length) return;
-		var v = views[sel];
+		var primary = sel >= 0 && sel < views.length;
+		for (b in selBars) b.visible = primary;
+		if (primary) outline(selBars, 0, views[sel]);
+
+		var others = [for (i in selectedList()) if (i != sel) i];
+		while (extraBars.length < others.length * 4)
+		{
+			var bar = new FlxSprite().makeGraphic(1, 1, 0xFF8CC4FF);
+			bar.cameras = [camScene];
+			bar.scrollFactor.set();
+			bar.visible = false;
+			extraBars.push(bar);
+			add(bar);
+		}
+		for (k in 0...extraBars.length) extraBars[k].visible = k < others.length * 4;
+		for (n in 0...others.length) outline(extraBars, n * 4, views[others[n]]);
+	}
+
+	/** Dibuja el borde de `v` con 4 barras de `bars` a partir de `first`. */
+	function outline(bars:Array<FlxSprite>, first:Int, v:FlxSprite):Void
+	{
 		var rects = [[v.x, v.y, v.width, 2.0], [v.x, v.y + v.height - 2, v.width, 2.0], [v.x, v.y, 2.0, v.height], [v.x + v.width - 2, v.y, 2.0, v.height]];
 		for (i in 0...4)
 		{
-			selBars[i].scale.set(Math.max(1, rects[i][2]), Math.max(1, rects[i][3]));
-			selBars[i].updateHitbox();
-			selBars[i].setPosition(rects[i][0], rects[i][1]);
+			bars[first + i].scale.set(Math.max(1, rects[i][2]), Math.max(1, rects[i][3]));
+			bars[first + i].updateHitbox();
+			bars[first + i].setPosition(rects[i][0], rects[i][1]);
 		}
 	}
 
@@ -815,8 +864,98 @@ class SceneEditorState extends UIState
 	function select(index:Int):Void
 	{
 		var before = sel;
+		extra = [];
 		sel = objects.length == 0 ? -1 : Std.int(Math.max(-1, Math.min(objects.length - 1, index)));
 		if (sel != before) tIdx = 0;
+		markList();
+		syncObjectWidgets();
+	}
+
+	// ───────────────────────── seleccion multiple ─────────────────────────
+
+	function setMulti(on:Bool):Void
+	{
+		multiMode = on;
+		tabMulti.color = on ? 0xFF8CC4FF : 0xFFFFFFFF;
+	}
+
+	function isSel(o:Dynamic):Bool
+		return (sel >= 0 && sel < objects.length && objects[sel] == o) || extra.indexOf(o) >= 0;
+
+	/** Indices de todo lo elegido (el principal primero). */
+	function selectedList():Array<Int>
+	{
+		var list:Array<Int> = [];
+		if (sel >= 0 && sel < objects.length) list.push(sel);
+		for (o in extra)
+		{
+			var i = objects.indexOf(o);
+			if (i >= 0 && list.indexOf(i) < 0) list.push(i);
+		}
+		return list;
+	}
+
+	/** Clic en la lista: con multi (o SHIFT / CTRL) alterna, si no elige solo ese. */
+	function clickObject(index:Int):Void
+	{
+		if (multiMode || FlxG.keys.pressed.SHIFT || FlxG.keys.pressed.CONTROL) toggleSelect(index);
+		else select(index);
+	}
+
+	function addToSelection(i:Int):Void
+	{
+		if (i < 0 || i >= objects.length) return;
+		var o = objects[i];
+		if (sel == i || extra.indexOf(o) >= 0) return;
+		if (sel < 0)
+		{
+			sel = i;
+			tIdx = 0;
+		}
+		else extra.push(o);
+	}
+
+	function toggleSelect(index:Int):Void
+	{
+		if (index < 0 || index >= objects.length) return;
+		var o = objects[index];
+		if (sel == index)
+		{
+			// se saca el principal: el siguiente elegido pasa a serlo
+			if (extra.length > 0)
+			{
+				sel = objects.indexOf(extra.shift());
+				tIdx = 0;
+			}
+			else sel = -1;
+		}
+		else if (extra.indexOf(o) >= 0) extra.remove(o);
+		else addToSelection(index);
+		markList();
+		syncObjectWidgets();
+	}
+
+	function selectAll():Void
+	{
+		if (objects.length == 0) return;
+		select(sel >= 0 ? sel : 0);
+		for (i in 0...objects.length) addToSelection(i);
+		markList();
+		syncObjectWidgets();
+	}
+
+	/** Suma a la seleccion lo que toque el rectangulo (coordenadas de la vista). */
+	function selectInRect(x1:Float, y1:Float, x2:Float, y2:Float):Void
+	{
+		var l = Math.min(x1, x2);
+		var r = Math.max(x1, x2);
+		var t = Math.min(y1, y2);
+		var b = Math.max(y1, y2);
+		for (i in 0...views.length)
+		{
+			var v = views[i];
+			if (v.x <= r && v.x + v.width >= l && v.y <= b && v.y + v.height >= t) addToSelection(i);
+		}
 		markList();
 		syncObjectWidgets();
 	}
@@ -1062,16 +1201,61 @@ class SceneEditorState extends UIState
 		touch();
 	}
 
-	function duplicate(i:Int):Void
+	/** Copia del objeto `i`, un poco corrida. */
+	function cloneObject(i:Int):Dynamic
 	{
 		var copy:Dynamic = Json.parse(Json.stringify(objects[i]));
 		var p = pos(copy);
 		var gap = Reflect.field(copy, "fixed") == true ? 0.02 : 40;
 		Reflect.setField(p, "x", JsonFile.num(Reflect.field(p, "x"), 0) + gap);
 		Reflect.setField(p, "y", JsonFile.num(Reflect.field(p, "y"), 0) + gap);
-		objects.insert(i + 1, copy);
+		return copy;
+	}
+
+	function duplicate(i:Int):Void
+	{
+		objects.insert(i + 1, cloneObject(i));
 		rebuild();
 		select(i + 1);
+		touch();
+	}
+
+	/** Duplica todo lo elegido; las copias quedan elegidas. */
+	function duplicateSelected():Void
+	{
+		var list = selectedList();
+		if (list.length == 0) return;
+		if (list.length == 1)
+		{
+			duplicate(list[0]);
+			return;
+		}
+		list.sort((a, b) -> b - a); // de atras para adelante: los indices que faltan por tratar no se mueven
+		var copies:Array<Dynamic> = [];
+		for (i in list)
+		{
+			var c = cloneObject(i);
+			objects.insert(i + 1, c);
+			copies.push(c);
+		}
+		rebuild();
+		var at = [for (c in copies) objects.indexOf(c)];
+		at.sort((a, b) -> a - b);
+		select(at[0]);
+		for (k in 1...at.length) addToSelection(at[k]);
+		markList();
+		touch();
+	}
+
+	function deleteSelected():Void
+	{
+		var list = selectedList();
+		if (list.length == 0) return;
+		list.sort((a, b) -> b - a);
+		var first = list[list.length - 1];
+		for (i in list) objects.splice(i, 1);
+		rebuild();
+		select(Std.int(Math.min(first, objects.length - 1)));
 		touch();
 	}
 
@@ -1186,19 +1370,50 @@ class SceneEditorState extends UIState
 		var pressedNow = FlxG.mouse.pressed;
 		var pressEdge = FlxG.mouse.justPressed || (pressedNow && !wasPressed);
 		var tapEdge = FlxG.mouse.justReleased && !wasPressed && !pressEdge;
+		var releaseEdge = FlxG.mouse.justReleased || (wasPressed && !pressedNow);
 		wasPressed = pressedNow;
 		var lx = mx - viewX;
 		var ly = my - viewY;
 		var inView = lx >= 0 && lx <= viewW && ly >= 0 && ly <= viewH && !topMenuSpr.anyMenuOpened && curContextMenu == null;
 
-		// la vista: elegir, arrastrar y escalar con la rueda
+		// la vista: elegir, arrastrar y escalar con la rueda.
+		// Con multi (boton Multi, o SHIFT / CTRL) el clic suma o quita; arrastrar un objeto elegido mueve todo el grupo; arrastrar en
+		// vacio dibuja un rectangulo que suma lo que toca.
+		var additive = multiMode || shift || ctrl;
 		if (mode == 0 && (pressEdge || tapEdge) && inView)
 		{
 			var hit = pick(lx, ly);
+			pressTravel = 0;
+			tapCandidate = -1;
+			collapseTo = -1;
 			if (hit >= 0)
 			{
-				select(hit);
+				var was = isSel(objects[hit]);
+				if (additive)
+				{
+					if (!was)
+					{
+						addToSelection(hit);
+						markList();
+						syncObjectWidgets();
+					}
+					else if (tapEdge) toggleSelect(hit);
+					else tapCandidate = hit; // si suelta sin arrastrar, se quita
+				}
+				else if (was && selectedList().length > 1)
+				{
+					// sobre uno de varios elegidos: se arrastra el grupo; si no llega a moverse, queda solo ese
+					if (tapEdge) select(hit);
+					else collapseTo = hit;
+				}
+				else select(hit);
 				dragging = pressEdge;
+			}
+			else if (additive && pressEdge)
+			{
+				marqueeOn = true;
+				marqueeX = lx;
+				marqueeY = ly;
 			}
 		}
 		if (!FlxG.mouse.pressed) dragging = false;
@@ -1208,13 +1423,46 @@ class SceneEditorState extends UIState
 			var dy = my - lastMY;
 			if (dx != 0 || dy != 0)
 			{
-				if (Reflect.field(objects[sel], "fixed") == true) move(sel, dx / viewW, dy / viewH);
-				else
+				pressTravel += Math.abs(dx) + Math.abs(dy);
+				for (i in selectedList())
 				{
-					var ppu = compute(sel).ppu;
-					move(sel, dx / ppu, dy / ppu);
+					if (Reflect.field(objects[i], "fixed") == true) move(i, dx / viewW, dy / viewH);
+					else
+					{
+						var ppu = compute(i).ppu;
+						move(i, dx / ppu, dy / ppu);
+					}
 				}
 			}
+		}
+		if (mode == 0 && marqueeOn)
+		{
+			var qx = Math.max(0, Math.min(viewW, lx));
+			var qy = Math.max(0, Math.min(viewH, ly));
+			if (pressedNow)
+			{
+				marqueeBox.visible = true;
+				marqueeBox.scale.set(Math.max(1, Math.abs(qx - marqueeX)), Math.max(1, Math.abs(qy - marqueeY)));
+				marqueeBox.updateHitbox();
+				marqueeBox.setPosition(Math.min(qx, marqueeX), Math.min(qy, marqueeY));
+			}
+			else
+			{
+				marqueeOn = false;
+				marqueeBox.visible = false;
+				selectInRect(marqueeX, marqueeY, qx, qy);
+			}
+		}
+		if (releaseEdge)
+		{
+			// un toque que no llego a mover nada: quita ese del grupo / deja solo ese
+			if (pressTravel < 4)
+			{
+				if (tapCandidate >= 0) toggleSelect(tapCandidate);
+				else if (collapseTo >= 0) select(collapseTo);
+			}
+			tapCandidate = -1;
+			collapseTo = -1;
 		}
 		// pestaña Camaras: el mundo esta fijo; arrastra el marco (o toca el mundo para llevarlo ahi), rueda: zoom, flechas: mover
 		if (mode == 1)
@@ -1242,7 +1490,7 @@ class SceneEditorState extends UIState
 		lastMX = mx;
 		lastMY = my;
 		if (mode == 0 && inView && FlxG.mouse.wheel != 0 && sel >= 0)
-			rescale(sel, FlxG.mouse.wheel * (shift ? 0.25 : ctrl ? 0.01 : 0.05));
+			for (i in selectedList()) rescale(i, FlxG.mouse.wheel * (shift ? 0.25 : ctrl ? 0.01 : 0.05));
 
 		// flechas: mover el objeto elegido (SHIFT x10, CTRL fino)
 		if (mode == 0 && !typing && !topMenuSpr.anyMenuOpened && sel >= 0 && sel < objects.length)
@@ -1251,9 +1499,12 @@ class SceneEditorState extends UIState
 			var ay = (keys.justPressed.DOWN ? 1 : 0) - (keys.justPressed.UP ? 1 : 0);
 			if (ax != 0 || ay != 0)
 			{
-				var fixed = Reflect.field(objects[sel], "fixed") == true;
-				var unit = fixed ? (shift ? 0.1 : ctrl ? 0.001 : 0.01) : (shift ? 100 : ctrl ? 1 : 10);
-				move(sel, ax * unit, ay * unit);
+				for (i in selectedList())
+				{
+					var fixed = Reflect.field(objects[i], "fixed") == true;
+					var unit = fixed ? (shift ? 0.1 : ctrl ? 0.001 : 0.01) : (shift ? 100 : ctrl ? 1 : 10);
+					move(i, ax * unit, ay * unit);
+				}
 			}
 		}
 
@@ -1280,7 +1531,7 @@ class SceneEditorState extends UIState
 
 	function refreshInfo():Void
 	{
-		infoText.text = (mode == 1 ? "Mundo fijo - camara " : "Vista de la camara ") + (camIdx + 1) + "/" + camCount() + (dirty ? "   * sin guardar" : "") + (mode == 0 && sel >= 0 && tCount() > 1 ? "   (posicion " + tIdx + " de " + tCount() + ")" : "")
+		infoText.text = (mode == 1 ? "Mundo fijo - camara " : "Vista de la camara ") + (camIdx + 1) + "/" + camCount() + (dirty ? "   * sin guardar" : "") + (mode == 0 && (multiMode || selectedList().length > 1) ? "   [" + selectedList().length + " elegidos" + (multiMode ? ", MULTI" : "") + "]" : "") + (mode == 0 && sel >= 0 && tCount() > 1 ? "   (posicion " + tIdx + " de " + tCount() + ")" : "")
 			+ (mode == 0 ? "\nClick y arrastra para mover. Rueda: escala. Flechas: mover (SHIFT x10, CTRL fino). Arrastra los botones de la lista para cambiar las capas."
 				: "\nPestaña Camaras (mundo fijo): arrastra el marco rojo o toca el mundo para mover la camara, rueda: zoom, flechas: mover (SHIFT x10, CTRL fino).");
 	}
