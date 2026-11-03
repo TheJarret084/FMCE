@@ -31,7 +31,7 @@ class SpriteCache
 	static var pool:Map<String, Array<LevelSprite>> = new Map();
 	static var graphics:Array<FlxGraphic> = [];
 
-	/** Deja el cache listo para `dir`. Si venia de otro nivel lo vacia primero. */
+	/** Deja el cache listo para `dir`. Lo vacia primero: cada vez que se entra al loading (tambien al reiniciar) se carga de nuevo. */
 	public static function begin(dir:String):Void
 	{
 		// Una sola vez: el cache solo vive mientras el estado es el loading o el juego. Cualquier otra pantalla
@@ -45,7 +45,7 @@ class SpriteCache
 			});
 		}
 
-		if (active && levelDir == dir) return;
+		// Siempre desde cero, tambien al reiniciar el mismo nivel: reusar el cache de la partida anterior dejaba el stage vacio.
 		clear();
 		levelDir = dir;
 		active = true;

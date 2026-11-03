@@ -62,7 +62,12 @@ class Eventos
 	/** Lo asigna PlayState: evento GUI (props.visible) para ocultar/mostrar strums, notas y HUD. */
 	public var onGui:Null<Bool->Void> = null;
 
+	/** Un evento que llega con mas de esto (ms) de retraso se considera "viejo". */
+	static inline var ATRASO_MS:Float = 1000;
+
 	var siguiente:Int = 0;
+	/** true mientras se ejecutan eventos muy atrasados (se entro a mitad de cancion): sus efectos pasajeros se saltan. */
+	var atrasado:Bool = false;
 	var transiciones:Array<Transicion> = [];
 	var avisados:Map<String, Bool> = new Map<String, Bool>();
 
@@ -88,8 +93,12 @@ class Eventos
 		{
 			var evento = lista[siguiente];
 			siguiente++;
+			// Entrando a mitad de cancion (probar desde el charter, adelantar / retroceder) los eventos anteriores se ejecutan todos
+			// de golpe: dejan el estado final (camara, objetos, GUI...) pero un flash o un shake de hace 30 segundos no tiene sentido.
+			atrasado = songTime - evento.time * 1000 > ATRASO_MS;
 			for (accion in evento.actions) ejecutarAccion(accion, evento.time * 1000, 0);
 		}
+		atrasado = false;
 		avanzar(songTime);
 	}
 
@@ -119,12 +128,12 @@ class Eventos
 		{
 			case "CameraSet": camaraSet(props, inicio);
 			case "CameraZoom": camaraZoom(props, inicio);
-			case "CameraShake", "CamaraShake": cameraShake(props);
+			case "CameraShake", "CamaraShake": if (!atrasado) cameraShake(props);
 			case "ObjectPositionSet": objetoPosicion(props, inicio);
 			case "ObjectVisibilitySet": objetoVisibilidad(props);
 			case "ObjectOpacitySet": objetoOpacidad(props, inicio);
 			case "ObjectAnimationSet": objetoAnimacion(props);
-			case "ScreenFlash": pantallaFlash(props, inicio);
+			case "ScreenFlash": if (!atrasado) pantallaFlash(props, inicio);
 			case "RunActionPack": correrPack(props, inicio, profundidad);
 			case "BarIconChange", "BarIconChance": cambioIcon(props);
 			case "ObjectSpriteSet": objetoSprite(props);

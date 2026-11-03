@@ -49,10 +49,6 @@ class PlayHUD extends FlxGroup
 	public static inline var COMBO_SCALE:Float = 0.5;
 	public static inline var COMBO_POP:Float = 0.6 / 0.5;
 	public static inline var MIN_COMBO_DIGITS:Int = 3;
-	/** Escala de los digitos de puntos y precision (mas chicos que los del combo) y cuantos digitos caben en cada fila. */
-	public static inline var PRESS_SCALE:Float = 0.3;
-	static inline var SCORE_SLOTS:Int = 4;
-	static inline var PRECISION_SLOTS:Int = 3;
 
 	/** Imagenes del popup: `images/game/score/<sick|good|bad|shit>.png` y `num0.png`..`num9.png`. */
 	static inline var SCORE_DIR:String = "game/score/";
@@ -69,6 +65,11 @@ class PlayHUD extends FlxGroup
 	var healthBar:HealthBar;
 	var timeBar:FlxBar;
 	var timeText:FlxText;
+	/** Nombre de la cancion: el texto de la barra de tiempo es `songName - tiempo`. */
+	var songName:String;
+	/** Texto de botplay (null si no esta activo). Lo coloca `placeBotplay` y parpadea. */
+	public var botplayText(default, null):FlxText;
+	var botplaySine:Float = 0;
 	var scoreText:FlxText;
 	var ratingText:FlxText;
 	/** Debajo del rating: puntos, precision y desfase de la ultima pulsacion. */
@@ -76,10 +77,6 @@ class PlayHUD extends FlxGroup
 	var comboText:FlxText;
 	var ratingImages:Map<String, FlxSprite> = new Map();
 	var comboImages:Array<FlxSprite> = [];
-	/** Puntos y precision de la ultima pulsacion con los mismos sprites num0..9 del combo (`percent.png` es opcional). */
-	var scoreSlots:Array<FlxSprite> = [];
-	var precisionSlots:Array<FlxSprite> = [];
-	var percentImage:FlxSprite;
 	var songLength:Float;
 	var barY:Float;
 	var shownSecond:Int = -1;
@@ -102,6 +99,7 @@ class PlayHUD extends FlxGroup
         if (defaultFont == null || defaultFont == "") defaultFont = Paths.fontPath("PhantomMuff.ttf");
         
 		this.songLength = Math.max(songLength, 1);
+		this.songName = songName;
 		var down = ClientPrefs.isDownScroll();
 
 		barY = FlxG.height * (down ? 0.11 : 0.89);
@@ -142,9 +140,9 @@ class PlayHUD extends FlxGroup
 		comboText.borderSize = 3;
 		comboText.alpha = 0;
 		add(comboText);
-		pressText = new FlxText(0, 0, 0, "", 28);
-		pressText.setFormat(defaultFont, 28, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		pressText.borderSize = 2;
+		pressText = new FlxText(0, 0, 0, "", 22);
+		pressText.setFormat(defaultFont, 22, 0xFF5CF0DC, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		pressText.borderSize = 1.5;
 		pressText.alpha = 0;
 		add(pressText);
 
@@ -172,33 +170,12 @@ class PlayHUD extends FlxGroup
 				comboImages.push(image);
 				add(image);
 			}
-			for (_ in 0...SCORE_SLOTS)
-			{
-				var image = new FlxSprite();
-				image.alpha = 0;
-				scoreSlots.push(image);
-				add(image);
-			}
-			for (_ in 0...PRECISION_SLOTS)
-			{
-				var image = new FlxSprite();
-				image.alpha = 0;
-				precisionSlots.push(image);
-				add(image);
-			}
-			var percentFile = Paths.image(SCORE_DIR + "percent");
-			if (Assets.exists(percentFile))
-			{
-				percentImage = new FlxSprite().loadGraphic(percentFile);
-				percentImage.alpha = 0;
-				add(percentImage);
-			}
 		}
 
 		// Botplay se guarda en las opciones y no cuenta fallos ni puntos: se deja a la vista para no jugar con el sin querer.
 		if (ClientPrefs.isBotplay())
 		{
-			var botplayText = new FlxText(0, down ? FlxG.height - 100 : 76, FlxG.width, "BOTPLAY", 32);
+			botplayText = new FlxText(0, down ? FlxG.height - 100 : 76, FlxG.width, "BOTPLAY", 32);
 			botplayText.setFormat(defaultFont, 32, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 			botplayText.borderSize = 2;
 			add(botplayText);
@@ -206,6 +183,15 @@ class PlayHUD extends FlxGroup
 
 		onUpdateScore(0, -1, 0);
 		updateTime(0);
+	}
+
+	/** Pone el texto de botplay justo encima de la strumline del jugador, centrado sobre ella. */
+	public function placeBotplay(lineX:Float, lineY:Float, lineWidth:Float):Void
+	{
+		if (botplayText == null) return;
+		botplayText.fieldWidth = lineWidth;
+		botplayText.x = lineX;
+		botplayText.y = lineY - botplayText.height - 8;
 	}
 
 	/** El tiempo y su barra aparecen al empezar la cancion. */
@@ -221,7 +207,7 @@ class PlayHUD extends FlxGroup
 		var played = accuracy >= 0;
 		var accText = played ? Std.string(Math.round(accuracy * 100) / 100) + "%" : "N/A";
 		var rank = played ? letterRank(accuracy, misses) : "N/A";
-		scoreText.text = "Score: " + FlxStringUtil.formatMoney(score, false) + " | Misses: " + misses + " | Accuracy: " + accText + " | Rank: " + rank + "\n";
+		scoreText.text = "Score: " + formatNumber(score) + " | Misses: " + misses + " | Accuracy: " + accText + " | Rank: " + rank + "\n";
 		if (!missed) doScoreBop();
 	}
 
@@ -335,93 +321,45 @@ class PlayHUD extends FlxGroup
 		if (press != null) showPress(press, posX, delay);
 	}
 
-	/** "+350  |  91.3%  |  -12 ms" entre el rating y el combo. */
+	/** Texto chico (celeste) arriba del rating con la precision de la pulsacion. Entra con un mini pop. */
 	function showPress(press:PressScore, posX:Float, delay:Float):Void
 	{
-		// con los sprites num0..9: una fila "350  91%" entre el rating y el combo, a la escala que quepa en ese hueco
-		if (scoreSlots.length > 0)
-		{
-			pressText.alpha = 0;
-			var scorePieces = prepareDigits(scoreSlots, press.score, null);
-			var precisionPieces = prepareDigits(precisionSlots, Math.round(press.precision), percentImage);
-
-			var ratingImage = ratingImages.get(press.rating);
-			var ratingBottom = FlxG.height / 2 - 60 + (ratingImage != null ? ratingImage.frameHeight * RATING_SCALE : ratingText.height) / 2;
-			var comboTop = FlxG.height / 2 + 80 - (comboImages.length > 0 ? comboImages[0].frameHeight * COMBO_SCALE : comboText.height) / 2;
-
-			var digitHeight = 1.0;
-			for (piece in scorePieces.concat(precisionPieces)) digitHeight = Math.max(digitHeight, piece.frameHeight);
-			var scale = Math.max(0.12, Math.min(PRESS_SCALE, (comboTop - ratingBottom - 8) / digitHeight));
-
-			var scoreWidth = piecesWidth(scorePieces, scale);
-			var gap = 80 * scale;
-			var left = posX - 40 - (scoreWidth + gap + piecesWidth(precisionPieces, scale)) / 2;
-			var top = ratingBottom + 4;
-			placePieces(scorePieces, left, top, scale, delay);
-			placePieces(precisionPieces, left + scoreWidth + gap, top, scale, delay);
-			return;
-		}
-
-		var ms = Math.round(press.ms);
-		pressText.text = "+" + press.score + "  |  " + Std.string(Math.round(press.precision * 10) / 10) + "%  |  " + (ms > 0 ? "+" : "") + ms + " ms";
-		pressText.color = RATING_COLORS.exists(press.rating) ? RATING_COLORS.get(press.rating) : FlxColor.WHITE;
+		pressText.text = formatPercent(press.precision);
 		pressText.updateHitbox();
-		pressText.setPosition(posX - 40 - pressText.width / 2, FlxG.height / 2 + 15);
+
+		var ratingImage = ratingImages.get(press.rating);
+		var ratingTop = FlxG.height / 2 - 60 - (ratingImage != null ? ratingImage.frameHeight * RATING_SCALE : ratingText.height) / 2;
+		pressText.setPosition(posX - 40 - pressText.width / 2, ratingTop - pressText.height - 4);
+
 		FlxTween.cancelTweensOf(pressText, ["alpha"]);
+		FlxTween.cancelTweensOf(pressText.scale);
 		pressText.alpha = 1;
+		pressText.scale.set(1.2, 1.2);
+		FlxTween.tween(pressText.scale, {x: 1, y: 1}, 0.15, {ease: FlxEase.expoOut});
 		FlxTween.tween(pressText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
 	}
 
-	/** Carga los sprites num0..9 de `value` en `slots` (y suma `tail` al final); devuelve las piezas en orden. Todas quedan ocultas. */
-	function prepareDigits(slots:Array<FlxSprite>, value:Int, tail:Null<FlxSprite>):Array<FlxSprite>
-	{
-		var digits = Std.string(Std.int(Math.max(0, value)));
-		if (digits.length > slots.length) digits = digits.substr(digits.length - slots.length);
+	/** "91.3%" (precision 0..100, un decimal). */
+	public static function formatPercent(value:Float):String
+		return Std.string(Math.round(value * 10) / 10) + "%";
 
-		for (slot in slots)
-		{
-			FlxTween.cancelTweensOf(slot, ["alpha"]);
-			FlxTween.cancelTweensOf(slot.scale);
-			slot.alpha = 0;
-		}
-		var pieces:Array<FlxSprite> = [];
-		for (i in 0...digits.length)
-		{
-			slots[i].loadGraphic(Paths.image(SCORE_DIR + "num" + digits.charAt(i)));
-			pieces.push(slots[i]);
-		}
-		if (tail != null)
-		{
-			FlxTween.cancelTweensOf(tail, ["alpha"]);
-			FlxTween.cancelTweensOf(tail.scale);
-			tail.alpha = 0;
-			pieces.push(tail);
-		}
-		return pieces;
+	/** "-12.4ms" / "+8ms": negativo = temprano, positivo = tarde. */
+	public static function formatMs(ms:Float):String
+	{
+		var rounded = Math.round(ms * 10) / 10;
+		return (rounded > 0 ? "+" : "") + Std.string(rounded) + "ms";
 	}
 
-	function piecesWidth(pieces:Array<FlxSprite>, scale:Float):Float
+	/**
+	 * Numero para el HUD: con separador de miles (`55,150`) y, de 10 millones para arriba, abreviado (`12.3M`) para que nunca
+	 * salgan filas enormes de digitos.
+	 */
+	public static function formatNumber(value:Int):String
 	{
-		var width = 0.0;
-		for (piece in pieces) width += piece.frameWidth * scale;
-		return width;
-	}
-
-	/** Pone las piezas una tras otra desde `left`, con el mismo pop y fade que el combo. */
-	function placePieces(pieces:Array<FlxSprite>, left:Float, topY:Float, scale:Float, delay:Float):Void
-	{
-		var height = 0.0;
-		for (piece in pieces) height = Math.max(height, piece.frameHeight * scale);
-		for (piece in pieces)
-		{
-			var cell = piece.frameWidth * scale;
-			piece.setPosition(left + cell / 2 - piece.frameWidth / 2, topY + height / 2 - piece.frameHeight / 2);
-			left += cell;
-			piece.alpha = 1;
-			piece.scale.set(scale * COMBO_POP, scale * COMBO_POP);
-			FlxTween.tween(piece.scale, {x: scale, y: scale}, 0.5, {ease: FlxEase.expoOut});
-			FlxTween.tween(piece, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
-		}
+		var abs = Math.abs(value);
+		if (abs >= 1000000000) return Std.string(Math.round(value / 100000000) / 10) + "B";
+		if (abs >= 10000000) return Std.string(Math.round(value / 100000) / 10) + "M";
+		return FlxStringUtil.formatMoney(value, false);
 	}
 
 	/** "Time Left" de Psych: lo que falta de cancion, una vez por segundo. */
@@ -431,7 +369,7 @@ class PlayHUD extends FlxGroup
 		var second = Std.int(songTime / 1000);
 		if (second == shownSecond) return;
 		shownSecond = second;
-		timeText.text = FlxStringUtil.formatTime(Math.floor(Math.max(0, songLength - songTime) / 1000), false);
+		timeText.text = songName + " - " + FlxStringUtil.formatTime(Math.floor(Math.max(0, songLength - songTime) / 1000), false);
 	}
 
 	/** Suma (o resta) vida del jugador, limitada a 0..1. */
@@ -457,6 +395,13 @@ class PlayHUD extends FlxGroup
 	{
 		shownHealth += (health - shownHealth) * Math.min(1, elapsed * 8);
 		super.update(elapsed);
+
+		// Botplay parpadea (como en Psych): el alpha sube y baja con un seno.
+		if (botplayText != null)
+		{
+			botplaySine += 180 * elapsed;
+			botplayText.alpha = 1 - Math.sin(Math.PI * botplaySine / 180);
+		}
 		healthBar.setHealth(shownHealth);
 		iconPlayer.updateHealth(shownHealth);
 		iconOpponent.updateHealth(shownHealth);

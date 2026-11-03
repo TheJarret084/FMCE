@@ -79,6 +79,8 @@ class PauseSubState extends FlxSubState
 	var chosen:Bool = false;
 	var pending:String = null;
 	var grace:Int = 0;
+	/** Las opciones cambiaron algo que solo se aplica al reiniciar (scroll, middlescroll, botplay, velocidad): se reinicia al volver. */
+	var pendingRestart:Bool = false;
 
 	public function new(playState:PlayState)
 	{
@@ -228,9 +230,11 @@ class PauseSubState extends FlxSubState
 				[
 					{text: "REANUDAR", action: "resume"},
 					{text: "REINICIAR", action: "restart"},
+					{text: "ADELANTAR " + Std.int(PlayState.SEEK_STEP_MS / 1000) + "S", action: "forward"},
+					{text: "RETROCEDER " + Std.int(PlayState.SEEK_STEP_MS / 1000) + "S", action: "backward"},
 					{text: "OPCIONES", action: "options"},
 					{text: "CONVERTIDOR", action: "convert"},
-					{text: "VOLVER AL FREEPLAY", action: "freeplay"}
+					{text: "SALIR", action: "freeplay"}
 				];
 			case CONFIRM:
 				[
@@ -288,6 +292,15 @@ class PauseSubState extends FlxSubState
 			label.x = FlxMath.lerp(label.x, (i == selected ? 75 : 55) + (navPad != null ? NavPad.WIDTH : 0), r);
 			alphas[i] = FlxMath.lerp(alphas[i], i == selected ? 1 : 0.3, r);
 			label.alpha = alphas[i] * uiAlpha;
+		}
+
+		// Volvio de Opciones con algo que pide reiniciar: se reinicia aqui (ya sin el substate de opciones encima).
+		if (pendingRestart && !chosen && subState == null)
+		{
+			pendingRestart = false;
+			chosen = true;
+			playState.restartSong();
+			return;
 		}
 
 		// Ignorar input una vez elegida una salida (la cortina va a tomar el control) o justo al volver de Opciones.
@@ -371,11 +384,17 @@ class PauseSubState extends FlxSubState
 				close();
 			case "restart":
 				chosen = true;
-				FlxG.sound.music?.stop();
-		playState.stopVoices();
 				// The substate is torn down by the state switch, so go through
 				// the parent's transition rather than opening a second curtain.
-				playState.transitionTo(new LoadingLevelState());
+				playState.restartSong();
+			case "forward" | "backward":
+				chosen = true;
+				// Como "probar desde aqui" del charter: se recarga el nivel empezando en el punto nuevo.
+				if (!playState.seekBy(action == "forward" ? PlayState.SEEK_STEP_MS : -PlayState.SEEK_STEP_MS))
+				{
+					chosen = false;
+					CoolUtil.playMenuSound("cancel", 0.5);
+				}
 			case "options":
 				openOptions();
 			case "no":
@@ -393,15 +412,22 @@ class PauseSubState extends FlxSubState
 	{
 		// Las opciones traen su propio fondo: esconder el nuestro mientras estan abiertas.
 		setPauseVisible(false);
+		var before = restartSignature();
 		var options = new ConfigSubState();
 		options.closeCallback = () ->
 		{
 			setPauseVisible(true);
 			grace = 2;
+			// Si cambio algo que "se aplica al reiniciar", se reinicia al volver (en el siguiente update, sin el substate encima).
+			if (restartSignature() != before) pendingRestart = true;
 		};
 		options.cameras = cameras;
 		openSubState(options);
 	}
+
+	/** Las opciones que solo se aplican al crear el nivel: si cambian, hace falta reiniciar. */
+	static function restartSignature():String
+		return ClientPrefs.isDownScroll() + "|" + ClientPrefs.isMiddleScroll() + "|" + ClientPrefs.isBotplay() + "|" + ClientPrefs.getScrollSpeed();
 
 	function setPauseVisible(value:Bool):Void
 	{
@@ -422,6 +448,8 @@ class PauseSubState extends FlxSubState
 	function leave(action:String):Void
 	{
 		chosen = true;
+		// Salir tras un adelantar / retroceder: que el siguiente nivel no herede ese punto de partida (desde el charter si se queda).
+		if (PlayState.returnToEditor == null) PlayState.startFromMs = 0;
 		switch (action)
 		{
 			case "convert":
@@ -453,7 +481,7 @@ class PauseSubState extends FlxSubState
 		return switch (action)
 		{
 			case "convert": "IR AL CONVERTIDOR";
-			case "freeplay": "VOLVER AL FREEPLAY";
+			case "freeplay": "SALIR";
 			default: "CONTINUAR";
 		}
 	}

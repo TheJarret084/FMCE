@@ -7,6 +7,7 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxSubState;
 import flixel.group.FlxGroup.FlxTypedGroup;
+import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 import flixel.sound.FlxSound;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
@@ -41,6 +42,16 @@ class PlayState extends MusicBeatState
 
 	/** Chart editor ("probar desde aqui"): empieza la cancion en este ms; 0 = desde el inicio. */
 	public static var startFromMs:Float = 0;
+
+	/** Desde donde se abrio el nivel (0 = el inicio, o el punto del charter): a ahi vuelve REINICIAR, aunque se haya adelantado o retrocedido. */
+	static var launchStartMs:Float = 0;
+
+	/** true justo despues de adelantar / retroceder desde la pausa: el create siguiente NO toma `startFromMs` como punto de partida. */
+	static var seeking:Bool = false;
+
+	/** Cuanto adelanta / retrocede la pausa, y lo minimo que se deja antes del final para que el salto no caiga en el cierre. */
+	public static inline var SEEK_STEP_MS:Float = 10000;
+	static inline var SEEK_END_MARGIN:Float = 3000;
 
 	/** Nivel al que se vuelve al salir del juego cuando se abrio desde el chart editor. null = Freeplay. */
 	public static var returnToEditor:Null<String> = null;
@@ -137,11 +148,56 @@ class PlayState extends MusicBeatState
 	/** Grupos que oculta el evento GUI: strums, notas, confirms y HUD. */
 	var guiGroups:Array<FlxBasic> = [];
 
-	/** Evento GUI: muestra u oculta toda la interfaz de juego. Los objetos fixed del stage se quedan. */
+	/** Cuanto se ve la interfaz (0..1). Lo anima el evento GUI con un mini tween. */
+	var guiFade:Float = 1;
+	var guiFadeTween:FlxTween;
+	/** Alpha propio de cada sprite de la interfaz mientras `guiFade` se lo esta multiplicando. */
+	var guiBaseAlpha:haxe.ds.ObjectMap<FlxSprite, Float> = new haxe.ds.ObjectMap();
+
+	static inline var GUI_FADE_SECONDS:Float = 0.25;
+
+	/**
+	 * Evento GUI: muestra u oculta toda la interfaz de juego con un fade corto. Los objetos fixed del stage se quedan.
+	 * NO toca `visible` de ningun grupo: lo que ya estaba oculto por otra razon (las notas del CPU en middlescroll) sigue oculto.
+	 */
 	public function setGuiVisible(value:Bool):Void
 	{
-		for (group in guiGroups)
-			group.visible = value;
+		if (guiFadeTween != null) guiFadeTween.cancel();
+		guiFadeTween = FlxTween.num(guiFade, value ? 1 : 0, GUI_FADE_SECONDS, {ease: FlxEase.quadOut}, function(v:Float) guiFade = v);
+	}
+
+	/** Antes del update: devuelve a cada sprite su alpha real, para que el resto del juego (tweens, notas) no vea el fade. */
+	function releaseGuiFade():Void
+	{
+		for (sprite in guiBaseAlpha.keys())
+			if (sprite.colorTransform != null) sprite.alpha = guiBaseAlpha.get(sprite);
+		guiBaseAlpha = new haxe.ds.ObjectMap();
+	}
+
+	/** Despues del update: multiplica el alpha de toda la interfaz por `guiFade` (no hace nada con la interfaz visible). */
+	function applyGuiFade():Void
+	{
+		if (guiFade >= 1) return;
+		for (group in guiGroups) paintGuiFade(group);
+	}
+
+	function paintGuiFade(basic:FlxBasic):Void
+	{
+		if (basic == null) return;
+		if (Std.isOfType(basic, FlxTypedGroup))
+		{
+			for (member in (cast basic : FlxTypedGroup<FlxBasic>).members) paintGuiFade(member);
+			return;
+		}
+		if (Std.isOfType(basic, FlxTypedSpriteGroup))
+		{
+			for (member in (cast basic : FlxTypedSpriteGroup<FlxSprite>).members) paintGuiFade(member);
+			return;
+		}
+		var sprite = Std.downcast(basic, FlxSprite);
+		if (sprite == null || sprite.colorTransform == null || guiBaseAlpha.exists(sprite)) return;
+		guiBaseAlpha.set(sprite, sprite.alpha);
+		sprite.alpha *= guiFade;
 	}
 
 	/** Camara para substates (pausa, game over): queda por encima del HUD. */
@@ -197,12 +253,17 @@ class PlayState extends MusicBeatState
 		super.create();
 		SpriteCache.attach();
 
+		// Punto de partida "de verdad": el que trajo el menu o el charter. Un salto desde la pausa no lo cambia.
+		if (!seeking) launchStartMs = startFromMs;
+		seeking = false;
+
 		camGame = FlxG.camera;
+        camGame.bgColor = 0xFF000000;
 		camHUD = new FlxCamera();
 		camHUD.bgColor = FlxColor.TRANSPARENT;
 		FlxG.cameras.add(camHUD, false);
 
-		add(new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xFF151722));
+		// add(new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xFF151722));
 
 		try
 		{
@@ -218,7 +279,7 @@ class PlayState extends MusicBeatState
 
 		funky.core.Paths.currentLevel = song.levelDir;
 		DiscordClient.playingPresence(songLabel(), Difficulty.name());
-		Scripts.load(song.levelDir, ["game" => this, "song" => song, "levelDir" => song.levelDir]);
+		Scripts.load(song.levelDir, ["PlayState" => this, "song" => song, "levelDir" => song.levelDir]);
 		Scripts.call("onLoad");
 
 		stage = new Stage(song, camHUD);
@@ -226,11 +287,14 @@ class PlayState extends MusicBeatState
 		if (stage.loaded)
 			add(stage);
 		else
+		{
+			Log.warn('[PlayState] el stage no cargo ningun objeto (' + song.levelDir + ')');
 			stage = null;
+		}
 
 		eventos = new Eventos(song, stage);
 		Scripts.set("stage", stage);
-		Scripts.set("eventos", eventos);
+		Scripts.set("events", eventos);
 
 		if (Scripts.has)
 			for (event in eventos.lista)
@@ -352,9 +416,12 @@ class PlayState extends MusicBeatState
 
 		hud.cameras = [camHUD];
 		add(hud);
+		hud.placeBotplay(strumX, strumY, lineWidth);
 		guiGroups.push(hud);
 		eventos.hud = hud;
 		eventos.onGui = setGuiVisible;
+		FlxG.signals.preUpdate.add(releaseGuiFade);
+		FlxG.signals.postUpdate.add(applyGuiFade);
 		Scripts.set("hud", hud);
 
 		if (song.musicPath != null)
@@ -1066,6 +1133,44 @@ class PlayState extends MusicBeatState
 		DiscordClient.playingPresence(songLabel(), Difficulty.name());
 	}
 
+	/** Reinicia la cancion desde donde se abrio el nivel (ignora los saltos hechos desde la pausa). */
+	public function restartSong():Void
+	{
+		startFromMs = launchStartMs;
+		seeking = false;
+		leaveSong();
+		transitionTo(new funky.menus.LoadingLevelState());
+	}
+
+	/**
+	 * Adelanta (+) o retrocede (-) la cancion `deltaMs`, igual que "probar desde aqui" del charter: se vuelve a cargar el nivel
+	 * empezando en el punto nuevo (notas anteriores fuera, eventos anteriores aplicados de golpe, countdown y a jugar).
+	 * El punto se mantiene dentro de la cancion; cerca del inicio (menos de un segundo) se empieza desde el principio.
+	 * @return false si no hay a donde saltar (ya estaba en el limite).
+	 */
+	public function seekBy(deltaMs:Float):Bool
+	{
+		if (song == null) return false;
+
+		var limit = Math.max(0, song.endTime - SEEK_END_MARGIN);
+		var target = Math.max(0, Math.min(limit, songTime + deltaMs));
+		if (target < 1000) target = 0;
+		if (Math.abs(target - songTime) < 1) return false;
+
+		startFromMs = target;
+		seeking = true;
+		leaveSong();
+		transitionTo(new funky.menus.LoadingLevelState());
+		return true;
+	}
+
+	/** Corta la musica y las voces antes de cambiar de state. */
+	function leaveSong():Void
+	{
+		if (FlxG.sound.music != null) FlxG.sound.music.stop();
+		stopVoices();
+	}
+
 	public function songLabel():String
 	{
 		return song == null ? "UNKNOWN" : song.name.toUpperCase();
@@ -1181,9 +1286,14 @@ class PlayState extends MusicBeatState
 		var spritePath = introSprites[swagCounter];
 		var soundName = introSounds[swagCounter];
 
+		// Si se entro desde el charter (probar la cancion), el countdown usa las versiones "-test" (intro3-test, game/countdown/
+		// ready-test...). Si falta alguna se usa la normal. Jugando desde el menu nunca se usan.
+		var testSuffix = returnToEditor != null ? "-test" : "";
+
 		if (spritePath != null)
 		{
-			var file = Paths.image(spritePath);
+			var file = Paths.image(spritePath + testSuffix);
+			if (testSuffix != "" && !sys.FileSystem.exists(file) && !openfl.utils.Assets.exists(file)) file = Paths.image(spritePath);
 
 			if (!sys.FileSystem.exists(file) && !openfl.utils.Assets.exists(file))
 			{
@@ -1211,7 +1321,8 @@ class PlayState extends MusicBeatState
 
 		if (soundName != null)
 		{
-			var file = Paths.sound(soundName);
+			var file = Paths.sound(soundName + testSuffix);
+			if (testSuffix != "" && !sys.FileSystem.exists(file) && !openfl.utils.Assets.exists(file)) file = Paths.sound(soundName);
 
 			if (!sys.FileSystem.exists(file) && !openfl.utils.Assets.exists(file))
 				Log.warn('[PlayState] countdown: falta el sonido $file');
@@ -1224,6 +1335,11 @@ class PlayState extends MusicBeatState
 	{
 		Scripts.call("onDestroy");
 		Scripts.clear();
+
+		FlxG.signals.preUpdate.remove(releaseGuiFade);
+		FlxG.signals.postUpdate.remove(applyGuiFade);
+		if (guiFadeTween != null) guiFadeTween.cancel();
+		releaseGuiFade();
 
 		for (timer in countdownTimers)
 			timer.cancel();
