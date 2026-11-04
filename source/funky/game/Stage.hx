@@ -655,7 +655,8 @@ class Stage extends FlxGroup
 
 		try
 		{
-			object.videoPlaying = object.video.play();
+			// play() diferido con reintentos: llamarlo justo despues de cargar el video fallaba y se quedaba parado.
+			object.videoPlaying = object.video.playWhenReady();
 		}
 		catch (e:Dynamic)
 		{
@@ -698,20 +699,18 @@ class Stage extends FlxGroup
 			|| index >= object.videoCount)
 			return false;
 
-		if (index == object.videoIndex)
-			return true;
-
-		object.video.stop();
+		// ObjectAnimationSet en un video = playAnim: arranca ese video desde el principio, aunque ya fuera el mismo
+		// (igual que playIndex(force) en un sprite). Antes el mismo indice se ignoraba y el cambio se quedaba trabado.
 		object.videoPlaying = false;
 
-		if (!object.video.loadSpriteVideo(
+		if (!object.video.playSpriteVideo(
 			SpriteBuilder.spriteDir(levelDir, object.videoName),
 			index
 		))
 			return false;
 
 		object.videoIndex = index;
-		playVideo(object);
+		object.videoPlaying = true;
 
 		return true;
 	}

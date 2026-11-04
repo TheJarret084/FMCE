@@ -3,18 +3,35 @@ package funky.menus;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.util.FlxColor;
+import flixel.util.FlxTimer;
 import funky.backend.FunkinVideoSprite;
 import funky.core.ClientPrefs;
 import funky.core.KeyBinds;
 import funky.core.Log;
 import funky.core.TouchNav;
+#if hxvlc
+import flixel.util.FlxAxes;
+import hxvlc.flixel.FlxVideo;
+#end
 
+/**
+ * Intro del juego: `assets/videos/splash.mp4` con su AUDIO, en un `FlxVideo` normal de hxvlc (un video de OpenFL a pantalla
+ * completa, no un sprite del State). Tocar la pantalla o una tecla lo salta.
+ */
 class SplashState extends FlxState
 {
 	/** Si el video no arranca en este tiempo (seg) se pasa al TITLE para no quedarse en negro. */
 	static inline var START_TIMEOUT:Float = 6;
 
-	var video:FunkinVideoSprite;
+	/** Espera (s) entre `load` y `play`, y reintentos si `play` aun no arranca (hxvlc pide no llamarlo en el mismo instante). */
+	static inline var PLAY_DELAY:Float = 0.05;
+	static inline var PLAY_RETRIES:Int = 10;
+
+	#if hxvlc
+	var video:Null<FlxVideo>;
+	var startTimer:Null<FlxTimer>;
+	#end
+
 	var finished:Bool = false;
 
 	/** El video ya conoce su tamano (hxvlc avisa en `onFormatSetup`). */
@@ -37,44 +54,108 @@ class SplashState extends FlxState
 			return;
 		}
 
-		video = new FunkinVideoSprite();
-		video.scrollFactor.set(0, 0);
-		add(video);
-
 		#if hxvlc
-		// Hasta que el video no avisa su formato no hay textura: ahi recien se puede escalar y centrar.
-		video.bitmap.onFormatSetup.add(fitVideo);
-		video.bitmap.onEndReached.add(() -> ended = true);
-		video.bitmap.onEncounteredError.add(error ->
+		video = new FlxVideo();
+		// Con el tamano ya conocido se ajusta a la pantalla manteniendo la proporcion (el FlxVideo por defecto la estira).
+		video.onFormatSetup.add(fitVideo);
+		video.onEndReached.add(() -> ended = true);
+		video.onEncounteredError.add(error ->
 		{
 			Log.warn('[SplashState] error del video: $error');
 			ended = true;
 		});
-		#end
+		FlxG.signals.gameResized.add(onGameResized);
+		FlxG.addChildBelowMouse(video);
 
-		var loaded = video.loadVideo("splash", false);
+		// Sin ":no-audio": el splash suena (el volumen es el del juego).
+		var loaded = false;
+		try
+		{
+			loaded = video.load(FunkinVideoSprite.resolve("splash"));
+		}
+		catch (e:Dynamic)
+		{
+			Log.error('[SplashState] error cargando el video: $e');
+		}
 
-		// Sin hxvlc o con el video roto no hay nada que mostrar: al TITLE.
+		// Con el video roto no hay nada que mostrar: al TITLE.
 		if (!loaded)
 		{
+			Log.warn('[SplashState] no se pudo cargar assets/videos/splash.mp4');
 			finishSplash();
 			return;
 		}
 
-		video.play();
+		startTimer = new FlxTimer().start(PLAY_DELAY, function(_) tryPlay(PLAY_RETRIES));
+		#else
+		// Sin hxvlc no hay video: al TITLE.
+		Log.warn('[SplashState] este build no incluye hxvlc, se omite el splash');
+		finishSplash();
+		#end
 	}
 
-	/** Ajusta el video a la pantalla manteniendo la proporcion (bandas negras si no coincide). */
+	#if hxvlc
+	function tryPlay(retries:Int):Void
+	{
+		startTimer = null;
+		if (finished || video == null) return;
+
+		var started = false;
+		try
+		{
+			started = video.play();
+		}
+		catch (e:Dynamic)
+		{
+			Log.error('[SplashState] error al reproducir: $e');
+		}
+
+		if (!started && retries > 0)
+			startTimer = new FlxTimer().start(PLAY_DELAY * 2, function(_) tryPlay(retries - 1));
+	}
+
+	/** Ajusta el video al tamano real del juego en pantalla manteniendo la proporcion (bandas negras si no coincide). */
 	function fitVideo():Void
 	{
-		if (video == null || video.frameWidth <= 0 || video.frameHeight <= 0) return;
+		if (video == null || video.bitmapData == null || video.bitmapData.width <= 0 || video.bitmapData.height <= 0) return;
 
-		var factor = Math.min(FlxG.width / video.frameWidth, FlxG.height / video.frameHeight);
-		video.setGraphicSize(Std.int(video.frameWidth * factor), Std.int(video.frameHeight * factor));
-		video.updateHitbox();
-		video.screenCenter();
+		// Deja de estirarlo a todo el juego (el `onFormatSetup` del propio FlxVideo ya corrio antes que este).
+		video.resizeMode = FlxAxes.NONE;
+
+		var game = FlxG.scaleMode.gameSize;
+		var factor = Math.min(game.x / video.bitmapData.width, game.y / video.bitmapData.height);
+		video.width = video.bitmapData.width * factor;
+		video.height = video.bitmapData.height * factor;
+		video.x = (game.x - video.width) / 2;
+		video.y = (game.y - video.height) / 2;
 		ready = true;
 	}
+
+	function onGameResized(width:Int, height:Int):Void
+		fitVideo();
+
+	/** Quita el video de la pantalla y libera el player. */
+	function releaseVideo():Void
+	{
+		if (startTimer != null)
+		{
+			startTimer.cancel();
+			startTimer = null;
+		}
+		FlxG.signals.gameResized.remove(onGameResized);
+
+		if (video == null) return;
+		var old = video;
+		video = null;
+		try
+		{
+			old.stop();
+		}
+		catch (e:Dynamic) {}
+		FlxG.removeChild(old);
+		old.dispose();
+	}
+	#end
 
 	override public function update(elapsed:Float):Void
 	{
@@ -116,8 +197,16 @@ class SplashState extends FlxState
 
 		finished = true;
 		#if hxvlc
-		if (video != null) video.stop();
+		releaseVideo();
 		#end
 		FlxG.switchState(new TitleState());
+	}
+
+	override public function destroy():Void
+	{
+		#if hxvlc
+		releaseVideo();
+		#end
+		super.destroy();
 	}
 }

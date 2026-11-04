@@ -1,6 +1,7 @@
 package funky.backend;
 
 import flixel.FlxSprite;
+import flixel.util.FlxTimer;
 import funky.core.Log;
 import funky.core.Paths;
 
@@ -28,6 +29,27 @@ class FunkinVideoSprite extends VideoBase
 
 	/** Ruta del video cargado, o null. */
 	public var videoPath(default, null):Null<String>;
+
+	/**
+	 * true desde que se pide reproducir (`playWhenReady` / `playSpriteVideo`) hasta que se detiene: lo que el juego quiere ver,
+	 * aunque el player todavia este arrancando.
+	 */
+	public var wantPlaying(default, null):Bool = false;
+
+	#if hxvlc
+	/** Espera (s) entre `load` y `play`: hxvlc no quiere el `play` en el mismo instante en que se carga el medio. */
+	static inline final PLAY_DELAY:Float = 0.05;
+
+	/** Si `play` todavia no arranca, cuantas veces mas se intenta y cada cuanto (s). */
+	static inline final PLAY_RETRIES:Int = 10;
+
+	static inline final RETRY_DELAY:Float = 0.1;
+
+	var startTimer:Null<FlxTimer>;
+
+	/** El juego pauso el video: si arranca mientras tanto, queda pausado en el primer cuadro. */
+	var heldPaused:Bool = false;
+	#end
 
 	/** Si el video cargado se repite (lo decide `loadVideo` / el `sprite.json`). */
 	public var looping(default, null):Bool = true;
@@ -63,6 +85,114 @@ class FunkinVideoSprite extends VideoBase
 		Log.warn('[FunkinVideoSprite] este build no incluye hxvlc, se omite el video "$path"');
 		return false;
 		#end
+	}
+
+	/**
+	 * Reproduce el video ya cargado en cuanto el player este listo, con reintentos. Es lo que usa el Stage en vez de `play()`
+	 * directo: llamar a `play()` justo despues de `load()` fallaba y el video se quedaba parado.
+	 * @return false si no hay video cargado (o este build no trae hxvlc).
+	 */
+	public function playWhenReady():Bool
+	{
+		if (videoPath == null) return false;
+
+		#if hxvlc
+		cancelStart();
+		wantPlaying = true;
+		startTimer = new FlxTimer().start(PLAY_DELAY, function(_) tryPlay(PLAY_RETRIES));
+		return true;
+		#else
+		return false;
+		#end
+	}
+
+	/**
+	 * Carga el video `index` de una carpeta de sprite y lo arranca desde el principio, aunque ya fuera ese: es el `playAnim`
+	 * de un objeto de video (evento ObjectAnimationSet). Una peticion nueva cancela la anterior que siga pendiente.
+	 */
+	public function playSpriteVideo(dir:String, index:Int):Bool
+	{
+		#if hxvlc
+		cancelStart();
+		wantPlaying = false;
+		// Sin `stop()` antes del `load`: load cambia el medio del player, y parar + cargar seguidos lo dejaba a medias.
+		if (!loadSpriteVideo(dir, index)) return false;
+		return playWhenReady();
+		#else
+		return false;
+		#end
+	}
+
+	#if hxvlc
+	function tryPlay(retries:Int):Void
+	{
+		startTimer = null;
+		if (!wantPlaying || bitmap == null) return;
+
+		var started = false;
+		try
+		{
+			started = play();
+		}
+		catch (e:Dynamic)
+		{
+			Log.error('[FunkinVideoSprite] error al reproducir "$videoPath": $e');
+		}
+
+		if (started)
+		{
+			if (heldPaused) bitmap.pause();
+			return;
+		}
+
+		if (retries > 0)
+			startTimer = new FlxTimer().start(RETRY_DELAY, function(_) tryPlay(retries - 1));
+		else
+		{
+			Log.warn('[FunkinVideoSprite] "$videoPath" no arranco');
+			wantPlaying = false;
+		}
+	}
+
+	function cancelStart():Void
+	{
+		if (startTimer == null) return;
+		startTimer.cancel();
+		startTimer = null;
+	}
+
+	override public function pause():Void
+	{
+		heldPaused = true;
+		super.pause();
+	}
+
+	override public function resume():Void
+	{
+		heldPaused = false;
+		super.resume();
+	}
+
+	override public function stop():Void
+	{
+		cancelStart();
+		wantPlaying = false;
+		super.stop();
+	}
+
+	override public function destroy():Void
+	{
+		cancelStart();
+		wantPlaying = false;
+		super.destroy();
+	}
+	#end
+
+	/** Tamano real (px) del video `index` de una carpeta de sprite, leido del propio .mp4 sin reproducirlo. null si no se pudo. */
+	public static function sizeOf(dir:String, index:Int):Null<{w:Int, h:Int}>
+	{
+		var file = videoFile(dir, index);
+		return file == null ? null : Mp4Info.size(file);
 	}
 
 	/** Cuantos videos tiene la carpeta cargada con `loadSpriteVideo` (0 si no es de video). */
@@ -225,7 +355,7 @@ class FunkinVideoSprite extends VideoBase
 	}
 
 	/** `intro` -> `assets/videos/intro.mp4`. Una ruta con extension se respeta. */
-	static function resolve(name:String):String
+	public static function resolve(name:String):String
 	{
 		var path = haxe.io.Path.extension(name) == "" ? Paths.video(name) : name;
 		#if (hxvlc && !desktop)

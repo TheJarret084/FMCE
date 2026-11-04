@@ -11,6 +11,7 @@ import flixel.text.FlxText.FlxTextBorderStyle;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
+import flixel.util.FlxStringUtil;
 import funky.core.ClientPrefs;
 import funky.core.CoolUtil;
 import funky.core.KeyBinds;
@@ -81,12 +82,16 @@ class PauseSubState extends FlxSubState
 	var grace:Int = 0;
 	/** Las opciones cambiaron algo que solo se aplica al reiniciar (scroll, middlescroll, botplay, velocidad): se reinicia al volver. */
 	var pendingRestart:Bool = false;
+	/** Punto de la cancion (ms) al que se salta al dar continuar. Empieza en el tiempo actual; ADELANTAR / RETROCEDER lo mueven. */
+	var seekTarget:Float = 0;
+	var timeInfo:FlxText;
 
 	public function new(playState:PlayState)
 	{
 		super();
 		this.playState = playState;
 		playState.pauseSong();
+		seekTarget = playState.songTime;
 		DiscordClient.pausePresence(playState.songLabel());
 	}
 
@@ -124,6 +129,12 @@ class PauseSubState extends FlxSubState
 		infoSub = new FlxText(0, pad + 44, FlxG.width - pad, "", 22);
 		infoSub.setFormat(font, 22, 0xFFD8D8E0, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(infoSub);
+
+		// Timer de referencia: tiempo actual / duracion; con un salto pendiente muestra a donde se va a saltar.
+		timeInfo = new FlxText(0, pad + 44 + 30, FlxG.width - pad, "", 22);
+		timeInfo.setFormat(font, 22, 0xFF8CC4FF, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		add(timeInfo);
+		refreshTimeInfo();
 
 		peekButton = new FlxText(20, FlxG.height - 56, 0, TouchNav.MOBILE ? "VER JUEGO" : "TAB: VER JUEGO", 22);
 		peekButton.setFormat(font, 22, FlxColor.WHITE, FlxTextAlign.LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -243,6 +254,7 @@ class PauseSubState extends FlxSubState
 				];
 		}
 		infoSub.text = next == MAIN ? "PAUSA" : "SE PIERDE EL PROGRESO DE LA CANCION";
+		if (timeInfo != null) timeInfo.visible = next == MAIN;
 		buildLabels();
 	}
 
@@ -281,6 +293,7 @@ class PauseSubState extends FlxSubState
 		if (bannerFrame != null) bannerFrame.alpha = 0.45 * uiAlpha;
 		infoTitle.alpha = uiAlpha;
 		infoSub.alpha = uiAlpha;
+		timeInfo.alpha = uiAlpha;
 		peekButton.alpha = FlxMath.lerp(peekButton.alpha, viewing ? 0.3 : 1, r);
 		if (dancer != null) dancer.alpha = uiAlpha;
 		if (backIcon != null) backIcon.alpha = uiAlpha;
@@ -380,21 +393,19 @@ class PauseSubState extends FlxSubState
 		{
 			case "resume":
 				chosen = true;
-				playState.resumeSong();
-				close();
+				// Con un salto pendiente (ADELANTAR / RETROCEDER) continuar lo aplica: recarga el nivel en ese punto y entra sin countdown.
+				if (!(hasPendingSeek() && playState.seekTo(seekTarget)))
+				{
+					playState.resumeSong();
+					close();
+				}
 			case "restart":
 				chosen = true;
 				// The substate is torn down by the state switch, so go through
 				// the parent's transition rather than opening a second curtain.
 				playState.restartSong();
 			case "forward" | "backward":
-				chosen = true;
-				// Como "probar desde aqui" del charter: se recarga el nivel empezando en el punto nuevo.
-				if (!playState.seekBy(action == "forward" ? PlayState.SEEK_STEP_MS : -PlayState.SEEK_STEP_MS))
-				{
-					chosen = false;
-					CoolUtil.playMenuSound("cancel", 0.5);
-				}
+				moveSeek(action == "forward" ? PlayState.SEEK_STEP_MS : -PlayState.SEEK_STEP_MS);
 			case "options":
 				openOptions();
 			case "no":
@@ -406,6 +417,39 @@ class PauseSubState extends FlxSubState
 			case "yes":
 				leave(pending);
 		}
+	}
+
+	function hasPendingSeek():Bool
+		return Math.abs(seekTarget - playState.songTime) >= 1;
+
+	/** Mueve el punto de salto (sin saltar todavia): lo muestra el timer y se aplica al dar continuar. */
+	function moveSeek(deltaMs:Float):Void
+	{
+		var next = playState.clampSeek(seekTarget + deltaMs);
+		if (Math.abs(next - seekTarget) < 1)
+		{
+			CoolUtil.playMenuSound("cancel", 0.5);
+			return;
+		}
+		seekTarget = next;
+		CoolUtil.playMenuSound("scroll", 0.5);
+		refreshTimeInfo();
+	}
+
+	static function clock(ms:Float):String
+		return FlxStringUtil.formatTime(Math.floor(Math.max(0, ms) / 1000), false);
+
+	function refreshTimeInfo():Void
+	{
+		var total = clock(playState.songLengthMs());
+		if (!hasPendingSeek())
+		{
+			timeInfo.text = clock(playState.songTime) + " / " + total;
+			return;
+		}
+
+		var diff = Math.round((seekTarget - playState.songTime) / 1000);
+		timeInfo.text = clock(playState.songTime) + "  >  " + clock(seekTarget) + " / " + total + "  (" + (diff > 0 ? "+" : "") + diff + "S)";
 	}
 
 	function openOptions():Void
@@ -437,6 +481,7 @@ class PauseSubState extends FlxSubState
 		if (bannerFrame != null) bannerFrame.visible = value;
 		infoTitle.visible = value;
 		infoSub.visible = value;
+		timeInfo.visible = value;
 		peekButton.visible = value;
 		if (dancer != null) dancer.visible = value;
 		if (backIcon != null) backIcon.visible = value;

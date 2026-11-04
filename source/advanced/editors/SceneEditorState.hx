@@ -18,6 +18,7 @@ import funkin.editors.SaveWarning;
 import funkin.editors.ui.*;
 import funkin.editors.ui.UIContextMenu.UIContextMenuOption;
 import funkin.editors.ui.notifications.UIBaseNotification;
+import funky.backend.FunkinVideoSprite;
 import funky.game.LevelSprite;
 import funky.game.SpriteBuilder;
 import funky.game.Stage;
@@ -696,16 +697,33 @@ class SceneEditorState extends UIState
 	{
 		var name = Std.string(Reflect.field(objects[i], "spr"));
 		var view:FlxSprite = null;
-		if (name != "null" && name != "" && SpriteBuilder.videoCount(levelDir, name) == 0)
+		var videos = name != "null" && name != "" ? SpriteBuilder.videoCount(levelDir, name) : 0;
+		if (videos > 0)
+			view = makeVideoBlock(i, name, videos);
+		else if (name != "null" && name != "")
 		{
 			var s = SpriteBuilder.build(levelDir, name);
 			if (s.loaded) view = s;
 		}
-		// sprite que falta (o video): una caja gris para poder moverlo igual
+		// sprite que falta: una caja gris para poder moverlo igual
 		if (view == null) view = new FlxSprite().makeGraphic(80, 80, 0xFF556070);
 		view.cameras = [camScene];
 		view.scrollFactor.set();
 		return view;
+	}
+
+	/** Un video se dibuja como un bloque con el ANCHO Y ALTO REALES del .mp4 (leidos de su cabecera), para colocarlo bien. */
+	function makeVideoBlock(i:Int, name:String, count:Int):FlxSprite
+	{
+		var index = Std.int(Math.max(0, Math.min(count - 1, JsonFile.num(Reflect.field(objects[i], "video"), 0))));
+		var size = FunkinVideoSprite.sizeOf(SpriteBuilder.spriteDir(levelDir, name), index);
+		// sin poder leer el tamano (archivo raro) queda una caja chica; el tope evita bitmaps enormes
+		var w = size != null ? Std.int(Math.min(4096, size.w)) : 160;
+		var h = size != null ? Std.int(Math.min(4096, size.h)) : 90;
+
+		var block = new FlxSprite().makeGraphic(w, h, 0xFF2E3A4C, true);
+		FlxSpriteUtil.drawRect(block, 0, 0, w, h, FlxColor.TRANSPARENT, {thickness: Math.max(2, Math.round(Math.min(w, h) / 90)), color: 0xFF8CC4FF});
+		return block;
 	}
 
 	function rebuild():Void

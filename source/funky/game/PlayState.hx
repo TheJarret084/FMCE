@@ -49,9 +49,14 @@ class PlayState extends MusicBeatState
 	/** true justo despues de adelantar / retroceder desde la pausa: el create siguiente NO toma `startFromMs` como punto de partida. */
 	static var seeking:Bool = false;
 
+	/** true tras continuar con un salto pedido desde la pausa: el siguiente create arranca sin countdown. */
+	static var skipCountdown:Bool = false;
+
 	/** Cuanto adelanta / retrocede la pausa, y lo minimo que se deja antes del final para que el salto no caiga en el cierre. */
 	public static inline var SEEK_STEP_MS:Float = 10000;
 	static inline var SEEK_END_MARGIN:Float = 3000;
+	/** Sin countdown, la cancion arranca este rato (s) despues de crear el nivel: lo que tarda la cortina en abrirse. */
+	static inline var SEEK_START_DELAY:Float = 0.5;
 
 	/** Nivel al que se vuelve al salir del juego cuando se abrio desde el chart editor. null = Freeplay. */
 	public static var returnToEditor:Null<String> = null;
@@ -258,12 +263,11 @@ class PlayState extends MusicBeatState
 		seeking = false;
 
 		camGame = FlxG.camera;
-        camGame.bgColor = 0xFF000000;
 		camHUD = new FlxCamera();
 		camHUD.bgColor = FlxColor.TRANSPARENT;
 		FlxG.cameras.add(camHUD, false);
 
-		// add(new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xFF151722));
+		add(new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xFF151722));
 
 		try
 		{
@@ -279,7 +283,7 @@ class PlayState extends MusicBeatState
 
 		funky.core.Paths.currentLevel = song.levelDir;
 		DiscordClient.playingPresence(songLabel(), Difficulty.name());
-		Scripts.load(song.levelDir, ["PlayState" => this, "song" => song, "levelDir" => song.levelDir]);
+		Scripts.load(song.levelDir, ["game" => this, "song" => song, "levelDir" => song.levelDir]);
 		Scripts.call("onLoad");
 
 		stage = new Stage(song, camHUD);
@@ -294,7 +298,7 @@ class PlayState extends MusicBeatState
 
 		eventos = new Eventos(song, stage);
 		Scripts.set("stage", stage);
-		Scripts.set("events", eventos);
+		Scripts.set("eventos", eventos);
 
 		if (Scripts.has)
 			for (event in eventos.lista)
@@ -464,7 +468,14 @@ class PlayState extends MusicBeatState
 				voices.time = startFromMs;
 		}
 
-		startCountdown();
+		if (skipCountdown)
+		{
+			// Venia de continuar con un salto (adelantar / retroceder): sin countdown, solo se espera a que abra la cortina.
+			skipCountdown = false;
+			countdownTimers.push(new FlxTimer().start(SEEK_START_DELAY, function(_) beginSong()));
+		}
+		else
+			startCountdown();
 
 		#if (android || ios)
 		mobileControls = new MobileControls(requestPause, song.laneCount);
@@ -1138,27 +1149,39 @@ class PlayState extends MusicBeatState
 	{
 		startFromMs = launchStartMs;
 		seeking = false;
+		skipCountdown = false;
 		leaveSong();
 		transitionTo(new funky.menus.LoadingLevelState());
 	}
 
-	/**
-	 * Adelanta (+) o retrocede (-) la cancion `deltaMs`, igual que "probar desde aqui" del charter: se vuelve a cargar el nivel
-	 * empezando en el punto nuevo (notas anteriores fuera, eventos anteriores aplicados de golpe, countdown y a jugar).
-	 * El punto se mantiene dentro de la cancion; cerca del inicio (menos de un segundo) se empieza desde el principio.
-	 * @return false si no hay a donde saltar (ya estaba en el limite).
-	 */
-	public function seekBy(deltaMs:Float):Bool
+	/** Deja `target` (ms) dentro de la cancion: con margen antes del final y, cerca del inicio (menos de 1 s), en 0. */
+	public function clampSeek(target:Float):Float
 	{
-		if (song == null) return false;
+		if (song == null) return songTime;
 
 		var limit = Math.max(0, song.endTime - SEEK_END_MARGIN);
-		var target = Math.max(0, Math.min(limit, songTime + deltaMs));
-		if (target < 1000) target = 0;
-		if (Math.abs(target - songTime) < 1) return false;
+		var clamped = Math.max(0, Math.min(limit, target));
+		return clamped < 1000 ? 0 : clamped;
+	}
 
-		startFromMs = target;
+	/** Duracion de la cancion (ms), para mostrarla en la pausa. */
+	public function songLengthMs():Float
+		return song == null ? 0 : song.endTime;
+
+	/**
+	 * Salta a `target` (ms), igual que "probar desde aqui" del charter: se vuelve a cargar el nivel empezando en ese punto (notas
+	 * anteriores fuera, eventos anteriores aplicados de golpe). Lo llama la pausa al darle continuar; entra SIN countdown (salvo
+	 * que el punto sea el inicio, que es como reiniciar).
+	 * @return false si ya se estaba ahi.
+	 */
+	public function seekTo(target:Float):Bool
+	{
+		var point = clampSeek(target);
+		if (Math.abs(point - songTime) < 1) return false;
+
+		startFromMs = point;
 		seeking = true;
+		skipCountdown = point > 0;
 		leaveSong();
 		transitionTo(new funky.menus.LoadingLevelState());
 		return true;
@@ -1255,23 +1278,26 @@ class PlayState extends MusicBeatState
 			}));
 		}
 
-		countdownTimers.push(new FlxTimer().start(beat * (introSounds.length + 1), function(_)
-		{
-			started = true;
-			hud.onSongStart();
-			if (stage != null) stage.startVideos();
-
-			if (FlxG.sound.music != null)
-				FlxG.sound.music.resume();
-			if (voices != null)
-				voices.resume();
-
-			Scripts.call("onSongStart");
-		}));
+		countdownTimers.push(new FlxTimer().start(beat * (introSounds.length + 1), function(_) beginSong()));
 
 		Scripts.call("onCountdownStarted");
 
 		Log.info('[PlayState] countdown: ${introSounds.length} cuentas de ${Std.int(Conductor.crochet)} ms');
+	}
+
+	/** Empieza la cancion de verdad: tiempo, musica, voces, videos del stage. Lo llama el fin del countdown (o el salto sin countdown). */
+	function beginSong():Void
+	{
+		started = true;
+		hud.onSongStart();
+		if (stage != null) stage.startVideos();
+
+		if (FlxG.sound.music != null)
+			FlxG.sound.music.resume();
+		if (voices != null)
+			voices.resume();
+
+		Scripts.call("onSongStart");
 	}
 
 	/**
