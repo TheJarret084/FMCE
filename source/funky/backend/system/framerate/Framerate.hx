@@ -6,6 +6,9 @@ import openfl.events.Event;
 import openfl.text.TextFormat;
 import funky.core.Paths;
 import flixel.util.FlxColor;
+import haxe.io.Path;
+import funky.core.Log;
+import openfl.utils.Assets as OpenFlAssets;
 
 /**
  * Contador propio de FMCE: panel oscuro redondeado con una barra de acento verde a la izquierda y tres bloques:
