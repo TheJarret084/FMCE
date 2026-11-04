@@ -566,7 +566,7 @@ class FreeplayState extends FlxState
 	{
 		leaving = true;
 		PlayState.archivePath = path;
-		PlayState.startFromMs = 0;
+		PlayState.resetLaunch(); // entrada normal: nada de arrastrar el punto de un salto anterior (launchStartMs = 0)
 		PlayState.returnToEditor = null;
 		Log.info('[FreeplayState] launching ' + path);
 		FlxG.switchState(new LoadingLevelState()); // sin cortina: solo el loading -> juego la lleva

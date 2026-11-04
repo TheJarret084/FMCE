@@ -267,6 +267,68 @@ class ConfigScreens
                     color: FlxColor.ORANGE
 				}
 			]
+		},
+		// ---- PLACEHOLDERS: cambia name / desc / url / avatar / color por los datos reales (sin avatar sale el icono de FMCE) ----
+		{
+			name: "Colaboradores",
+			desc: "PLACEHOLDER: gente que ayudo con codigo, charts y mas",
+			background: "othersEngines",
+			menu: [
+				{
+					name: "Programador (placeholder)",
+					desc: "PLACEHOLDER: que hizo esta persona en FMCE",
+					color: FlxColor.fromRGB(100, 221, 170)
+				},
+				{
+					name: "Artista (placeholder)",
+					desc: "PLACEHOLDER: sprites, menus, iconos...",
+					color: FlxColor.fromRGB(255, 209, 102)
+				},
+				{
+					name: "Musico (placeholder)",
+					desc: "PLACEHOLDER: musica y efectos de sonido",
+					color: FlxColor.fromRGB(255, 107, 107)
+				},
+				{
+					name: "Charter (placeholder)",
+					desc: "PLACEHOLDER: charts de los niveles de ejemplo",
+					color: FlxColor.fromRGB(120, 170, 255)
+				}
+			]
+		},
+		{
+			name: "Testers",
+			desc: "PLACEHOLDER: quienes probaron el engine y reportaron bugs",
+			background: "othersEngines",
+			menu: [
+				{
+					name: "Tester 1 (placeholder)",
+					desc: "PLACEHOLDER: probo en Android",
+					color: FlxColor.WHITE
+				},
+				{
+					name: "Tester 2 (placeholder)",
+					desc: "PLACEHOLDER: probo el convertidor de .fnmm",
+					color: FlxColor.WHITE
+				}
+			]
+		},
+		{
+			name: "Agradecimientos especiales",
+			desc: "PLACEHOLDER: comunidad, amigos y quien merezca un gracias",
+			background: "othersEngines",
+			menu: [
+				{
+					name: "Comunidad (placeholder)",
+					desc: "PLACEHOLDER: gracias por el apoyo",
+					color: FlxColor.fromRGB(100, 221, 170)
+				},
+				{
+					name: "Tu nombre aqui (placeholder)",
+					desc: "PLACEHOLDER: agrega mas lineas como esta",
+					color: FlxColor.fromRGB(255, 209, 102)
+				}
+			]
 		}
 	];
 

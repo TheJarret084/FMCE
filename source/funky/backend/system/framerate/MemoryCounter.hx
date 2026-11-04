@@ -27,23 +27,25 @@ class MemoryCounter extends Sprite
     public function new()
     {
         super();
-        memoryText = makeText();
-        memoryPeakText = makeText();
+        memoryText = makeText(0xFFD6E0F5);
+        memoryPeakText = makeText(0xFFD6E0F5);
         memoryPeakText.alpha = 0.5;
-        deviceText = makeText();
+        deviceText = makeText(0xFF8F9BB3);
         addChild(memoryText);
         addChild(memoryPeakText);
         addChild(deviceText);
         addEventListener(Event.ENTER_FRAME, onEnterFrame);
     }
 
-    private function makeText():TextField
+    private function makeText(color:Int):TextField
     {
         var field = new TextField();
         field.autoSize = LEFT;
         field.multiline = field.wordWrap = false;
-        field.defaultTextFormat = new TextFormat(Framerate.fontName, 12, 0xFFFFFFFF);
+        field.defaultTextFormat = new TextFormat(Framerate.fontName, 11, 0xFFFFFFFF);
+        field.textColor = color & 0xFFFFFF;
         field.selectable = false;
+        field.mouseEnabled = false;
         return field;
     }
 

@@ -253,6 +253,7 @@ class ConverterMenuState extends UIState
 		if (levelDir == null) return;
 		leaving = true;
 		funky.game.PlayState.archivePath = levelDir;
+		funky.game.PlayState.resetLaunch();
 		TransitionHandler.switchState(new funky.menus.LoadingLevelState());
 	}
 

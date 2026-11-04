@@ -44,7 +44,19 @@ class PlayState extends MusicBeatState
 	public static var startFromMs:Float = 0;
 
 	/** Desde donde se abrio el nivel (0 = el inicio, o el punto del charter): a ahi vuelve REINICIAR, aunque se haya adelantado o retrocedido. */
-	static var launchStartMs:Float = 0;
+	public static var launchStartMs:Float = 0;
+
+	/**
+	 * Entrada "limpia" a un nivel (Freeplay, convertidor...): borra cualquier rastro de un salto anterior de la pausa.
+	 * Sin esto, salir tras adelantar y volver a entrar podia arrancar desde el punto del salto.
+	 */
+	public static function resetLaunch():Void
+	{
+		startFromMs = 0;
+		launchStartMs = 0;
+		seeking = false;
+		skipCountdown = false;
+	}
 
 	/** true justo despues de adelantar / retroceder desde la pausa: el create siguiente NO toma `startFromMs` como punto de partida. */
 	static var seeking:Bool = false;
@@ -1183,7 +1195,13 @@ class PlayState extends MusicBeatState
 		seeking = true;
 		skipCountdown = point > 0;
 		leaveSong();
-		transitionTo(new funky.menus.LoadingLevelState());
+
+		// Salto: NO pasa por LoadingLevelState ni vuelve a precargar sprites (eso duplicaba la RAM). Se reusa el chart ya
+		// leido y las texturas que siguen vivas en `SpriteCache`; solo se vuelve a armar el PlayState desde `point`.
+		funky.menus.LoadingLevelState.keep(song);
+		SpriteCache.keepAlive();
+		SpriteCache.detach();
+		transitionTo(new PlayState());
 		return true;
 	}
 

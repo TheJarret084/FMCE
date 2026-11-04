@@ -157,6 +157,34 @@ class SpriteCache
 				FlxG.bitmap.addGraphic(graphic);
 	}
 
+	/**
+	 * Antes de un salto (PlayState -> PlayState sin loading): suelta lo que ya perdio su textura (repuestos y atlas) para
+	 * no reusar un sprite vacio; lo que sigue vivo se queda y el nuevo PlayState lo toma sin leer disco.
+	 */
+	public static function keepAlive():Void
+	{
+		if (!active) return;
+
+		for (name in [for (key in pool.keys()) key])
+		{
+			var kept:Array<LevelSprite> = [];
+			for (sprite in pool.get(name))
+			{
+				if (alive(sprite)) kept.push(sprite);
+				else sprite.destroy();
+			}
+			pool.set(name, kept);
+		}
+
+		for (key in [for (k in frames.keys()) k])
+		{
+			var atlas = frames.get(key);
+			if (atlas == null || atlas.parent == null || atlas.parent.bitmap == null) frames.remove(key);
+		}
+
+		graphics = graphics.filter(function(graphic:FlxGraphic):Bool return graphic != null && graphic.bitmap != null);
+	}
+
 	/** Devuelve un sprite que ya no se usa para reutilizarlo; si no se puede, lo destruye. */
 	public static function give(dir:Null<String>, sprite:LevelSprite):Void
 	{
