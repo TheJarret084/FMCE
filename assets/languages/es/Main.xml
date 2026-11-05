@@ -63,7 +63,7 @@
 	<group name="Game" prefix="game.">
 		<str id="botplay">BOTPLAY</str>
 		<str id="notAvailable">N/A</str>
-		<str id="stats">PUNTOS: {0} | FALLOS: {1} | PRECISION: {2} | RANGO: {3}</str>
+		<str id="stats">Puntos: {0} | Fallas: {1} | Presicion: {2} | Rango: {3}</str>
 	</group>
 
 	<group name="Credits" prefix="credits.">

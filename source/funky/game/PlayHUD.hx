@@ -126,7 +126,7 @@ class PlayHUD extends FlxGroup
 		timeText.borderSize = 2;
 		timeText.alpha = 0;
 		timeBar = new FlxBar(FlxG.width / 2 - 200, timeText.y + timeText.height / 4, FlxBarFillDirection.LEFT_TO_RIGHT, 400, 18, this, "YOU ARE GAY?", 0, this.songLength);
-		timeBar.createFilledBar(FlxColor.fromRGB(143,255,138), FlxColor.fromRGB(31,0,56), true, 0xFF000000); // (el flixel del fork no trae el grosor del borde)
+		timeBar.createFilledBar(0x8fff8aff, 0x1f0038ff, true, 0xFF000000); // (el flixel del fork no trae el grosor del borde)
 		timeBar.alpha = 0;
 		add(timeBar);
 		add(timeText);
@@ -192,7 +192,7 @@ class PlayHUD extends FlxGroup
 		if (botplayText == null) return;
 		botplayText.fieldWidth = lineWidth;
 		botplayText.x = lineX;
-		botplayText.y = lineY - botplayText.height - 20;
+		botplayText.y = lineY - botplayText.height + 20;
 	}
 
 	/** El tiempo y su barra aparecen al empezar la cancion. */

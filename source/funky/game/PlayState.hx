@@ -16,6 +16,7 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import hxvlc.flixel.FlxVideo;
+import funky.backend.FunkinVideoSprite;
 import funky.backend.MusicBeatState;
 import funky.backend.chart.FNMMNote;
 import funky.backend.chart.LevelLoader;
@@ -1270,6 +1271,15 @@ class PlayState extends MusicBeatState
     function showError(message:String):Void
     {
         var video = new FlxVideo();
+        var loadedError:Bool = false;
+        try
+		{
+			loadedError = video.load(FunkinVideoSprite.resolve("fatalerrorisocurred"));
+		}
+		catch (e:Dynamic) 
+        {
+            // NAH
+        }
     
         video.onEndReached.add(function():Void
         {
@@ -1292,7 +1302,7 @@ class PlayState extends MusicBeatState
     
         FlxG.addChildBelowMouse(video);
     
-        if (video.load(Paths.video("fatalerrorisocurred.mp4")))
+        if (loadedError)
             video.play();
         else
         {
