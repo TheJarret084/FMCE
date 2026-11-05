@@ -24,6 +24,8 @@ class Framerate extends Sprite
     public static var textFormat:TextFormat;
     public static var fontName:String = "_typewriter";
     public static var otherNewFont:String = "Daydream";
+    /** Nombre real de la fuente ya cargada (lo que usan todos los TextField del contador). */
+    public static var textFont:String = "_typewriter";
 
     public var otherColor:Bool = false;
 
@@ -50,7 +52,8 @@ class Framerate extends Sprite
         instance = this;
         isLoaded = true;
                                                                                                                                             // valor     si es true   si es false
-        textFormat = new TextFormat(OpenFlAssets.exists(Paths.Font(otherNewFont, ".otf")) ? Paths.Font(otherNewFont, ".otf") : fontName, 12, otherColor ? 0xFFA5D6D1 : 0xFFFFFFFF);  //FlxColor.fromRGB(145, 214, 209)); 0xFFFFFFFF
+        textFont = resolveFont();
+        textFormat = new TextFormat(textFont, 12, otherColor ? 0xFFA5D6D1 : 0xFFFFFFFF);
 
         panel = new Sprite();
         panel.mouseEnabled = false;
@@ -68,6 +71,22 @@ class Framerate extends Sprite
 
         updateLayout();
         addEventListener(Event.ENTER_FRAME, onEnterFrame);
+    }
+
+    /** Busca assets/fonts/<otherNewFont>.otf o .ttf y devuelve su fontName; si no existe, usa la fuente por defecto. */
+    public static function resolveFont():String
+    {
+        for (ext in [".otf", ".ttf"])
+        {
+            var path = Paths.Font(otherNewFont, ext);
+            if (OpenFlAssets.exists(path))
+            {
+                var f = OpenFlAssets.getFont(path);
+                if (f != null && f.fontName != null) return f.fontName;
+            }
+        }
+        Log.warn('Framerate: no se encontro la fuente "' + otherNewFont + '" en assets/fonts, usando ' + fontName);
+        return fontName;
     }
 
     private function onEnterFrame(_):Void

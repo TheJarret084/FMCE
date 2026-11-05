@@ -369,7 +369,7 @@ class PlayHUD extends FlxGroup
 		var second = Std.int(songTime / 1000);
 		if (second == shownSecond) return;
 		shownSecond = second;
-		timeText.text = songName + " - " + FlxStringUtil.formatTime(Math.floor(Math.max(0, songLength - songTime) / 1000), false);
+		timeText.text = /*songName + " - " + */ FlxStringUtil.formatTime(Math.floor(Math.max(0, songLength - songTime) / 1000), false);
 	}
 
 	/** Suma (o resta) vida del jugador, limitada a 0..1. */

@@ -42,7 +42,7 @@ class MemoryCounter extends Sprite
         var field = new TextField();
         field.autoSize = LEFT;
         field.multiline = field.wordWrap = false;
-        field.defaultTextFormat = new TextFormat(Framerate.fontName, 11, 0xFFFFFFFF);
+        field.defaultTextFormat = new TextFormat(Framerate.textFont, 11, 0xFFFFFFFF);
         field.textColor = color & 0xFFFFFF;
         field.selectable = false;
         field.mouseEnabled = false;

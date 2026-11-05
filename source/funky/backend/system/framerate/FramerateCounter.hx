@@ -59,7 +59,7 @@ class FramerateCounter extends Sprite
         var field = new TextField();
         field.autoSize = LEFT;
         field.multiline = field.wordWrap = false;
-        field.defaultTextFormat = new TextFormat(Framerate.fontName, size, 0xFFFFFFFF);
+        field.defaultTextFormat = new TextFormat(Framerate.textFont, size, 0xFFFFFFFF);
         field.selectable = false;
         field.mouseEnabled = false;
         return field;

@@ -19,7 +19,7 @@ class EngineBuildField extends Sprite
         textField = new TextField();
         textField.autoSize = LEFT;
         textField.multiline = textField.wordWrap = false;
-        textField.defaultTextFormat = new TextFormat(Framerate.fontName, 11, 0xFFFFFFFF);
+        textField.defaultTextFormat = new TextFormat(Framerate.textFont, 11, 0xFFFFFFFF);
         textField.textColor = 0x8F9BB3;
         textField.selectable = false;
         textField.mouseEnabled = false;
