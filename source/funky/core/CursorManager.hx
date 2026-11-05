@@ -4,25 +4,17 @@ import flixel.FlxG;
 import flixel.graphics.frames.FlxAtlasFrames;
 import funky.core.Paths;
 
-/**
- * Cambia el cursor normal de Flixel por el frame "idle0000" de
- * assets/images/cursor.png + cursor.xml. Se llama una vez, despues de crear el FlxGame
- * (por ejemplo en el create() del primer state).
- */
 class CursorManager
 {
-	static inline var ATLAS_NAME:String = "cursor";
-	static inline var FRAME_NAME:String = "idle0000";
-
 	public static function init():Void
 	{
-		var atlas:FlxAtlasFrames = Paths.getSparrowAtlas(ATLAS_NAME);
+		var atlas:FlxAtlasFrames = Paths.getSparrowAtlas("cursor");
 		if (atlas == null) return;
 
-		var frame = atlas.getByName(FRAME_NAME);
+		var frame = atlas.getByName("idle0000");
 		if (frame == null)
 		{
-			trace('[CursorManager] no existe el frame $FRAME_NAME en el atlas $ATLAS_NAME.');
+			trace('[CursorManager] no existe el frame en el atlas');
 			return;
 		}
 
