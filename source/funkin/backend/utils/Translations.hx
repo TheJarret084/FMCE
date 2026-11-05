@@ -220,10 +220,10 @@ class Translations
 		}
 		if (root == null) return;
 
-		var languageNode = root.nodeName == "language" ? root : null;
+		var languageNode:Xml = root.nodeName == "language" ? root : null;
 		if (languageNode == null)
 		{
-			for (node in root.elements) if (node.nodeName == "language")
+			for (node in root.elements()) if (node.nodeName == "language")
 			{
 				languageNode = node;
 				break;

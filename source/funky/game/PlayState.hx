@@ -1215,6 +1215,13 @@ class PlayState extends MusicBeatState
 		stopVoices();
 	}
 
+	/** Sale al menu desde una pantalla de error: corta la musica y las voces y cambia de state. */
+	function exitToMenu():Void
+	{
+		leaveSong();
+		transitionTo(PlayState.menuState());
+	}
+
 	public function songLabel():String
 	{
 		return song == null ? "UNKNOWN" : song.name.toUpperCase();
@@ -1276,7 +1283,7 @@ class PlayState extends MusicBeatState
                     {
                         label: "Salir",
                         color: FlxColor.RED,
-                        onClick: function(_) leave()
+                        onClick: function(_) exitToMenu()
                     }
                 ],
                 false
@@ -1299,7 +1306,7 @@ class PlayState extends MusicBeatState
                     {
                         label: "Salir",
                         color: FlxColor.RED,
-                        onClick: function(_) leave()
+                        onClick: function(_) exitToMenu()
                     }
                 ],
                 false
