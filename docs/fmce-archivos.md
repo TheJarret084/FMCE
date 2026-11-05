@@ -1,5 +1,6 @@
 # Niveles `.FMCE` (exportar / importar)
 
+
 Un `.FMCE` es un **zip normal** con lo que hay dentro de la carpeta del nivel (`meta.json`, `chart.json`, `scene.json`,
 `data/`, `sprites/`...). No se guardan las copias de seguridad `.bak` / `.bck`.
 
