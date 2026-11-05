@@ -22,6 +22,7 @@ import funky.core.TouchNav;
 import funky.game.PlayState;
 import funky.menus.options.BackButton;
 import funky.menus.options.ConfigSubState;
+import funkin.backend.utils.TranslationUtil as TU;
 
 private enum Page
 {
@@ -136,7 +137,9 @@ class PauseSubState extends FlxSubState
 		add(timeInfo);
 		refreshTimeInfo();
 
-		peekButton = new FlxText(20, FlxG.height - 56, 0, TouchNav.MOBILE ? "VER JUEGO" : "TAB: VER JUEGO", 22);
+		peekButton = new FlxText(20, FlxG.height - 56, 0, TouchNav.MOBILE
+			? TU.translate("pause.peek.mobile", null, "VER JUEGO")
+			: TU.translate("pause.peek.desktop", null, "TAB: VER JUEGO"), 22);
 		peekButton.setFormat(font, 22, FlxColor.WHITE, FlxTextAlign.LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(peekButton);
 
@@ -239,21 +242,22 @@ class PauseSubState extends FlxSubState
 		{
 			case MAIN:
 				[
-					{text: "REANUDAR", action: "resume"},
-					{text: "REINICIAR", action: "restart"},
-					{text: "ADELANTAR " + Std.int(PlayState.SEEK_STEP_MS / 1000) + "S", action: "forward"},
-					{text: "RETROCEDER " + Std.int(PlayState.SEEK_STEP_MS / 1000) + "S", action: "backward"},
-					{text: "OPCIONES", action: "options"},
-					{text: "CONVERTIDOR", action: "convert"},
-					{text: "SALIR", action: "freeplay"}
+					{text: TU.translate("pause.resume", null, "REANUDAR"), action: "resume"},
+					{text: TU.translate("pause.restart", null, "REINICIAR"), action: "restart"},
+					{text: TU.translate("pause.forward", [Std.int(PlayState.SEEK_STEP_MS / 1000)], "ADELANTAR {0}S"), action: "forward"},
+					{text: TU.translate("pause.backward", [Std.int(PlayState.SEEK_STEP_MS / 1000)], "RETROCEDER {0}S"), action: "backward"},
+					{text: TU.translate("pause.options", null, "OPCIONES"), action: "options"},
+					{text: TU.translate("pause.converter", null, "CONVERTIDOR"), action: "convert"},
+					{text: TU.translate("pause.exit", null, "SALIR"), action: "freeplay"}
 				];
 			case CONFIRM:
 				[
-					{text: "NO, VOLVER", action: "no"},
-					{text: "SI, " + describe(pending), action: "yes"}
+					{text: TU.translate("pause.no", null, "NO, VOLVER"), action: "no"},
+					{text: TU.translate("pause.yes", [describe(pending)], "SI, {0}"), action: "yes"}
 				];
 		}
-		infoSub.text = next == MAIN ? "PAUSA" : "SE PIERDE EL PROGRESO DE LA CANCION";
+		infoSub.text = next == MAIN ? TU.translate("pause.title", null, "PAUSA")
+			: TU.translate("pause.loseProgress", null, "SE PIERDE EL PROGRESO DE LA CANCION");
 		if (timeInfo != null) timeInfo.visible = next == MAIN;
 		buildLabels();
 	}
@@ -525,9 +529,9 @@ class PauseSubState extends FlxSubState
 	{
 		return switch (action)
 		{
-			case "convert": "IR AL CONVERTIDOR";
-			case "freeplay": "SALIR";
-			default: "CONTINUAR";
+			case "convert": TU.translate("pause.describe.converter", null, "IR AL CONVERTIDOR");
+			case "freeplay": TU.translate("pause.describe.exit", null, "SALIR");
+			default: TU.translate("pause.describe.continue", null, "CONTINUAR");
 		}
 	}
 

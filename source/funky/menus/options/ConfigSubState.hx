@@ -18,7 +18,7 @@ class ConfigSubState extends FlxSubState
 		add(dim);
 
 		menu = new ConfigMenu();
-		menu.setRoot(ConfigScreens.root(menu, true));
+		menu.setRootFactory(() -> ConfigScreens.root(menu, true));
 		menu.onExit = close;
 		add(menu);
 	}

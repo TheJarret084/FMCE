@@ -20,6 +20,7 @@ import funky.core.TouchNav;
 import funky.menus.options.ConfigItem;
 
 import funky.core.Log;
+import funkin.backend.utils.TranslationUtil as TU;
 
 /** Una fila visible: texto + (checkbox | numero | slider). Se posiciona desde ConfigMenu. */
 private class Row extends FlxGroup
@@ -191,6 +192,8 @@ class ConfigMenu extends FlxGroup
 	public var onExit:Void->Void;
 	/** Avisa del fondo de la pantalla visible (null = el de por defecto); solo lo usan los creditos. */
 	public var onBackgroundChange:String->Void;
+	/** Reconstruye la raiz (se usa al cambiar de idioma). */
+	public var rootFactory:Void->ConfigScreen;
 	public var stack:Array<ConfigScreen> = [];
 
 	var rows:Array<Row> = [];
@@ -247,7 +250,7 @@ class ConfigMenu extends FlxGroup
 			}
 			else
 			{
-				var text = new FlxText(FlxG.width - 190, 10, 176, "< ATRAS", 28);
+				var text = new FlxText(FlxG.width - 190, 10, 176, TU.translate("ui.back", null, "< ATRAS"), 28);
 				text.setFormat(font, 28, FlxColor.WHITE, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 				backButton = text;
 			}
@@ -271,6 +274,22 @@ class ConfigMenu extends FlxGroup
 	{
 		stack = [screen];
 		build(screen, 0);
+	}
+
+	/** Guarda como se construye la raiz y la muestra. */
+	public function setRootFactory(factory:Void->ConfigScreen):Void
+	{
+		rootFactory = factory;
+		setRoot(factory());
+	}
+
+	/** Vuelve a la raiz para refrescar titulos, descripciones y filas (cambio de idioma). */
+	public function reloadRoot():Void
+	{
+		if (rootFactory == null) return;
+		stack = [rootFactory()];
+		build(stack[0], 0);
+		applyBackground();
 	}
 
 	public function push(screen:ConfigScreen):Void

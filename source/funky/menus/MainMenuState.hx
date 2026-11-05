@@ -17,6 +17,7 @@ import funky.core.KeyBinds;
 import funky.core.Paths;
 import funky.core.TouchNav;
 import funky.core.TransitionHandler;
+import funkin.backend.utils.TranslationUtil as TU;
 
 /**
  * Menu principal con la vista de Codename Engine: fondo que se desplaza con la camara,
@@ -84,7 +85,7 @@ class MainMenuState extends FlxState
 			else
 			{
 				// Sin atlas: texto plano, no rompe el menu.
-				var label = new FlxText(0, 60 + i * 160, 0, option.toUpperCase(), 64);
+				var label = new FlxText(0, 60 + i * 160, 0, TU.translate("mainMenu." + option, null, option.toUpperCase()), 64);
 				item = label;
 			}
 			item.ID = i;
@@ -97,8 +98,9 @@ class MainMenuState extends FlxState
 		FlxG.camera.follow(camFollow, null, 0.06);
 
 		versionText = new FlxText(5, 0, 0, "V" + lime.app.Application.current.meta.get("version") + "\n"
-			+ (TouchNav.MOBILE ? "toca una opcion" : KeyBinds.label(KeyBinds.ACCEPT) + " elegir  |  " + KeyBinds.label(KeyBinds.BACK) + " volver"
-				+ (AdvancedModeState.antiGay ? "" : "  |  7 avanzado")), 16);
+			+ (TouchNav.MOBILE ? TU.translate("mainMenu.hintMobile", null, "toca una opcion")
+				: TU.translate("mainMenu.hint", [KeyBinds.label(KeyBinds.ACCEPT), KeyBinds.label(KeyBinds.BACK)],
+					"{0} elegir  |  {1} volver") + (AdvancedModeState.antiGay ? "" : TU.translate("mainMenu.hintAdvanced", null, "  |  7 avanzado"))), 16);
 		versionText.setBorderStyle(OUTLINE, 0xFF000000, 1.5);
 		versionText.y = FlxG.height - versionText.height - 4;
 		versionText.scrollFactor.set();

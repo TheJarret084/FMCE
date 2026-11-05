@@ -78,6 +78,8 @@ class ClientPrefs
             noteSplashes: true,
             // true = el splash inicial se salta y va directo al TITLE
             skipIntro: false,
+            // Idioma de la interfaz (carpeta en assets/languages/<codigo>/)
+            language: "es",
             masterVolume: 1.0,
             musicVolume: 1.0,
             sfxVolume: 1.0,
@@ -210,6 +212,11 @@ class ClientPrefs
         data.missSound = getBool(parsed, "missSound", true);
         data.noteSplashes = getBool(parsed, "noteSplashes", true);
         data.skipIntro = getBool(parsed, "skipIntro", false);
+        if (Reflect.hasField(parsed, "language"))
+        {
+            var lang = Std.string(Reflect.field(parsed, "language"));
+            if (lang != null && lang.length > 0) data.language = lang;
+        }
         data.masterVolume = getFloat(parsed, "masterVolume", 1.0);
         data.musicVolume = getFloat(parsed, "musicVolume", 1.0);
         data.sfxVolume = getFloat(parsed, "sfxVolume", 1.0);
@@ -276,6 +283,14 @@ class ClientPrefs
     {
         var root = Xml.parse(raw).firstElement();
         if (root == null) throw "settings.xml has no root element";
+
+        var languageNode = firstChild(root, "language");
+        if (languageNode != null)
+        {
+            var code = languageNode.get("code");
+            if (code == null) code = languageNode.get("value");
+            if (code != null && code.length > 0) data.language = code;
+        }
 
         var gameplay = firstChild(root, "gameplay");
         if (gameplay != null)
@@ -464,6 +479,10 @@ class ClientPrefs
 
             var root = Xml.createElement("settings");
             root.set("version", "2");
+
+            var language = Xml.createElement("language");
+            language.set("code", getLanguage());
+            root.addChild(language);
 
             var gameplay = Xml.createElement("gameplay");
             gameplay.set("downscroll", Std.string(isDownScroll()));
@@ -660,6 +679,17 @@ class ClientPrefs
 
     public static function setSkipIntro(v:Bool):Void
         Reflect.setField(data, "skipIntro", v);
+
+    /** Codigo del idioma guardado (carpeta en assets/languages/). */
+    public static function getLanguage():String
+    {
+        var v = Reflect.hasField(data, "language") ? Std.string(Reflect.field(data, "language")) : "es";
+        v = v == null ? "" : StringTools.trim(v);
+        return v.length > 0 ? v : "es";
+    }
+
+    public static function setLanguage(v:String):Void
+        Reflect.setField(data, "language", v == null ? "es" : StringTools.trim(v));
 
     public static function getMasterVolume():Float
     {

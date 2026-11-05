@@ -9,6 +9,7 @@ import funky.core.MemoryUtil;
 import funky.core.WindowUtils;
 import funky.core.Paths;
 import funky.core.ClientPrefs;
+import funkin.backend.utils.TranslationUtil;
 import funky.api.DiscordClient;
 import funky.backend.system.framerate.Framerate;
 import funky.backend.system.LogOverlay;
@@ -32,6 +33,7 @@ class Main extends Sprite
 		CrashHandler.init();
 		Paths.init();
 		ClientPrefs.load();
+		TranslationUtil.init();
 
 		#if desktop
 		WindowUtils.init("FMCE");

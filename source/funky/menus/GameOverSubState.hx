@@ -15,6 +15,7 @@ import funky.core.CoolUtil;
 import funky.core.KeyBinds;
 import funky.core.Log;
 import funky.core.Paths;
+import funkin.backend.utils.TranslationUtil as TU;
 import funky.core.TouchNav;
 import funky.game.PlayState;
 import funky.menus.options.BackButton;
@@ -101,12 +102,15 @@ class GameOverSubState extends FlxSubState
 		else
 		{
 			Log.warn("[GameOverSubState] falta menus/gameover/bf-dead (o sus animaciones), se muestra solo el texto");
-			var title = new FlxText(0, FlxG.height / 2 - 60, FlxG.width, "GAME OVER", 72);
+			var title = new FlxText(0, FlxG.height / 2 - 60, FlxG.width, TU.translate("gameOver.title", null, "GAME OVER"), 72);
 			title.setFormat(font, 72, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 			add(title);
 		}
 
-		var hintText = TouchNav.MOBILE ? "TOCA PARA REINTENTAR" : KeyBinds.label(KeyBinds.ACCEPT) + " REINTENTAR   |   " + KeyBinds.label(KeyBinds.BACK) + " SALIR";
+		var hintText = TouchNav.MOBILE
+			? TU.translate("gameOver.hintMobile", null, "TOCA PARA REINTENTAR")
+			: TU.translate("gameOver.hint", [KeyBinds.label(KeyBinds.ACCEPT), KeyBinds.label(KeyBinds.BACK)],
+				"{0} REINTENTAR   |   {1} SALIR");
 		hint = new FlxText(0, FlxG.height - 70, FlxG.width, hintText, 24);
 		hint.setFormat(font, 24, 0xFFD8D8E0, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		hint.alpha = 0;
@@ -114,7 +118,7 @@ class GameOverSubState extends FlxSubState
 
 		if (TouchNav.MOBILE)
 		{
-			exitButton = BackButton.available() ? new BackButton(FlxG.width - BackButton.SIZE - 20, FlxG.height - 110) : TouchNav.button("SALIR", FlxG.width - 240, FlxG.height - 76, 220);
+			exitButton = BackButton.available() ? new BackButton(FlxG.width - BackButton.SIZE - 20, FlxG.height - 110) : TouchNav.button(TU.translate("gameOver.exit", null, "SALIR"), FlxG.width - 240, FlxG.height - 76, 220);
 			exitButton.alpha = 0;
 			add(exitButton);
 		}

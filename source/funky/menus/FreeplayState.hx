@@ -22,6 +22,7 @@ import funky.core.TouchNav;
 import funky.core.TransitionHandler;
 import funky.game.HealthIcon;
 import funky.game.PlayState;
+import funkin.backend.utils.TranslationUtil as TU;
 import haxe.io.Path;
 import openfl.utils.Assets as OpenFlAssets;
 
@@ -135,9 +136,9 @@ class FreeplayState extends FlxState
 		if (TouchNav.MOBILE)
 		{
 			// Sin teclado: los atajos pasan a botones, las filas se tocan.
-			backButton = TouchNav.button("< VOLVER", 30, 14, 180);
-			convertButton = TouchNav.button("CONVERTIDOR", 30, FlxG.height - 60, 220);
-			refreshButton = TouchNav.button("REFRESCAR", FlxG.width / 2 - 110, FlxG.height - 60);
+			backButton = TouchNav.button(TU.translate("freeplay.back", null, "< VOLVER"), 30, 14, 180);
+			convertButton = TouchNav.button(TU.translate("freeplay.converter", null, "CONVERTIDOR"), 30, FlxG.height - 60, 220);
+			refreshButton = TouchNav.button(TU.translate("freeplay.refresh", null, "REFRESCAR"), FlxG.width / 2 - 110, FlxG.height - 60);
 			for (button in [backButton, convertButton, refreshButton])
 			{
 				button.setBorderStyle(OUTLINE, 0xFF000000, 2);
@@ -152,8 +153,8 @@ class FreeplayState extends FlxState
 			add(strip);
 
 			var hint = new FlxText(0, FlxG.height - 28, FlxG.width,
-				KeyBinds.label(KeyBinds.ACCEPT) + " jugar  |  < > dificultad  |  R refrescar  |  "
-				+ KeyBinds.label(KeyBinds.BACK) + " volver  |  C convertidor", 16);
+				TU.translate("freeplay.hint", [KeyBinds.label(KeyBinds.ACCEPT), KeyBinds.label(KeyBinds.BACK)],
+					"{0} jugar  |  < > dificultad  |  R refrescar  |  {1} volver  |  C convertidor"), 16);
 			hint.alignment = FlxTextAlign.CENTER;
 			hint.color = ACTIVE;
 			add(hint);
@@ -174,7 +175,9 @@ class FreeplayState extends FlxState
 	/** Lista vacia: la Jazmin `void` con un texto de ayuda abajo; sin el sparrow, solo el texto de siempre. */
 	private function showEmpty():Void
 	{
-		var hint = TouchNav.MOBILE ? "Toca CONVERTIDOR para importar un .fnmm" : "Convertí un .fnmm con la tecla C";
+		var hint = TouchNav.MOBILE
+			? TU.translate("freeplay.empty.hintMobile", null, "Toca CONVERTIDOR para importar un .fnmm")
+			: TU.translate("freeplay.empty.hintDesktop", null, "Converti un .fnmm con la tecla C");
 		var hasVoid = false;
 		if (OpenFlAssets.exists(Paths.image(VOID_IMAGE)) && OpenFlAssets.exists(Paths.imageXml(VOID_IMAGE)))
 		{
@@ -191,7 +194,8 @@ class FreeplayState extends FlxState
 		}
 		statusText.size = 24;
 		statusText.y = FlxG.height * 0.45;
-		statusText.text = "No hay niveles en " + Paths.levelsRoot() + "\n" + hint;
+		statusText.text = TU.translate("freeplay.empty.noLevels", [Paths.levelsRoot(), hint],
+			"No hay niveles en {0}\n{1}");
 	}
 
 	/** Crea la Jazmin animada (`idle`, en bucle) centrada entre la barra de arriba y el texto de ayuda. */
@@ -285,7 +289,7 @@ class FreeplayState extends FlxState
 		if (entries.length == 0)
 		{
 			showEmpty();
-			countText.text = "0 NIVELES";
+			countText.text = TU.translate("freeplay.noLevels", null, "0 NIVELES");
 			scoreText.text = "";
 			return;
 		}
@@ -536,8 +540,9 @@ class FreeplayState extends FlxState
 
 	private function showDifficulty():Void
 	{
-		difficultyText.text = "< " + Difficulty.name() + " >  (velocidad " + Difficulty.speed() + ")"
-			+ (TouchNav.MOBILE ? "  toca para cambiar" : "");
+		difficultyText.text = TU.translate("freeplay.difficulty", [Difficulty.name(), Difficulty.speed()],
+			"< {0} >  (velocidad {1})")
+			+ (TouchNav.MOBILE ? TU.translate("freeplay.difficulty.touch", null, "  toca para cambiar") : "");
 		showScore();
 	}
 
@@ -552,8 +557,9 @@ class FreeplayState extends FlxState
 
 		var best = Scores.get(Scores.levelId(entries[selected].path), Difficulty.current);
 		scoreText.text = best == null
-			? "SIN PUNTAJE"
-			: "MEJOR " + best.score + "   " + Std.string(Math.round(best.accuracy * 10) / 10) + "%   " + best.misses + " FALLOS";
+			? TU.translate("freeplay.noScore", null, "SIN PUNTAJE")
+			: TU.translate("freeplay.best", [best.score, Std.string(Math.round(best.accuracy * 10) / 10), best.misses],
+				"MEJOR {0}   {1}%   {2} FALLOS");
 	}
 
 	private function leave(next:FlxState):Void

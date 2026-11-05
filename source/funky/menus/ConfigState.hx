@@ -38,7 +38,7 @@ class ConfigState extends FlxState
 		add(bg);
 
 		menu = new ConfigMenu();
-		menu.setRoot(ConfigScreens.root(menu, false));
+		menu.setRootFactory(() -> ConfigScreens.root(menu, false));
 		menu.onExit = leave;
 		add(menu);
 

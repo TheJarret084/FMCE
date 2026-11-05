@@ -15,6 +15,7 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
+import hxvlc.flixel.FlxVideo;
 import funky.backend.MusicBeatState;
 import funky.backend.chart.FNMMNote;
 import funky.backend.chart.LevelLoader;
@@ -31,6 +32,9 @@ import funky.game.PlayHUD.PressScore;
 import funky.menus.FreeplayState;
 import funky.menus.GameOverSubState;
 import funky.menus.PauseSubState;
+import funkin.editors.ui.*;
+import funkin.editors.ui.UIWarningSubstate;
+import funkin.editors.ui.UIWarningSubstate.WarningButton;
 import funky.scripting.Scripts;
 
 /** FNMM runner: notas + escenario (scene.json) + eventos (events.json). Todo lo de la cancion sale de `SongData`. */
@@ -236,14 +240,14 @@ class PlayState extends MusicBeatState
 	var scrollDirection:Float = 1;
 
 	/** Un sonido y (opcional) un sprite por cuenta: 3, 2, 1, GO. El "3" no lleva imagen, como en FNF. */
-	var introSounds:Array<String> = [
+	public var introSounds:Array<String> = [
 		'intro3',
 		'intro2',
 		'intro1',
 		'introGo'
 	];
 
-	var introSprites:Array<Null<String>> = [
+	public var introSprites:Array<Null<String>> = [
 		null,
 		'game/countdown/ready',
 		'game/countdown/set',
@@ -275,11 +279,10 @@ class PlayState extends MusicBeatState
 		seeking = false;
 
 		camGame = FlxG.camera;
+        camGame.bgColor = FlxColor.BLACK;
 		camHUD = new FlxCamera();
 		camHUD.bgColor = FlxColor.TRANSPARENT;
 		FlxG.cameras.add(camHUD, false);
-
-		add(new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xFF151722));
 
 		try
 		{
@@ -1252,30 +1255,57 @@ class PlayState extends MusicBeatState
 		Scripts.call("onSubstateClose");
 	}
 
-	/**
-	 * Displays a level loading error.
-	 * @param message Error text.
-	 */
-	function showError(message:String):Void
-	{
-		var status = new FlxText(
-			30,
-			300,
-			FlxG.width - 60,
-			"No se pudo cargar el nivel:\n"
-			+ message
-			+ "\n\nPulsa "
-			+ KeyBinds.label(KeyBinds.BACK)
-			+ " para volver",
-			20
-		);
-
-		status.alignment = FlxTextAlign.CENTER;
-		if (camHUD != null)
-			status.cameras = [camHUD];
-
-		add(status);
-	}
+	
+	 /**
+     * Displays a level loading error.
+     * @param message Error text.
+     */
+    function showError(message:String):Void
+    {
+        var video = new FlxVideo();
+    
+        video.onEndReached.add(function():Void
+        {
+            video.dispose();
+            FlxG.removeChild(video);
+    
+            openSubState(new UIWarningSubstate(
+                "Error al cargar el nivel",
+                message,
+                [
+                    {
+                        label: "Salir",
+                        color: FlxColor.RED,
+                        onClick: function(_) leave()
+                    }
+                ],
+                false
+            ));
+        });
+    
+        FlxG.addChildBelowMouse(video);
+    
+        if (video.load(Paths.video("fatalerrorisocurred.mp4")))
+            video.play();
+        else
+        {
+            video.dispose();
+            FlxG.removeChild(video);
+    
+            openSubState(new UIWarningSubstate(
+                "Error al cargar el nivel",
+                message,
+                [
+                    {
+                        label: "Salir",
+                        color: FlxColor.RED,
+                        onClick: function(_) leave()
+                    }
+                ],
+                false
+            ));
+        }
+    }
 
 	/**
 	 * Cuenta regresiva antes de la cancion: 4 tiempos de un beat (3, 2, 1, GO) y la musica arranca un

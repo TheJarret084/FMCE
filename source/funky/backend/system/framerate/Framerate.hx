@@ -27,7 +27,7 @@ class Framerate extends Sprite
     /** Nombre real de la fuente ya cargada (lo que usan todos los TextField del contador). */
     public static var textFont:String = "_typewriter";
 
-    public var otherColor:Bool = false;
+    public var otherColor:Bool = true;
 
     static inline var PAD_X:Float = 12;
     static inline var PAD_Y:Float = 7;
@@ -53,7 +53,7 @@ class Framerate extends Sprite
         isLoaded = true;
                                                                                                                                             // valor     si es true   si es false
         textFont = resolveFont();
-        textFormat = new TextFormat(textFont, 12, otherColor ? 0xFFA5D6D1 : 0xFFFFFFFF);
+        textFormat = new TextFormat(textFont, 10, otherColor ? 0xFFA5D6D1 : 0xFFFFFFFF);
 
         panel = new Sprite();
         panel.mouseEnabled = false;

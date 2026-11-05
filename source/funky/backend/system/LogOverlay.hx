@@ -199,9 +199,9 @@ class LogOverlay extends Sprite
 		var body = item.count > 1 ? item.text + "  x" + item.count : item.text;
 
 		item.field.width = maxW - PAD * 2 - BAR_W;
-		item.field.defaultTextFormat = new TextFormat(Framerate.textFont, FONT_SIZE, 0xFFFFFFFF);
+		item.field.defaultTextFormat = new TextFormat(Framerate.fontName, FONT_SIZE, 0xFFFFFFFF); // me di cuenta que esta fuente tiene cosas que no sirve aqui
 		item.field.text = label + body;
-		item.field.setTextFormat(new TextFormat(Framerate.textFont, FONT_SIZE, color(item.severity), true), 0, label.length);
+		item.field.setTextFormat(new TextFormat(Framerate.fontName, FONT_SIZE, color(item.severity), true), 0, label.length);
 
 		item.w = Math.min(maxW, item.field.textWidth + PAD * 2 + BAR_W + 6);
 		item.h = item.field.height + PAD * 2 - 4;

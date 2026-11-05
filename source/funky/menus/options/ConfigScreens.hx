@@ -11,6 +11,7 @@ import funky.core.TransitionHandler;
 import flixel.util.FlxColor;
 
 import funky.core.Log;
+import funkin.backend.utils.TranslationUtil as TU;
 
 /**
  * Un nodo del arbol de creditos (como los nodos <credit> y <menu> del credits.xml de Codename).
@@ -41,44 +42,101 @@ class ConfigScreens
 	{
 		var items:Array<ConfigItem> = [];
 		if (!TouchNav.MOBILE)
-			items.push(ConfigItem.submenu("CONTROLES", "Cambia la tecla de cada carril", () -> menu.push(controls(menu))));
-		items.push(ConfigItem.submenu("GAMEPLAY", "Scroll, ghost tapping, botplay y mas", () -> menu.push(gameplay())));
-		items.push(ConfigItem.submenu("AUDIO", "Volumen general, musica y efectos", () -> menu.push(audio())));
-		items.push(ConfigItem.submenu("APARIENCIA", "Intro, contador de FPS y logs en pantalla", () -> menu.push(appearance())));
+			items.push(ConfigItem.submenu(TU.translate("options.controls.name", null, "CONTROLES"),
+				TU.translate("options.controls.desc", null, "Cambia la tecla de cada carril"), () -> menu.push(controls(menu))));
+		items.push(ConfigItem.submenu(TU.translate("options.gameplay.name", null, "GAMEPLAY"),
+			TU.translate("options.gameplay.desc", null, "Scroll, ghost tapping, botplay y mas"), () -> menu.push(gameplay())));
+		items.push(ConfigItem.submenu(TU.translate("options.audio.name", null, "AUDIO"),
+			TU.translate("options.audio.desc", null, "Volumen general, musica y efectos"), () -> menu.push(audio())));
+		items.push(ConfigItem.submenu(TU.translate("options.appearance.name", null, "APARIENCIA"),
+			TU.translate("options.appearance.desc", null, "Intro, contador de FPS y logs en pantalla"), () -> menu.push(appearance())));
+		items.push(ConfigItem.submenu(TU.translate("options.language.name", null, "IDIOMA"),
+			TU.translate("options.language.desc", null, "Cambia el idioma del juego"), () -> menu.push(language(menu))));
 		if (!inGame)
-			items.push(ConfigItem.submenu("MISCELANEA", "Convertidor y herramientas", () -> menu.push(misc())));
-		return new ConfigScreen("OPCIONES", "Ajusta FMCE a tu gusto", items);
+			items.push(ConfigItem.submenu(TU.translate("options.misc.name", null, "MISCELANEA"),
+				TU.translate("options.misc.desc", null, "Convertidor y herramientas"), () -> menu.push(misc())));
+		return new ConfigScreen(TU.translate("options.title", null, "OPCIONES"),
+			TU.translate("options.desc", null, "Ajusta FMCE a tu gusto"), items);
+	}
+
+	/** Pantalla que lista los idiomas encontrados en assets/languages/. */
+	static function language(menu:ConfigMenu):ConfigScreen
+	{
+		var items:Array<ConfigItem> = [];
+		for (entry in TU.foundLanguages)
+		{
+			var split = entry.split("/");
+			var code = split[0];
+			var name = split.length > 1 ? split[1] : code;
+			var current = code == TU.curLanguage;
+			var config = TU.getConfig(code);
+			var credits = config.get("credits");
+			var version = config.get("version");
+			if (credits == null) credits = "";
+			if (version == null) version = "1.0.0";
+			var desc = TU.translate("options.language.entry", [name, credits, version],
+				"{0}  |  {1}  |  v{2}");
+			var item = ConfigItem.action((current ? "> " : "  ") + name, desc, null);
+			item.onSelect = () ->
+			{
+				if (code == TU.curLanguage) return;
+				TU.setLanguage(code);
+				ClientPrefs.save();
+				menu.reloadRoot();
+			};
+			items.push(item);
+		}
+		return new ConfigScreen(TU.translate("options.language.title", null, "IDIOMA"),
+			TU.translate("options.language.desc", null, "Elige el idioma de la interfaz"), items);
 	}
 
 	static function gameplay():ConfigScreen
 	{
-		return new ConfigScreen("GAMEPLAY", "Como se juega", [
-			ConfigItem.check("DOWNSCROLL", "Las notas bajan en vez de subir (se aplica al reiniciar)", ClientPrefs.isDownScroll, ClientPrefs.setDownScroll),
-			ConfigItem.check("MIDDLESCROLL", "Tus carriles al centro y el rival oculto (se aplica al reiniciar)", ClientPrefs.isMiddleScroll, ClientPrefs.setMiddleScroll),
-			ConfigItem.check("GHOST TAPPING", "Tocar sin nota delante no cuenta como fallo", ClientPrefs.isGhostTapping, ClientPrefs.setGhostTapping),
-			ConfigItem.check("BOTPLAY", "El juego toca por ti", ClientPrefs.isBotplay, ClientPrefs.setBotplay),
-			ConfigItem.check("SONIDO DE FALLO", "Suena un efecto al fallar una nota", ClientPrefs.isMissSound, ClientPrefs.setMissSound),
-			ConfigItem.check("NOTE SPLASHES", "Salpicadura al acertar con SICK", ClientPrefs.isNoteSplashes, ClientPrefs.setNoteSplashes),
+		return new ConfigScreen(TU.translate("options.gameplay.title", null, "GAMEPLAY"),
+			TU.translate("options.gameplay.titleDesc", null, "Como se juega"), [
+			ConfigItem.check(TU.translate("options.gameplay.downscroll.name", null, "DOWNSCROLL"),
+				TU.translate("options.gameplay.downscroll.desc", null, "Las notas bajan en vez de subir (se aplica al reiniciar)"),
+				ClientPrefs.isDownScroll, ClientPrefs.setDownScroll),
+			ConfigItem.check(TU.translate("options.gameplay.middlescroll.name", null, "MIDDLESCROLL"),
+				TU.translate("options.gameplay.middlescroll.desc", null, "Tus carriles al centro y el rival oculto (se aplica al reiniciar)"),
+				ClientPrefs.isMiddleScroll, ClientPrefs.setMiddleScroll),
+			ConfigItem.check(TU.translate("options.gameplay.ghostTapping.name", null, "GHOST TAPPING"),
+				TU.translate("options.gameplay.ghostTapping.desc", null, "Tocar sin nota delante no cuenta como fallo"),
+				ClientPrefs.isGhostTapping, ClientPrefs.setGhostTapping),
+			ConfigItem.check(TU.translate("options.gameplay.botplay.name", null, "BOTPLAY"),
+				TU.translate("options.gameplay.botplay.desc", null, "El juego toca por ti"),
+				ClientPrefs.isBotplay, ClientPrefs.setBotplay),
+			ConfigItem.check(TU.translate("options.gameplay.missSound.name", null, "SONIDO DE FALLO"),
+				TU.translate("options.gameplay.missSound.desc", null, "Suena un efecto al fallar una nota"),
+				ClientPrefs.isMissSound, ClientPrefs.setMissSound),
+			ConfigItem.check(TU.translate("options.gameplay.noteSplashes.name", null, "NOTE SPLASHES"),
+				TU.translate("options.gameplay.noteSplashes.desc", null, "Salpicadura al acertar con SICK"),
+				ClientPrefs.isNoteSplashes, ClientPrefs.setNoteSplashes),
 			ConfigItem.separator(),
-			ConfigItem.number("VELOCIDAD DE NOTAS", "Velocidad base de scroll (se aplica al reiniciar)", 0.5, 10, 0.1, 1, ClientPrefs.getScrollSpeed,
-				ClientPrefs.setScrollSpeed)
+			ConfigItem.number(TU.translate("options.gameplay.scrollSpeed.name", null, "VELOCIDAD DE NOTAS"),
+				TU.translate("options.gameplay.scrollSpeed.desc", null, "Velocidad base de scroll (se aplica al reiniciar)"),
+				0.5, 10, 0.1, 1, ClientPrefs.getScrollSpeed, ClientPrefs.setScrollSpeed)
 		]);
 	}
 
 	static function audio():ConfigScreen
 	{
-		return new ConfigScreen("AUDIO", "Volumenes", [
-			ConfigItem.slider("VOLUMEN GENERAL", "Volumen maestro de todo el juego", 0.1, ClientPrefs.getMasterVolume, v ->
+		return new ConfigScreen(TU.translate("options.audio.title", null, "AUDIO"),
+			TU.translate("options.audio.titleDesc", null, "Volumenes"), [
+			ConfigItem.slider(TU.translate("options.audio.master.name", null, "VOLUMEN GENERAL"),
+				TU.translate("options.audio.master.desc", null, "Volumen maestro de todo el juego"), 0.1, ClientPrefs.getMasterVolume, v ->
 			{
 				ClientPrefs.setMasterVolume(v);
 				ClientPrefs.applyAudio();
 			}),
-			ConfigItem.slider("MUSICA", "Volumen de la musica y la cancion", 0.1, ClientPrefs.getMusicVolume, v ->
+			ConfigItem.slider(TU.translate("options.audio.music.name", null, "MUSICA"),
+				TU.translate("options.audio.music.desc", null, "Volumen de la musica y la cancion"), 0.1, ClientPrefs.getMusicVolume, v ->
 			{
 				ClientPrefs.setMusicVolume(v);
 				ClientPrefs.applyAudio();
 			}),
-			ConfigItem.slider("EFECTOS", "Volumen de sonidos de menu y de fallo", 0.1, ClientPrefs.getSfxVolume, v ->
+			ConfigItem.slider(TU.translate("options.audio.sfx.name", null, "EFECTOS"),
+				TU.translate("options.audio.sfx.desc", null, "Volumen de sonidos de menu y de fallo"), 0.1, ClientPrefs.getSfxVolume, v ->
 			{
 				ClientPrefs.setSfxVolume(v);
 			})
@@ -87,13 +145,20 @@ class ConfigScreens
 
 	static function appearance():ConfigScreen
 	{
-		return new ConfigScreen("APARIENCIA", "Lo que se ve en pantalla", [
-			ConfigItem.check("SALTAR INTRO", "Al abrir el juego va directo al titulo, sin el splash", ClientPrefs.isSkipIntro, ClientPrefs.setSkipIntro),
-			ConfigItem.check("LOGS EN PANTALLA", "Tarjetas con los mensajes del log (tambien con F2)", () -> LogOverlay.enabled, v ->
+		return new ConfigScreen(TU.translate("options.appearance.title", null, "APARIENCIA"),
+			TU.translate("options.appearance.titleDesc", null, "Lo que se ve en pantalla"), [
+			ConfigItem.check(TU.translate("options.appearance.skipIntro.name", null, "SALTAR INTRO"),
+				TU.translate("options.appearance.skipIntro.desc", null, "Al abrir el juego va directo al titulo, sin el splash"),
+				ClientPrefs.isSkipIntro, ClientPrefs.setSkipIntro),
+			ConfigItem.check(TU.translate("options.appearance.logs.name", null, "LOGS EN PANTALLA"),
+				TU.translate("options.appearance.logs.desc", null, "Tarjetas con los mensajes del log (tambien con F2)"),
+				() -> LogOverlay.enabled, v ->
 			{
 				LogOverlay.enabled = v;
 			}),
-			ConfigItem.check("CONTADOR DE FPS", "FPS y memoria arriba a la izquierda (no se guarda)", () -> Framerate.debugMode > 0, v ->
+			ConfigItem.check(TU.translate("options.appearance.fps.name", null, "CONTADOR DE FPS"),
+				TU.translate("options.appearance.fps.desc", null, "FPS y memoria arriba a la izquierda (no se guarda)"),
+				() -> Framerate.debugMode > 0, v ->
 			{
 				Framerate.debugMode = v ? 1 : 0;
 			})
@@ -103,7 +168,8 @@ class ConfigScreens
 	static function misc():ConfigScreen
 	{
 		var items:Array<ConfigItem> = [
-			ConfigItem.action("CONVERTIDOR .FNMM", "Convierte niveles .fnmm a FMCE y exporta niveles FMCE a .FNMM", () ->
+			ConfigItem.action(TU.translate("options.misc.converter.name", null, "CONVERTIDOR .FNMM"),
+				TU.translate("options.misc.converter.desc", null, "Convierte niveles .fnmm a FMCE y exporta niveles FMCE a .FNMM"), () ->
 			{
 				ClientPrefs.save();
 				TransitionHandler.switchState(new ConverterMenuState());
@@ -111,13 +177,15 @@ class ConfigScreens
 		];
 		if (!AdvancedModeState.antiGay)
 		{
-			items.push(ConfigItem.action("MODO AVANZADO", "Editores y Code Studio (atajo: tecla 7 en el menu principal)", () ->
+			items.push(ConfigItem.action(TU.translate("options.misc.advanced.name", null, "MODO AVANZADO"),
+				TU.translate("options.misc.advanced.desc", null, "Editores y Code Studio (atajo: tecla 7 en el menu principal)"), () ->
 			{
 				ClientPrefs.save();
 				TransitionHandler.switchState(new AdvancedModeState());
 			}));
 		}
-		return new ConfigScreen("MISCELANEA", "Herramientas", items);
+		return new ConfigScreen(TU.translate("options.misc.title", null, "MISCELANEA"),
+			TU.translate("options.misc.titleDesc", null, "Herramientas"), items);
 	}
 
 	static function controls(menu:ConfigMenu):ConfigScreen
@@ -125,10 +193,12 @@ class ConfigScreens
 		var items:Array<ConfigItem> = [];
 		var capturing = -1;
 
+		var pressKey = TU.translate("options.controls.pressKey", null, "PRESIONA UNA TECLA...");
 		for (lane in 0...ClientPrefs.getLaneCount())
 		{
-			var item = ConfigItem.action("", "ENTER para cambiar la tecla  |  ESC cancela", null);
-			item.dynamicLabel = () -> "CARRIL " + (lane + 1) + ":  " + (capturing == lane ? "PRESIONA UNA TECLA..." : keysText(lane));
+			var item = ConfigItem.action("", TU.translate("options.controls.itemDesc", null, "ENTER para cambiar la tecla  |  ESC cancela"), null);
+			item.dynamicLabel = () -> TU.translate("options.controls.lane", [lane + 1, capturing == lane ? pressKey : keysText(lane)],
+				"CARRIL {0}:  {1}");
 			item.onSelect = () ->
 			{
 				capturing = lane;
@@ -143,7 +213,8 @@ class ConfigScreens
 			};
 			items.push(item);
 		}
-		return new ConfigScreen("CONTROLES", "Teclas de los carriles", items);
+		return new ConfigScreen(TU.translate("options.controls.title", null, "CONTROLES"),
+			TU.translate("options.controls.titleDesc", null, "Teclas de los carriles"), items);
 	}
 
 	static function keysText(lane:Int):String
@@ -333,7 +404,8 @@ class ConfigScreens
 	];
 
 	public static function credits(menu:ConfigMenu):ConfigScreen
-		return creditScreen(menu, "CREDITOS", "Gracias a todos los que hicieron esto posible", CREDITS);
+		return creditScreen(menu, TU.translate("credits.title", null, "CREDITOS"),
+			TU.translate("credits.desc", null, "Gracias a todos los que hicieron esto posible"), CREDITS);
 
 	/** Construye una pantalla de creditos; las secciones se llaman a si mismas para abrir su propia pantalla. */
 	static function creditScreen(menu:ConfigMenu, title:String, desc:String, entries:Array<CreditEntry>):ConfigScreen

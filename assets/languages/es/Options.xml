@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<language>
+	<group name="Options" prefix="options.">
+		<str id="title">OPCIONES</str>
+		<str id="desc">Ajusta FMCE a tu gusto</str>
+
+		<str id="controls.name">CONTROLES</str>
+		<str id="controls.desc">Cambia la tecla de cada carril</str>
+		<str id="controls.title">CONTROLES</str>
+		<str id="controls.titleDesc">Teclas de los carriles</str>
+		<str id="controls.itemDesc">ENTER para cambiar la tecla  |  ESC cancela</str>
+		<str id="controls.pressKey">PRESIONA UNA TECLA...</str>
+		<str id="controls.lane">CARRIL {0}:  {1}</str>
+
+		<str id="gameplay.name">GAMEPLAY</str>
+		<str id="gameplay.desc">Scroll, ghost tapping, botplay y mas</str>
+		<str id="gameplay.title">GAMEPLAY</str>
+		<str id="gameplay.titleDesc">Como se juega</str>
+		<str id="gameplay.downscroll.name">DOWNSCROLL</str>
+		<str id="gameplay.downscroll.desc">Las notas bajan en vez de subir (se aplica al reiniciar)</str>
+		<str id="gameplay.middlescroll.name">MIDDLESCROLL</str>
+		<str id="gameplay.middlescroll.desc">Tus carriles al centro y el rival oculto (se aplica al reiniciar)</str>
+		<str id="gameplay.ghostTapping.name">GHOST TAPPING</str>
+		<str id="gameplay.ghostTapping.desc">Tocar sin nota delante no cuenta como fallo</str>
+		<str id="gameplay.botplay.name">BOTPLAY</str>
+		<str id="gameplay.botplay.desc">El juego toca por ti</str>
+		<str id="gameplay.missSound.name">SONIDO DE FALLO</str>
+		<str id="gameplay.missSound.desc">Suena un efecto al fallar una nota</str>
+		<str id="gameplay.noteSplashes.name">NOTE SPLASHES</str>
+		<str id="gameplay.noteSplashes.desc">Salpicadura al acertar con SICK</str>
+		<str id="gameplay.scrollSpeed.name">VELOCIDAD DE NOTAS</str>
+		<str id="gameplay.scrollSpeed.desc">Velocidad base de scroll (se aplica al reiniciar)</str>
+
+		<str id="audio.name">AUDIO</str>
+		<str id="audio.desc">Volumen general, musica y efectos</str>
+		<str id="audio.title">AUDIO</str>
+		<str id="audio.titleDesc">Volumenes</str>
+		<str id="audio.master.name">VOLUMEN GENERAL</str>
+		<str id="audio.master.desc">Volumen maestro de todo el juego</str>
+		<str id="audio.music.name">MUSICA</str>
+		<str id="audio.music.desc">Volumen de la musica y la cancion</str>
+		<str id="audio.sfx.name">EFECTOS</str>
+		<str id="audio.sfx.desc">Volumen de sonidos de menu y de fallo</str>
+
+		<str id="appearance.name">APARIENCIA</str>
+		<str id="appearance.desc">Intro, contador de FPS y logs en pantalla</str>
+		<str id="appearance.title">APARIENCIA</str>
+		<str id="appearance.titleDesc">Lo que se ve en pantalla</str>
+		<str id="appearance.skipIntro.name">SALTAR INTRO</str>
+		<str id="appearance.skipIntro.desc">Al abrir el juego va directo al titulo, sin el splash</str>
+		<str id="appearance.logs.name">LOGS EN PANTALLA</str>
+		<str id="appearance.logs.desc">Tarjetas con los mensajes del log (tambien con F2)</str>
+		<str id="appearance.fps.name">CONTADOR DE FPS</str>
+		<str id="appearance.fps.desc">FPS y memoria arriba a la izquierda (no se guarda)</str>
+
+		<str id="language.name">IDIOMA</str>
+		<str id="language.desc">Cambia el idioma del juego</str>
+		<str id="language.title">IDIOMA</str>
+		<str id="language.entry">{0}  |  {1}  |  v{2}</str>
+
+		<str id="misc.name">MISCELANEA</str>
+		<str id="misc.desc">Convertidor y herramientas</str>
+		<str id="misc.title">MISCELANEA</str>
+		<str id="misc.titleDesc">Herramientas</str>
+		<str id="misc.converter.name">CONVERTIDOR .FNMM</str>
+		<str id="misc.converter.desc">Convierte niveles .fnmm a FMCE y exporta niveles FMCE a .FNMM</str>
+		<str id="misc.advanced.name">MODO AVANZADO</str>
+		<str id="misc.advanced.desc">Editores y Code Studio (atajo: tecla 7 en el menu principal)</str>
+	</group>
+</language>

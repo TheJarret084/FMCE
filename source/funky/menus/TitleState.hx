@@ -14,6 +14,7 @@ import funky.core.Paths;
 import funky.core.Log;
 import funky.core.TouchNav;
 import funky.core.TransitionHandler;
+import funkin.backend.utils.TranslationUtil as TU;
 
 /**
  * Pantalla de titulo basica: degradado, logo, GF bailando y el aviso de "Press Enter", todo al ritmo
@@ -48,9 +49,9 @@ class TitleState extends FlxState
 		super.create();
 
 		#if desktop
-		COMPILATION = "DESKTOP";
+		COMPILATION = TU.translate("title.desktop", null, "DESKTOP");
 		#else
-		COMPILATION = "MOBILE";
+		COMPILATION = TU.translate("title.mobile", null, "MOBILE");
 		#end
 
 		background = FlxGradient.createGradientFlxSprite(FlxG.width, FlxG.height, [0xFF0B0B16, 0xFF1B1030, 0xFF2D1646], 24);
@@ -123,7 +124,8 @@ class TitleState extends FlxState
 		}
 		else
 		{
-			hintText = new FlxText(FlxG.width * 0.04, FlxG.height - 110, FlxG.width * 0.52, TouchNav.MOBILE ? "TOCA LA PANTALLA" : KeyBinds.labelWithGamepad(KeyBinds.ACCEPT), 28);
+			hintText = new FlxText(FlxG.width * 0.04, FlxG.height - 110, FlxG.width * 0.52,
+				TouchNav.MOBILE ? TU.translate("title.tap", null, "TOCA LA PANTALLA") : KeyBinds.labelWithGamepad(KeyBinds.ACCEPT), 28);
 			hintText.alignment = FlxTextAlign.CENTER;
 			hintText.color = TITLE_COLOR;
 			hintText.setBorderStyle(FlxTextBorderStyle.SHADOW, 0xFF000000, 3);

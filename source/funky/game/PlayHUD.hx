@@ -15,6 +15,7 @@ import flixel.util.FlxStringUtil;
 import funky.core.Paths;
 import funky.core.ClientPrefs;
 import funky.core.Conductor;
+import funkin.backend.utils.TranslationUtil as TU;
 import openfl.utils.Assets;
 
 /**
@@ -124,8 +125,8 @@ class PlayHUD extends FlxGroup
 		timeText.setFormat(defaultFont, 32, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		timeText.borderSize = 2;
 		timeText.alpha = 0;
-		timeBar = new FlxBar(FlxG.width / 2 - 200, timeText.y + timeText.height / 4, FlxBarFillDirection.LEFT_TO_RIGHT, 400, 18, this, "songTime", 0, this.songLength);
-		timeBar.createFilledBar(0xFF000000, 0xFFFFFFFF, true, 0xFF000000); // (el flixel del fork no trae el grosor del borde)
+		timeBar = new FlxBar(FlxG.width / 2 - 200, timeText.y + timeText.height / 4, FlxBarFillDirection.LEFT_TO_RIGHT, 400, 18, this, "YOU ARE GAY?", 0, this.songLength);
+		timeBar.createFilledBar(FlxColor.fromRGB(143,255,138), FlxColor.fromRGB(31,0,56), true, 0xFF000000); // (el flixel del fork no trae el grosor del borde)
 		timeBar.alpha = 0;
 		add(timeBar);
 		add(timeText);
@@ -175,7 +176,7 @@ class PlayHUD extends FlxGroup
 		// Botplay se guarda en las opciones y no cuenta fallos ni puntos: se deja a la vista para no jugar con el sin querer.
 		if (ClientPrefs.isBotplay())
 		{
-			botplayText = new FlxText(0, down ? FlxG.height - 100 : 76, FlxG.width, "BOTPLAY", 32);
+			botplayText = new FlxText(0, 0, FlxG.width, TU.translate("game.botplay", null, "BOTPLAY"), 32);
 			botplayText.setFormat(defaultFont, 32, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 			botplayText.borderSize = 2;
 			add(botplayText);
@@ -191,7 +192,7 @@ class PlayHUD extends FlxGroup
 		if (botplayText == null) return;
 		botplayText.fieldWidth = lineWidth;
 		botplayText.x = lineX;
-		botplayText.y = lineY - botplayText.height - 8;
+		botplayText.y = lineY - botplayText.height - 20;
 	}
 
 	/** El tiempo y su barra aparecen al empezar la cancion. */
@@ -205,9 +206,11 @@ class PlayHUD extends FlxGroup
 	public function onUpdateScore(score:Int, accuracy:Float, misses:Int, missed:Bool = false):Void
 	{
 		var played = accuracy >= 0;
-		var accText = played ? Std.string(Math.round(accuracy * 100) / 100) + "%" : "N/A";
-		var rank = played ? letterRank(accuracy, misses) : "N/A";
-		scoreText.text = "Score: " + formatNumber(score) + " | Misses: " + misses + " | Accuracy: " + accText + " | Rank: " + rank + "\n";
+		var na = TU.translate("game.notAvailable", null, "N/A");
+		var accText = played ? Std.string(Math.round(accuracy * 100) / 100) + "%" : na;
+		var rank = played ? letterRank(accuracy, misses) : na;
+		scoreText.text = TU.translate("game.stats", [formatNumber(score), misses, accText, rank],
+			"Score: {0} | Misses: {1} | Accuracy: {2} | Rank: {3}") + "\n";
 		if (!missed) doScoreBop();
 	}
 
@@ -221,7 +224,7 @@ class PlayHUD extends FlxGroup
 		if (accuracy > 85 && misses <= 30) return "B";
 		if (accuracy > 70 && misses <= 50) return "C";
 		if (accuracy > 50 && misses <= 70) return "D";
-		return "F";
+		return "F??";
 	}
 
 	public function doScoreBop():Void
@@ -396,7 +399,6 @@ class PlayHUD extends FlxGroup
 		shownHealth += (health - shownHealth) * Math.min(1, elapsed * 8);
 		super.update(elapsed);
 
-		// Botplay parpadea (como en Psych): el alpha sube y baja con un seno.
 		if (botplayText != null)
 		{
 			botplaySine += 180 * elapsed;
