@@ -28,25 +28,7 @@ class Main extends Sprite
 		super();
 		instance = this;
 
-		Log.init();
-		CrashHandler.init();
-		Paths.init();
-		ClientPrefs.load();
-
-		#if desktop
-		WindowUtils.init("FMCE");
-		#end
-
-		#if (desktop || android)
-		DiscordClient.initialize();
-		#end
-
-		MemoryUtil.enable();
-		FlxG.signals.postStateSwitch.add(() -> MemoryUtil.clearMajor());
-
-		addChild(new FlxGame(GAME_WIDTH, GAME_HEIGHT, SplashState, 60, 60, true));
-		addChild(new Framerate());
-		addChild(new LogOverlay()); // logs en pantalla (F2)
+		// jotos
 		Log.info("Juego iniciado :happy:");
 	}
 }
