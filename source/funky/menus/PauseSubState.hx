@@ -2,6 +2,7 @@ package funky.menus;
 
 import funky.api.DiscordClient;
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
 import flixel.math.FlxMath;
@@ -17,6 +18,7 @@ import funky.core.CoolUtil;
 import funky.core.KeyBinds;
 import funky.core.Log;
 import funky.core.Paths;
+import funky.core.MenuButton;
 import funky.core.NavPad;
 import funky.core.TouchNav;
 import funky.game.PlayState;
@@ -71,9 +73,9 @@ class PauseSubState extends FlxSubState
 	var bannerFrame:Null<FlxSprite>;
 	var infoTitle:FlxText;
 	var infoSub:FlxText;
-	var peekButton:FlxText;
+	var peekButton:MenuButton;
 	var dancer:Null<FlxSprite>;
-	var backIcon:BackButton;
+	var backIcon:FlxObject;
 	var navPad:Null<NavPad>;
 
 	var uiAlpha:Float = 0;
@@ -137,21 +139,19 @@ class PauseSubState extends FlxSubState
 		add(timeInfo);
 		refreshTimeInfo();
 
-		peekButton = new FlxText(20, FlxG.height - 56, 0, TouchNav.MOBILE
+		// Boton VER JUEGO: en la fila de acciones de abajo (el mismo lugar y estilo que en los demas menus).
+		peekButton = new MenuButton(TouchNav.MOBILE
 			? TU.translate("pause.peek.mobile", null, "VER JUEGO")
-			: TU.translate("pause.peek.desktop", null, "TAB: VER JUEGO"), 22);
-		peekButton.setFormat(font, 22, FlxColor.WHITE, FlxTextAlign.LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			: TU.translate("pause.peek.desktop", null, "TAB: VER JUEGO"));
+		MenuButton.bottomRow([peekButton]);
 		add(peekButton);
 
 		dancer = makeDancer();
 		if (dancer != null) add(dancer);
 
-		// En movil no hay tecla BACK: el boton hace lo mismo (reanudar / volver desde la confirmacion).
-		if (TouchNav.MOBILE && BackButton.available())
-		{
-			backIcon = new BackButton(14, 10);
-			add(backIcon);
-		}
+		// ATRAS arriba a la izquierda (mouse o dedo): hace lo mismo que la tecla BACK (reanudar / volver desde la confirmacion).
+		backIcon = BackButton.place();
+		add(backIcon);
 
 		navPad = NavPad.make(() -> navigate(-1), () -> navigate(1));
 		if (navPad != null) add(navPad);
@@ -298,9 +298,9 @@ class PauseSubState extends FlxSubState
 		infoTitle.alpha = uiAlpha;
 		infoSub.alpha = uiAlpha;
 		timeInfo.alpha = uiAlpha;
-		peekButton.alpha = FlxMath.lerp(peekButton.alpha, viewing ? 0.3 : 1, r);
+		peekButton.fade = FlxMath.lerp(peekButton.fade, viewing ? 0.3 : 1, r);
 		if (dancer != null) dancer.alpha = uiAlpha;
-		if (backIcon != null) backIcon.alpha = uiAlpha;
+		BackButton.fade(backIcon, uiAlpha);
 		if (navPad != null) navPad.visible = !viewing;
 
 		for (i in 0...labels.length)
@@ -328,23 +328,32 @@ class PauseSubState extends FlxSubState
 			return;
 		}
 
+		// El mismo clic/toque que abre la vista no debe cerrarla en ese mismo frame.
+		var peekToggled = false;
 		#if desktop
-		if (FlxG.keys.justPressed.TAB) setViewing(!viewing);
+		if (FlxG.keys.justPressed.TAB)
+		{
+			setViewing(!viewing);
+			peekToggled = true;
+		}
 		#end
-		if (TouchNav.hit(peekButton)) setViewing(!viewing);
+		if (peekButton.clicked())
+		{
+			setViewing(!viewing);
+			peekToggled = true;
+		}
 
 		if (viewing)
 		{
-			// Cualquier toque, ENTER o BACK vuelve al menu.
-			if (KeyBinds.justPressed(KeyBinds.BACK) || KeyBinds.justPressed(KeyBinds.ACCEPT) || TouchNav.tapped()) setViewing(false);
+			// Cualquier toque o clic, ENTER o BACK vuelve al menu.
+			if (!peekToggled && (KeyBinds.justPressed(KeyBinds.BACK) || KeyBinds.justPressed(KeyBinds.ACCEPT) || TouchNav.tapped())) setViewing(false);
 			return;
 		}
 
 		if (KeyBinds.justPressed(KeyBinds.UP)) changeSelection(-1);
 		if (KeyBinds.justPressed(KeyBinds.DOWN)) changeSelection(1);
 
-		var backTapped = backIcon != null && TouchNav.hit(backIcon);
-		if (backTapped) backIcon.press();
+		var backTapped = BackButton.clicked(backIcon);
 		if (KeyBinds.justPressed(KeyBinds.BACK) || backTapped)
 		{
 			switch (page)

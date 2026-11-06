@@ -1,118 +1,107 @@
-
 package funky.backend;
 
 import flixel.FlxG;
 import flixel.FlxSubState;
-import flixel.FlxSprite;
 import flixel.util.FlxTimer;
-import flixel.util.FlxColor;
+#if FMCE_VIDEO
 import hxvlc.flixel.FlxVideo;
-
+#end
+import funky.core.Log;
 import funky.core.Paths;
-import funkin.editors.ui.UIWarningSubstate;
 
-typedef ConfigWarning =
-{
-    var titleError:String;
-    var messageBoxError:String;
-    var labelError:String;
-    var colorError:FlxColor;
-    var onClickError:UIWarningSubstate->Void;
-}
-
+/**
+ * Substate que reproduce un video a pantalla completa y, cuando termina, avisa. Se usa para el video de error de carga.
+ * Uso: `var v = new JarretVideo(); openSubState(v); v.play("nombre", function() { ... });`
+ * `onDone` se llama SIEMPRE: al terminar el video, si el video falta o si falla (asi el aviso que sigue nunca se pierde).
+ */
 class JarretVideo extends FlxSubState
 {
-    public var fnc:Void->Void;
-    public var instance:JarretVideo;
+	#if FMCE_VIDEO
+	var video:FlxVideo;
+	#end
+	var finished:Bool = false;
+	var onDone:Null<Void->Void>;
 
-    public var warning:ConfigWarning;
+	public function new()
+	{
+		super();
+	}
 
-    public var showError:Void->Void;
+	/** Reproduce `assets/videos/<name>.mp4`. (Se llama `play` y no `create`: `create` es del ciclo de vida del substate.) */
+	public function play(name:String, ?onDone:Void->Void):Void
+	{
+		this.onDone = onDone;
+		finished = false;
 
-    var video:FlxVideo;
-    var finished:Bool = false;
+		#if FMCE_VIDEO
+		try
+		{
+			video = new FlxVideo();
+			video.onEndReached.add(function() finish());
+			video.onEncounteredError.add(function(error:String)
+			{
+				Log.warn('[JarretVideo] error de video: $error');
+				finish();
+			});
 
-    public function new()
-    {
-        super();
-        instance = this;
-    }
+			FlxG.addChildBelowMouse(video);
 
-    public function create(
-        sprite:FlxSprite,
-        path:String,
-        ?onError:Void->Void,
-        ?func:Void->Void
-    ):Void
-    {
-        fnc = func;
-        showError = onError;
+			if (video.load(Paths.video(name)))
+			{
+				// un frame de espera para que el video termine de montarse
+				new FlxTimer().start(0.05, function(_)
+				{
+					if (!finished && video != null) video.play();
+				});
+			}
+			else
+			{
+				Log.warn('[JarretVideo] no se pudo cargar ${Paths.video(name)}');
+				finish();
+			}
+		}
+		catch (e:Dynamic)
+		{
+			Log.warn('[JarretVideo] $e');
+			finish();
+		}
+		#else
+		// este build no trae video: se pasa directo al aviso
+		finish();
+		#end
+	}
 
-        finished = false;
-        video = new FlxVideo();
+	function releaseVideo():Void
+	{
+		#if FMCE_VIDEO
+		if (video == null) return;
+		try
+		{
+			video.stop();
+			video.dispose();
+			FlxG.removeChild(video);
+		}
+		catch (e:Dynamic) {}
+		video = null;
+		#end
+	}
 
-        video.onEndReached.add(function()
-        {
-            finishVideo();
-        });
+	function finish():Void
+	{
+		if (finished) return;
+		finished = true;
 
-        video.onEncounteredError.add(function(error:String)
-        {
-            finishVideo(true);
-        });
+		releaseVideo();
+		var done = onDone;
+		onDone = null;
 
-        FlxG.addChildBelowMouse(video);
+		close();
+		if (done != null) done();
+	}
 
-        if (video.load(Paths.video(path)))
-        {
-            new FlxTimer().start(0.001, function(_)
-            {
-                if (!finished && video != null)
-                    video.play();
-            });
-        }
-        else
-        {
-            finishVideo(true);
-        }
-    }
-
-    function finishVideo(error:Bool = false):Void
-    {
-        if (finished) return;
-        finished = true;
-
-        if (video != null)
-        {
-            video.stop();
-            video.dispose();
-            FlxG.removeChild(video);
-            video = null;
-        }
-
-        close();
-
-        if (error)
-        {
-            if (showError != null)
-                showError();
-        }
-        else if (fnc != null)
-        {
-            fnc();
-        }
-    }
-
-    override function destroy():Void
-    {
-        if (video != null)
-        {
-            video.stop();
-            video.dispose();
-            FlxG.removeChild(video);
-            video = null;
-        }
-
-        super.destroy();
-    }
+	override function destroy():Void
+	{
+		releaseVideo();
+		super.destroy();
+	}
 }

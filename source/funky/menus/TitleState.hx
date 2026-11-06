@@ -140,9 +140,6 @@ class TitleState extends FlxState
 
 		funky.core.CoolUtil.playMenuSong();
 
-		FlxG.mouse.visible = false;
-		FlxG.mouse.enabled = false;
-
 		Log.info('[TitleState] created');
 
 		TransitionHandler.playIn(this);
@@ -212,9 +209,6 @@ class TitleState extends FlxState
 	override public function destroy():Void
 	{
 		super.destroy();
-
-		FlxG.mouse.visible = true;
-		FlxG.mouse.enabled = true;
 
 		background = null;
 		logo = null;

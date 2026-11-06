@@ -1,6 +1,7 @@
 package funky.menus.options;
 
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.input.keyboard.FlxKey;
@@ -201,8 +202,7 @@ class ConfigMenu extends FlxGroup
 	var headBG:FlxSprite;
 	var titleText:FlxText;
 	var descText:FlxText;
-	var backButton:FlxSprite;
-	var backIcon:BackButton;
+	var backButton:FlxObject;
 	var navPad:Null<NavPad>;
 
 	var enterT:Float = 1;
@@ -238,24 +238,16 @@ class ConfigMenu extends FlxGroup
 		descText.setFormat(font, 18, 0xFFD8D8E0, FlxTextAlign.LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(descText);
 
+		// Boton ATRAS en su lugar de siempre (arriba a la izquierda, igual que en los demas menus), con mouse o dedo.
+		backButton = BackButton.place();
+		add(backButton);
+
+		// El titulo y la descripcion arrancan despues del boton, no pasan por debajo.
+		titleText.x = descText.x = BackButton.WIDTH;
+		titleText.fieldWidth = descText.fieldWidth = FlxG.width - BackButton.WIDTH - 14;
+
 		if (TouchNav.MOBILE)
 		{
-			if (BackButton.available())
-			{
-				backIcon = new BackButton(FlxG.width - BackButton.SIZE - 14, 6);
-				backButton = backIcon;
-				// El titulo y la descripcion no pasan por debajo del boton.
-				titleText.fieldWidth = FlxG.width - 28 - BackButton.SIZE - 14;
-				descText.fieldWidth = FlxG.width - 28 - BackButton.SIZE - 14;
-			}
-			else
-			{
-				var text = new FlxText(FlxG.width - 190, 10, 176, TU.translate("ui.back", null, "< ATRAS"), 28);
-				text.setFormat(font, 28, FlxColor.WHITE, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-				backButton = text;
-			}
-			add(backButton);
-
 			navPad = NavPad.make(() -> navigate(-1), () -> navigate(1));
 			if (navPad != null) add(navPad);
 		}
@@ -357,7 +349,8 @@ class ConfigMenu extends FlxGroup
 		descText.text = text;
 		descText.y = titleText.y + titleText.height + 2;
 
-		headBG.scale.set(FlxG.width, descText.y + descText.height + 8);
+		// La barra de arriba cubre tambien el boton ATRAS (esquina izquierda), para que las filas no pasen por debajo de el.
+		headBG.scale.set(FlxG.width, Math.max(descText.y + descText.height + 8, BackButton.Y + BackButton.SIZE + 4));
 		headBG.updateHitbox();
 	}
 
@@ -447,7 +440,8 @@ class ConfigMenu extends FlxGroup
 		var screen = top();
 		if (screen == null) return;
 
-		if (KeyBinds.justPressed(KeyBinds.BACK))
+		// ATRAS: la tecla o el boton de arriba a la izquierda (mouse o dedo).
+		if (KeyBinds.justPressed(KeyBinds.BACK) || BackButton.clicked(backButton))
 		{
 			back();
 			return;
@@ -488,7 +482,7 @@ class ConfigMenu extends FlxGroup
 
 		if (KeyBinds.justPressed(KeyBinds.ACCEPT)) activate(item);
 
-		var tap = tapPoint();
+		var tap = TouchNav.pressPoint();
 		if (tap != null && navPad != null && navPad.covers(tap.x, tap.y))
 			tap.put();
 		else if (tap != null)
@@ -500,12 +494,6 @@ class ConfigMenu extends FlxGroup
 
 	function handleTap(p:FlxPoint, screen:ConfigScreen):Void
 	{
-		if (backButton != null && inside(p, backButton.x, backButton.y, backButton.width, backButton.height, 14))
-		{
-			if (backIcon != null) backIcon.press();
-			back();
-			return;
-		}
 		for (i in 0...rows.length)
 		{
 			var row = rows[i];
@@ -523,15 +511,6 @@ class ConfigMenu extends FlxGroup
 				activate(row.item);
 			return;
 		}
-	}
-
-	function tapPoint():Null<FlxPoint>
-	{
-		#if FLX_TOUCH
-		for (touch in FlxG.touches.list)
-			if (touch.justPressed) return touch.getWorldPosition(FlxG.camera);
-		#end
-		return null;
 	}
 
 	static inline function inside(p:FlxPoint, x:Float, y:Float, w:Float, h:Float, pad:Float):Bool

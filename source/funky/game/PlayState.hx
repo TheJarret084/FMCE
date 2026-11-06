@@ -294,7 +294,7 @@ class PlayState extends MusicBeatState
 		}
 		catch (error:Dynamic)
 		{
-			startCountdown(true, true, Std.string(error));
+			pendingError = Std.string(error);
 			return;
 		}
 
@@ -438,6 +438,7 @@ class PlayState extends MusicBeatState
 		hud.cameras = [camHUD];
 		add(hud);
 		hud.placeBotplay(strumX, strumY, lineWidth);
+		hud.followBotplay(playerLine); // se pega a los receptores reales del jugador y los sigue
 		guiGroups.push(hud);
 		eventos.hud = hud;
 		eventos.onGui = setGuiVisible;
@@ -508,6 +509,14 @@ class PlayState extends MusicBeatState
 
 	override public function update(elapsed:Float):Void
 	{
+		if (pendingError != null)
+		{
+			var message = pendingError;
+			pendingError = null;
+			showError(message);
+			return;
+		}
+
 		if (KeyBinds.justPressed(KeyBinds.PAUSE) && started && !songEnded && subState == null)
 		{
 			requestPause();
@@ -1264,140 +1273,204 @@ class PlayState extends MusicBeatState
 		Scripts.call("onSubstateClose");
 	}
 
-	var messageError;
-	 /**
-     * Displays a level loading error.
-     * @param message Error text.
-     */
-    function showError(message:String):Void
-    {
-        FlxG.sound.music.stop();
-        
-        var cutscene = new JarretVideo();
+	/** Error de carga pendiente: el create no puede abrir substates todavia, asi que se muestra en el primer update. */
+	var pendingError:Null<String> = null;
 
-        openSubState(cutscene);
-        
-        cutscene.create(
-            null,
-            "fatalerrorisocurred",
-            function()
-            {
-                openSubState(new UIWarningSubstate(
-                    "Error al cargar el nivel",
-                    message,
-                    [
-                        {
-                            label: "Exit?",
-                            onClick: function(_) {
-                                PauseSubState.leave('freeplay');
-                            }
-                        }
-                    ],
-                    false
-                ));
-            }
-        );
-    }
+	/**
+	 * Muestra el error de carga de un nivel: primero un video solo (`fatalerrorisocurred`) y al terminar (o si el video
+	 * falta o falla) la ventana de aviso con el mensaje y un boton para salir.
+	 * @param message Texto del error.
+	 */
+	function showError(message:String):Void
+	{
+		safely("transitionIn (error)", function() transitionIn());
+		safely("music.stop (error)", function() if (FlxG.sound.music != null) FlxG.sound.music.stop());
+
+		var showWarning = function():Void
+		{
+			openSubState(new UIWarningSubstate(
+				"Error al cargar el nivel",
+				message,
+				[
+					{
+						label: "Salir",
+						color: FlxColor.RED,
+						onClick: function(_) exitToMenu()
+					}
+				],
+				false
+			));
+		};
+
+		var cutscene = new JarretVideo();
+		openSubState(cutscene);
+		cutscene.play("fatalerrorisocurred", showWarning);
+	}
+
+	/** Corre `action`. Si truena, lo manda al log (F2) con `label` y el juego sigue: un detalle no debe tumbar el countdown. */
+	function safely(label:String, action:Void->Void):Void
+	{
+		try
+		{
+			action();
+		}
+		catch (error:Dynamic)
+		{
+			Log.error('[PlayState] $label: ' + Std.string(error));
+		}
+	}
+
+	/** Duracion de un tiempo del countdown (s). Con un BPM invalido (0, NaN, infinito) usa el del chart, o 500 ms como ultimo recurso. */
+	function countdownBeat():Float
+	{
+		var ms = Conductor.crochet;
+		if (Math.isNaN(ms) || !Math.isFinite(ms) || ms <= 0)
+		{
+			var bpm = song != null ? song.bpm : 0;
+			ms = (!Math.isNaN(bpm) && Math.isFinite(bpm) && bpm > 0) ? 60000 / bpm : 500;
+			Log.warn('[PlayState] countdown: BPM invalido, se usan ${Std.int(ms)} ms por tiempo');
+		}
+		return Math.max(0.1, ms / 1000);
+	}
+
+	/** Cancela los timers del countdown (al reiniciarlo o al destruir el state). */
+	function cancelCountdown():Void
+	{
+		for (timer in countdownTimers)
+			if (timer != null) timer.cancel();
+		countdownTimers = [];
+	}
 
 	/**
 	 * Cuenta regresiva antes de la cancion: 4 tiempos de un beat (3, 2, 1, GO) y la musica arranca un
 	 * beat despues del GO.
+	 *
+	 * A prueba de errores: si un script, una imagen o un sonido falla, se avisa en el log y la cuenta SIGUE; la cancion siempre
+	 * arranca (antes un error en un tick podia dejar el nivel congelado o mandar al CrashState).
 	 */
-	public function startCountdown(force:Bool = false, ?caseError:Bool, ?message:String):Void
+	public function startCountdown(force:Bool = false):Void
 	{
-		if (!force && Scripts.call("onStartCountdown"))
-			return;
+		if (started) return; // la cancion ya empezo: no hay nada que contar
 
-		var beat = Conductor.crochet / 1000;
-
-		for (index in 0...introSounds.length)
+		// Un script puede cancelarlo con Function_Stop (y llamar `startCountdown(true)` cuando quiera).
+		if (!force)
 		{
-			countdownTimers.push(new FlxTimer().start(beat * (index + 1), function(_)
-			{
-				countdown(index);
-			}));
+			var cancelled = false;
+			safely("onStartCountdown", function() cancelled = Scripts.call("onStartCountdown"));
+			if (cancelled) return;
 		}
 
-		countdownTimers.push(new FlxTimer().start(beat * (introSounds.length + 1), function(_) beginSong()));
+		cancelCountdown(); // si se llama dos veces no se duplican los timers
 
-        if (caseError) 
-            showError(message);
-        
-		Scripts.call("onCountdownStarted");
+		var beat = countdownBeat();
+		var ticks = Std.int(Math.max(introSounds.length, introSprites.length));
 
-		Log.info('[PlayState] countdown: ${introSounds.length} cuentas de ${Std.int(Conductor.crochet)} ms');
+		for (index in 0...ticks)
+			countdownTimers.push(new FlxTimer().start(beat * (index + 1), function(_) countdown(index)));
+
+		countdownTimers.push(new FlxTimer().start(beat * (ticks + 1), function(_) beginSong()));
+
+		safely("onCountdownStarted", function() Scripts.call("onCountdownStarted"));
+
+		Log.info('[PlayState] countdown: $ticks cuentas de ${Std.int(beat * 1000)} ms');
 	}
 
 	/** Empieza la cancion de verdad: tiempo, musica, voces, videos del stage. Lo llama el fin del countdown (o el salto sin countdown). */
 	function beginSong():Void
 	{
+		if (started) return; // un timer repetido no debe arrancar la cancion dos veces
 		started = true;
-		hud.onSongStart();
-		if (stage != null) stage.startVideos();
 
-		if (FlxG.sound.music != null)
-			FlxG.sound.music.resume();
-		if (voices != null)
-			voices.resume();
-
-		Scripts.call("onSongStart");
+		// Cada paso va aparte: si los videos del stage fallan, la musica igual tiene que sonar.
+		safely("hud.onSongStart", function() hud.onSongStart());
+		safely("stage.startVideos", function() if (stage != null) stage.startVideos());
+		safely("music.resume", function() if (FlxG.sound.music != null) FlxG.sound.music.resume());
+		safely("voices.resume", function() if (voices != null) voices.resume());
+		safely("onSongStart", function() Scripts.call("onSongStart"));
 	}
 
 	/**
-	 * Muestra una cuenta del countdown y reproduce su sonido.
+	 * Muestra una cuenta del countdown y reproduce su sonido. Cada parte (script, imagen, sonido) falla por separado:
+	 * si falta la imagen, el sonido suena igual y la cuenta no se detiene.
 	 * @param swagCounter 0 = "3", 1 = "2" (ready), 2 = "1" (set), 3 = GO.
 	 */
 	public function countdown(swagCounter:Int):Void
 	{
-		Scripts.set("countdownTick", swagCounter);
-		Scripts.call("onCountdownTick");
+		if (songEnded) return; // llego tarde (el nivel ya termino): ya no se muestra
 
-		var spritePath = introSprites[swagCounter];
-		var soundName = introSounds[swagCounter];
-
-		// Si se entro desde el charter (probar la cancion), el countdown usa las versiones "-test" (intro3-test, game/countdown/
-		// ready-test...). Si falta alguna se usa la normal. Jugando desde el menu nunca se usan.
-		var testSuffix = returnToEditor != null ? "-test" : "";
-
-		if (spritePath != null)
+		safely("onCountdownTick", function()
 		{
-			var file = Paths.image(spritePath + testSuffix);
-			if (testSuffix != "" && !sys.FileSystem.exists(file) && !openfl.utils.Assets.exists(file)) file = Paths.image(spritePath);
+			Scripts.set("countdownTick", swagCounter);
+			Scripts.call("onCountdownTick");
+		});
+		safely("imagen del countdown", function() showCountdownImage(swagCounter));
+		safely("sonido del countdown", function() playCountdownSound(swagCounter));
+	}
 
-			if (!sys.FileSystem.exists(file) && !openfl.utils.Assets.exists(file))
-			{
-				Log.warn('[PlayState] countdown: falta la imagen $file');
-			}
-			else
-			{
-				var sprite = new FlxSprite().loadGraphic(file);
-				sprite.scrollFactor.set();
-				sprite.antialiasing = true;
-				sprite.screenCenter();
-				sprite.cameras = [camHUD];
-				add(sprite);
+	/**
+	 * Ruta de un archivo del countdown que SI existe, o null. Si se entro desde el charter (probar la cancion) se prueba primero la
+	 * version "-test" (intro3-test, game/countdown/ready-test...) y si falta se usa la normal. Jugando desde el menu nunca se usan.
+	 */
+	function countdownAsset(name:String, image:Bool):Null<String>
+	{
+		var names = returnToEditor != null ? [name + "-test", name] : [name];
+		for (candidate in names)
+		{
+			var file = image ? Paths.image(candidate) : Paths.sound(candidate);
+			if (sys.FileSystem.exists(file) || openfl.utils.Assets.exists(file)) return file;
+		}
+		return null;
+	}
 
-				FlxTween.tween(sprite, {y: sprite.y + 100, alpha: 0}, Conductor.crochet / 1000, {
-					ease: FlxEase.cubeInOut,
-					onComplete: function(_)
-					{
-						remove(sprite, true);
-						sprite.destroy();
-					}
-				});
-			}
+	function showCountdownImage(index:Int):Void
+	{
+		var spritePath = index >= 0 && index < introSprites.length ? introSprites[index] : null;
+		if (spritePath == null) return; // el "3" no lleva imagen
+
+		var file = countdownAsset(spritePath, true);
+		if (file == null)
+		{
+			Log.warn('[PlayState] countdown: falta la imagen ${Paths.image(spritePath)}');
+			return;
 		}
 
-		if (soundName != null)
+		var sprite = new FlxSprite().loadGraphic(file);
+		if (sprite.graphic == null || sprite.frameWidth <= 1)
 		{
-			var file = Paths.sound(soundName + testSuffix);
-			if (testSuffix != "" && !sys.FileSystem.exists(file) && !openfl.utils.Assets.exists(file)) file = Paths.sound(soundName);
-
-			if (!sys.FileSystem.exists(file) && !openfl.utils.Assets.exists(file))
-				Log.warn('[PlayState] countdown: falta el sonido $file');
-			else
-				FlxG.sound.play(file, 0.6);
+			Log.warn('[PlayState] countdown: la imagen $file no se pudo cargar');
+			sprite.destroy();
+			return;
 		}
+
+		sprite.scrollFactor.set();
+		sprite.antialiasing = true;
+		sprite.screenCenter();
+		sprite.cameras = [camHUD];
+		add(sprite);
+
+		FlxTween.tween(sprite, {y: sprite.y + 100, alpha: 0}, countdownBeat(), {
+			ease: FlxEase.cubeInOut,
+			onComplete: function(_)
+			{
+				remove(sprite, true);
+				sprite.destroy();
+			}
+		});
+	}
+
+	function playCountdownSound(index:Int):Void
+	{
+		var soundName = index >= 0 && index < introSounds.length ? introSounds[index] : null;
+		if (soundName == null) return;
+
+		var file = countdownAsset(soundName, false);
+		if (file == null)
+		{
+			Log.warn('[PlayState] countdown: falta el sonido ${Paths.sound(soundName)}');
+			return;
+		}
+
+		FlxG.sound.play(file, 0.6);
 	}
 
 	override public function destroy():Void
@@ -1410,9 +1483,7 @@ class PlayState extends MusicBeatState
 		if (guiFadeTween != null) guiFadeTween.cancel();
 		releaseGuiFade();
 
-		for (timer in countdownTimers)
-			timer.cancel();
-		countdownTimers = [];
+		cancelCountdown();
 
 		if (eventos != null)
 			eventos.destroy();

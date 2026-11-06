@@ -71,6 +71,10 @@ class PlayHUD extends FlxGroup
 	/** Texto de botplay (null si no esta activo). Lo coloca `placeBotplay` y parpadea. */
 	public var botplayText(default, null):FlxText;
 	var botplaySine:Float = 0;
+	/** Strumline del jugador: el texto de botplay se pega a sus receptores y los sigue (si un script o evento los mueve). */
+	var botplayLine:Null<StrumLine>;
+	/** Separacion (px) entre el borde de abajo del texto de botplay y el borde de arriba de los receptores. */
+	public static inline var BOTPLAY_GAP:Float = 6;
 	var scoreText:FlxText;
 	var ratingText:FlxText;
 	/** Debajo del rating: puntos, precision y desfase de la ultima pulsacion. */
@@ -186,13 +190,52 @@ class PlayHUD extends FlxGroup
 		updateTime(0);
 	}
 
-	/** Pone el texto de botplay justo encima de la strumline del jugador, centrado sobre ella. */
+	/**
+	 * Pone el texto de botplay encima de la strumline del jugador, centrado sobre ella. Esta version usa los numeros que se
+	 * pasan (sirve antes de que existan los receptores); `followBotplay` lo deja pegado a los receptores de verdad.
+	 */
 	public function placeBotplay(lineX:Float, lineY:Float, lineWidth:Float):Void
 	{
 		if (botplayText == null) return;
-		botplayText.fieldWidth = lineWidth;
-		botplayText.x = lineX;
-		botplayText.y = lineY - botplayText.height + 20;
+		setBotplayRect(lineX, lineY, lineWidth);
+	}
+
+	/** El texto de botplay se pega a los receptores de `line` (su x, ancho y alto reales) y los sigue cada frame. */
+	public function followBotplay(line:StrumLine):Void
+	{
+		botplayLine = line;
+		syncBotplay();
+	}
+
+	/** Centra el texto sobre [left, left + width] con su borde de abajo `BOTPLAY_GAP` px arriba de `top`. */
+	function setBotplayRect(left:Float, top:Float, width:Float):Void
+	{
+		if (botplayText.fieldWidth != width) botplayText.fieldWidth = width;
+		botplayText.x = left;
+
+		// textHeight sale del texto ya armado: no depende de que el FlxText se haya redibujado todavia.
+		var textHeight = botplayText.textField.textHeight + 4;
+		if (!(textHeight > 4)) textHeight = botplayText.size * 1.3;
+		botplayText.y = top - textHeight - BOTPLAY_GAP;
+	}
+
+	function syncBotplay():Void
+	{
+		if (botplayText == null || botplayLine == null) return;
+
+		var left = Math.POSITIVE_INFINITY;
+		var right = Math.NEGATIVE_INFINITY;
+		var top = Math.POSITIVE_INFINITY;
+		for (strum in botplayLine.members)
+		{
+			if (strum == null || !strum.exists) continue;
+			left = Math.min(left, strum.x);
+			right = Math.max(right, strum.x + strum.width);
+			top = Math.min(top, strum.y);
+		}
+		if (left > right) return; // la linea no tiene receptores
+
+		setBotplayRect(left, top, right - left);
 	}
 
 	/** El tiempo y su barra aparecen al empezar la cancion. */
@@ -401,6 +444,7 @@ class PlayHUD extends FlxGroup
 
 		if (botplayText != null)
 		{
+			syncBotplay();
 			botplaySine += 180 * elapsed;
 			botplayText.alpha = 1 - Math.sin(Math.PI * botplaySine / 180);
 		}

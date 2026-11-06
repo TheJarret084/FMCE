@@ -12,6 +12,7 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import funky.backend.FunkinSprite;
+import funky.backend.system.framerate.Framerate;
 import funky.core.ClientPrefs;
 import funky.core.Conductor;
 import funky.core.Log;
@@ -146,6 +147,8 @@ class Scripts
 		globals.set("Conductor", Conductor);
 		globals.set("ClientPrefs", ClientPrefs);
 		globals.set("Log", Log);
+		// Framerate.setPosition(x, y) / .move(dx, dy) / .resetPosition() / .setAlpha(a): mueve el contador de FPS.
+		globals.set("Framerate", Framerate);
 
 		globals.set("setVar", function(name:String, value:Dynamic):Void shared.set(name, value));
 		globals.set("getVar", function(name:String):Dynamic return shared.get(name));

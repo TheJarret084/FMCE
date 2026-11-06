@@ -1,5 +1,7 @@
 package funky.backend.system.framerate;
 
+import flixel.FlxG;
+import flixel.math.FlxPoint;
 import openfl.Lib;
 import openfl.display.Sprite;
 import openfl.events.Event;
@@ -19,8 +21,16 @@ class Framerate extends Sprite
     public static var instance:Framerate;
     public static var isLoaded:Bool = false;
     public static var debugMode:Int = 1;
-    public static var offsetX:Float = 6;
-    public static var offsetY:Float = 6;
+    /** Posicion base del contador (px). Cambiala con `setPosition`, `move` o `resetPosition`. */
+    public static var offsetX:Float = DEFAULT_X;
+    public static var offsetY:Float = DEFAULT_Y;
+    /**
+     * Desplazamiento extra encima de la posicion base. Los editores lo usan para bajar el contador y que no tape el menu de
+     * arriba (UIState pone `offset.y = 30`). Se limpia solo al cambiar de state, asi que no se queda corrido en el juego.
+     */
+    public static var offset:FlxPoint = FlxPoint.get(0, 0);
+    /** Opacidad de TODO el contador (0..1). `setAlpha` la cambia; se restablece sola al cambiar de state. */
+    public static var panelAlpha:Float = 1;
     public static var textFormat:TextFormat;
     public static var fontName:String = "_typewriter";
     public static var otherNewFont:String = "Daydream";
@@ -29,6 +39,8 @@ class Framerate extends Sprite
 
     public var otherColor:Bool = true;
 
+    static inline var DEFAULT_X:Float = 6;
+    static inline var DEFAULT_Y:Float = 6;
     static inline var PAD_X:Float = 12;
     static inline var PAD_Y:Float = 7;
     static inline var GAP:Float = 2;
@@ -71,6 +83,49 @@ class Framerate extends Sprite
 
         updateLayout();
         addEventListener(Event.ENTER_FRAME, onEnterFrame);
+
+        // Cada state arranca con el contador en su lugar: lo que muevan los editores no se arrastra al juego.
+        FlxG.signals.preStateSwitch.add(onPreStateSwitch);
+    }
+
+    // ------------------------------------------------------------------ mover el contador
+
+    /** Pone el contador en (x, y) de pantalla (px, antes del escalado). `Framerate.setPosition(6, 40)`. */
+    public static function setPosition(x:Float, y:Float):Void
+    {
+        offsetX = x;
+        offsetY = y;
+    }
+
+    /** Mueve el contador `dx`, `dy` px desde donde esta ahora. `Framerate.move(0, 30)` lo baja 30 px. */
+    public static function move(dx:Float, dy:Float):Void
+    {
+        offsetX += dx;
+        offsetY += dy;
+    }
+
+    /** Lo regresa a su lugar de siempre (arriba a la izquierda) y quita el desplazamiento extra y la transparencia. */
+    public static function resetPosition():Void
+    {
+        offsetX = DEFAULT_X;
+        offsetY = DEFAULT_Y;
+        offset.set(0, 0);
+        panelAlpha = 1;
+    }
+
+    /** Opacidad de todo el contador (0 = invisible, 1 = normal). */
+    public static function setAlpha(value:Float):Void
+        panelAlpha = value < 0 ? 0 : (value > 1 ? 1 : value);
+
+    /** Muestra u oculta el contador (mismo efecto que `debugMode`: 0 oculto, 1 visible). */
+    public static function setVisible(value:Bool):Void
+        debugMode = value ? 1 : 0;
+
+    static function onPreStateSwitch():Void
+    {
+        // La posicion base se respeta (por si un script la movio a proposito); solo se limpia lo temporal.
+        offset.set(0, 0);
+        panelAlpha = 1;
     }
 
     /** Busca assets/fonts/<otherNewFont>.otf o .ttf y devuelve su fontName; si no existe, usa la fuente por defecto. */
@@ -92,7 +147,7 @@ class Framerate extends Sprite
     private function onEnterFrame(_):Void
     {
         visible = debugMode > 0;
-        alpha = visible ? 1 : 0;
+        alpha = visible ? panelAlpha : 0;
         if (!visible) return;
 
         // en pantallas altas (celulares) el panel se agranda para seguir siendo legible
@@ -102,8 +157,8 @@ class Framerate extends Sprite
             scaleX = scaleY = fit;
         }
 
-        x = offsetX;
-        y = offsetY;
+        x = offsetX + offset.x;
+        y = offsetY + offset.y;
 
         var now = Lib.getTimer();
         if (now - lastRefresh >= REFRESH_MS)
@@ -155,6 +210,7 @@ class Framerate extends Sprite
     public function destroy():Void
     {
         removeEventListener(Event.ENTER_FRAME, onEnterFrame);
+        FlxG.signals.preStateSwitch.remove(onPreStateSwitch);
         fpsCounter.destroy();
         memoryCounter.destroy();
         if (instance == this) instance = null;

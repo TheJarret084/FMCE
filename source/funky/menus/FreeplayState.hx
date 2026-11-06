@@ -2,6 +2,7 @@ package funky.menus;
 
 import flixel.util.FlxAxes;
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.math.FlxMath;
@@ -14,6 +15,7 @@ import funky.core.CoolUtil;
 import funky.backend.chart.LevelLoader;
 import funky.core.Difficulty;
 import funky.core.KeyBinds;
+import funky.core.MenuButton;
 import funky.core.NavPad;
 import funky.core.Log;
 import funky.core.Scores;
@@ -22,6 +24,7 @@ import funky.core.TouchNav;
 import funky.core.TransitionHandler;
 import funky.game.HealthIcon;
 import funky.game.PlayState;
+import funky.menus.options.BackButton;
 import funkin.backend.utils.TranslationUtil as TU;
 import haxe.io.Path;
 import openfl.utils.Assets as OpenFlAssets;
@@ -42,7 +45,9 @@ class FreeplayState extends FlxState
 	private static final PALETTE:Array<Int> = [0xFF9271FD, 0xFFFD719B, 0xFF71FDB3, 0xFFFDC571, 0xFF71C5FD, 0xFFB871FD];
 
 	/** Alto de la barra de arriba (nivel, dificultad y mejor puntaje). */
-	private static inline var BAR_H:Float = 96;
+	private static inline var BAR_H:Float = 104;
+	/** Alto de la tira de atajos de teclado que se ve abajo en PC. */
+	private static inline var STRIP_H:Float = 34;
 	/** Separacion vertical entre filas y x de la lista (recta: ya no se inclina). */
 	private static inline var ROW_GAP:Float = 92;
 	private static inline var LIST_X:Float = 60;
@@ -74,11 +79,13 @@ class FreeplayState extends FlxState
 	private var countText:FlxText;
 	private var statusText:FlxText;
 	private var leaving:Bool = false;
-	private var backButton:FlxText;
-	private var convertButton:FlxText;
-	private var refreshButton:FlxText;
+	private var backButton:FlxObject;
+	private var convertButton:MenuButton;
+	private var refreshButton:MenuButton;
 	private var difficultyText:FlxText;
 	private var navPad:Null<NavPad>;
+	/** Donde termina la lista por abajo (arriba de la fila de botones). */
+	private var listBottom:Float = 600;
 
 	override public function create():Void
 	{
@@ -112,8 +119,8 @@ class FreeplayState extends FlxState
 		scoreBG.scrollFactor.set();
 		add(scoreBG);
 
-		// En movil el boton VOLVER ocupa la esquina: los textos arrancan despues de el.
-		var textX:Float = TouchNav.MOBILE ? 240 : 30;
+		// El boton ATRAS ocupa la esquina de arriba a la izquierda (igual que en todos los menus): los textos arrancan despues de el.
+		var textX:Float = BackButton.WIDTH;
 		countText = new FlxText(textX, 10, 420, "", 30);
 		difficultyText = new FlxText(textX, 52, 420, "", 22);
 		difficultyText.color = ARCHIVE_COLOR;
@@ -133,21 +140,23 @@ class FreeplayState extends FlxState
 			add(text);
 		}
 
-		if (TouchNav.MOBILE)
+		// Botones (mouse o dedo): ATRAS arriba a la izquierda y las acciones en una fila abajo, igual que en los demas menus.
+		backButton = BackButton.place();
+		add(backButton);
+
+		convertButton = new MenuButton(TU.translate("freeplay.converter", null, "CONVERTIDOR"), 0, 0, 230);
+		refreshButton = new MenuButton(TU.translate("freeplay.refresh", null, "REFRESCAR"), 0, 0, 200);
+
+		// En PC abajo hay una tira con los atajos de teclado: la fila de botones queda justo encima.
+		var bottomInset:Float = TouchNav.MOBILE ? 0 : STRIP_H;
+		MenuButton.bottomRow([convertButton, refreshButton], bottomInset);
+		listBottom = convertButton.y - 8;
+		add(convertButton);
+		add(refreshButton);
+
+		if (!TouchNav.MOBILE)
 		{
-			// Sin teclado: los atajos pasan a botones, las filas se tocan.
-			backButton = TouchNav.button(TU.translate("freeplay.back", null, "< VOLVER"), 30, 14, 180);
-			convertButton = TouchNav.button(TU.translate("freeplay.converter", null, "CONVERTIDOR"), 30, FlxG.height - 60, 220);
-			refreshButton = TouchNav.button(TU.translate("freeplay.refresh", null, "REFRESCAR"), FlxG.width / 2 - 110, FlxG.height - 60);
-			for (button in [backButton, convertButton, refreshButton])
-			{
-				button.setBorderStyle(OUTLINE, 0xFF000000, 2);
-				add(button);
-			}
-		}
-		else
-		{
-			var strip = new FlxSprite(0, FlxG.height - 34).makeGraphic(FlxG.width, 34, 0xFF000000);
+			var strip = new FlxSprite(0, FlxG.height - STRIP_H).makeGraphic(FlxG.width, Std.int(STRIP_H), 0xFF000000);
 			strip.alpha = 0.6;
 			strip.scrollFactor.set();
 			add(strip);
@@ -162,9 +171,6 @@ class FreeplayState extends FlxState
 
 		navPad = NavPad.make(() -> if (!leaving) move(-1), () -> if (!leaving) move(1));
 		if (navPad != null) add(navPad);
-
-		FlxG.mouse.visible = false;
-		FlxG.mouse.enabled = false;
 
 		showDifficulty();
 		refresh();
@@ -182,7 +188,7 @@ class FreeplayState extends FlxState
 		if (OpenFlAssets.exists(Paths.image(VOID_IMAGE)) && OpenFlAssets.exists(Paths.imageXml(VOID_IMAGE)))
 		{
 			statusText.size = 20;
-			statusText.y = FlxG.height - (TouchNav.MOBILE ? 160 : 110);
+			statusText.y = listBottom - 62; // arriba de la fila de botones
 			hasVoid = createVoid();
 		}
 
@@ -331,7 +337,7 @@ class FreeplayState extends FlxState
 		var row = rows[index];
 		var targetY = index - selected;
 		var areaTop = BAR_H;
-		var areaBottom:Float = TouchNav.MOBILE ? FlxG.height - 70 : FlxG.height - 40;
+		var areaBottom:Float = listBottom;
 		var centerY = (areaTop + areaBottom) / 2;
 		var wantY = centerY + targetY * ROW_GAP - row.height / 2;
 		var wantX = LIST_X + (targetY == 0 ? SELECTED_SHIFT : 0);
@@ -458,24 +464,28 @@ class FreeplayState extends FlxState
 		refreshSelection();
 	}
 
-	/** Fila que un dedo acaba de tocar, o -1. */
+	/** Fila que un dedo o el mouse acaba de tocar, o -1. */
 	private function tappedRow():Int
 	{
-		#if FLX_TOUCH
-		for (touch in FlxG.touches.list)
+		var tap = TouchNav.pressPoint();
+		if (tap == null) return -1;
+
+		var found = -1;
+		if (navPad == null || !navPad.covers(tap.x, tap.y))
 		{
-			if (!touch.justPressed) continue;
-			if (navPad != null && navPad.covers(touch.screenX, touch.screenY)) continue;
 			for (index in 0...rows.length)
 			{
 				var row = rows[index];
 				if (!row.visible) continue;
-				if (touch.screenX >= row.x - 14 && touch.screenX <= row.x + row.width + 14 && touch.screenY >= row.y - 8 && touch.screenY <= row.y + row.height + 8)
-					return index;
+				if (tap.x >= row.x - 14 && tap.x <= row.x + row.width + 14 && tap.y >= row.y - 8 && tap.y <= row.y + row.height + 8)
+				{
+					found = index;
+					break;
+				}
 			}
 		}
-		#end
-		return -1;
+		tap.put();
+		return found;
 	}
 
 	override public function update(elapsed:Float):Void
@@ -511,9 +521,9 @@ class FreeplayState extends FlxState
 
 		// Touch: buttons first, then the level rows.
 		if (TouchNav.hit(difficultyText)) { Difficulty.next(); showDifficulty(); return; }
-		if (TouchNav.hit(backButton)) { leave(new MainMenuState()); return; }
-		if (TouchNav.hit(convertButton)) { leave(new ConverterMenuState()); return; }
-		if (TouchNav.hit(refreshButton))
+		if (BackButton.clicked(backButton)) { CoolUtil.playMenuSound("cancel", 0.7); leave(new MainMenuState()); return; }
+		if (convertButton.clicked()) { leave(new ConverterMenuState()); return; }
+		if (refreshButton.clicked())
 		{
 			refresh();
 			return;

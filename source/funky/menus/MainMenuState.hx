@@ -17,6 +17,7 @@ import funky.core.KeyBinds;
 import funky.core.Paths;
 import funky.core.TouchNav;
 import funky.core.TransitionHandler;
+import funky.menus.options.BackButton;
 import funkin.backend.utils.TranslationUtil as TU;
 
 /**
@@ -38,6 +39,7 @@ class MainMenuState extends FlxState
 	var camFollow:FlxObject;
 	var menuItems:FlxTypedGroup<FlxSprite>;
 	var versionText:FlxText;
+	var backButton:FlxObject;
 
 	override public function create():Void
 	{
@@ -106,8 +108,9 @@ class MainMenuState extends FlxState
 		versionText.scrollFactor.set();
 		add(versionText);
 
-		FlxG.mouse.visible = false;
-		FlxG.mouse.enabled = false;
+		// ATRAS arriba a la izquierda (igual que en los demas menus): vuelve a la pantalla de titulo.
+		backButton = BackButton.place();
+		add(backButton);
 
 		changeItem();
 		TransitionHandler.playIn(this);
@@ -127,11 +130,13 @@ class MainMenuState extends FlxState
 				return;
 			}
 
+			hoverItem();
+
 			var up = KeyBinds.justPressed(KeyBinds.UP);
 			var down = KeyBinds.justPressed(KeyBinds.DOWN);
 			if (up || down) changeItem((up ? -1 : 0) + (down ? 1 : 0));
 
-			if (KeyBinds.justPressed(KeyBinds.BACK))
+			if (KeyBinds.justPressed(KeyBinds.BACK) || BackButton.clicked(backButton))
 			{
 				CoolUtil.playMenuSound("cancel", 0.7);
 				leave(new TitleState());
@@ -154,22 +159,40 @@ class MainMenuState extends FlxState
 		menuItems.forEach(spr -> spr.screenCenter(X));
 	}
 
-	/** Indice del boton que un dedo acaba de tocar, o -1. Los botones tienen scrollFactor 0: x/y ya son de pantalla. */
+	/** Indice del boton que un dedo o el mouse acaba de tocar, o -1. Los botones tienen scrollFactor 0: se prueban en coordenadas de pantalla. */
 	function tappedItem():Int
 	{
-		#if FLX_TOUCH
-		for (touch in FlxG.touches.list)
+		var tap = TouchNav.pressPoint();
+		if (tap == null) return -1;
+
+		var found = -1;
+		for (spr in menuItems)
 		{
-			if (!touch.justPressed) continue;
-			for (spr in menuItems)
+			// Margen generoso (dedo gordo).
+			if (TouchNav.contains(spr, tap.x, tap.y, 20))
 			{
-				// Margen generoso (dedo gordo) y se ignora el offset: los botones son scrollFactor 0, x/y ya son de pantalla.
-				if (touch.screenX >= spr.x - 24 && touch.screenX <= spr.x + spr.width + 24 && touch.screenY >= spr.y - 16 && touch.screenY <= spr.y + spr.height + 16)
-					return spr.ID;
+				found = spr.ID;
+				break;
+			}
+		}
+		tap.put();
+		return found;
+	}
+
+	/** Mouse en PC: el boton bajo el cursor se selecciona al moverlo (un clic despues lo abre). */
+	function hoverItem():Void
+	{
+		#if (FLX_MOUSE && !(android || ios))
+		if (!FlxG.mouse.justMoved) return;
+		for (spr in menuItems)
+		{
+			if (spr.ID != curSelected && TouchNav.contains(spr, FlxG.mouse.screenX, FlxG.mouse.screenY, 0))
+			{
+				changeItem(spr.ID - curSelected);
+				return;
 			}
 		}
 		#end
-		return -1;
 	}
 
 	function leave(next:FlxState):Void

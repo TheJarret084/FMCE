@@ -1,12 +1,80 @@
 package funkin.backend.system.framerate;
 
-class FramerateStub { public var visible:Bool = false; public var alpha:Float = 1; public function new() {} }
+import flixel.math.FlxPoint;
+import openfl.display.DisplayObject;
+import funky.backend.system.framerate.Framerate as RealFramerate;
 
+/**
+ * Pieza suelta (visible / alpha) del contador real. El charter portado de Codename la usa como `Framerate.fpsCounter.alpha = 0.4`;
+ * aqui se redirige al objeto de verdad (`funky.backend.system.framerate.Framerate`) en vez de ser un stub que no hacia nada.
+ */
+class FramerateStub
+{
+	var target:Void->DisplayObject;
+
+	public var visible(get, set):Bool;
+	public var alpha(get, set):Float;
+
+	public function new(target:Void->DisplayObject)
+		this.target = target;
+
+	function part():Null<DisplayObject>
+		return RealFramerate.instance == null ? null : target();
+
+	function get_visible():Bool
+	{
+		var p = part();
+		return p != null && p.visible;
+	}
+
+	function set_visible(value:Bool):Bool
+	{
+		var p = part();
+		if (p != null) p.visible = value;
+		return value;
+	}
+
+	function get_alpha():Float
+	{
+		var p = part();
+		return p == null ? 1 : p.alpha;
+	}
+
+	function set_alpha(value:Float):Float
+	{
+		var p = part();
+		if (p != null) p.alpha = value;
+		return value;
+	}
+}
+
+/**
+ * Puente para el codigo portado de Codename (`funkin.*`): todo lo que toque `Framerate` aqui mueve el contador REAL del juego.
+ * Antes esto era un stub vacio, por eso `Framerate.offset.y = 30` del UIState no bajaba nada y el contador tapaba el menu del charter.
+ * Para mover el contador desde codigo propio usa `funky.backend.system.framerate.Framerate.setPosition(x, y)` / `.move(dx, dy)` /
+ * `.resetPosition()` (o `setPosition` desde un script: `Framerate.setPosition(6, 40)`).
+ */
 class Framerate
 {
-	public static var isLoaded:Bool = false;
-	public static var offset:flixel.math.FlxPoint = flixel.math.FlxPoint.get();
-	public static var fpsCounter:FramerateStub = new FramerateStub();
-	public static var memoryCounter:FramerateStub = new FramerateStub();
-	public static var codenameBuildField:FramerateStub = new FramerateStub();
+	public static var isLoaded(get, never):Bool;
+	public static var offset(get, never):FlxPoint;
+
+	public static var fpsCounter:FramerateStub = new FramerateStub(() -> RealFramerate.instance.fpsCounter);
+	public static var memoryCounter:FramerateStub = new FramerateStub(() -> RealFramerate.instance.memoryCounter);
+	public static var codenameBuildField:FramerateStub = new FramerateStub(() -> RealFramerate.instance.buildField);
+
+	static inline function get_isLoaded():Bool
+		return RealFramerate.isLoaded && RealFramerate.instance != null;
+
+	static inline function get_offset():FlxPoint
+		return RealFramerate.offset;
+
+	public static inline function setPosition(x:Float, y:Float):Void
+		RealFramerate.setPosition(x, y);
+
+	public static inline function move(dx:Float, dy:Float):Void
+		RealFramerate.move(dx, dy);
+
+	public static inline function resetPosition():Void
+		RealFramerate.resetPosition();
 }

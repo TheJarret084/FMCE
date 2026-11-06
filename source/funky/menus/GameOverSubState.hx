@@ -2,6 +2,7 @@ package funky.menus;
 
 import funky.api.DiscordClient;
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
 import flixel.text.FlxText;
@@ -52,7 +53,7 @@ class GameOverSubState extends FlxSubState
 	var bg:FlxSprite;
 	var bf:FlxSprite;
 	var hint:FlxText;
-	var exitButton:FlxSprite;
+	var exitButton:FlxObject;
 
 	public function new(playState:PlayState)
 	{
@@ -116,12 +117,10 @@ class GameOverSubState extends FlxSubState
 		hint.alpha = 0;
 		add(hint);
 
-		if (TouchNav.MOBILE)
-		{
-			exitButton = BackButton.available() ? new BackButton(FlxG.width - BackButton.SIZE - 20, FlxG.height - 110) : TouchNav.button(TU.translate("gameOver.exit", null, "SALIR"), FlxG.width - 240, FlxG.height - 76, 220);
-			exitButton.alpha = 0;
-			add(exitButton);
-		}
+		// SALIR = el boton ATRAS de siempre (arriba a la izquierda), con mouse o dedo; aparece junto con el texto.
+		exitButton = BackButton.place();
+		BackButton.fade(exitButton, 0);
+		add(exitButton);
 
 		CoolUtil.playSound("gameOverSFX");
 	}
@@ -150,12 +149,12 @@ class GameOverSubState extends FlxSubState
 		if (phase == LOOP)
 		{
 			hint.alpha = Math.min(1, hint.alpha + elapsed * 2);
-			if (exitButton != null) exitButton.alpha = hint.alpha;
+			BackButton.fade(exitButton, hint.alpha);
 		}
 
 		if (leaving || age < INPUT_DELAY) return;
 
-		if (KeyBinds.justPressed(KeyBinds.BACK) || TouchNav.hit(exitButton))
+		if (KeyBinds.justPressed(KeyBinds.BACK) || (hint.alpha > 0.3 && BackButton.clicked(exitButton)))
 		{
 			exit();
 			return;
