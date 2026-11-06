@@ -111,11 +111,7 @@ class ConfigScreens
 				ClientPrefs.isMissSound, ClientPrefs.setMissSound),
 			ConfigItem.check(TU.translate("options.gameplay.noteSplashes.name", null, "NOTE SPLASHES"),
 				TU.translate("options.gameplay.noteSplashes.desc", null, "Salpicadura al acertar con SICK"),
-				ClientPrefs.isNoteSplashes, ClientPrefs.setNoteSplashes),
-			ConfigItem.separator(),
-			ConfigItem.number(TU.translate("options.gameplay.scrollSpeed.name", null, "VELOCIDAD DE NOTAS"),
-				TU.translate("options.gameplay.scrollSpeed.desc", null, "Velocidad base de scroll (se aplica al reiniciar)"),
-				0.5, 10, 0.1, 1, ClientPrefs.getScrollSpeed, ClientPrefs.setScrollSpeed)
+				ClientPrefs.isNoteSplashes, ClientPrefs.setNoteSplashes)
 		]);
 	}
 

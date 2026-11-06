@@ -1725,7 +1725,6 @@ class Charter extends UIState {
 				buildNoteTypesUI();
 			case CEditChartData(oldData, newData):
 				PlayState.SONG.stage = oldData.stage;
-				PlayState.SONG.scrollSpeed = oldData.speed;
 			case CEditNoteTypes(oldArray, newArray):
 				noteTypes = oldArray;
 				changeNoteType(null, false);
@@ -1790,7 +1789,6 @@ class Charter extends UIState {
 				buildNoteTypesUI();
 			case CEditChartData(oldData, newData):
 				PlayState.SONG.stage = newData.stage;
-				PlayState.SONG.scrollSpeed = newData.speed;
 			case CEditNoteTypes(oldArray, newArray):
 				noteTypes = newArray;
 				changeNoteType(null, false);
@@ -2615,7 +2613,7 @@ enum CharterChange {
 	CSelectionDrag(selectionDrags:Array<SelectionDragChange>);
 	CEditSustains(notes:Array<NoteSustainChange>);
 	CEditEvent(event:CharterEvent, oldEvents:Array<ChartEvent>, newEvents:Array<ChartEvent>);
-	CEditChartData(oldData:{stage:String, speed:Float}, newData:{stage:String, speed:Float});
+	CEditChartData(oldData:{stage:String}, newData:{stage:String});
 	CEditActionPacks(oldPacks:Array<ChartActionPack>, newPacks:Array<ChartActionPack>);
 	CEditNoteTypes(oldArray:Array<String>, newArray:Array<String>);
 	CEditBookmarks(oldArray:Array<ChartBookmark>, newArray:Array<ChartBookmark>);

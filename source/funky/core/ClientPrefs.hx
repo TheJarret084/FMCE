@@ -84,9 +84,6 @@ class ClientPrefs
             musicVolume: 1.0,
             sfxVolume: 1.0,
 
-            // El JSON real usa "scroolSpeedDEFAULD" (typo del autor, se respeta)
-            scroolSpeedDEFAULD: "3",
-
             laneCount: 4,
             // laneCount por strumLine: [playerLaneCount, enemyLaneCount]
             // Si está vacío o null, se usa laneCount global para todos.
@@ -221,12 +218,6 @@ class ClientPrefs
         data.musicVolume = getFloat(parsed, "musicVolume", 1.0);
         data.sfxVolume = getFloat(parsed, "sfxVolume", 1.0);
 
-        if (Reflect.hasField(parsed, "scroolSpeedDEFAULD"))
-        {
-            var spd = Std.string(Reflect.field(parsed, "scroolSpeedDEFAULD"));
-            if (spd != null && spd.length > 0) data.scroolSpeedDEFAULD = spd;
-        }
-
         data.laneCount = clampInt(
             getInt(parsed, "laneCount", getInt(parsed, "strumCount", 4)),
             MIN_LANES, MAX_LANES
@@ -306,10 +297,6 @@ class ClientPrefs
             data.masterVolume = parseXmlFloat(gameplay.get("masterVolume"), 1.0);
             data.musicVolume = parseXmlFloat(gameplay.get("musicVolume"), 1.0);
             data.sfxVolume = parseXmlFloat(gameplay.get("sfxVolume"), 1.0);
-
-            var speed = gameplay.get("scrollSpeed");
-            if (speed != null && speed.length > 0)
-                data.scroolSpeedDEFAULD = speed;
 
             var mk = gameplay.get("multikeysettings");
             if (mk != null && mk.length > 0)
@@ -495,7 +482,6 @@ class ClientPrefs
             gameplay.set("masterVolume", Std.string(getMasterVolume()));
             gameplay.set("musicVolume", Std.string(getMusicVolume()));
             gameplay.set("sfxVolume", Std.string(getSfxVolume()));
-            gameplay.set("scrollSpeed", Std.string(getScrollSpeed()));
             gameplay.set("multikeysettings", getMultikeyFile());
             root.addChild(gameplay);
 
@@ -615,23 +601,6 @@ class ClientPrefs
         }
         return section;
     }
-
-    /**
-     * Velocidad de scroll del juego.
-     * Lee "scroolSpeedDEFAULD" del JSON (puede venir como string).
-     * Rango esperado: 0.5 – 10.0
-     */
-    public static function getScrollSpeed():Float
-    {
-        var raw = Reflect.hasField(data, "scroolSpeedDEFAULD")
-            ? Std.string(Reflect.field(data, "scroolSpeedDEFAULD")) : "3";
-        var v = Std.parseFloat(raw);
-        if (Math.isNaN(v) || v <= 0) v = 3.0;
-        return v;
-    }
-
-    public static function setScrollSpeed(v:Float):Void
-        Reflect.setField(data, "scroolSpeedDEFAULD", Std.string(v));
 
     /**
      * ¿Scroll hacia abajo?

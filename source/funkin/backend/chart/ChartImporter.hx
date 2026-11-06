@@ -8,7 +8,6 @@ typedef ImportResult = {
 	var format:String;
 	/** Indice 0 = jugador, 1 = oponente, 2+ = extras (el orden de FMCE). */
 	var lines:Array<Array<ChartNote>>;
-	var scrollSpeed:Null<Float>;
 	/** BPM que declara el archivo (solo Legacy). Las notas ya estan en ms, asi que solo sirve para avisar. */
 	var bpm:Null<Float>;
 	var notes:Int;
@@ -60,7 +59,7 @@ class ChartImporter {
 		var raw:Dynamic = try Json.parse(text) catch (e:Dynamic) throw "No es un JSON valido.";
 		var format = detect(raw);
 		if (format == null) throw "Formato no reconocido (no es un chart de FNMM, Codename, Legacy/Psych, FNF (.fnfc) ni FMCE).";
-		var res:ImportResult = {format: format, lines: [], scrollSpeed: null, bpm: null, notes: 0, sustains: 0, droppedLanes: 0, droppedEvents: 0, duplicates: 0, lanes: lanes};
+		var res:ImportResult = {format: format, lines: [], bpm: null, notes: 0, sustains: 0, droppedLanes: 0, droppedEvents: 0, duplicates: 0, lanes: lanes};
 		switch (format) {
 			case "fnmm": fromFNMM(raw, res);
 			case "codename": fromCodename(raw, res);
@@ -123,7 +122,6 @@ class ChartImporter {
 			var notes:Array<Dynamic> = Reflect.field(s, "notes");
 			if (notes != null) for (n in notes) add(res, i, f(Reflect.field(n, "time")), Std.int(f(Reflect.field(n, "id"), -1)), f(Reflect.field(n, "sLen")));
 		}
-		res.scrollSpeed = Reflect.hasField(raw, "scrollSpeed") ? f(Reflect.field(raw, "scrollSpeed")) : null;
 		var ev:Array<Dynamic> = Reflect.field(raw, "events");
 		res.droppedEvents = ev == null ? 0 : ev.length;
 	}
@@ -149,7 +147,6 @@ class ChartImporter {
 				add(res, lineIdx, f(arr[0]), raw_lane % keys, arr.length > 2 ? f(arr[2]) : 0);
 			}
 		}
-		res.scrollSpeed = Reflect.hasField(song, "speed") ? f(Reflect.field(song, "speed")) : null;
 		res.bpm = Reflect.hasField(song, "bpm") ? f(Reflect.field(song, "bpm")) : null;
 		var ev:Array<Dynamic> = Reflect.field(song, "events");
 		if (ev != null) for (e in ev) {
@@ -174,11 +171,6 @@ class ChartImporter {
 			if (d < 0) continue;
 			if (Reflect.field(n, "k") != null && Std.string(Reflect.field(n, "k")) != "") res.droppedKinds++;
 			add(res, Std.int(d / 4), f(Reflect.field(n, "t"), -1), d % 4, f(Reflect.field(n, "l")));
-		}
-		var speed:Dynamic = Reflect.field(raw, "scrollSpeed");
-		if (speed != null) {
-			var value:Dynamic = Reflect.isObject(speed) && !Std.isOfType(speed, Float) ? (Reflect.hasField(speed, pick) ? Reflect.field(speed, pick) : Reflect.field(speed, "default")) : speed;
-			res.scrollSpeed = value == null ? null : f(value);
 		}
 		var ev:Array<Dynamic> = Reflect.field(raw, "events");
 		res.droppedEvents = ev == null ? 0 : ev.length;
@@ -209,6 +201,5 @@ class ChartImporter {
 			line(res, i);
 			for (n in l) add(res, i, f(Reflect.field(n, "time")) * mul, Std.int(f(Reflect.field(n, "lane"), -1)), f(Reflect.field(n, "length")) * mul);
 		}
-		res.scrollSpeed = Reflect.hasField(raw, "scrollSpeed") ? f(Reflect.field(raw, "scrollSpeed")) : null;
 	}
 }

@@ -65,7 +65,6 @@ class ChartNormalizer
 		for (field in ["name", "bpm", "npb", "bookmarks"])
 			if (Reflect.field(chart, field) != null) Reflect.setField(out, field, Reflect.field(chart, field));
 		if (Reflect.field(out, "bpm") == null && result.bpm != null && result.bpm > 0) Reflect.setField(out, "bpm", result.bpm);
-		if (result.scrollSpeed != null && result.scrollSpeed > 0) Reflect.setField(out, "scrollSpeed", result.scrollSpeed);
 
 		// ChartImporter da ms absolutos; el archivo guarda segundos SIN el `meta.offset` (LevelLoader lo vuelve a sumar).
 		var lines:Array<Array<Dynamic>> = [];

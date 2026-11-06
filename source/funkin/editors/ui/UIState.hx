@@ -22,7 +22,53 @@ class UIState extends MusicBeatState {
 	public static var fallbackState:UIState = null;
 
 	private inline static function get_state()
-		return FlxG.state is UIState ? cast FlxG.state : fallbackState;
+		return FlxG.state is UIState ? cast FlxG.state : getFallback();
+
+	/**
+	 * Cuando una ventana de UI (UIWarningSubstate, menus contextuales...) se abre en un state que NO es un UIState (por ejemplo el
+	 * PlayState), `UIState.state` ya no es null: devuelve este UIState "sin cabeza". Nunca se agrega al juego; se actualiza solo
+	 * despues de cada frame (hover, clics, foco), que es lo que un UIState hace en `tryUpdate`.
+	 */
+	static function getFallback():UIState {
+		if (fallbackState == null) {
+			fallbackState = new UIState();
+			fallbackState.__rect = new FlxRect();
+			fallbackState.__mousePos = FlxPoint.get();
+			FlxG.signals.postUpdate.add(fallbackState.__headlessTick);
+		}
+		return fallbackState;
+	}
+
+	/** Lo que `tryUpdate` hace al terminar el frame, para el UIState sin cabeza. */
+	function __headlessTick():Void {
+		// Si el state actual es un UIState de verdad, el se encarga: aqui solo se limpia.
+		if (FlxG.state is UIState) {
+			buttonHandler = null;
+			hoveredSprite = null;
+			return;
+		}
+
+		FlxG.mouse.getScreenPosition(FlxG.camera, __mousePos);
+
+		if (buttonHandler != null) {
+			buttonHandler();
+			buttonHandler = null;
+		}
+
+		if (FlxG.mouse.justPressed)
+			playEditorSound(Flags.DEFAULT_EDITOR_CLICK_SOUND);
+
+		if (FlxG.mouse.justReleased)
+			currentFocus = (hoveredSprite is IUIFocusable) ? (cast hoveredSprite) : null;
+
+		if (hoveredSprite != null && hoveredSprite.cursor != null)
+			NativeAPI.setCursorIcon(hoveredSprite.cursor);
+		else
+			NativeAPI.setCursorIcon(currentCursor);
+
+		prevHoveredSprite = hoveredSprite;
+		hoveredSprite = null;
+	}
 
 	public var buttonHandler:Void->Void = null;
 	public var hoveredSprite:UISprite = null;

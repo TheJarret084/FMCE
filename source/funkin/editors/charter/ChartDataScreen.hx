@@ -4,7 +4,6 @@ import flixel.math.FlxPoint;
 import funkin.backend.chart.ChartData.ChartMetaData;
 import funkin.backend.chart.ChartData;
 import funkin.game.Stage;
-import funkin.game.HudCamera;
 
 using StringTools;
 
@@ -13,11 +12,7 @@ class ChartDataScreen extends UISubstateWindow {
 	public var saveButton:UIButton;
 	public var closeButton:UIButton;
 
-	public var scrollSpeedStepper:UINumericStepper;
 	public var stageTextBox:UIAutoCompleteTextBox;
-
-	public var strumLineCam:HudCamera;
-	public var previewStrumLine:CharterPreviewStrumLine;
 
 	public function new(data:ChartData) {
 		super();
@@ -46,10 +41,6 @@ class ChartDataScreen extends UISubstateWindow {
 		add(stageTextBox);
 		addLabelOn(stageTextBox, TU.translate("chartDataScreen.stage"));
 
-		scrollSpeedStepper = new UINumericStepper(stageTextBox.x + 200 + 26, stageTextBox.y, data.scrollSpeed, 0.1, 2, 0, 10, 82);
-		add(scrollSpeedStepper);
-		addLabelOn(scrollSpeedStepper, TU.translate("chartDataScreen.scrollSpeed"));
-
 		saveButton = new UIButton(windowSpr.x + windowSpr.bWidth - 20 - 125, windowSpr.y + windowSpr.bHeight - 16 - 32, TU.translate("editor.saveClose"), function() {
 			saveInfo();
 			close();
@@ -62,40 +53,15 @@ class ChartDataScreen extends UISubstateWindow {
 		add(closeButton);
 		closeButton.color = 0xFFFF0000;
 		closeButton.x -= closeButton.bWidth;
-
-		strumLineCam = new HudCamera();
-		strumLineCam.downscroll = Options.downscroll;
-		strumLineCam.bgColor = 0;
-		strumLineCam.alpha = 0;
-		FlxG.cameras.add(strumLineCam, false);
-		previewStrumLine = new CharterPreviewStrumLine(96, 50, 1, 1, 4, 0);
-		previewStrumLine.camera = strumLineCam;
-		add(previewStrumLine);
 	}
 
 	public function saveInfo() {
 		UIUtil.confirmUISelections(this);
 
-		var oldData:{stage:String, speed:Float} = {stage: PlayState.SONG.stage, speed: PlayState.SONG.scrollSpeed};
+		var oldData:{stage:String} = {stage: PlayState.SONG.stage};
 
 		PlayState.SONG.stage = stageTextBox.label.text;
-		PlayState.SONG.scrollSpeed = scrollSpeedStepper.value;
 
-		Charter.undos.addToUndo(CEditChartData(oldData, {stage: stageTextBox.label.text, speed: scrollSpeedStepper.value}));
-	}
-
-	override public function update(elapsed:Float) {
-		var scrollSpeed:Float = 0.0;
-		if (scrollSpeedStepper.hovered || scrollSpeedStepper.focused)
-			scrollSpeed = scrollSpeedStepper.value;
-
-		strumLineCam.alpha = CoolUtil.fpsLerp(strumLineCam.alpha, scrollSpeed == 0.0 ? 0.0 : 1.0, 0.2);
-		previewStrumLine.updatePos(96, 50, 1, 1, 4, scrollSpeed);
-
-		super.update(elapsed);
-	}
-	override public function destroy() {
-		super.destroy();
-		FlxG.cameras.remove(strumLineCam);
+		Charter.undos.addToUndo(CEditChartData(oldData, {stage: stageTextBox.label.text}));
 	}
 }

@@ -125,7 +125,6 @@ class Chart {
 			actionPacks: loadActionPacks(dir),
 			meta: chartMeta,
 			stage: stage != null ? stage : "scene",
-			scrollSpeed: num(Reflect.field(rawChart, "scrollSpeed"), 1.5),
 			noteTypes: [],
 			bookmarks: bookmarks != null ? bookmarks : [],
 			chartVersion: version
@@ -272,7 +271,7 @@ class Chart {
 	static inline function levelFile(name:String):String
 		return Path.join([levelDir, name]);
 
-	/** chart.json: las notas en segundos (sin el `meta.offset`), la velocidad del chart y los bookmarks. */
+	/** chart.json: las notas en segundos (sin el `meta.offset`) y los bookmarks. La velocidad ya no vive en el chart (la fija la dificultad). */
 	public static function saveChart(song:ChartData, pretty:Bool = true):Void {
 		var lines:Array<Array<Dynamic>> = [];
 		for (sl in song.strumLines) {
@@ -288,7 +287,7 @@ class Chart {
 				}
 			]);
 		}
-		var fresh:Dynamic = {fmceChart: true, timeUnit: "seconds", strumLines: lines, scrollSpeed: song.scrollSpeed};
+		var fresh:Dynamic = {fmceChart: true, timeUnit: "seconds", strumLines: lines};
 		if (song.bookmarks != null && song.bookmarks.length > 0) Reflect.setField(fresh, "bookmarks", song.bookmarks);
 		var path = levelFile(LevelLoader.CHART_FILE);
 		write(path, merge(path, fresh, ["notes", "strumLines", "timeUnit", "scrollSpeed", "bookmarks"]), pretty);

@@ -7,7 +7,6 @@ typedef ChartData = {
 	public var events:Array<ChartEvent>;
 	public var meta:ChartMetaData;
 	public var stage:String;
-	public var scrollSpeed:Float;
 	public var noteTypes:Array<String>;
 	public var ?bookmarks:Array<ChartBookmark>;
 	/** `action_packs` de events.json: cada pack es una lista de acciones que corre un `RunActionPack`. */
@@ -46,7 +45,6 @@ typedef ChartStrumLine = {
 	var ?strumPos:Array<Float>;
 	var ?strumScale:Float;
 	var ?strumSpacing:Float;
-	var ?scrollSpeed:Float;
 	var ?vocalsSuffix:String;
 	var ?keyCount:Int; // default=4
 

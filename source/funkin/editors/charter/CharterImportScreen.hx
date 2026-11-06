@@ -160,7 +160,6 @@ class CharterImportScreen extends UISubstateWindow {
 			if (n > 0) msg += "\nAudio copiado a music/ (" + n + "). Reabre el nivel para oirlo; las voces se asignan en cada strumline.";
 		}
 		if (r.skipped > 0) msg += "\n" + TU.translate("charterImport.skippedLines", ["" + r.skipped]);
-		if (result.scrollSpeed != null) msg += "\n" + TU.translate("charterImport.speedNote", ["" + result.scrollSpeed, "" + PlayState.SONG.scrollSpeed]);
 		info.text = msg;
 		result = null; // ya aplicado: evita importar dos veces sin querer
 	}
