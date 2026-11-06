@@ -1288,7 +1288,9 @@ class PlayState extends MusicBeatState
                     [
                         {
                             label: "Exit?",
-                            onClick: function(_) {exitToMenu()}
+                            onClick: function(_) {
+                                PauseSubState.leave('freeplay');
+                            }
                         }
                     ],
                     false
