@@ -37,6 +37,7 @@ import funkin.editors.ui.*;
 import funkin.editors.ui.UIWarningSubstate;
 import funkin.editors.ui.UIWarningSubstate.WarningButton;
 import funky.scripting.Scripts;
+import funky.backend.JarretVideo;
 
 /** FNMM runner: notas + escenario (scene.json) + eventos (events.json). Todo lo de la cancion sale de `SongData`. */
 class PlayState extends MusicBeatState
@@ -293,7 +294,7 @@ class PlayState extends MusicBeatState
 		}
 		catch (error:Dynamic)
 		{
-			showError(Std.string(error));
+			startCountdown(true, true, Std.string(error));
 			return;
 		}
 
@@ -1263,72 +1264,44 @@ class PlayState extends MusicBeatState
 		Scripts.call("onSubstateClose");
 	}
 
-	
+	var messageError;
 	 /**
      * Displays a level loading error.
      * @param message Error text.
      */
     function showError(message:String):Void
     {
-        var video = new FlxVideo();
-        var loadedError:Bool = false;
-        try
-		{
-			loadedError = video.load(FunkinVideoSprite.resolve("fatalerrorisocurred"));
-		}
-		catch (e:Dynamic) 
-        {
-            // NAH
-        }
-    
-        video.onEndReached.add(function():Void
-        {
-            video.dispose();
-            FlxG.removeChild(video);
-    
-            openSubState(new UIWarningSubstate(
-                "Error al cargar el nivel",
-                message,
-                [
-                    {
-                        label: "Salir",
-                        color: FlxColor.RED,
-                        onClick: function(_) exitToMenu()
-                    }
-                ],
-                false
-            ));
-        });
-    
-        FlxG.addChildBelowMouse(video);
-    
-        if (loadedError)
-            video.play();
-        else
-        {
-            video.dispose();
-            FlxG.removeChild(video);
-    
-            openSubState(new UIWarningSubstate(
-                "Error al cargar el nivel",
-                message,
-                [
-                    {
-                        label: "Salir",
-                        color: FlxColor.RED,
-                        onClick: function(_) exitToMenu()
-                    }
-                ],
-                false
-            ));
-        }
+        FlxG.sound.music.stop();
+        
+        var cutscene = new JarretVideo();
+
+        openSubState(cutscene);
+        
+        cutscene.create(
+            null,
+            "fatalerrorisocurred",
+            function()
+            {
+                openSubState(new UIWarningSubstate(
+                    "Error al cargar el nivel",
+                    message,
+                    [
+                        {
+                            label: "Exit?",
+                            onClick: function(_) {exitToMenu()}
+                        }
+                    ],
+                    false
+                ));
+            }
+        );
     }
 
 	/**
 	 * Cuenta regresiva antes de la cancion: 4 tiempos de un beat (3, 2, 1, GO) y la musica arranca un
 	 * beat despues del GO.
 	 */
-	public function startCountdown(force:Bool = false):Void
+	public function startCountdown(force:Bool = false, ?caseError:Bool, ?message:String):Void
 	{
 		if (!force && Scripts.call("onStartCountdown"))
 			return;
@@ -1345,6 +1318,9 @@ class PlayState extends MusicBeatState
 
 		countdownTimers.push(new FlxTimer().start(beat * (introSounds.length + 1), function(_) beginSong()));
 
+        if (caseError) 
+            showError(message);
+        
 		Scripts.call("onCountdownStarted");
 
 		Log.info('[PlayState] countdown: ${introSounds.length} cuentas de ${Std.int(Conductor.crochet)} ms');

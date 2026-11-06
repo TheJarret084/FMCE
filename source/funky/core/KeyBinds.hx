@@ -122,10 +122,10 @@ class KeyBinds
     {
         return switch (action)
         {
-            case UP: ["UP", "W"];
+            case UP: ["UP", "K"];
             case DOWN: ["DOWN", "S"];
             case LEFT: ["LEFT", "A"];
-            case RIGHT: ["RIGHT", "D"];
+            case RIGHT: ["RIGHT", "L"];
             case ACCEPT: ["ENTER", "SPACE"];
             case BACK: ["ESCAPE"] ;
             case PAUSE: ["ENTER"];

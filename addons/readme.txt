@@ -15,7 +15,7 @@ Estado actual del sistema de addons:
   · No hay registro de addons al arrancar
   · No hay carga de .zip
 
-Cuando se implemente, el contrato esperado sera:
+Cuando se implemente, el estructura esperada sera:
 
   📁 addons/
       📁 mi_addon/
