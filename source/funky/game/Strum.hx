@@ -85,9 +85,9 @@ class Strum extends FlxSprite
 			case SPARROW:
 				shader = null;
 			case TINT:
-				// Reposo: el color base de los receptores (strumDefaultColor); apretado: el color de la nota.
+				// Reposo: el `rest` del skin (o strumDefaultColor si no lo define); apretado: el color de la nota.
 				shader = null;
-				color = pressed ? skin.tintFor(lane, true, laneCount) : ClientPrefs.strumIdleColor();
+				color = pressed ? skin.tintFor(lane, true, laneCount) : skin.restTintFor(lane, laneCount);
 			case RGB:
 				var colors = pressed ? skin.rgbFor(lane, true, laneCount) : ClientPrefs.idleRgb();
 				shader = colors == null ? null : NoteRGBShader.forColors(colors);

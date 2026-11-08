@@ -103,9 +103,14 @@ class ConfigScreens
 		noteSkin.dynamicLabel = () -> TU.translate("options.gameplay.noteSkin.name",
 			[NoteSkin.displayName(ClientPrefs.getNoteSkin())], "NOTAS: {0}");
 
+		var timeBar = ConfigItem.action("", TU.translate("options.gameplay.timeBar.desc", null,
+			"Colores de la barra de tiempo: rosa y lima, blanco y negro, o los colores de las notas"), ClientPrefs.cycleTimeBarStyle);
+		timeBar.dynamicLabel = () -> TU.translate("options.gameplay.timeBar.name", [timeBarLabel(ClientPrefs.getTimeBarStyle())], "BARRA DE TIEMPO: {0}");
+
 		return new ConfigScreen(TU.translate("options.gameplay.title", null, "GAMEPLAY"),
 			TU.translate("options.gameplay.titleDesc", null, "Como se juega"), [
 			noteSkin,
+			timeBar,
 			ConfigItem.separator(),
 			ConfigItem.check(TU.translate("options.gameplay.downscroll.name", null, "DOWNSCROLL"),
 				TU.translate("options.gameplay.downscroll.desc", null, "Las notas bajan en vez de subir (se aplica al reiniciar)"),
@@ -126,6 +131,16 @@ class ConfigScreens
 				TU.translate("options.gameplay.noteSplashes.desc", null, "Salpicadura al acertar con SICK"),
 				ClientPrefs.isNoteSplashes, ClientPrefs.setNoteSplashes)
 		]);
+	}
+
+	static function timeBarLabel(style:String):String
+	{
+		return switch (style)
+		{
+			case "mono": TU.translate("options.gameplay.timeBar.mono", null, "BLANCO Y NEGRO");
+			case "multi": TU.translate("options.gameplay.timeBar.multi", null, "MULTICOLOR");
+			default: TU.translate("options.gameplay.timeBar.pinklime", null, "ROSA Y LIMA");
+		}
 	}
 
 	static function audio():ConfigScreen

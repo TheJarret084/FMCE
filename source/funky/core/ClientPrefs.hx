@@ -76,6 +76,8 @@ class ClientPrefs
             ghostTapping: true,
             missSound: true,
             noteSplashes: true,
+            // Estilo de la barra de tiempo: "pinklime" | "mono" | "multi" (ver PlayHUD.TimeBarStyle)
+            timeBarStyle: "pinklime",
             // true = el splash inicial se salta y va directo al TITLE
             skipIntro: false,
             // Idioma de la interfaz (carpeta en assets/languages/<codigo>/)
@@ -218,6 +220,7 @@ class ClientPrefs
         data.ghostTapping = getBool(parsed, "ghostTapping", true);
         data.missSound = getBool(parsed, "missSound", true);
         data.noteSplashes = getBool(parsed, "noteSplashes", true);
+        if (Reflect.hasField(parsed, "timeBarStyle")) data.timeBarStyle = Std.string(Reflect.field(parsed, "timeBarStyle"));
         data.skipIntro = getBool(parsed, "skipIntro", false);
         if (Reflect.hasField(parsed, "language"))
         {
@@ -307,6 +310,7 @@ class ClientPrefs
             data.ghostTapping = parseXmlBool(gameplay.get("ghostTapping"), true);
             data.missSound = parseXmlBool(gameplay.get("missSound"), true);
             data.noteSplashes = parseXmlBool(gameplay.get("noteSplashes"), true);
+            if (gameplay.get("timeBarStyle") != null) data.timeBarStyle = gameplay.get("timeBarStyle");
             data.skipIntro = parseXmlBool(gameplay.get("skipIntro"), false);
 
             data.masterVolume = parseXmlFloat(gameplay.get("masterVolume"), 1.0);
@@ -519,6 +523,7 @@ class ClientPrefs
             gameplay.set("ghostTapping", Std.string(isGhostTapping()));
             gameplay.set("missSound", Std.string(isMissSound()));
             gameplay.set("noteSplashes", Std.string(isNoteSplashes()));
+            gameplay.set("timeBarStyle", getTimeBarStyle());
             gameplay.set("skipIntro", Std.string(isSkipIntro()));
             gameplay.set("masterVolume", Std.string(getMasterVolume()));
             gameplay.set("musicVolume", Std.string(getMusicVolume()));
@@ -701,6 +706,27 @@ class ClientPrefs
 
     public static function setNoteSplashes(v:Bool):Void
         Reflect.setField(data, "noteSplashes", v);
+
+    /** Estilos de la barra de tiempo, en el orden en que los recorre el menu. */
+    public static final TIME_BAR_STYLES:Array<String> = ["pinklime", "mono", "multi"];
+
+    /** Estilo de la barra de tiempo: "pinklime" (rosa y lima), "mono" (blanco y negro) o "multi" (colores de las notas). */
+    public static function getTimeBarStyle():String
+    {
+        var v = Reflect.hasField(data, "timeBarStyle") ? Std.string(Reflect.field(data, "timeBarStyle")) : "pinklime";
+        v = v == null ? "" : StringTools.trim(v).toLowerCase();
+        return TIME_BAR_STYLES.contains(v) ? v : "pinklime";
+    }
+
+    public static function setTimeBarStyle(v:String):Void
+        Reflect.setField(data, "timeBarStyle", v == null ? "pinklime" : StringTools.trim(v).toLowerCase());
+
+    /** Pasa al siguiente estilo (para el item del menu). */
+    public static function cycleTimeBarStyle():Void
+    {
+        var next = (TIME_BAR_STYLES.indexOf(getTimeBarStyle()) + 1) % TIME_BAR_STYLES.length;
+        setTimeBarStyle(TIME_BAR_STYLES[next]);
+    }
 
     /** Saltar el splash inicial e ir directo al TITLE. */
     public static function isSkipIntro():Bool

@@ -17,11 +17,17 @@ typedef NoteSkinLane =
 	var confirm:String;
 }
 
-/** Colores RGB de una direccion. `pressed` es el color del receptor/confirm apretado. */
+/**
+ * Colores de una direccion (igual para `rgb` que para `tint`). Todos son opcionales: lo que falta cae a settings.xml.
+ *  - idle:    color de la nota
+ *  - pressed: color del receptor / confirm apretado (si falta, el de `idle`)
+ *  - rest:    color del receptor EN REPOSO (el "modo mimido"); solo lo usa el tipo `tint`. Si falta, `strumDefaultColor`.
+ */
 typedef NoteSkinColor =
 {
-	var idle:Int;
-	var pressed:Int;
+	var idle:Null<Int>;
+	var pressed:Null<Int>;
+	var rest:Null<Int>;
 }
 
 /**
@@ -114,6 +120,8 @@ class NoteSkin
 	public var holdAlpha:Float = 0.65;
 	public var anims:Array<NoteSkinLane>;
 	public var colors:Array<Null<NoteSkinColor>>;
+	/** Color de reposo de los receptores para todo el skin (`<colors rest="#828282">`), si ninguna lane trae el suyo. */
+	public var restColor:Null<Int> = null;
 	/** Paleta multikey (9 colores, mismo orden que noteColors de settings.xml). */
 	public var palette:Array<Null<NoteSkinColor>>;
 
@@ -230,20 +238,33 @@ class NoteSkin
 		}
 	}
 
-	/** Color del skin para la lane, o null si el skin no define colores (se usan los de settings.xml). */
-	public function colorFor(lane:Int, pressed:Bool = false, ?laneCount:Int):Null<Int>
+	/** Entrada de color del skin para la lane (paleta multikey primero, luego por direccion), o null. */
+	function entryFor(lane:Int, ?laneCount:Int):Null<NoteSkinColor>
 	{
 		var total = laneCount == null ? 4 : Std.int(Math.max(1, Math.min(9, laneCount)));
 		var safeLane = lane < 0 ? 0 : (lane >= total ? total - 1 : lane);
 
 		// Paleta multikey (mismo orden que noteColors de settings.xml).
 		var entry = palette[ClientPrefs.colorIndexForLane(safeLane, total)];
-		if (entry != null) return pressed ? entry.pressed : entry.idle;
+		return entry != null ? entry : colors[dirForLane(lane)];
+	}
 
-		// Colores por direccion (4K / skins simples).
-		var color = colors[dirForLane(lane)];
-		if (color == null) return null;
-		return pressed ? color.pressed : color.idle;
+	/** Color del skin para la lane, o null si el skin no define colores (se usan los de settings.xml). */
+	public function colorFor(lane:Int, pressed:Bool = false, ?laneCount:Int):Null<Int>
+	{
+		var entry = entryFor(lane, laneCount);
+		if (entry == null) return null;
+		// `pressed` sin definir = el de `idle`; `idle` sin definir = null (cae a settings.xml).
+		return pressed ? (entry.pressed != null ? entry.pressed : entry.idle) : entry.idle;
+	}
+
+	/** Color de reposo del receptor para `tint`: el de la lane, el del skin o `strumDefaultColor`. */
+	public function restTintFor(lane:Int, ?laneCount:Int):Int
+	{
+		var entry = entryFor(lane, laneCount);
+		if (entry != null && entry.rest != null) return 0xFF000000 | entry.rest;
+		if (restColor != null) return 0xFF000000 | restColor;
+		return ClientPrefs.strumIdleColor();
 	}
 
 	/**
@@ -359,17 +380,25 @@ class NoteSkin
 
 	static function parseColors(skin:NoteSkin, node:Xml):Void
 	{
+		var globalRest = attr(node, "rest", null);
+		if (globalRest != null)
+		{
+			skin.restColor = parseColorOpt(globalRest);
+		}
+
 		for (lane in node.elementsNamed("lane"))
 		{
+			// Todo es opcional: idle (nota), pressed (apretado) y rest (receptor en reposo, solo `tint`).
 			var idleAttr = attr(lane, "idle", attr(lane, "color", null));
-			if (idleAttr == null) continue;
-
-			var idle = parseColor(idleAttr, -1);
-			if (idle < 0) continue;
-
 			var pressedAttr = attr(lane, "pressed", null);
-			var pressed = pressedAttr == null ? idle : parseColor(pressedAttr, idle);
-			var entry:NoteSkinColor = {idle: idle, pressed: pressed};
+			var restAttr = attr(lane, "rest", attr(lane, "strum", null));
+			if (idleAttr == null && pressedAttr == null && restAttr == null) continue;
+
+			var entry:NoteSkinColor = {
+				idle: idleAttr == null ? null : parseColorOpt(idleAttr),
+				pressed: pressedAttr == null ? null : parseColorOpt(pressedAttr),
+				rest: restAttr == null ? null : parseColorOpt(restAttr)
+			};
 
 			// <lane dir="left"> = color por direccion (4K / skins simples).
 			var dir = attr(lane, "dir", null);
@@ -389,6 +418,21 @@ class NoteSkin
 					skin.palette[idx] = entry;
 			}
 		}
+	}
+
+	/**
+	 * Como `parseColor`, pero devuelve null si el texto no es un color. No se puede usar `-1` de centinela: un color
+	 * opaco (0xFFRRGGBB) ya es negativo como Int de 32 bits.
+	 */
+	static function parseColorOpt(value:String):Null<Int>
+	{
+		var s = StringTools.trim(value);
+		if (s.startsWith("#")) s = s.substr(1);
+		else if (s.startsWith("0x") || s.startsWith("0X")) s = s.substr(2);
+		if (s.length == 0) return null;
+
+		var n = Std.parseInt("0x" + s);
+		return n == null ? null : (s.length <= 6 ? (0xFF000000 | n) : n);
 	}
 
 	// ───────────────────────────── helpers ─────────────────────────────

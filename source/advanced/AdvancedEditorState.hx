@@ -43,6 +43,8 @@ class AdvancedEditorState extends FlxState
 		studio = new CodeStudio(loadFiles(), saveFile, prepareRun, openSpritePreview, createScript, levelName);
 		studio.onExit = leave;
 		add(studio);
+		// los TextField de OpenFL siempre dibujan encima de Flixel (tambien de la cortina): se congelan mientras dura la transicion
+		studio.setCovered(true);
 
 		DiscordClient.customPresence("Modo Avanzado", "Editando " + levelName, "fmce", "", false);
 		TransitionHandler.playIn(this);
@@ -221,6 +223,7 @@ class AdvancedEditorState extends FlxState
 	function openSpritePreview():Void
 	{
 		chosen = true;
+		if (studio != null) studio.setCovered(true);
 		TransitionHandler.switchState(new advanced.editors.SpriteEditorState(levelName));
 	}
 
@@ -255,12 +258,25 @@ class AdvancedEditorState extends FlxState
 			return;
 		}
 		chosen = true;
+		if (studio != null) studio.setCovered(true);
 		TransitionHandler.switchState(new AdvancedModeState());
 	}
+
+	/** La cortina de entrada termino: el editor vuelve a ser el de verdad. */
+	override public function closeSubState():Void
+	{
+		super.closeSubState();
+		if (studio != null && !chosen) studio.setCovered(false);
+	}
+
+	var coveredTicks:Int = 0;
 
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		// seguro: si por lo que sea no hubo cortina, no dejar el editor congelado
+		if (studio != null && studio.covered && !chosen && TransitionHandler.active == null && ++coveredTicks > 3)
+			studio.setCovered(false);
 		if (chosen) return;
 		if (studio != null && studio.escapeHandled) return;
 		if (KeyBinds.justPressed(KeyBinds.BACK) || FlxG.keys.justPressed.ESCAPE) leave();

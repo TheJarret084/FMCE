@@ -23,6 +23,8 @@ class CodeStudio extends FlxSpriteGroup
 	public var currentFile(default, null):Int = -1;
 	/** true en el frame en que CodeStudio uso ESC (cerrar menu o buscador): el state no debe salir. */
 	public var escapeHandled(default, null):Bool = false;
+	/** true mientras una cortina de transicion tapa la pantalla: los TextField se cambian por una foto para que no floten encima. */
+	public var covered(default, null):Bool = false;
 	/** Lo llama "Archivo > Volver". */
 	public var onExit:Void->Void;
 
@@ -36,6 +38,9 @@ class CodeStudio extends FlxSpriteGroup
 	var toolbar:ToolBar;
 	var tabs:TabBar;
 	var tree:FileTree;
+	var inspector:JsonPanel;
+	var inspectorBtn:CodeButton;
+	var inspectorOn:Bool = true;
 	var editor:CodeEditor;
 	var findBar:FindBar;
 	var output:OutputPanel;
@@ -80,7 +85,11 @@ class CodeStudio extends FlxSpriteGroup
 
 		editor = new CodeEditor(overlay.root, 0, bodyY, mainW, editorH);
 		editor.onChange = onEditorChange;
-		editor.onCaret = function(line, col, sel) status.setCaret(line, col, sel);
+		editor.onCaret = function(line, col, sel)
+		{
+			status.setCaret(line, col, sel);
+			if (inspector != null && inspector.exists) inspector.follow(editor.field.caretIndex);
+		};
 
 		welcome = CodeDraw.label(0, bodyY + Std.int(editorH / 2) - 30, "Elige un archivo del explorador", 18, CodeTheme.DIM, mainW);
 		welcome.alignment = FlxTextAlign.CENTER;
@@ -93,6 +102,19 @@ class CodeStudio extends FlxSpriteGroup
 		tree.setTitle(levelName != null ? levelName : "Nivel");
 		tree.onOpen = function(f) activate(f);
 		tree.onNewScript = newScript;
+
+		inspector = new JsonPanel(mainW, tabsY, CodeTheme.EXPLORER_W, statusY - tabsY);
+		inspector.exists = false;
+		inspector.onJump = function(offset, len)
+		{
+			editor.goToOffset(offset, len);
+			editor.focus();
+		};
+		inspector.onClose = function()
+		{
+			inspectorOn = false;
+			runJsonCheck();
+		};
 
 		output = new OutputPanel(0, statusY - outH, mainW, outH);
 		output.onToggle = relayout;
@@ -110,6 +132,8 @@ class CodeStudio extends FlxSpriteGroup
 		};
 		menu.onClose = function()
 		{
+			// si el menu se cierra porque se esta saliendo, la pantalla sigue congelada
+			if (covered) return;
 			editor.thaw();
 			findBar.thaw();
 		};
@@ -121,6 +145,7 @@ class CodeStudio extends FlxSpriteGroup
 		add(findBar);
 		add(output);
 		add(tree);
+		add(inspector);
 		add(toolbar);
 		add(status);
 		add(menu);
@@ -147,6 +172,9 @@ class CodeStudio extends FlxSpriteGroup
 		t.addButton("Sprites", CodeTheme.TEXT, previewSprites);
 		t.addSeparator();
 		t.addButton("Buscar", CodeTheme.TEXT, function() openFind(""));
+		t.addSeparator();
+		inspectorBtn = t.addButton("{ } Inspector JSON", CodeTheme.TEXT, toggleInspector);
+		inspectorBtn.toggled = inspectorOn;
 		t.setTitle(levelName != null ? levelName : "");
 		return t;
 	}
@@ -185,7 +213,9 @@ class CodeStudio extends FlxSpriteGroup
 				title: "Ver",
 				items: function():Array<MenuItem> return [
 					{label: output.collapsed ? "Mostrar salida" : "Ocultar salida", shortcut: "Ctrl+J", action: toggleOutput},
-					{label: "Limpiar salida", action: output.clearLog}
+					{label: "Limpiar salida", action: output.clearLog},
+					{label: "", separator: true},
+					{label: inspectorOn ? "Ocultar inspector JSON" : "Mostrar inspector JSON", shortcut: "F4", action: toggleInspector}
 				]
 			},
 			{
@@ -202,7 +232,8 @@ class CodeStudio extends FlxSpriteGroup
 					{label: "Tab / Mayús+Tab: sangría"},
 					{label: "Ctrl+/: comentar líneas"},
 					{label: "Ctrl+D: duplicar línea"},
-					{label: "Clic central: cerrar pestaña"}
+					{label: "Clic central: cerrar pestaña"},
+					{label: "Inspector JSON: clic en una fila va a esa clave"}
 				]
 			}
 		];
@@ -432,11 +463,52 @@ class CodeStudio extends FlxSpriteGroup
 		}
 	}
 
+	function toggleInspector():Void
+	{
+		inspectorOn = !inspectorOn;
+		var f = currentOpen();
+		if (inspectorOn && (f == null || f.kind != "json")) info("[FMCE] El inspector aparece al abrir un archivo .json.");
+		runJsonCheck();
+	}
+
+	/** Muestra el inspector (en vez del explorador) si hay un .json abierto y lo pone al dia con el texto del editor. */
+	function syncInspector(f:Null<CodeStudioFile>):Void
+	{
+		var show = inspectorOn && f != null && f.kind == "json";
+		inspector.exists = show;
+		tree.exists = !show;
+		if (inspectorBtn != null) inspectorBtn.toggled = inspectorOn;
+		if (!show) return;
+		inspector.setSource(f, editor.getText());
+		inspector.follow(editor.field.caretIndex);
+	}
+
+	/** Una cortina de transicion va a tapar (o acaba de dejar de tapar) la pantalla. */
+	public function setCovered(value:Bool):Void
+	{
+		if (covered == value) return;
+		covered = value;
+		if (value)
+		{
+			editor.flushHighlight();
+			editor.freeze();
+			findBar.freeze();
+			if (FlxG.stage != null) FlxG.stage.focus = null;
+		}
+		else
+		{
+			editor.thaw();
+			findBar.thaw();
+			editor.focus();
+		}
+	}
+
 	/** Revisa el JSON abierto y marca la linea del error. */
 	function runJsonCheck():Void
 	{
 		jsonTimer = -1;
 		var f = currentOpen();
+		syncInspector(f);
 		if (f == null || f.kind != "json")
 		{
 			editor.setErrorLine(-1);
@@ -535,9 +607,15 @@ class CodeStudio extends FlxSpriteGroup
 
 	function onKeyDown(event:KeyboardEvent):Void
 	{
-		if (menu == null) return;
+		if (menu == null || covered) return;
 		var ctrl = event.ctrlKey || event.commandKey;
 
+		if (event.keyCode == Keyboard.F4)
+		{
+			event.preventDefault();
+			toggleInspector();
+			return;
+		}
 		if (event.keyCode == Keyboard.F5)
 		{
 			event.preventDefault();

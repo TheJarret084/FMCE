@@ -15,6 +15,7 @@ import flixel.util.FlxStringUtil;
 import funky.core.Paths;
 import funky.core.ClientPrefs;
 import funky.core.Conductor;
+import funky.core.NoteSkin;
 import funkin.backend.utils.TranslationUtil as TU;
 import openfl.utils.Assets;
 
@@ -33,7 +34,34 @@ typedef PressScore =
 	var ms:Float;
 }
 
-/** HUD con la misma distribucion que `PsychHUD` del legacy: */
+/** Estilos de la barra de tiempo (opcion `timeBarStyle`). */
+enum abstract TimeBarStyle(String) to String
+{
+	/** Rosa y lima. */
+	var PINK_LIME = "pinklime";
+	/** Blanco y negro. */
+	var MONO = "mono";
+	/** Degradado con los colores de las notas del skin (los de cada lane). */
+	var MULTI = "multi";
+
+	public static function parse(value:Null<String>):TimeBarStyle
+	{
+		return switch (value == null ? "" : StringTools.trim(value).toLowerCase())
+		{
+			case "mono" | "bw" | "blackwhite": MONO;
+			case "multi" | "multicolor" | "notes": MULTI;
+			default: PINK_LIME;
+		}
+	}
+}
+
+/**
+ * HUD con la misma distribucion que `PsychHUD` del legacy.
+ *
+ * `@:keep` para que los scripts (que resuelven `healthBar`, `timeBar`, `scoreTxt`... por reflexion sobre el PlayState)
+ * puedan ver todos los campos aunque el DCE los vea sin uso.
+ */
+@:keep
 class PlayHUD extends FlxGroup
 {
 	/** Vida inicial del jugador, como en FNF. */
@@ -63,9 +91,20 @@ class PlayHUD extends FlxGroup
 		"shit" => 0xFFFF5555
 	];
 
-	var healthBar:HealthBar;
-	var timeBar:FlxBar;
-	var timeText:FlxText;
+	/** Colores de la barra de tiempo (FlxColor ARGB, opacos). Publicos por si un script los quiere cambiar. */
+	public static var PINK:FlxColor = 0xFFFF8AFF;
+	public static var LIME:FlxColor = 0xFF8FFF8A;
+
+	/** Ancho / alto de la barra de tiempo. */
+	static inline var TIME_BAR_WIDTH:Int = 400;
+	static inline var TIME_BAR_HEIGHT:Int = 18;
+
+	public var healthBar(default, null):HealthBar;
+	public var timeBar(default, null):FlxBar;
+	public var timeText(default, null):FlxText;
+	/** Estilo actual de la barra de tiempo. Cambiarlo con `setTimeBarStyle`. */
+	public var timeBarStyle(default, null):TimeBarStyle = TimeBarStyle.PINK_LIME;
+	var laneCount:Int = 4;
 	/** Nombre de la cancion: el texto de la barra de tiempo es `songName - tiempo`. */
 	var songName:String;
 	/** Texto de botplay (null si no esta activo). Lo coloca `placeBotplay` y parpadea. */
@@ -75,7 +114,10 @@ class PlayHUD extends FlxGroup
 	var botplayLine:Null<StrumLine>;
 	/** Separacion (px) entre el borde de abajo del texto de botplay y el borde de arriba de los receptores. */
 	public static inline var BOTPLAY_GAP:Float = 6;
-	var scoreText:FlxText;
+	/** Debajo de la barra de vida, como en Codename: puntos (derecha), fallos (centro) y precision (izquierda). */
+	public var scoreTxt(default, null):FlxText;
+	public var missesTxt(default, null):FlxText;
+	public var accuracyTxt(default, null):FlxText;
 	var ratingText:FlxText;
 	/** Debajo del rating: puntos, precision y desfase de la ultima pulsacion. */
 	var pressText:FlxText;
@@ -97,9 +139,11 @@ class PlayHUD extends FlxGroup
 	public var iconPlayer(default, null):HealthIcon;
 	public var iconOpponent(default, null):HealthIcon;
 
-	public function new(songName:String, songLength:Float, ?levelDir:String, ?playerIcon:String, ?opponentIcon:String)
+	public function new(songName:String, songLength:Float, ?levelDir:String, ?playerIcon:String, ?opponentIcon:String, ?laneCount:Int)
 	{
 		super();
+
+		if (laneCount != null) this.laneCount = laneCount;
 
         if (defaultFont == null || defaultFont == "") defaultFont = Paths.fontPath("PhantomMuff.ttf");
         
@@ -120,17 +164,23 @@ class PlayHUD extends FlxGroup
 		add(iconPlayer);
 		placeIcons();
 
-		scoreText = new FlxText(0, barY + 40, FlxG.width, "", 20);
-		scoreText.setFormat(defaultFont, 20, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		scoreText.borderSize = 1.25;
-		add(scoreText);
+		// Tres textos separados bajo la barra, igual que Codename: mismo rectangulo (barra menos 50px por lado), cada uno alineado distinto.
+		var textX = healthBar.x + 50;
+		var textY = barY + 40;
+		var textWidth = Std.int(Math.max(1, healthBar.frameWidth - 100));
+		scoreTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.RIGHT);
+		missesTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.CENTER);
+		accuracyTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.LEFT);
 
 		timeText = new FlxText(0, down ? FlxG.height - 44 : 19, FlxG.width, "", 32);
 		timeText.setFormat(defaultFont, 32, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		timeText.borderSize = 2;
 		timeText.alpha = 0;
-		timeBar = new FlxBar(FlxG.width / 2 - 200, timeText.y + timeText.height / 4, FlxBarFillDirection.LEFT_TO_RIGHT, 400, 18, this, "YOU ARE GAY?", 0, this.songLength);
-		timeBar.createFilledBar(0x8fff8aff, 0x1f0038ff, true, 0xFF000000); // (el flixel del fork no trae el grosor del borde)
+		// Sin parentRef: `updateTime` le pasa el valor a mano (antes apuntaba a una variable que no existe y la barra nunca se llenaba).
+		timeBar = new FlxBar(FlxG.width / 2 - TIME_BAR_WIDTH / 2, timeText.y + timeText.height / 4, FlxBarFillDirection.LEFT_TO_RIGHT, TIME_BAR_WIDTH, TIME_BAR_HEIGHT, null, "", 0, this.songLength);
+		// Un paso por pixel (por defecto son 100 y la barra avanzaba a saltos).
+		timeBar.numDivisions = TIME_BAR_WIDTH;
+		setTimeBarStyle(TimeBarStyle.parse(ClientPrefs.getTimeBarStyle()));
 		timeBar.alpha = 0;
 		add(timeBar);
 		add(timeText);
@@ -238,6 +288,64 @@ class PlayHUD extends FlxGroup
 		setBotplayRect(left, top, right - left);
 	}
 
+	function makeStatText(x:Float, y:Float, width:Int, align:FlxTextAlign):FlxText
+	{
+		var text = new FlxText(x, y, width, "", 20);
+		text.setFormat(defaultFont, 20, FlxColor.WHITE, align, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		text.borderSize = 1.25;
+		text.scrollFactor.set();
+		add(text);
+		return text;
+	}
+
+	/** Cambia el estilo de la barra de tiempo (un script puede llamarlo en cualquier momento). */
+	public function setTimeBarStyle(style:TimeBarStyle):Void
+	{
+		timeBarStyle = style;
+
+		switch (style)
+		{
+			case TimeBarStyle.MONO:
+				// Blanco sobre negro; el borde blanco deja ver la parte vacia aunque el fondo sea oscuro.
+				timeBar.createFilledBar(FlxColor.BLACK, FlxColor.WHITE, true, FlxColor.WHITE);
+			case TimeBarStyle.MULTI:
+				var fill = laneColors();
+				var empty = [for (color in fill) FlxColor.interpolate(color, FlxColor.BLACK, 0.75)];
+				timeBar.createGradientBar(empty, fill, 1, 180, true, FlxColor.BLACK);
+			case TimeBarStyle.PINK_LIME:
+				// Los colores van en ARGB: antes eran `0x8fff8aff` / `0x1f0038ff` (RGBA), asi que salian con alfa raro y casi transparentes.
+				timeBar.createFilledBar(LIME, PINK, true, FlxColor.BLACK);
+		}
+
+		timeBar.value = songTime;
+	}
+
+	/** Colores de la barra con dos colores sueltos (empty = lo que falta, fill = lo avanzado). Deja el estilo en `PINK_LIME`. */
+	public function setTimeBarColors(empty:FlxColor, fill:FlxColor, border:FlxColor = FlxColor.BLACK):Void
+	{
+		timeBarStyle = TimeBarStyle.PINK_LIME;
+		timeBar.createFilledBar(empty, fill, true, border);
+		timeBar.value = songTime;
+	}
+
+	/** Un color por lane (los del skin de notas o, si no define, los de settings.xml): el degradado del modo multicolor. */
+	function laneColors():Array<FlxColor>
+	{
+		var skin = NoteSkin.current();
+		var out:Array<FlxColor> = [];
+
+		for (lane in 0...laneCount)
+		{
+			var color:Null<Int> = skin.colorFor(lane, false, laneCount);
+			if (color == null) color = ClientPrefs.noteColorForLane(lane, false, laneCount);
+			out.push(FlxColor.fromInt(0xFF000000 | color));
+		}
+
+		// el degradado necesita 2 colores como minimo
+		if (out.length == 1) out.push(out[0]);
+		return out;
+	}
+
 	/** El tiempo y su barra aparecen al empezar la cancion. */
 	public function onSongStart():Void
 	{
@@ -252,8 +360,9 @@ class PlayHUD extends FlxGroup
 		var na = TU.translate("game.notAvailable", null, "N/A");
 		var accText = played ? Std.string(Math.round(accuracy * 100) / 100) + "%" : na;
 		var rank = played ? letterRank(accuracy, misses) : na;
-		scoreText.text = TU.translate("game.stats", [formatNumber(score), misses, accText, rank],
-			"Score: {0} | Misses: {1} | Accuracy: {2} | Rank: {3}") + "\n";
+		scoreTxt.text = TU.translate("game.score", [formatNumber(score)], "Score: {0}");
+		missesTxt.text = TU.translate("game.misses", [misses], "Misses: {0}");
+		accuracyTxt.text = TU.translate("game.accuracy", [accText, rank], "Accuracy: {0} ({1})");
 		if (!missed) doScoreBop();
 	}
 
@@ -272,9 +381,9 @@ class PlayHUD extends FlxGroup
 
 	public function doScoreBop():Void
 	{
-		FlxTween.cancelTweensOf(scoreText.scale);
-		scoreText.scale.set(1.075, 1.075);
-		FlxTween.tween(scoreText.scale, {x: 1, y: 1}, 0.2);
+		FlxTween.cancelTweensOf(scoreTxt.scale);
+		scoreTxt.scale.set(1.075, 1.075);
+		FlxTween.tween(scoreTxt.scale, {x: 1, y: 1}, 0.2);
 	}
 
 	/** Popup de rating + combo, como `PsychHUD.popUpScore`. Con imagenes si estan en `game/score/`, si no con texto. */
@@ -412,6 +521,7 @@ class PlayHUD extends FlxGroup
 	public function updateTime(time:Float):Void
 	{
 		songTime = Math.min(time, songLength);
+		timeBar.value = songTime;
 		var second = Std.int(songTime / 1000);
 		if (second == shownSecond) return;
 		shownSecond = second;

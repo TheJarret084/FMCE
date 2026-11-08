@@ -39,10 +39,54 @@ import funkin.editors.ui.UIWarningSubstate.WarningButton;
 import funky.scripting.Scripts;
 import funky.backend.JarretVideo;
 
-/** FNMM runner: notas + escenario (scene.json) + eventos (events.json). Todo lo de la cancion sale de `SongData`. */
+/**
+ * PlayState
+ *
+ * `@:keep`: los scripts usan este objeto como "padre" (como en Codename) y resuelven `healthBar`, `hud`, `score`...
+ * por reflexion, asi que ningun campo puede desaparecer por DCE.
+ */
+@:keep
 class PlayState extends MusicBeatState
 {
-	public var instance:PlayState;
+	public static var instance:PlayState;
+
+	// ───────────── Accesos directos para scripts ─────────────
+
+	public var healthBar(get, never):HealthBar;
+	public var iconP1(get, never):HealthIcon;
+	public var iconP2(get, never):HealthIcon;
+	public var timeBar(get, never):flixel.ui.FlxBar;
+	public var timeTxt(get, never):FlxText;
+	public var scoreTxt(get, never):FlxText;
+	public var missesTxt(get, never):FlxText;
+	public var accuracyTxt(get, never):FlxText;
+	/** Vida del jugador, 0..1 (la del HUD). */
+	public var health(get, set):Float;
+	/** Nombres de Codename / Psych para el compas actual (`curBeat`, `curStep`, `curSection`) y la posicion de la cancion. */
+	public var curBeat(get, never):Int;
+	public var curStep(get, never):Int;
+	public var curSection(get, never):Int;
+	public var curMeasure(get, never):Int;
+
+	function get_curBeat():Int return Conductor.currentBeat;
+	function get_curStep():Int return Conductor.currentStep;
+	function get_curSection():Int return Std.int(Conductor.currentBeat / 4);
+	function get_curMeasure():Int return get_curSection();
+
+	function get_healthBar():HealthBar return hud == null ? null : hud.healthBar;
+	function get_iconP1():HealthIcon return hud == null ? null : hud.iconPlayer;
+	function get_iconP2():HealthIcon return hud == null ? null : hud.iconOpponent;
+	function get_timeBar():flixel.ui.FlxBar return hud == null ? null : hud.timeBar;
+	function get_timeTxt():FlxText return hud == null ? null : hud.timeText;
+	function get_scoreTxt():FlxText return hud == null ? null : hud.scoreTxt;
+	function get_missesTxt():FlxText return hud == null ? null : hud.missesTxt;
+	function get_accuracyTxt():FlxText return hud == null ? null : hud.accuracyTxt;
+	function get_health():Float return hud == null ? PlayHUD.START_HEALTH : hud.health;
+	function set_health(value:Float):Float
+	{
+		if (hud != null) hud.setHealth(value);
+		return get_health();
+	}
 
 	public static var archivePath:String;
 
@@ -274,6 +318,7 @@ class PlayState extends MusicBeatState
 	override public function create():Void
 	{
 		super.create();
+		instance = this;
 		SpriteCache.attach();
 
 		// Punto de partida "de verdad": el que trajo el menu o el charter. Un salto desde la pausa no lo cambia.
@@ -300,6 +345,7 @@ class PlayState extends MusicBeatState
 
 		funky.core.Paths.currentLevel = song.levelDir;
 		DiscordClient.playingPresence(songLabel(), Difficulty.name());
+		// `game` pasa a ser el padre de los scripts (como Codename): `healthBar.visible = false;` sin prefijo.
 		Scripts.load(song.levelDir, ["game" => this, "song" => song, "levelDir" => song.levelDir]);
 		Scripts.call("onLoad");
 
@@ -432,7 +478,8 @@ class PlayState extends MusicBeatState
 			song.endTime,
 			song.levelDir,
 			song.iconPlayer,
-			song.iconOpponent
+			song.iconOpponent,
+			song.laneCount
 		);
 
 		hud.cameras = [camHUD];
@@ -1295,7 +1342,9 @@ class PlayState extends MusicBeatState
 					{
 						label: "Salir",
 						color: FlxColor.RED,
-						onClick: function(_) exitToMenu()
+						onClick: function(_) {
+                exitToMenu();
+                showWarning.destroy();
 					}
 				],
 				false
@@ -1477,6 +1526,7 @@ class PlayState extends MusicBeatState
 	{
 		Scripts.call("onDestroy");
 		Scripts.clear();
+		if (instance == this) instance = null;
 
 		FlxG.signals.preUpdate.remove(releaseGuiFade);
 		FlxG.signals.postUpdate.remove(applyGuiFade);

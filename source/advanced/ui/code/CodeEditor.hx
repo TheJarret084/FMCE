@@ -8,6 +8,7 @@ import openfl.display.BitmapData;
 import openfl.display.Sprite;
 import openfl.events.Event;
 import openfl.events.KeyboardEvent;
+import openfl.events.MouseEvent;
 import openfl.events.TextEvent;
 import openfl.geom.Matrix;
 import openfl.text.TextField;
@@ -90,6 +91,10 @@ class CodeEditor extends FlxSpriteGroup
 	var suppress:Bool = false;
 	var burstOpen:Bool = false;
 	var burstTimer:Float = 0;
+	/** true = hay que recolorear toda la ventana (editar, cambiar de archivo); false = solo las lineas nuevas al hacer scroll. */
+	var hlFull:Bool = true;
+	/** La rueda del mouse se uso en este frame: ese scroll es del usuario, no un salto raro de OpenFL. */
+	var wheelTick:Bool = false;
 
 	public function new(overlay:Sprite, x:Float, y:Float, w:Float, h:Float)
 	{
@@ -151,6 +156,7 @@ class CodeEditor extends FlxSpriteGroup
 		field.text = "";
 		field.addEventListener(Event.CHANGE, onFieldChange);
 		field.addEventListener(TextEvent.TEXT_INPUT, onTextInput);
+		field.addEventListener(MouseEvent.MOUSE_WHEEL, onWheel);
 		box.addChild(field);
 
 		place();
@@ -176,6 +182,7 @@ class CodeEditor extends FlxSpriteGroup
 		snapshot.setPosition(x, y);
 		place();
 		hlDirty = true;
+		hlFull = true;
 		hlDelay = 0;
 		lastScroll = -1;
 	}
@@ -230,6 +237,7 @@ class CodeEditor extends FlxSpriteGroup
 		retokenize();
 		appliedFirst = appliedLast = -1;
 		hlDirty = true;
+		hlFull = true;
 		hlDelay = 0;
 		lastScroll = -1;
 		lastCaret = -1;
@@ -317,6 +325,7 @@ class CodeEditor extends FlxSpriteGroup
 		noteEdit();
 		updateGutter(false);
 		hlDirty = true;
+		hlFull = true;
 		hlDelay = 0.12;
 		retokenize();
 		recalcLineHeight();
@@ -405,8 +414,42 @@ class CodeEditor extends FlxSpriteGroup
 		if (file == null) return;
 		var n = field.numLines;
 		if (n <= 0) return;
-		var first = Std.int(Math.max(0, field.scrollV - 1 - HL_MARGIN));
+
+		// setTextFormat hace que OpenFL lleve la vista al cursor: en archivos largos eso te mandaba al inicio.
+		// Se guarda el scroll y se devuelve despues de colorear.
+		var keepScroll = field.scrollV;
+		var first = Std.int(Math.max(0, keepScroll - 1 - HL_MARGIN));
 		var last = Std.int(Math.min(n - 1, field.bottomScrollV - 1 + HL_MARGIN));
+
+		if (hlFull || appliedFirst < 0 || first > appliedLast + 1 || last < appliedFirst - 1)
+		{
+			formatLines(first, last, n);
+			appliedFirst = first;
+			appliedLast = last;
+		}
+		else
+		{
+			// al hacer scroll solo se colorean las lineas que todavia no tienen color (antes se repintaba toda la ventana)
+			if (first < appliedFirst)
+			{
+				formatLines(first, Std.int(Math.min(last, appliedFirst - 1)), n);
+				appliedFirst = first;
+			}
+			if (last > appliedLast)
+			{
+				formatLines(Std.int(Math.max(first, appliedLast + 1)), last, n);
+				appliedLast = last;
+			}
+		}
+		hlFull = false;
+
+		if (field.scrollV != keepScroll) field.scrollV = keepScroll;
+	}
+
+	/** Pinta de la linea `first` a la `last` (indices desde 0) con los colores de `spans`. */
+	function formatLines(first:Int, last:Int, n:Int):Void
+	{
+		if (last < first) return;
 		var a = field.getLineOffset(first);
 		var b = last + 1 < n ? field.getLineOffset(last + 1) : field.text.length;
 		if (b <= a) return;
@@ -430,9 +473,18 @@ class CodeEditor extends FlxSpriteGroup
 			field.setTextFormat(fmtFor(spans[k * 3 + 2]), s < a ? a : s, e > b ? b : e);
 			k++;
 		}
-		appliedFirst = first;
-		appliedLast = last;
 	}
+
+	/** Colorea ya (sin esperar al retraso). Se usa antes de congelar la pantalla para que la foto salga con colores. */
+	public function flushHighlight():Void
+	{
+		if (file == null || !hlDirty) return;
+		hlDelay = 0;
+		applyHighlight();
+	}
+
+	function onWheel(_):Void
+		wheelTick = true;
 
 	// ------------------------------------------------------------------ frame
 
@@ -455,6 +507,16 @@ class CodeEditor extends FlxSpriteGroup
 		var sv = field.scrollV;
 		var ci = field.caretIndex;
 		var sel = field.selectionEndIndex - field.selectionBeginIndex;
+
+		// Si el scroll cambio solo (sin rueda, sin mover el cursor y sin que lo pidiera el codigo) es OpenFL
+		// llevando la vista al cursor tras recolorear: se devuelve a donde estaba el usuario.
+		if (wheelTick)
+			wheelTick = false;
+		else if (lastScroll > 0 && sv != lastScroll && ci == lastCaret && sel == lastSel)
+		{
+			field.scrollV = lastScroll;
+			sv = field.scrollV;
+		}
 		var scrolled = sv != lastScroll;
 
 		if (scrolled)
@@ -718,6 +780,7 @@ class CodeEditor extends FlxSpriteGroup
 		updateGutter(false);
 		retokenize();
 		hlDirty = true;
+		hlFull = true;
 		hlDelay = 0;
 		lastScroll = -1;
 		if (onChange != null) onChange();
@@ -819,6 +882,17 @@ class CodeEditor extends FlxSpriteGroup
 		return {total: total, current: current};
 	}
 
+	/** Lleva el cursor a un caracter (y selecciona `len`). Lo usa el inspector JSON. */
+	public function goToOffset(idx:Int, len:Int = 0):Void
+	{
+		if (file == null) return;
+		var total = field.text.length;
+		var a = Std.int(Math.max(0, Math.min(idx, total)));
+		var b = Std.int(Math.max(a, Math.min(a + len, total)));
+		field.setSelection(a, b);
+		reveal(a);
+	}
+
 	public function goToLine(n:Int):Void
 	{
 		if (file == null) return;
@@ -835,6 +909,7 @@ class CodeEditor extends FlxSpriteGroup
 	{
 		field.removeEventListener(Event.CHANGE, onFieldChange);
 		field.removeEventListener(TextEvent.TEXT_INPUT, onTextInput);
+		field.removeEventListener(MouseEvent.MOUSE_WHEEL, onWheel);
 		if (box != null && box.parent != null) box.parent.removeChild(box);
 		box = null;
 		super.destroy();

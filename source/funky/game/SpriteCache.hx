@@ -126,7 +126,7 @@ class SpriteCache
 			return null;
 		}
 
-		Log.info('[SpriteCache] repuesto de "' + name + '"');
+		// Log.info('[SpriteCache] repuesto de "' + name + '"');
 		return sprite;
 	}
 
