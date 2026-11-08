@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE noteSkin>
+<!--
+    Skin de notas por defecto de FMCE.
+    El atlas es el NOTE_assets.png/xml de siempre (mascara RGB: rojo = color, verde = brillo, azul = sombra).
+    type="rgb": se pinta con NoteRGBShader usando los colores de <colors>.
+    Si quitas <colors>, se usa la paleta de assets/data/config/settings.xml (noteColors / pressedColors).
+-->
+<noteSkin type="rgb" name="Default (FMCE)" author="JarretLabs" version="1.0">
+    <atlas path="NOTE_assets"/>
+
+    <holdAlpha value="0.65"/>
+
+    <animations>
+        <lane dir="left"  note="left note"  hold="left hold piece"  holdEnd="left hold tail"  receptor="left receptor"  press="left press"  confirm="left confirm"/>
+        <lane dir="down"  note="down note"  hold="down hold piece"  holdEnd="down hold tail"  receptor="down receptor"  press="down press"  confirm="down confirm"/>
+        <lane dir="up"    note="up note"    hold="up hold piece"    holdEnd="up hold tail"    receptor="up receptor"    press="up press"    confirm="up confirm"/>
+        <lane dir="right" note="right note" hold="right hold piece" holdEnd="right hold tail" receptor="right receptor" press="right press" confirm="right confirm"/>
+    </animations>
+
+    <colors>
+        <!-- Paleta multikey: mismos indices que noteColors/pressedColors de settings.xml.
+             Para un skin simple de 4K tambien puedes usar <lane dir="left" idle="..." pressed="..."/>. -->
+        <lane index="0" idle="0xFFCA4E9D" pressed="0xFFC576A8"/>
+        <lane index="1" idle="0xFF00FFFE" pressed="0xFF4AEBEB"/>
+        <lane index="2" idle="0xFF10FA05" pressed="0xFF55E84F"/>
+        <lane index="3" idle="0xFFFC3844" pressed="0xFFE46E75"/>
+        <lane index="4" idle="0xFF35B162" pressed="0xFF3A8957"/>
+        <lane index="5" idle="0xFFFF0001" pressed="0xFFB51414"/>
+        <lane index="6" idle="0xFFEF05FA" pressed="0xFFAA17B0"/>
+        <lane index="7" idle="0xFF03C7BB" pressed="0xFF1B918A"/>
+        <lane index="8" idle="0xFFF5F0E8" pressed="0xFFF5F0E8"/>
+    </colors>
+</noteSkin>

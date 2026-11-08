@@ -65,8 +65,7 @@ class Strum extends FlxSprite
 			confirmSprite.updateHitbox();
 			confirmSprite.alpha = ClientPrefs.getStrumAlpha();
 			// El confirm usa el tinte presionado, igual que antes de usar el shader RGB.
-			var rgb = skin.rgbFor(lane, true, laneCount);
-			if (rgb != null) confirmSprite.shader = NoteRGBShader.forColors(rgb);
+			skin.applyTo(confirmSprite, lane, true, laneCount);
 			confirmSprite.visible = false;
 		}
 	}
@@ -81,14 +80,18 @@ class Strum extends FlxSprite
 		if (pressed == rgbPressed) return;
 		rgbPressed = pressed;
 
-		if (!skin.rgb)
+		switch (skin.type)
 		{
-			shader = null;
-			return;
+			case SPARROW:
+				shader = null;
+			case TINT:
+				// Reposo: el color base de los receptores (strumDefaultColor); apretado: el color de la nota.
+				shader = null;
+				color = pressed ? skin.tintFor(lane, true, laneCount) : ClientPrefs.strumIdleColor();
+			case RGB:
+				var colors = pressed ? skin.rgbFor(lane, true, laneCount) : ClientPrefs.idleRgb();
+				shader = colors == null ? null : NoteRGBShader.forColors(colors);
 		}
-
-		var colors = pressed ? skin.rgbFor(lane, true, laneCount) : ClientPrefs.idleRgb();
-		shader = colors == null ? null : NoteRGBShader.forColors(colors);
 	}
 
 	public function updateInput(pressed:Bool, justPressed:Bool):Void

@@ -1,5 +1,6 @@
 package funky.core;
 
+import flixel.FlxSprite;
 import flixel.graphics.frames.FlxAtlasFrames;
 
 using StringTools;
@@ -23,6 +24,31 @@ typedef NoteSkinColor =
 }
 
 /**
+ * Como se colorean las notas de un skin (atributo `type` del `<noteSkin>`):
+ * - `sparrow`: atlas completo y ya pintado (flechas de colores, colas, receptores...). Se dibuja tal cual. Ej: Codename.
+ * - `rgb`: atlas tipo mascara (rojo = color, verde = brillo, azul = sombra) pintado con NoteRGBShader. Ej: FMCE.
+ * - `tint`: atlas claro/gris que se tiñe con un solo color (FlxSprite.color). Ej: Funky Maker: Mobile.
+ */
+enum abstract NoteSkinType(String) to String
+{
+	var SPARROW = "sparrow";
+	var RGB = "rgb";
+	var TINT = "tint";
+
+	public static function parse(value:Null<String>, fallback:NoteSkinType):NoteSkinType
+	{
+		if (value == null) return fallback;
+		return switch (value.trim().toLowerCase())
+		{
+			case "sparrow" | "full" | "painted": SPARROW;
+			case "rgb" | "mask": RGB;
+			case "tint" | "color" | "colored" | "flxcolor": TINT;
+			default: fallback;
+		}
+	}
+}
+
+/**
  * Skin de notas configurable con un `noteSkin.xml` (con DOCTYPE, como los XML de Codename).
  *
  * Cada skin es un addon (ver `Addons`):
@@ -32,9 +58,9 @@ typedef NoteSkinColor =
  * El `<atlas path="..."/>` es el nombre del atlas SIN extension, dentro de la carpeta images/ del propio skin
  * (un skin queda aislado: copiar su carpeta basta para instalarlo). Si ahi no esta, se busca en assets/images/.
  *
- * El XML dice que atlas usar, como se llaman las animaciones de cada direccion y, si el atlas
- * es una mascara RGB (rojo = color, verde = brillo, azul = sombra), que colores pintar.
- * Los skins de Codename y Funky Maker: Mobile ya traen el arte pintado, asi que usan `<rgb enabled="false"/>`.
+ * El XML dice que atlas usar, como se llaman las animaciones de cada direccion, de que tipo es
+ * (`type="sparrow|rgb|tint"`, ver NoteSkinType) y, para rgb / tint, que colores usar (si no, los de settings.xml).
+ * Compatibilidad: sin `type`, `<rgb enabled="true"/>` = rgb y `<rgb enabled="false"/>` = sparrow.
  */
 class NoteSkin
 {
@@ -54,8 +80,13 @@ class NoteSkin
 	public var author:String;
 	/** Nombre del atlas sin extension, dentro de addons/noteskins/<id>/images/. */
 	public var atlas:String;
-	/** true = aplicar NoteRGBShader con los colores del skin (atlas tipo mascara RGB). */
-	public var rgb:Bool = true;
+	public var type:NoteSkinType = RGB;
+
+	/** true si el atlas es una mascara RGB (se pinta con NoteRGBShader). */
+	public var rgb(get, never):Bool;
+
+	inline function get_rgb():Bool
+		return type == RGB;
 	public var holdAlpha:Float = 0.65;
 	public var anims:Array<NoteSkinLane>;
 	public var colors:Array<Null<NoteSkinColor>>;
@@ -63,6 +94,8 @@ class NoteSkin
 	public var palette:Array<Null<NoteSkinColor>>;
 
 	var framesCache:Null<FlxAtlasFrames>;
+	/** Ya se intento cargar el atlas (con o sin exito): si fallo no se vuelve a buscar en cada nota. */
+	var framesTried:Bool = false;
 
 	function new(id:String)
 	{
@@ -94,7 +127,16 @@ class NoteSkin
 		var skin = load(id);
 		if (skin == null || !skin.hasAtlas())
 		{
-			if (id != DEFAULT_ID) return get(DEFAULT_ID);
+			Log.warn('[NoteSkin] "$id" no esta completo (' + (skin == null ? "falta data/noteSkin.xml" : "falta su atlas " + skin.atlasRel() + ".png/.xml") + ')'
+				+ (id != DEFAULT_ID ? ': se usa "default"' : ''));
+
+			if (id != DEFAULT_ID)
+			{
+				// Se guarda tambien el resultado "cayo al default": si no, cada nota volveria a leer y parsear el XML.
+				var replacement = get(DEFAULT_ID);
+				cache.set(id, replacement);
+				return replacement;
+			}
 			if (skin == null) skin = fallback();
 		}
 
@@ -124,8 +166,13 @@ class NoteSkin
 	/** Atlas del skin (null si no existe; Note/Strum caen a un cuadro blanco). */
 	public function frames():FlxAtlasFrames
 	{
-		if (framesCache == null) framesCache = Addons.getSparrowAtlas(atlasRel());
+		if (framesCache != null || framesTried) return framesCache;
+		framesTried = true;
+
+		framesCache = Addons.getSparrowAtlas(atlasRel());
 		if (framesCache == null && Paths.framesExists(atlas)) framesCache = Paths.getSparrowAtlas(atlas);
+		if (framesCache == null)
+			Log.error('[NoteSkin] no se pudo cargar el atlas de "$id": ' + atlasRel() + '.png/.xml (en addons/ externo o del build) ni assets/images/$atlas');
 		return framesCache;
 	}
 
@@ -171,12 +218,40 @@ class NoteSkin
 	 */
 	public function rgbFor(lane:Int, pressed:Bool = false, ?laneCount:Int):Null<Array<Int>>
 	{
-		if (!rgb) return null;
+		if (type != RGB) return null;
 
 		var color = colorFor(lane, pressed, laneCount);
 		return color == null
 			? ClientPrefs.noteRgbForLane(lane, pressed, laneCount)
 			: ClientPrefs.rgbFromBase(color);
+	}
+
+	/** Color (FlxColor) para el tipo `tint`: el del skin o, si no define, el de settings.xml. null en los otros tipos. */
+	public function tintFor(lane:Int, pressed:Bool = false, ?laneCount:Int):Null<Int>
+	{
+		if (type != TINT) return null;
+
+		var color = colorFor(lane, pressed, laneCount);
+		return color != null ? (0xFF000000 | color) : (0xFF000000 | ClientPrefs.noteColorForLane(lane, pressed, laneCount));
+	}
+
+	/** Pinta un sprite (nota o receptor) segun el tipo del skin: shader RGB, tinte, o nada (sparrow). */
+	public function applyTo(sprite:FlxSprite, lane:Int, pressed:Bool = false, ?laneCount:Int):Void
+	{
+		switch (type)
+		{
+			case RGB:
+				var colors = rgbFor(lane, pressed, laneCount);
+				sprite.shader = colors == null ? null : NoteRGBShader.forColors(colors);
+				sprite.color = 0xFFFFFFFF;
+			case TINT:
+				sprite.shader = null;
+				var tint = tintFor(lane, pressed, laneCount);
+				sprite.color = tint == null ? 0xFFFFFFFF : tint;
+			case SPARROW:
+				sprite.shader = null;
+				sprite.color = 0xFFFFFFFF;
+		}
 	}
 
 	/** Se llama al cambiar de nivel/skin para no quedarse con texturas viejas. */
@@ -207,8 +282,10 @@ class NoteSkin
 			// El atlas vive en images/ del propio skin: si el XML trae una ruta vieja (game/notes/...), se queda con el nombre.
 			skin.atlas = haxe.io.Path.withoutDirectory(skin.atlas);
 
+			// type="sparrow|rgb|tint". Sin type: <rgb enabled="..."/> (formato viejo); sin nada, rgb.
 			var rgbNode = firstElement(root, "rgb");
-			if (rgbNode != null) skin.rgb = parseBool(attr(rgbNode, "enabled", "true"), true);
+			var legacy:NoteSkinType = rgbNode != null && !parseBool(attr(rgbNode, "enabled", "true"), true) ? SPARROW : RGB;
+			skin.type = NoteSkinType.parse(attr(root, "type", null), legacy);
 
 			var holdNode = firstElement(root, "holdAlpha");
 			if (holdNode != null) skin.holdAlpha = parseFloat(attr(holdNode, "value", "0.65"), 0.65);

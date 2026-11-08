@@ -1079,6 +1079,10 @@ class ClientPrefs
      * Paleta del receptor en reposo: gris parejo para todas las lanes (`strumDefaultColor`, 0x828282
      * de base).
      */
+    /** Color base de los receptores en reposo (strumDefaultColor), como FlxColor. Lo usa el tipo `tint` de los note skins. */
+    public static function strumIdleColor():Int
+        return 0xFF000000 | getInt(data, "strumDefaultColor", 0x828282);
+
     public static function idleRgb():Array<Int>
     {
         var base = getInt(data, "strumDefaultColor", 0x828282);

@@ -230,8 +230,8 @@ class Note extends FlxSprite
 		if (isSustainNote)
 			alpha = skin.holdAlpha;
 
-		var rgb = skin.rgbFor(noteData, false, laneCount);
-		shader = rgb == null ? null : NoteRGBShader.forColors(rgb);
+		// Segun el tipo del skin: shader RGB, tinte (color) o nada (atlas ya pintado). Tambien limpia lo del uso anterior.
+		skin.applyTo(this, noteData, false, laneCount);
 
 		return this;
 	}

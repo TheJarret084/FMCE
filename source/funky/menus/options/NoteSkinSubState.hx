@@ -229,11 +229,7 @@ class NoteSkinSubState extends FlxSubState
 			else receptor.makeGraphic(Std.int(PREVIEW_SIZE), Std.int(PREVIEW_SIZE), 0xFF888888);
 			receptor.setGraphicSize(Std.int(PREVIEW_SIZE));
 			receptor.updateHitbox();
-			if (skin.rgb)
-			{
-				var colors = skin.rgbFor(dir, true, 4);
-				if (colors != null) receptor.shader = NoteRGBShader.forColors(colors);
-			}
+			skin.applyTo(receptor, dir, true, 4);
 			receptor.setPosition(laneX, previewY);
 			add(receptor);
 			receptors.push(receptor);
@@ -248,11 +244,7 @@ class NoteSkinSubState extends FlxSubState
 			else note.makeGraphic(Std.int(PREVIEW_SIZE), Std.int(PREVIEW_SIZE), 0xFFFFFFFF);
 			note.setGraphicSize(Std.int(PREVIEW_SIZE));
 			note.updateHitbox();
-			if (skin.rgb)
-			{
-				var colors = skin.rgbFor(dir, false, 4);
-				if (colors != null) note.shader = NoteRGBShader.forColors(colors);
-			}
+			skin.applyTo(note, dir, false, 4);
 			note.setPosition(laneX, previewY - 220);
 			add(note);
 			notes.push(note);

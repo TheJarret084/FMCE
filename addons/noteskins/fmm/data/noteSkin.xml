@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE noteSkin>
+<!--
+    Notas de Funky Maker: Mobile (fmm.png/xml originales).
+    Solo trae las flechas y el sustain (tail / tailEnd), asi que el receptor y el confirm reusan
+    el frame de la flecha. El atlas es a escala de grises: se tiñe con un solo color (type="tint").
+-->
+<noteSkin type="tint" name="Funky Maker: Mobile" author="KingGC" version="0.9">
+    <atlas path="NOTE_assets"/>
+    <holdAlpha value="0.7"/>
+
+    <animations>
+        <lane dir="left"  note="left"  hold="tail0" holdEnd="tailEnd" receptor="left"  press="left"  confirm="left"/>
+        <lane dir="down"  note="down"  hold="tail0" holdEnd="tailEnd" receptor="down"  press="down"  confirm="down"/>
+        <lane dir="up"    note="up"    hold="tail0" holdEnd="tailEnd" receptor="up"    press="up"    confirm="up"/>
+        <lane dir="right" note="right" hold="tail0" holdEnd="tailEnd" receptor="right" press="right" confirm="right"/>
+    </animations>
+</noteSkin>

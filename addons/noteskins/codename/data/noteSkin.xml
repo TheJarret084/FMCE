@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE noteSkin>
+<!--
+    Notas de Codename Engine (assets/images/game/notes/default.png/xml originales).
+    type="sparrow": el atlas ya viene pintado (notas de colores, colas, receptores), asi que se dibuja tal cual.
+-->
+<noteSkin type="sparrow" name="Codename" author="Codename Crew" version="1.0">
+    <atlas path="NOTE_assets"/>
+    <holdAlpha value="0.65"/>
+
+    <animations>
+        <lane dir="left"  note="purple0" hold="purple hold piece" holdEnd="pruple end hold"  receptor="arrowLEFT"  press="left press"  confirm="left confirm"/>
+        <lane dir="down"  note="blue0"   hold="blue hold piece"   holdEnd="blue hold end"    receptor="arrowDOWN"  press="down press"  confirm="down confirm"/>
+        <lane dir="up"    note="green0"  hold="green hold piece"  holdEnd="green hold end"   receptor="arrowUP"    press="up press"    confirm="up confirm"/>
+        <lane dir="right" note="red0"    hold="red hold piece"    holdEnd="red hold end"     receptor="arrowRIGHT" press="right press" confirm="right confirm"/>
+    </animations>
+</noteSkin>

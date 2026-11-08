@@ -22,3 +22,12 @@ El `<atlas path="..."/>` de un `noteSkin.xml` es el nombre del atlas dentro de *
 ## source/
 `java/` y `libs/` ahora estan en `source/java/` y `source/libs/` (Project.xml, `DiscordBuild.hx` y `discord-android.sh` ya apuntan ahi).
 Recuerda copiar `discord_partner_sdk.aar` a `source/libs/discord/android/`.
+
+## Tipos de noteskin (`type` en `<noteSkin>`)
+- `sparrow`: atlas completo y ya pintado (notas de colores, colas, receptores). Se dibuja tal cual. Ej: `codename`.
+- `rgb`: atlas mascara (rojo = color, verde = brillo, azul = sombra) pintado con `NoteRGBShader`. Ej: `default` (FMCE).
+- `tint`: atlas claro/gris teñido con un solo color (`FlxSprite.color`). Ej: `fmm` (Funky Maker: Mobile).
+Los colores de `rgb` y `tint` salen de `<colors>` del skin o, si no hay, de settings.xml. Sin `type`, `<rgb enabled="false"/>` = sparrow.
+
+## Scores
+`scores.fmsc`: binario ofuscado y firmado (HMAC-SHA256). En Android vive en la carpeta privada de la app. Si se altera, se aparta como `.invalid` y se empieza vacio. El `scores.json` viejo se migra una sola vez.
