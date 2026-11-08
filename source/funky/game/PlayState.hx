@@ -15,6 +15,7 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
+import flixel.math.FlxRandom;
 import hxvlc.flixel.FlxVideo;
 import funky.backend.FunkinVideoSprite;
 import funky.backend.MusicBeatState;
@@ -1078,7 +1079,7 @@ class PlayState extends MusicBeatState
 
 		try
 		{
-			funky.core.CoolUtil.playSound("missSFX", 0.4);
+			funky.core.CoolUtil.playSound("missSFX" + Std.string(FlxRandom.int(0, 4)), FlxRandom.float(0.2, 0.8));
 		}
 		catch (e:Dynamic) {}
 	}
@@ -1322,6 +1323,8 @@ class PlayState extends MusicBeatState
 
 	/** Error de carga pendiente: el create no puede abrir substates todavia, asi que se muestra en el primer update. */
 	var pendingError:Null<String> = null;
+    var showWarning:Void->Void;
+    var warningInstanced:Bool = false;
 
 	/**
 	 * Muestra el error de carga de un nivel: primero un video solo (`fatalerrorisocurred`) y al terminar (o si el video
@@ -1333,7 +1336,7 @@ class PlayState extends MusicBeatState
 		safely("transitionIn (error)", function() transitionIn());
 		safely("music.stop (error)", function() if (FlxG.sound.music != null) FlxG.sound.music.stop());
 
-		var showWarning = function():Void
+		showWarning = function():Void
 		{
 			openSubState(new UIWarningSubstate(
 				"Error al cargar el nivel",
@@ -1341,10 +1344,9 @@ class PlayState extends MusicBeatState
 				[
 					{
 						label: "Salir",
-						color: FlxColor.RED,
+						color: FlxRandom.color(), //FlxColor.RED,
 						onClick: function(_) {
-                exitToMenu();
-                showWarning.destroy();
+                            exitToMenu();
 					}
 				],
 				false
@@ -1354,6 +1356,7 @@ class PlayState extends MusicBeatState
 		var cutscene = new JarretVideo();
 		openSubState(cutscene);
 		cutscene.play("fatalerrorisocurred", showWarning);
+        warningInstanced = true;
 	}
 
 	/** Corre `action`. Si truena, lo manda al log (F2) con `label` y el juego sigue: un detalle no debe tumbar el countdown. */
@@ -1532,6 +1535,15 @@ class PlayState extends MusicBeatState
 		FlxG.signals.postUpdate.remove(applyGuiFade);
 		if (guiFadeTween != null) guiFadeTween.cancel();
 		releaseGuiFade();
+
+        if (warningInstanced) {
+            try {
+                showWarning.destroy();
+                showWarning = null;
+            } catch(_:Dynamic) {
+                Log.warn("[warningSubState]: tu mierda exploto");
+            }
+        }
 
 		cancelCountdown();
 
