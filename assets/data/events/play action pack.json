@@ -1,9 +1,0 @@
-{
-	"params": [
-		{
-            "name": "# del action_pack",
-            "type": "Int(0, 99, 1)",
-            "defaultValue": 0
-        }
-	]
-}

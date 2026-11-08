@@ -54,6 +54,13 @@ class Chart {
 		levelDir = dir;
 		Paths.levelDir = dir;
 		funky.core.Paths.currentLevel = dir;
+		// Carpeta de nivel recien hecha (sin chart.json): se crea un chart vacio y el charter abre normal, en vez de crashear.
+		var chartFile = Path.join([dir, LevelLoader.CHART_FILE]);
+		if (FileSystem.exists(dir) && FileSystem.isDirectory(dir) && !FileSystem.exists(chartFile)) {
+			funky.core.Log.warn('[Chart] ' + dir + ' no tiene chart.json: se crea uno vacio');
+			try File.saveContent(chartFile, Json.stringify({fmceChart: true, timeUnit: "seconds", strumLines: [[], []]}, null, "\t"))
+			catch (e:Dynamic) funky.core.Log.error('[Chart] no se pudo crear ' + chartFile + ': ' + Std.string(e));
+		}
 		var lv = LevelLoader.loadFolder(dir);
 		var meta:Dynamic = readJson(Path.join([dir, "meta.json"]));
 		if (meta == null) meta = {};

@@ -8,6 +8,7 @@ import funky.core.CrashHandler;
 import funky.core.MemoryUtil;
 import funky.core.WindowUtils;
 import funky.core.Paths;
+import funky.core.AssetPack;
 import funky.core.ClientPrefs;
 import funkin.backend.utils.TranslationUtil;
 import funky.api.DiscordClient;
@@ -31,8 +32,12 @@ class Main extends Sprite
 
 		Log.init();
 		CrashHandler.init();
+		// assets.pack ANTES de cualquier otra cosa que pida un asset (Paths, ClientPrefs, traducciones...).
+		AssetPack.mount();
 		Paths.init();
 		ClientPrefs.load();
+		// Cerrar la ventana con la X (o que Android mate la app) no pasa por el menu de opciones: se guarda aqui tambien.
+		lime.app.Application.current.onExit.add(function(_:Int) ClientPrefs.save());
 		TranslationUtil.init();
 
 		#if desktop
@@ -47,6 +52,7 @@ class Main extends Sprite
 		FlxG.signals.postStateSwitch.add(() -> MemoryUtil.clearMajor());
 
 		addChild(new FlxGame(GAME_WIDTH, GAME_HEIGHT, SplashState, 60, 60, true));
+		FlxG.signals.focusLost.add(function() ClientPrefs.save());
     funky.core.CursorManager.init(); // yea
 		addChild(new Framerate());
 		addChild(new LogOverlay()); // logs en pantalla (F2)

@@ -19,6 +19,11 @@ class ConfigSubState extends FlxSubState
 
 		menu = new ConfigMenu();
 		menu.setRootFactory(() -> ConfigScreens.root(menu, true));
+		menu.openSubState = function(sub)
+		{
+			sub.cameras = cameras;
+			openSubState(sub);
+		};
 		menu.onExit = close;
 		add(menu);
 	}

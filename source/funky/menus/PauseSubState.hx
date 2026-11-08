@@ -484,7 +484,7 @@ class PauseSubState extends FlxSubState
 
 	/** Las opciones que solo se aplican al crear el nivel: si cambian, hace falta reiniciar. */
 	static function restartSignature():String
-		return ClientPrefs.isDownScroll() + "|" + ClientPrefs.isMiddleScroll() + "|" + ClientPrefs.isBotplay();
+		return ClientPrefs.isDownScroll() + "|" + ClientPrefs.isMiddleScroll() + "|" + ClientPrefs.isBotplay() + "|" + ClientPrefs.getNoteSkin();
 
 	function setPauseVisible(value:Bool):Void
 	{

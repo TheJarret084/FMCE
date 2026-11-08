@@ -24,7 +24,8 @@ class Paths
 	public static final MUSIC  = ASSETS + "music/";
 	public static final DATA   = ASSETS + "data/";
 	public static final FONTS  = ASSETS + "fonts/";
-	public static final VIDEOS = ASSETS + "videos/";
+	/** Los videos NO van en el assets.pack (hxvlc necesita un archivo real): viven en addons/videos/ (ver Addons). */
+	public static final VIDEOS = Addons.ID_ROOT + "videos/";
 
 	public static final GAME_UI = IMAGES + "game/";
 
@@ -40,7 +41,12 @@ class Paths
 	public static inline function sound(name:String):String   return SOUNDS + name + ".ogg";
 	public static inline function music(name:String):String   return MUSIC + name + ".ogg";
 	public static inline function font(name:String):String return FONTS + name;
-	public static inline function video(name:String):String return VIDEOS + name + ".mp4";
+	/** Ruta REAL en disco de `addons/videos/<name>.mp4` (la carpeta externa gana sobre la que trae el build). Si no existe, el id sin resolver. */
+	public static function video(name:String):String
+	{
+		var real = Addons.file("videos/" + name + ".mp4");
+		return real != null ? real : VIDEOS + name + ".mp4";
+	}
 
 	// Soporta atlas de Adobe Animate (carpeta con Animation.json + spritemap) via flixel-animate,
 	// ademas de Sparrow / Packer / Aseprite / imagen suelta.

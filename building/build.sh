@@ -48,6 +48,17 @@ while read -r name ver url ref; do
 	fi
 done < building/libs.txt
 
+# ── Assets -> assets.pack ───────────────────────────────────────
+# assets/ se compila en building/_pack/assets.pack (Project.xml lo mete en el build). -DFMCE_LOOSE_ASSETS lo salta.
+if [[ " $* " == *" -DFMCE_LOOSE_ASSETS "* ]]; then
+	echo "==> Assets sueltos (-DFMCE_LOOSE_ASSETS): no se arma assets.pack"
+else
+	PY="$(command -v python3 || command -v python || true)"
+	[ -n "$PY" ] || { echo "build.sh: falta python3 (building/pack-assets.py arma assets.pack)" >&2; exit 127; }
+	echo "==> Empaquetando assets/ en assets.pack"
+	"$PY" building/pack-assets.py --verify
+fi
+
 # ── Compilar ────────────────────────────────────────────────────
 case "$KIND" in
 	android) PLATFORM=android;;

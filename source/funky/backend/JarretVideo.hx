@@ -27,7 +27,7 @@ class JarretVideo extends FlxSubState
 		super();
 	}
 
-	/** Reproduce `assets/videos/<name>.mp4`. (Se llama `play` y no `create`: `create` es del ciclo de vida del substate.) */
+	/** Reproduce `addons/videos/<name>.mp4`. (Se llama `play` y no `create`: `create` es del ciclo de vida del substate.) */
 	public function play(name:String, ?onDone:Void->Void):Void
 	{
 		this.onDone = onDone;

@@ -15,7 +15,7 @@ import hxdiscord_rpc.Types;
 /**
  * Discord Rich Presence. Un solo `DiscordClient` para todo el juego, con el backend que toque segun la plataforma:
  *
- * - **Android** (`DISCORD_SDK`): Discord Social SDK, desde el `.aar` (ver `DiscordSdk` y `libs/discord/README.md`).
+ * - **Android** (`DISCORD_SDK`): Discord Social SDK, desde el `.aar` (ver `DiscordSdk` y `source/libs/discord/README.md`).
  * - **Escritorio, target cpp** (`DISCORD_RPC`): el haxelib `hxdiscord_rpc` (Windows, Linux y Mac; no pide DLL ni login).
  * - Otros (HashLink, HTML5): no hace nada, y el resto del juego lo llama igual.
  *

@@ -99,6 +99,8 @@ class SpriteBuilder
 		var dir = spriteDir(levelDir, name);
 		// carpeta de video: un .mp4 + config.json con "type": "video" (o `meta.fmce.video` en sprite.json)
 		if (FunkinVideoSprite.readInfo(dir) != null) return true;
+		// Icono base de FNF (png de 300x150 / 150x150 sin json): se mapea solo para que cuente como sprite en los editores.
+		funky.backend.converter.SpriteFolderConverter.mapFnfIcon(dir);
 		return FileSystem.exists(Path.join([dir, "sprite.png"]))
 			&& (FileSystem.exists(Path.join([dir, "sprite.json"])) || FileSystem.exists(Path.join([dir, "sprite.xml"])));
 		#else

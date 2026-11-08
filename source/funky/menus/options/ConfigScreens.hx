@@ -6,6 +6,7 @@ import funky.backend.system.LogOverlay;
 import funky.backend.system.framerate.Framerate;
 import funky.core.ClientPrefs;
 import funky.core.CoolUtil;
+import funky.core.NoteSkin;
 import funky.core.TouchNav;
 import funky.core.TransitionHandler;
 import flixel.util.FlxColor;
@@ -45,7 +46,7 @@ class ConfigScreens
 			items.push(ConfigItem.submenu(TU.translate("options.controls.name", null, "CONTROLES"),
 				TU.translate("options.controls.desc", null, "Cambia la tecla de cada carril"), () -> menu.push(controls(menu))));
 		items.push(ConfigItem.submenu(TU.translate("options.gameplay.name", null, "GAMEPLAY"),
-			TU.translate("options.gameplay.desc", null, "Scroll, ghost tapping, botplay y mas"), () -> menu.push(gameplay())));
+			TU.translate("options.gameplay.desc", null, "Scroll, ghost tapping, botplay y mas"), () -> menu.push(gameplay(menu))));
 		items.push(ConfigItem.submenu(TU.translate("options.audio.name", null, "AUDIO"),
 			TU.translate("options.audio.desc", null, "Volumen general, musica y efectos"), () -> menu.push(audio())));
 		items.push(ConfigItem.submenu(TU.translate("options.appearance.name", null, "APARIENCIA"),
@@ -90,10 +91,22 @@ class ConfigScreens
 			TU.translate("options.language.desc", null, "Elige el idioma de la interfaz"), items);
 	}
 
-	static function gameplay():ConfigScreen
+	static function gameplay(menu:ConfigMenu):ConfigScreen
 	{
+		var noteSkin = ConfigItem.submenu("", TU.translate("options.gameplay.noteSkin.desc", null,
+			"Elige un skin de notas (noteSkin.xml). Se aplica al reiniciar"), () ->
+		{
+			var sub = new NoteSkinSubState();
+			if (menu.openSubState != null) menu.openSubState(sub);
+			else FlxG.state.openSubState(sub);
+		});
+		noteSkin.dynamicLabel = () -> TU.translate("options.gameplay.noteSkin.name",
+			[NoteSkin.displayName(ClientPrefs.getNoteSkin())], "NOTAS: {0}");
+
 		return new ConfigScreen(TU.translate("options.gameplay.title", null, "GAMEPLAY"),
 			TU.translate("options.gameplay.titleDesc", null, "Como se juega"), [
+			noteSkin,
+			ConfigItem.separator(),
 			ConfigItem.check(TU.translate("options.gameplay.downscroll.name", null, "DOWNSCROLL"),
 				TU.translate("options.gameplay.downscroll.desc", null, "Las notas bajan en vez de subir (se aplica al reiniciar)"),
 				ClientPrefs.isDownScroll, ClientPrefs.setDownScroll),
@@ -153,7 +166,7 @@ class ConfigScreens
 				LogOverlay.enabled = v;
 			}),
 			ConfigItem.check(TU.translate("options.appearance.fps.name", null, "CONTADOR DE FPS"),
-				TU.translate("options.appearance.fps.desc", null, "FPS y memoria arriba a la izquierda (no se guarda)"),
+				TU.translate("options.appearance.fps.desc", null, "FPS y memoria arriba a la izquierda"),
 				() -> Framerate.debugMode > 0, v ->
 			{
 				Framerate.debugMode = v ? 1 : 0;

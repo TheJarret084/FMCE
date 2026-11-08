@@ -109,7 +109,7 @@ class SpriteImporter
 					File.copy(json, Path.join([dest, "sprite.json"]));
 					used.push(json);
 				}
-				else
+				else if (!SpriteFolderConverter.mapFnfIcon(dest))
 					writeSingleFrame(dest);
 
 				ensureConfig(dest);
@@ -187,7 +187,7 @@ class SpriteImporter
 			}
 			else if (dataKind == "json" && dataText != null)
 				File.saveContent(Path.join([dest, "sprite.json"]), dataText);
-			else
+			else if (!SpriteFolderConverter.mapFnfIcon(dest))
 				writeSingleFrame(dest);
 
 			ensureConfig(dest);

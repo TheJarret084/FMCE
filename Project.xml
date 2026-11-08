@@ -37,11 +37,27 @@
 	<!-- _________________________________ Assets ________________________________ -->
 
 	<section unless="TEST_BUILD">
-		<assets path="assets" rename="assets" exclude="*.ogg" if="web" />
-		<assets path="assets" rename="assets" exclude="*.mp3" unless="web" />
+		<!-- assets/ se compila en UN solo archivo: building/_pack/assets.pack (lo arma building/pack-assets.py; build.sh, build.bat y
+		     android-build.sh lo corren antes de lime). El juego lo lee con funky.core.AssetPack / PackLibrary.
+		     assets.id es un texto chiquito con el hash del .pack: en Android sirve para saber si hay que volver a extraerlo del APK.
+		     Para iterar sin empaquetar: -DFMCE_LOOSE_ASSETS (mete assets/ suelto, como antes). -->
+		<section unless="FMCE_LOOSE_ASSETS">
+			<assets path="building/_pack/assets.pack" rename="assets.pack" type="binary" />
+			<assets path="building/_pack/assets.id" rename="assets.id" type="text" />
+		</section>
+		<section if="FMCE_LOOSE_ASSETS">
+			<assets path="assets" rename="assets" exclude="*.ogg" if="web" />
+			<assets path="assets" rename="assets" exclude="*.mp3" unless="web" />
+		</section>
+
+		<!-- addons/ (noteskins, videos...) NO entra en el .pack: son recursos externos (hxvlc necesita archivos reales).
+		     Escritorio: Lime los copia junto al ejecutable. Android: quedan en el APK (y se puede ademas poner una carpeta
+		     addons/ en .JarretLabs-FMCE/ que gana sobre la del APK). Ver funky.core.Addons y DOCS/addons-y-pack.md. -->
+		<assets path="addons" rename="addons" />
 
 		<assets path="LICENSE" rename="LICENSE.txt" />
 
+		<!-- Las fuentes van embebidas en el ejecutable (por eso pack-assets.py se salta assets/fonts). -->
 		<assets path="assets/fonts" embed="true" />
 	</section>
 
@@ -57,7 +73,7 @@
 	<!-- Android: carpeta publica /storage/emulated/0/.JarretLabs-FMCE (ver funky/core/Storage.hx).
 	     OJO: definir permisos reemplaza la lista por defecto de lime, por eso van tambien los 4 de siempre. -->
 	<section if="android">
-		<java path="java" />
+		<java path="source/java" />
 		<!-- Solo arm64: la mitad de tiempo de C++ y un APK mas chico. Quita esta linea si necesitas armv7 (telefonos de 32 bits). -->
 		<architecture name="arm64" />
 		<config:android permission="android.permission.WAKE_LOCK" />
@@ -75,13 +91,13 @@
 	<define name="FMCE_VIDEO" if="android" unless="FMCE_NO_VIDEO_ANDROID" />
 	<haxelib name="hxvlc" if="FMCE_VIDEO" />
 
-	<!-- Discord Rich Presence. Android: Discord Social SDK desde el .aar (libs/discord/, ver su README). Escritorio con target cpp:
+	<!-- Discord Rich Presence. Android: Discord Social SDK desde el .aar (source/libs/discord/, ver su README). Escritorio con target cpp:
 	     el haxelib hxdiscord_rpc (sin DLL ni login). HashLink y HTML5 quedan sin presencia. Apagalo con -DFMCE_NO_DISCORD. -->
 	<define name="DISCORD_SDK" if="android" unless="FMCE_NO_DISCORD" />
 	<define name="DISCORD_RPC" if="cpp desktop" unless="FMCE_NO_DISCORD" />
 	<haxelib name="hxdiscord_rpc" if="DISCORD_RPC" />
 	<section if="DISCORD_SDK">
-		<dependency name="discord" path="libs/discord/android" />
+		<dependency name="discord" path="source/libs/discord/android" />
 	</section>
 
 	<!-- ______________________________ Haxedefines _____________________________ -->

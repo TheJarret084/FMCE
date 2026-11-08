@@ -163,7 +163,7 @@ class FreeplayState extends FlxState
 
 			var hint = new FlxText(0, FlxG.height - 28, FlxG.width,
 				TU.translate("freeplay.hint", [KeyBinds.label(KeyBinds.ACCEPT), KeyBinds.label(KeyBinds.BACK)],
-					"{0} jugar  |  < > dificultad  |  R refrescar  |  {1} volver  |  C convertidor"), 16);
+					"{0} jugar  |  < > dificultad  |  R refrescar  |  {1} volver  |  C convertidor  |  7 avanzado"), 16);
 			hint.alignment = FlxTextAlign.CENTER;
 			hint.color = ACTIVE;
 			add(hint);
@@ -513,6 +513,12 @@ class FreeplayState extends FlxState
 
 		// Literal shortcuts: see the hint text in create().
 		if (FlxG.keys.justPressed.C) leave(new ConverterMenuState());
+		// 7 = modo avanzado con el nivel seleccionado ya elegido (antiGay = true lo bloquea, igual que en el menu principal).
+		if (!advanced.AdvancedModeState.antiGay && FlxG.keys.justPressed.SEVEN && entries.length > 0)
+		{
+			leave(new advanced.AdvancedModeState(entries[selected].label));
+			return;
+		}
 		if (FlxG.keys.justPressed.R)
 		{
 			refresh();

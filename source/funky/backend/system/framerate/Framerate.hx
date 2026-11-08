@@ -86,6 +86,8 @@ class Framerate extends Sprite
 
         // Cada state arranca con el contador en su lugar: lo que muevan los editores no se arrastra al juego.
         FlxG.signals.preStateSwitch.add(onPreStateSwitch);
+        FlxG.signals.postStateSwitch.add(onPostStateSwitch);
+        onPostStateSwitch();
     }
 
     // ------------------------------------------------------------------ mover el contador
@@ -121,6 +123,19 @@ class Framerate extends Sprite
     public static function setVisible(value:Bool):Void
         debugMode = value ? 1 : 0;
 
+    /** Opacidad del contador dentro de los editores: ahi estorba, asi que baja solo al 10%. */
+    public static inline var EDITOR_ALPHA:Float = 0.1;
+
+    static var inEditor:Bool = false;
+
+    static function onPostStateSwitch():Void
+    {
+        var name = FlxG.state != null ? Type.getClassName(Type.getClass(FlxG.state)) : "";
+        inEditor = StringTools.startsWith(name, "funkin.editors.")
+            || StringTools.startsWith(name, "advanced.editors.")
+            || name == "advanced.AdvancedEditorState";
+    }
+
     static function onPreStateSwitch():Void
     {
         // La posicion base se respeta (por si un script la movio a proposito); solo se limpia lo temporal.
@@ -147,7 +162,7 @@ class Framerate extends Sprite
     private function onEnterFrame(_):Void
     {
         visible = debugMode > 0;
-        alpha = visible ? panelAlpha : 0;
+        alpha = visible ? (inEditor ? EDITOR_ALPHA : panelAlpha) : 0;
         if (!visible) return;
 
         // en pantallas altas (celulares) el panel se agranda para seguir siendo legible
@@ -211,6 +226,7 @@ class Framerate extends Sprite
     {
         removeEventListener(Event.ENTER_FRAME, onEnterFrame);
         FlxG.signals.preStateSwitch.remove(onPreStateSwitch);
+        FlxG.signals.postStateSwitch.remove(onPostStateSwitch);
         fpsCounter.destroy();
         memoryCounter.destroy();
         if (instance == this) instance = null;

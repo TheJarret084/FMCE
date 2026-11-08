@@ -1,23 +1,15 @@
-╔═══════════════════════════════════════╗
-║ CARPETA DE ADDONS — FMCE                    ║
-╚═══════════════════════════════════════╝
+CARPETA DE ADDONS - FMCE
 
-Este directorio existe por compatibilidad de estructura con Codename Engine.
-Todavía NO hay un cargador de addons implementado en FMCE: poner carpetas acá
-no hace que el juego las lea.
+Aqui vive lo que NO va dentro de assets.pack: extensiones que el juego carga siempre
+(a diferencia de un mod, que se activa o desactiva) y recursos que necesitan ser archivos reales.
 
-Un addon esta pensado como una extension que se carga siempre y extiende el
-engine, a diferencia de un mod que se puede activar o desactivar.
+  addons/
+    noteskins/<id>/data/noteSkin.xml      configuracion del skin
+    noteskins/<id>/images/NOTE_assets.*   atlas Sparrow (.png + .xml)
+    videos/<nombre>.mp4                   videos (hxvlc no puede leer de un .pack)
 
-Estado actual del sistema de addons:
+Donde se buscan (el externo gana, asi puedes reemplazar uno que trae el juego):
+  1. Carpeta externa: addons/ junto al ejecutable (escritorio) o .JarretLabs-FMCE/addons/ (Android)
+  2. Lo que trae el build (Project.xml mete esta carpeta)
 
-  · No existe IModsAssetLibrary ni ZipFolderLibrary
-  · No hay registro de addons al arrancar
-  · No hay carga de .zip
-
-Cuando se implemente, el estructura esperada sera:
-
-  📁 addons/
-      📁 mi_addon/
-          📁 data/
-          📁 assets/
+Una noteskin nueva = copiar su carpeta a addons/noteskins/ (sin recompilar). Detalles: DOCS/addons-y-pack.md

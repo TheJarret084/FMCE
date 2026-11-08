@@ -21,6 +21,12 @@ class UISubstateWindow extends MusicBeatSubstate {
 		#else
 		try {
 			var _ = new CustomShader(Options.intensiveBlur ? "engine/editorBlur" : "engine/editorBlurFast");
+			// El Flixel de Codename llama setCamSize() cada frame a los shaders de camara: sin `_camSize` revienta.
+			// (Pasa si el .frag no existe o no usa `#pragma header`.) Mejor sin blur que un crash en loop.
+			if (Reflect.field(_.data, "_camSize") == null) {
+				funky.core.Log.warn('[UISubstateWindow] el shader de blur no tiene _camSize (revisa assets/shaders/engine/), se usa un fondo oscuro');
+				return null;
+			}
 			if(!Options.intensiveBlur) {
 				var noiseTexture:ShaderInput<openfl.display.BitmapData> = _.data.noiseTexture;
 				noiseTexture.input = Assets.getBitmapData("assets/shaders/noise256.png");

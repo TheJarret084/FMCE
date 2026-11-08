@@ -36,3 +36,6 @@ no hay `FlxG.switchState(X.new)` (usa `new X()`), el mouse/touch usa `screenX/sc
 
 `FunkinVideoSprite` usa hxvlc, que solo existe en C++: Windows/Linux lo traen, HashLink usa un stub.
 En Android viene activado (el splash lo usa); para apagarlo compila con `-DFMCE_NO_VIDEO_ANDROID`.
+
+## assets.pack
+`pack-assets.py` compila `assets/` en `building/_pack/assets.pack` (los scripts de build lo corren solos; necesita Python 3). Ver `DOCS/addons-y-pack.md`.

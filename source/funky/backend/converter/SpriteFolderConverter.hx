@@ -90,9 +90,87 @@ class SpriteFolderConverter
 	}
 
 	#if sys
+	/** Lado de cada frame de un icono estilo FNF (la imagen mide 150 de alto y 150 o 300 de ancho). */
+	public static inline var FNF_ICON_SIZE:Int = 150;
+
+	/** Frames de un icono FNF segun el tamano del PNG: 300x150 = 2 (normal, perdiendo), 150x150 = 1. 0 si no es de ese tamano. */
+	public static function fnfIconFrames(size:Null<{w:Int, h:Int}>):Int
+	{
+		if (size == null || size.h != FNF_ICON_SIZE) return 0;
+		return size.w == FNF_ICON_SIZE * 2 ? 2 : (size.w == FNF_ICON_SIZE ? 1 : 0);
+	}
+
+	/**
+	 * Icono base de FNF: `sprite.png` suelto de 300x150 (2 frames de 150x150: anim0 normal y anim1 perdiendo) o de 150x150 (1 frame).
+	 * La imagen no se toca: solo se escribe el `sprite.json` (Aseprite) que la mapea y, si falta, un `config.json` con `type: icon`.
+	 * No hace nada si la carpeta ya trae `sprite.json` / `sprite.xml` o si el PNG no mide eso. true = lo mapeo.
+	 */
+	public static function mapFnfIcon(dir:String):Bool
+	{
+		try
+		{
+			var png = Path.join([dir, "sprite.png"]);
+			if (!FileSystem.exists(png)) return false;
+			if (FileSystem.exists(Path.join([dir, "sprite.json"])) || FileSystem.exists(Path.join([dir, "sprite.xml"]))) return false;
+
+			var size = pngSize(png);
+			var count = fnfIconFrames(size);
+			if (count == 0) return false;
+
+			var frames:Array<Dynamic> = [];
+			var tags:Array<Dynamic> = [];
+			var anims:Dynamic = {};
+			for (i in 0...count)
+			{
+				var name = "anim" + i;
+				var side = FNF_ICON_SIZE;
+				frames.push({
+					filename: name,
+					frame: {x: i * side, y: 0, w: side, h: side},
+					rotated: false,
+					trimmed: false,
+					spriteSourceSize: {x: 0, y: 0, w: side, h: side},
+					sourceSize: {w: side, h: side},
+					duration: 42
+				});
+				tags.push({name: name, from: i, to: i, direction: "forward"});
+				Reflect.setField(anims, name, {fps: 24, loop: true});
+			}
+
+			var out = {
+				frames: frames,
+				meta: {
+					app: "FMCE SpriteImporter",
+					version: "1.0",
+					image: "sprite.png",
+					format: "RGBA8888",
+					size: {w: size.w, h: size.h},
+					scale: "1",
+					frameTags: tags,
+					fmce: {source: "fnf-icon", type: "icon", animations: anims}
+				}
+			};
+			File.saveContent(Path.join([dir, "sprite.json"]), Json.stringify(out, null, "\t"));
+
+			var configPath = Path.join([dir, "config.json"]);
+			if (!FileSystem.exists(configPath))
+			{
+				var config = {type: "icon", data: [for (i in 0...count) {anim: "anim" + i, spd: 1, loop: true}]};
+				File.saveContent(configPath, Json.stringify(config, null, "\t"));
+			}
+			return true;
+		}
+		catch (e:Dynamic)
+		{
+			return false;
+		}
+	}
+
 	static function walk(dir:String, overwrite:Bool, out:Array<SpriteConvertResult>, depth:Int):Void
 	{
 		if (depth > 12) return;
+		// Iconos FNF sueltos (sprite.png de 300x150 / 150x150 sin json): se mapean al cargar el nivel.
+		mapFnfIcon(dir);
 		var entries = FileSystem.readDirectory(dir);
 		entries.sort(Reflect.compare);
 		for (entry in entries)

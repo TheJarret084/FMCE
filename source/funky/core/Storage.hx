@@ -47,7 +47,7 @@ class Storage
 		#if android
 		return androidGameDirectory() + "/levels";
 		#else
-		return "levels";
+		return exeDirectory() + "/levels";
 		#end
 	}
 
@@ -56,7 +56,7 @@ class Storage
 		#if android
 		return androidGameDirectory() + "/fnmm-cache";
 		#else
-		return ".fnmm-cache";
+		return exeDirectory() + "/.fnmm-cache";
 		#end
 	}
 
@@ -76,7 +76,7 @@ class Storage
 		#end
 		return lime.system.System.applicationStorageDirectory;
 		#else
-		return ".";
+		return exeDirectory();
 		#end
 	}
 
@@ -86,9 +86,38 @@ class Storage
 		#if android
 		return androidGameDirectory();
 		#else
-		return ".";
+		return exeDirectory();
 		#end
 	}
+
+	#if !android
+	static var exeDir:Null<String> = null;
+
+	/**
+	 * Carpeta del ejecutable (sin `/` al final). En escritorio TODO (levels/, .JarretLabs-FMCE/FMCE.sol, scores, logs, crashes)
+	 * vive aqui y no en el cwd: el cwd cambia segun como se abra el juego (acceso directo, terminal, Wine/Winlator...) y los datos
+	 * terminaban en una carpeta `.JarretLabs-FMCE` distinta cada vez, sin que el juego los volviera a encontrar.
+	 */
+	public static function exeDirectory():String
+	{
+		if (exeDir != null) return exeDir;
+		var dir = ".";
+		#if sys
+		try
+		{
+			var prog = Sys.programPath();
+			if (prog != null && prog != "")
+			{
+				var d = haxe.io.Path.directory(prog);
+				if (d != null && d != "") dir = StringTools.replace(d, "\\", "/");
+			}
+		}
+		catch (_:Dynamic) {}
+		#end
+		while (dir.length > 3 && StringTools.endsWith(dir, "/")) dir = dir.substr(0, dir.length - 1);
+		return exeDir = dir;
+	}
+	#end
 
 	#if android
 	/** Carpeta publica si se puede escribir ahi; si no, la de `Android/media/<package>`. Sin `/` al final. */

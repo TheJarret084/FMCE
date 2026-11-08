@@ -51,6 +51,15 @@ class AdvancedModeState extends FlxState
 	var chosen:Bool = false;
 	var info:FlxText;
 
+	/** Nivel que debe aparecer ya seleccionado al abrir (viene del Freeplay con la tecla 7). */
+	var startLevel:Null<String>;
+
+	public function new(?startLevel:String)
+	{
+		super();
+		this.startLevel = startLevel;
+	}
+
 	override public function create():Void
 	{
 		super.create();
@@ -83,6 +92,11 @@ class AdvancedModeState extends FlxState
 		add(desc);
 
 		levels = Paths.listLevels();
+		if (startLevel != null)
+		{
+			var idx = levels.indexOf(startLevel);
+			if (idx >= 0) selected = idx;
+		}
 		if (levels.length > 0)
 		{
 			for (i in 0...levels.length)

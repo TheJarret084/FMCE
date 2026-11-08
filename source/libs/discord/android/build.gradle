@@ -1,0 +1,5 @@
+// Envuelve discord_partner_sdk.aar como modulo de Gradle para que Lime lo meta con
+// `implementation project(':deps:discord')` (Project.xml: <dependency name="discord" path="source/libs/discord/android" />).
+// Esto trae las .so de cada ABI, las clases Java y el AndroidManifest del SDK (AuthenticationActivity, etc.).
+configurations.maybeCreate("default")
+artifacts.add("default", file("discord_partner_sdk.aar"))

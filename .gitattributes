@@ -55,4 +55,5 @@
 *.7z       binary
 *.keystore binary
 *.mp4      binary
+*.pack     binary
 *.ogv      binary

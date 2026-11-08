@@ -86,6 +86,10 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		uniform bool hasTransform;
 		uniform bool hasColorTransform;
 
+		// El Flixel de Codename llama shader.setCamSize() CADA FRAME a todo shader que este en cam.filters.
+		// Si el uniform no existe, data._camSize es null y revienta (Null Object Reference en FlxCamera.update).
+		uniform vec4 _camSize;
+
 		vec4 flixel_texture2D(sampler2D bitmap, vec2 coord)
 		{
 			vec4 color = texture2D(bitmap, coord);

@@ -3,6 +3,7 @@ package funky.menus.options;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
+import flixel.FlxSubState;
 import flixel.group.FlxGroup;
 import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxMath;
@@ -193,6 +194,8 @@ class ConfigMenu extends FlxGroup
 	public var onExit:Void->Void;
 	/** Avisa del fondo de la pantalla visible (null = el de por defecto); solo lo usan los creditos. */
 	public var onBackgroundChange:String->Void;
+	/** Abre un substate encima del host correcto (ConfigState o el ConfigSubState de la pausa). */
+	public var openSubState:FlxSubState->Void;
 	/** Reconstruye la raiz (se usa al cambiar de idioma). */
 	public var rootFactory:Void->ConfigScreen;
 	public var stack:Array<ConfigScreen> = [];

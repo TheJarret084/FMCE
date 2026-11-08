@@ -15,7 +15,7 @@ import hxvlc.flixel.FlxVideo;
 #end
 
 /**
- * Intro del juego: `assets/videos/splash.mp4` con su AUDIO, en un `FlxVideo` normal de hxvlc (un video de OpenFL a pantalla
+ * Intro del juego: `addons/videos/splash.mp4` con su AUDIO, en un `FlxVideo` normal de hxvlc (un video de OpenFL a pantalla
  * completa, no un sprite del State). Tocar la pantalla o una tecla lo salta.
  */
 class SplashState extends FlxState
@@ -81,7 +81,7 @@ class SplashState extends FlxState
 		// Con el video roto no hay nada que mostrar: al TITLE.
 		if (!loaded)
 		{
-			Log.warn('[SplashState] no se pudo cargar assets/videos/splash.mp4');
+			Log.warn('[SplashState] no se pudo cargar addons/videos/splash.mp4');
 			finishSplash();
 			return;
 		}

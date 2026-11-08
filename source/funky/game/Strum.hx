@@ -3,15 +3,17 @@ package funky.game;
 import flixel.FlxSprite;
 import funky.core.ClientPrefs;
 import funky.core.NoteRGBShader;
-import funky.core.Paths;
+import funky.core.NoteSkin;
 
 /** Four-key receptor adapted from Codename's Strum, without controls or scripting layers. */
 class Strum extends FlxSprite
 {
-	static var dirs = ["left", "down", "up", "right"];
 	public var lane(default, null):Int;
 	public var laneCount(default, null):Int;
 	public var lastHit:Float = -5000;
+
+	/** Skin con el que se creo este receptor (los cambios se aplican al reiniciar la cancion). */
+	var skin:NoteSkin;
 
 	/**
 	 * Estado presionado para el que hay un shader asignado. `null` = todavia no se
@@ -34,13 +36,14 @@ class Strum extends FlxSprite
 		super(x, y);
 		this.lane = lane;
 		this.laneCount = laneCount;
-		var dir = dirs[lane % dirs.length];
-		var atlas = Paths.getSparrowAtlas("game/notes/NOTE_assets");
+		skin = NoteSkin.current();
+
+		var atlas = skin.frames();
 		if (atlas != null)
 		{
 			frames = atlas;
-			animation.addByPrefix("static", dir + " receptor", 24, false);
-			animation.addByPrefix("pressed", dir + " press", 24, false);
+			animation.addByPrefix("static", skin.animFor("receptor", lane), 24, false);
+			animation.addByPrefix("pressed", skin.animFor("press", lane), 24, false);
 			animation.play("static");
 		}
 		else makeGraphic(100, 100, 0xFF888888);
@@ -55,14 +58,15 @@ class Strum extends FlxSprite
 		{
 			confirmSprite = new FlxSprite(x, y);
 			confirmSprite.frames = atlas;
-			confirmSprite.animation.addByPrefix("confirm", dir + " confirm", 24, false);
+			confirmSprite.animation.addByPrefix("confirm", skin.animFor("confirm", lane), 24, false);
 			// Misma escala que el receptor: antes se medía con el frame 0 del atlas (no el confirm),
 			// así el confirm salía con otro tamaño y corrido respecto al receptor.
 			confirmSprite.scale.set(scale.x, scale.y);
 			confirmSprite.updateHitbox();
 			confirmSprite.alpha = ClientPrefs.getStrumAlpha();
 			// El confirm usa el tinte presionado, igual que antes de usar el shader RGB.
-			confirmSprite.shader = NoteRGBShader.forColors(ClientPrefs.noteRgbForLane(lane, true, laneCount));
+			var rgb = skin.rgbFor(lane, true, laneCount);
+			if (rgb != null) confirmSprite.shader = NoteRGBShader.forColors(rgb);
 			confirmSprite.visible = false;
 		}
 	}
@@ -76,7 +80,15 @@ class Strum extends FlxSprite
 	{
 		if (pressed == rgbPressed) return;
 		rgbPressed = pressed;
-		shader = NoteRGBShader.forColors(pressed ? ClientPrefs.noteRgbForLane(lane, true, laneCount) : ClientPrefs.idleRgb());
+
+		if (!skin.rgb)
+		{
+			shader = null;
+			return;
+		}
+
+		var colors = pressed ? skin.rgbFor(lane, true, laneCount) : ClientPrefs.idleRgb();
+		shader = colors == null ? null : NoteRGBShader.forColors(colors);
 	}
 
 	public function updateInput(pressed:Bool, justPressed:Bool):Void

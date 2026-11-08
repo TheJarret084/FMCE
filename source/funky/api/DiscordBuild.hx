@@ -8,7 +8,7 @@ import sys.FileSystem;
 
 /**
  * Le pasa a hxcpp (por `@:buildXml`) las rutas ABSOLUTAS del puente nativo y del Discord Social SDK, que viven en
- * `libs/discord/` y `source/funky/api/native/` (hxcpp no sabe donde esta el proyecto).
+ * `source/libs/discord/` y `source/funky/api/native/` (hxcpp no sabe donde esta el proyecto).
  */
 class DiscordBuild
 {
@@ -17,7 +17,7 @@ class DiscordBuild
 		var api = Path.normalize(FileSystem.fullPath(Path.directory(Context.resolvePath("funky/api/DiscordSdk.hx"))));
 		var native = api + "/native";
 		var root = Path.normalize(FileSystem.fullPath(api + "/../../.."));
-		var discord = root + "/libs/discord";
+		var discord = root + "/source/libs/discord";
 		var stage = root + "/building/_discord/jni"; // lo deja building/discord-android.sh (los .so salen del .aar)
 
 		var build = '

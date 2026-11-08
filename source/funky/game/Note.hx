@@ -1,9 +1,8 @@
 package funky.game;
 
 import flixel.FlxSprite;
-import funky.core.ClientPrefs;
 import funky.core.NoteRGBShader;
-import funky.core.Paths;
+import funky.core.NoteSkin;
 
 class QueueNote
 {
@@ -71,8 +70,6 @@ class Note extends FlxSprite
 	public static var PX_PER_MS:Float = BASE_PX_PER_MS;
 	public static inline var HOLD_WIDTH:Float = 0.45;
 
-	static var dirs:Array<String> = ["left", "down", "up", "right"];
-
 	public var queueNote:Null<QueueNote>;
 	public var parent:Null<Note>;
 	public var prevNote:Null<Note>;
@@ -94,6 +91,7 @@ class Note extends FlxSprite
 	var baseScaleY:Float = 1;
 	var animLane:Int = -1;
 	var usingAtlas:Bool = false;
+	var skinId:String = "";
 
 	public function new()
 	{
@@ -169,30 +167,28 @@ class Note extends FlxSprite
 		alpha = 1;
 		flipY = false;
 
-		if (frames == null && !usingAtlas)
-		{
-			var atlas = Paths.getSparrowAtlas("game/notes/NOTE_assets");
+		var skin = NoteSkin.current();
 
-			if (atlas != null)
-			{
-				frames = atlas;
-				usingAtlas = true;
-			}
-			else
-			{
-				makeGraphic(50, 50, 0xFFFFFFFF);
-			}
+		if (frames == null || (usingAtlas && skinId != skin.id))
+		{
+			skinId = skin.id;
+			frames = skin.frames();
+			usingAtlas = frames != null;
+			animLane = -1;
+			animation.destroyAnimations();
+
+			if (!usingAtlas) makeGraphic(50, 50, 0xFFFFFFFF);
 		}
 
 		if (usingAtlas)
 		{
 			if (animLane != noteData)
 			{
-				var dir = dirs[noteData % dirs.length];
+				animation.destroyAnimations();
 
-				animation.addByPrefix("scroll", dir + " note", 24, false);
-				animation.addByPrefix("hold", dir + " hold piece", 24, false);
-				animation.addByPrefix("holdend", dir + " hold tail", 24, false);
+				animation.addByPrefix("scroll", skin.animFor("note", noteData), 24, false);
+				animation.addByPrefix("hold", skin.animFor("hold", noteData), 24, false);
+				animation.addByPrefix("holdend", skin.animFor("holdEnd", noteData), 24, false);
 
 				animLane = noteData;
 			}
@@ -232,15 +228,10 @@ class Note extends FlxSprite
 		updateHitbox();
 
 		if (isSustainNote)
-			alpha = 0.65;
+			alpha = skin.holdAlpha;
 
-		shader = NoteRGBShader.forColors(
-			ClientPrefs.noteRgbForLane(
-				noteData,
-				false,
-				laneCount
-			)
-		);
+		var rgb = skin.rgbFor(noteData, false, laneCount);
+		shader = rgb == null ? null : NoteRGBShader.forColors(rgb);
 
 		return this;
 	}

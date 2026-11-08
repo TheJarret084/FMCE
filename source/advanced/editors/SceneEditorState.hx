@@ -373,6 +373,7 @@ class SceneEditorState extends UIState
 		scaleY = ui(new FieldStepper(half, top + 170, 1, 0.05, 3, null, null, 120));
 		scaleY.onValue = function(v:Float) setObjField("scale", "y", v);
 		var mirrorBtn = ui(new UIButton(x0 + 20, top + 208, "Espejo X", function() mirror("x"), 120, 28));
+		var mirrorYBtn = ui(new UIButton(half, top + 208, "Espejo Y", function() mirror("y"), 120, 28));
 
 		var l6 = label(x0 + 20, top + 248, "Parallax X");
 		scrollX = ui(new FieldStepper(x0 + 20, top + 266, 1, 0.05, 3, null, null, 120));
@@ -381,7 +382,7 @@ class SceneEditorState extends UIState
 		scrollY = ui(new FieldStepper(half, top + 266, 1, 0.05, 3, null, null, 120));
 		scrollY.onValue = function(v:Float) setObjField("scrollFactor", "y", v);
 
-		objPages[0] = [fixedCheck, l1, posPrev, posNext, posIdxText, posAdd, posDel, l2, posX, l3, posY, l4, scaleX, l5, scaleY, mirrorBtn, l6, scrollX, l7, scrollY];
+		objPages[0] = [fixedCheck, l1, posPrev, posNext, posIdxText, posAdd, posDel, l2, posX, l3, posY, l4, scaleX, l5, scaleY, mirrorBtn, mirrorYBtn, l6, scrollX, l7, scrollY];
 
 		// ── Apariencia ──
 		var a1 = label(x0 + 20, top + 2, "Sprite");
@@ -410,7 +411,7 @@ class SceneEditorState extends UIState
 		var del = ui(new UIButton(x0 + 156, y0 + 402, "Borrar", function() deleteSelected(), 120, 28));
 		del.color = 0xFFFF8080;
 
-		objWidgets = [spriteDrop, spriteBtn, posX, posY, scaleX, scaleY, scrollX, scrollY, opacityStep, strumStep, fixedCheck, visibleCheck, colorWheel, posPrev, posNext, posAdd, posDel, mirrorBtn, dup, del];
+		objWidgets = [spriteDrop, spriteBtn, posX, posY, scaleX, scaleY, scrollX, scrollY, opacityStep, strumStep, fixedCheck, visibleCheck, colorWheel, posPrev, posNext, posAdd, posDel, mirrorBtn, mirrorYBtn, dup, del];
 
 		objPanel = members.slice(objStart);
 

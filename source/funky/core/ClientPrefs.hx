@@ -80,6 +80,8 @@ class ClientPrefs
             skipIntro: false,
             // Idioma de la interfaz (carpeta en assets/languages/<codigo>/)
             language: "es",
+            // Skin de notas (assets/images/game/notes/skins/<id>/noteSkin.xml)
+            noteSkin: "default",
             masterVolume: 1.0,
             musicVolume: 1.0,
             sfxVolume: 1.0,
@@ -171,19 +173,15 @@ class ClientPrefs
             var fromSol = readSol();
             if (fromSol != null)
                 loadXml(fromSol);
-            else if (FileSystem.exists(PATH))
-            {
-                // Migracion: settings.xml viejo (dentro de assets) -> FMCE.sol
-                loadXml(File.getContent(PATH));
-                save();
-            }
-            else if (FileSystem.exists(LEGACY_PATH))
-            {
-                loadLegacyJson(File.getContent(LEGACY_PATH));
-                save();
-            }
             else
+            {
+                // Primer arranque / migracion: settings.xml viejo (dentro de assets, ahora en assets.pack) -> FMCE.sol
+                var legacyXml = assetText(PATH);
+                var legacyJson = legacyXml == null ? assetText(LEGACY_PATH) : null;
+                if (legacyXml != null) loadXml(legacyXml);
+                else if (legacyJson != null) loadLegacyJson(legacyJson);
                 save();
+            }
 
             syncActiveGroupToLaneKeys();
         }
@@ -192,6 +190,18 @@ class ClientPrefs
             trace('[ClientPrefs] Error loading: ' + e);
             save();
         }
+    }
+
+    /** Texto de un archivo de assets/ (viven en assets.pack, no en disco): null si no existe. Cae al disco si el build trae assets sueltos. */
+    static function assetText(path:String):Null<String>
+    {
+        try
+        {
+            if (openfl.utils.Assets.exists(path)) return openfl.utils.Assets.getText(path);
+            if (FileSystem.exists(path)) return File.getContent(path);
+        }
+        catch (e) {}
+        return null;
     }
 
     static function loadLegacyJson(raw:String):Void
@@ -213,6 +223,11 @@ class ClientPrefs
         {
             var lang = Std.string(Reflect.field(parsed, "language"));
             if (lang != null && lang.length > 0) data.language = lang;
+        }
+        if (Reflect.hasField(parsed, "noteSkin"))
+        {
+            var skin = Std.string(Reflect.field(parsed, "noteSkin"));
+            if (skin != null && skin.length > 0) data.noteSkin = skin;
         }
         data.masterVolume = getFloat(parsed, "masterVolume", 1.0);
         data.musicVolume = getFloat(parsed, "musicVolume", 1.0);
@@ -301,6 +316,32 @@ class ClientPrefs
             var mk = gameplay.get("multikeysettings");
             if (mk != null && mk.length > 0)
                 data.multikeysettings = mk;
+        }
+
+        var notes = firstChild(root, "notes");
+        if (notes != null)
+        {
+            var skin = notes.get("skin");
+            if (skin == null) skin = notes.get("id");
+            if (skin != null && skin.length > 0) data.noteSkin = skin;
+        }
+
+        var display = firstChild(root, "display");
+        if (display != null)
+        {
+            funky.backend.system.framerate.Framerate.debugMode =
+                parseXmlBool(display.get("fps"), funky.backend.system.framerate.Framerate.debugMode > 0) ? 1 : 0;
+            funky.backend.system.LogOverlay.enabled = parseXmlBool(display.get("logs"), funky.backend.system.LogOverlay.enabled);
+        }
+
+        var editor = firstChild(root, "editor");
+        if (editor != null)
+        {
+            funkin.options.Options.editorSFX = parseXmlBool(editor.get("sfx"), funkin.options.Options.editorSFX);
+            funkin.options.Options.intensiveBlur = parseXmlBool(editor.get("intensiveBlur"), funkin.options.Options.intensiveBlur);
+            funkin.options.Options.maxUndos = Std.int(Math.max(1, parseXmlFloat(editor.get("maxUndos"), funkin.options.Options.maxUndos)));
+            funkin.options.Options.charterAutoSaves = parseXmlBool(editor.get("autoSaves"), funkin.options.Options.charterAutoSaves);
+            funkin.options.Options.charterAutoSaveTime = Math.max(10, parseXmlFloat(editor.get("autoSaveTime"), funkin.options.Options.charterAutoSaveTime));
         }
 
         var lanes = firstChild(root, "lanes");
@@ -485,6 +526,10 @@ class ClientPrefs
             gameplay.set("multikeysettings", getMultikeyFile());
             root.addChild(gameplay);
 
+            var notes = Xml.createElement("notes");
+            notes.set("skin", getNoteSkin());
+            root.addChild(notes);
+
             var lanes = Xml.createElement("lanes");
             lanes.set("count", Std.string(getLaneCount()));
 
@@ -578,6 +623,21 @@ class ClientPrefs
             }
             root.addChild(keygroups);
 
+            // Pantalla: contador de FPS (visible + opacidad) y logs en pantalla. Se leen de donde viven (los toggles del menu y F2 los cambian directo).
+            var display = Xml.createElement("display");
+            display.set("fps", Std.string(funky.backend.system.framerate.Framerate.debugMode > 0));
+            display.set("logs", Std.string(funky.backend.system.LogOverlay.enabled));
+            root.addChild(display);
+
+            // Opciones de los editores (las de Codename: funkin.options.Options).
+            var editor = Xml.createElement("editor");
+            editor.set("sfx", Std.string(funkin.options.Options.editorSFX));
+            editor.set("intensiveBlur", Std.string(funkin.options.Options.intensiveBlur));
+            editor.set("maxUndos", Std.string(funkin.options.Options.maxUndos));
+            editor.set("autoSaves", Std.string(funkin.options.Options.charterAutoSaves));
+            editor.set("autoSaveTime", Std.string(funkin.options.Options.charterAutoSaveTime));
+            root.addChild(editor);
+
             writeSol('<?xml version="1.0" encoding="UTF-8"?>\n' + root.toString());
         }
         catch (e)
@@ -659,6 +719,17 @@ class ClientPrefs
 
     public static function setLanguage(v:String):Void
         Reflect.setField(data, "language", v == null ? "es" : StringTools.trim(v));
+
+    /** Id del skin de notas (assets/images/game/notes/skins/<id>/noteSkin.xml). */
+    public static function getNoteSkin():String
+    {
+        var v = Reflect.hasField(data, "noteSkin") ? Std.string(Reflect.field(data, "noteSkin")) : "default";
+        v = v == null ? "" : StringTools.trim(v);
+        return v.length > 0 ? v : "default";
+    }
+
+    public static function setNoteSkin(v:String):Void
+        Reflect.setField(data, "noteSkin", v == null ? "default" : StringTools.trim(v));
 
     public static function getMasterVolume():Float
     {
@@ -988,7 +1059,12 @@ class ClientPrefs
     /** Los tres colores que `NoteRGBShader` le suma a cada canal. */
     public static function noteRgbForLane(lane:Int, pressed:Bool = false, ?laneCount:Int):Array<Int>
     {
-        var base = noteColorForLane(lane, pressed, laneCount);
+        return rgbFromBase(noteColorForLane(lane, pressed, laneCount));
+    }
+
+    /** Igual que `noteRgbForLane` pero desde un color ya resuelto (lo usan los note skins). */
+    public static function rgbFromBase(base:Int):Array<Int>
+    {
         var r = (base >> 16) & 0xFF;
         var g = (base >> 8) & 0xFF;
         var b = base & 0xFF;
@@ -1041,7 +1117,7 @@ class ClientPrefs
      * 4K: [0 morado, 1 celeste, 2 verde, 3 rojo] = LEFT, DOWN, UP, RIGHT.
      * Multikey: mitad izquierda usa 4..7, mitad derecha 0..3 (de afuera hacia el centro), centro impar = 8.
      */
-    static function colorIndexForLane(lane:Int, total:Int):Int
+    public static function colorIndexForLane(lane:Int, total:Int):Int
     {
         if (total <= 4) return clampInt(lane, 0, 3);
 

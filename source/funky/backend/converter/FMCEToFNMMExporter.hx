@@ -837,10 +837,22 @@ class FNMMSpriteExport
 	function open():Void
 	{
 		label = "abriendo";
+		// El .FNMM no soporta video: se sacan los frames (ffmpeg), se arma un spritesheet en una carpeta temporal y se exporta ese.
+		var hasVideo = false;
 		for (entry in FileSystem.readDirectory(dir))
 		{
 			var lower = entry.toLowerCase();
-			if (StringTools.endsWith(lower, ".mp4") || StringTools.endsWith(lower, ".webm")) throw "es un video y el .FNMM no los soporta";
+			if (StringTools.endsWith(lower, ".mp4") || StringTools.endsWith(lower, ".webm")) hasVideo = true;
+		}
+		if (hasVideo && !FileSystem.exists(Path.join([dir, "sprite.png"])))
+		{
+			#if android
+			throw "exportar videos solo funciona en escritorio (hace falta ffmpeg)";
+			#else
+			label = "video a spritesheet";
+			dir = VideoSheet.build(dir, warnings);
+			warnings.push("video exportado como spritesheet (" + name + ")");
+			#end
 		}
 
 		// ya viene en formato FNMM (tiras + sprite.json con `data`): se copia tal cual

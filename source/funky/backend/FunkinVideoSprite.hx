@@ -55,7 +55,7 @@ class FunkinVideoSprite extends VideoBase
 	public var looping(default, null):Bool = true;
 
 	/**
-	 * Carga `assets/videos/<name>.mp4` (o una ruta tal cual si ya trae extension) sin audio.
+	 * Carga `addons/videos/<name>.mp4` (o una ruta tal cual si ya trae extension) sin audio.
 	 * @param loop repetir al terminar.
 	 * @return true si el video quedo listo para `play()`.
 	 */
@@ -354,12 +354,13 @@ class FunkinVideoSprite extends VideoBase
 		return null;
 	}
 
-	/** `intro` -> `assets/videos/intro.mp4`. Una ruta con extension se respeta. */
+	/** `intro` -> `addons/videos/intro.mp4`. Una ruta con extension se respeta. */
 	public static function resolve(name:String):String
 	{
 		var path = haxe.io.Path.extension(name) == "" ? Paths.video(name) : name;
 		#if (hxvlc && !desktop)
-		// En Android los assets viven dentro del APK: OpenFL sabe donde quedan en disco.
+		// `Paths.video` ya devuelve la ruta real de addons/videos/. Esto cubre un id explicito con extension
+		// (`addons/videos/x.mp4`): en Android lo que trae el build vive dentro del APK y OpenFL sabe donde queda en disco.
 		// Assets.getPath lanza una excepcion ("no asset with an ID") si el archivo no es un asset empaquetado: los videos
 		// de un nivel (/storage/.../levels/<nivel>/sprites/...) son archivos sueltos y se abren por su ruta.
 		if (openfl.utils.Assets.exists(path))

@@ -1,5 +1,6 @@
 package funkin.editors.charter;
 
+import funky.core.NoteSkin;
 import funkin.game.Note;
 
 class CharterPreviewStrumLine extends FlxTypedGroup<FlxSprite>
@@ -9,9 +10,6 @@ class CharterPreviewStrumLine extends FlxTypedGroup<FlxSprite>
 		updatePos(x, y, scale, spacing, keyCount, scrollSpeed);
 	}
 
-	/** Atlas de notas de FMCE (el de Codename era `game/notes/default`, que aqui no existe). */
-	static inline var NOTE_ATLAS:String = "game/notes/NOTE_assets";
-
 	private var note:FlxSprite;
 
 	public function generateStrums(x:Float, y:Float, scale:Float, spacing:Float, keyCount:Int, scrollSpeed:Float){
@@ -19,14 +17,14 @@ class CharterPreviewStrumLine extends FlxTypedGroup<FlxSprite>
 			member.destroy();
 		}
 		clear();
-			
-		var strumAnimPrefix = ["left", "down", "up", "right"];
+
+		var skin = NoteSkin.current();
+		var frames = skin.frames();
 		for (i in 0...keyCount){
 			var strum = new FlxSprite();
-			strum.frames = Paths.getFrames(NOTE_ATLAS);
-			var animPrefix = strumAnimPrefix[i % 4];
+			strum.frames = frames;
 			if (strum.frames != null) {
-				strum.animation.addByPrefix('static', '$animPrefix receptor', 24, false);
+				strum.animation.addByPrefix('static', skin.animFor('receptor', i), 24, false);
 				strum.animation.play('static');
 			}
 			else strum.makeGraphic(Std.int(Note.swagWidth), Std.int(Note.swagWidth), 0xFF808080);
@@ -37,9 +35,9 @@ class CharterPreviewStrumLine extends FlxTypedGroup<FlxSprite>
 		}
 
 		note = new FlxSprite();
-		note.frames = Paths.getFrames(NOTE_ATLAS);
+		note.frames = frames;
 		if (note.frames != null) {
-			note.animation.addByPrefix('note', 'left note', 24, false);
+			note.animation.addByPrefix('note', skin.animFor('note', 0), 24, false);
 			note.animation.play('note');
 		}
 		else note.makeGraphic(Std.int(Note.swagWidth), Std.int(Note.swagWidth), 0xFFC24B99);

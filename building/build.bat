@@ -29,6 +29,14 @@ for /f "usebackq eol=# tokens=1,2,3,4" %%a in ("building\libs.txt") do (
 	)
 )
 
+rem -- Assets -^> assets.pack: assets\ se compila en building\_pack\assets.pack (Project.xml lo mete en el build)
+set "PY="
+py -3 --version >nul 2>nul && set "PY=py -3"
+if not defined PY (python --version >nul 2>nul && set "PY=python")
+if not defined PY (echo build.bat: falta Python 3 ^(building\pack-assets.py arma assets.pack^) & exit /b 127)
+echo =^> Empaquetando assets\ en assets.pack
+%PY% building\pack-assets.py --verify || exit /b 1
+
 set "ARGS=build windows"
 if /i "%KIND%"=="hl" set "ARGS=%ARGS% -hl"
 if /i "%MODE%"=="debug" set "ARGS=%ARGS% -debug"

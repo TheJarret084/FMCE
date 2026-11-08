@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# FMCE - saca las .so del Discord Social SDK (libs/discord/android/discord_partner_sdk.aar) a building/_discord/jni/<abi>/.
+# FMCE - saca las .so del Discord Social SDK (source/libs/discord/android/discord_partner_sdk.aar) a building/_discord/jni/<abi>/.
 # hxcpp las necesita en tiempo de ENLACE (-ldiscord_partner_sdk); en el APK las mete Gradle desde el mismo .aar.
 # Lo llama building/build.sh al compilar android. Si no hay .aar, no hace nada (el juego compila sin Rich Presence).
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-AAR="libs/discord/android/discord_partner_sdk.aar"
+AAR="source/libs/discord/android/discord_partner_sdk.aar"
 OUT="building/_discord"
 
 if [ ! -f "$AAR" ]; then
-	echo "==> Discord: no hay $AAR -> compila sin Rich Presence (ver libs/discord/README.md)"
+	echo "==> Discord: no hay $AAR -> compila sin Rich Presence (ver source/libs/discord/README.md)"
 	exit 0
 fi
 
