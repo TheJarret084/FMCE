@@ -1,0 +1,14 @@
+{
+    "params": [
+        {
+            "name": "Objeto (strumline)",
+            "type": "StrumLine",
+            "defaultValue": 0
+        },
+        {
+            "name": "Visible",
+            "type": "Bool",
+            "defaultValue": true
+        }
+    ]
+}

@@ -1,0 +1,14 @@
+{
+    "params": [
+        {
+            "name": "Sprite (nombre del icono en icons/)",
+            "type": "String",
+            "defaultValue": "bf"
+        },
+        {
+            "name": "Objetivo (0=Enemigo, 1=Jugador)",
+            "type": "Int(0, 1, 1)",
+            "defaultValue": 1
+        }
+    ]
+}

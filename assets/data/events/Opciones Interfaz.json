@@ -1,0 +1,9 @@
+{
+    "params": [
+        {
+            "name": "Visible (camHUD)",
+            "type": "Bool",
+            "defaultValue": true
+        }
+    ]
+}

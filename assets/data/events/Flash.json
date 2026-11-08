@@ -1,0 +1,29 @@
+{
+    "params": [
+        {
+            "name": "Opacidad (0-100%)",
+            "type": "Int(0, 100, 5)",
+            "defaultValue": 100
+        },
+        {
+            "name": "R (0-255)",
+            "type": "Int(0, 255, 1)",
+            "defaultValue": 255
+        },
+        {
+            "name": "G (0-255)",
+            "type": "Int(0, 255, 1)",
+            "defaultValue": 255
+        },
+        {
+            "name": "B (0-255)",
+            "type": "Int(0, 255, 1)",
+            "defaultValue": 255
+        },
+        {
+            "name": "Duracion (steps)",
+            "type": "Float(0.1, 64, 0.5, 2)",
+            "defaultValue": 4.0
+        }
+    ]
+}

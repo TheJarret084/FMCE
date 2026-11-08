@@ -1,0 +1,365 @@
+{
+    "version": 1,
+    "keyGroups": [
+        {
+            "keys": 4,
+            "lanes": [
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFFCA4E9D",
+                    "keys": [
+                        "A"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFF00FFFE",
+                    "keys": [
+                        "S"
+                    ]
+                },
+                {
+                    "dir": 3,
+                    "note": "up",
+                    "color": "0xFF10FA05",
+                    "keys": [
+                        "K"
+                    ]
+                },
+                {
+                    "dir": 4,
+                    "note": "right",
+                    "color": "0xFFFC3844",
+                    "keys": [
+                        "L"
+                    ]
+                }
+            ],
+            "scale": 0.7,
+            "gapWidth": 112,
+            "xOffset": 0
+        },
+        {
+            "keys": 5,
+            "lanes": [
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFFCA4E9D",
+                    "keys": [
+                        "A"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFF00FFFE",
+                    "keys": [
+                        "S"
+                    ]
+                },
+                {
+                    "dir": 0,
+                    "note": "mid",
+                    "color": "0xFFF5F0E8",
+                    "keys": [
+                        "SPACE"
+                    ]
+                },
+                {
+                    "dir": 3,
+                    "note": "up",
+                    "color": "0xFF10FA05",
+                    "keys": [
+                        "K"
+                    ]
+                },
+                {
+                    "dir": 4,
+                    "note": "right",
+                    "color": "0xFFFC3844",
+                    "keys": [
+                        "L"
+                    ]
+                }
+            ],
+            "scale": 0.65,
+            "gapWidth": 145,
+            "xOffset": -15
+        },
+        {
+            "keys": 6,
+            "lanes": [
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFFCA4E9D",
+                    "keys": [
+                        "A"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFF00FFFE",
+                    "keys": [
+                        "S"
+                    ]
+                },
+                {
+                    "dir": 3,
+                    "note": "up",
+                    "color": "0xFF10FA05",
+                    "keys": [
+                        "D"
+                    ]
+                },
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFF35B162",
+                    "keys": [
+                        "J"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFFFF0001",
+                    "keys": [
+                        "K"
+                    ]
+                },
+                {
+                    "dir": 4,
+                    "note": "right",
+                    "color": "0xFF03C7BB",
+                    "keys": [
+                        "L"
+                    ]
+                }
+            ],
+            "scale": 0.6,
+            "gapWidth": 120,
+            "xOffset": -35
+        },
+        {
+            "keys": 7,
+            "lanes": [
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFFCA4E9D",
+                    "keys": [
+                        "A"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFF00FFFE",
+                    "keys": [
+                        "S"
+                    ]
+                },
+                {
+                    "dir": 3,
+                    "note": "up",
+                    "color": "0xFF10FA05",
+                    "keys": [
+                        "D"
+                    ]
+                },
+                {
+                    "dir": 0,
+                    "note": "mid",
+                    "color": "0xFFF5F0E8",
+                    "keys": [
+                        "SPACE"
+                    ]
+                },
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFF35B162",
+                    "keys": [
+                        "J"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFFFF0001",
+                    "keys": [
+                        "K"
+                    ]
+                },
+                {
+                    "dir": 4,
+                    "note": "right",
+                    "color": "0xFF03C7BB",
+                    "keys": [
+                        "L"
+                    ]
+                }
+            ],
+            "scale": 0.55,
+            "gapWidth": 110,
+            "xOffset": -50
+        },
+        {
+            "keys": 8,
+            "lanes": [
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFFCA4E9D",
+                    "keys": [
+                        "A"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFF00FFFE",
+                    "keys": [
+                        "S"
+                    ]
+                },
+                {
+                    "dir": 3,
+                    "note": "up",
+                    "color": "0xFF10FA05",
+                    "keys": [
+                        "D"
+                    ]
+                },
+                {
+                    "dir": 4,
+                    "note": "right",
+                    "color": "0xFFFC3844",
+                    "keys": [
+                        "F"
+                    ]
+                },
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFF35B162",
+                    "keys": [
+                        "H"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFFFF0001",
+                    "keys": [
+                        "J"
+                    ]
+                },
+                {
+                    "dir": 3,
+                    "note": "up",
+                    "color": "0xFFEF05FA",
+                    "keys": [
+                        "K"
+                    ]
+                },
+                {
+                    "dir": 4,
+                    "note": "right",
+                    "color": "0xFF03C7BB",
+                    "keys": [
+                        "L"
+                    ]
+                }
+            ],
+            "scale": 0.5,
+            "gapWidth": 100,
+            "xOffset": -60
+        },
+        {
+            "keys": 9,
+            "lanes": [
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFFCA4E9D",
+                    "keys": [
+                        "A"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFF00FFFE",
+                    "keys": [
+                        "S"
+                    ]
+                },
+                {
+                    "dir": 3,
+                    "note": "up",
+                    "color": "0xFF10FA05",
+                    "keys": [
+                        "D"
+                    ]
+                },
+                {
+                    "dir": 4,
+                    "note": "right",
+                    "color": "0xFFFC3844",
+                    "keys": [
+                        "F"
+                    ]
+                },
+                {
+                    "dir": 0,
+                    "note": "mid",
+                    "color": "0xFFF5F0E8",
+                    "keys": [
+                        "SPACE"
+                    ]
+                },
+                {
+                    "dir": 1,
+                    "note": "left",
+                    "color": "0xFF35B162",
+                    "keys": [
+                        "H"
+                    ]
+                },
+                {
+                    "dir": 2,
+                    "note": "down",
+                    "color": "0xFFFF0001",
+                    "keys": [
+                        "J"
+                    ]
+                },
+                {
+                    "dir": 3,
+                    "note": "up",
+                    "color": "0xFFEF05FA",
+                    "keys": [
+                        "K"
+                    ]
+                },
+                {
+                    "dir": 4,
+                    "note": "right",
+                    "color": "0xFF03C7BB",
+                    "keys": [
+                        "L"
+                    ]
+                }
+            ],
+            "scale": 0.46,
+            "gapWidth": 90,
+            "xOffset": -70
+        }
+    ]
+}
