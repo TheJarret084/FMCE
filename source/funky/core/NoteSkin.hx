@@ -1,5 +1,6 @@
 package funky.core;
 
+import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.frames.FlxAtlasFrames;
 
@@ -74,6 +75,29 @@ class NoteSkin
 	static var BUILTINS:Array<String> = [DEFAULT_ID, "codename", "fmm"];
 
 	static var cache:Map<String, NoteSkin> = new Map();
+	static var hooked:Bool = false;
+
+	/**
+	 * El Flixel de Codename, en cada cambio de estado, marca TODA la cache de imagenes como destruible (tambien las `persist`)
+	 * y solo salva las que se vuelven a pedir con `FlxG.bitmap.get(key)` durante el estado nuevo. Un skin que se queda con sus
+	 * frames guardados nunca la vuelve a pedir: su atlas se destruye y las notas salen como cuadros negros o invisibles.
+	 * Por eso al cambiar de estado se sueltan los frames: la proxima nota / receptor los vuelve a pedir (y los rescata).
+	 */
+	static function hook():Void
+	{
+		if (hooked) return;
+		hooked = true;
+		FlxG.signals.preStateSwitch.add(releaseFrames);
+	}
+
+	static function releaseFrames():Void
+	{
+		for (skin in cache)
+		{
+			skin.framesCache = null;
+			skin.framesTried = false;
+		}
+	}
 
 	public var id(default, null):String;
 	public var name:String;
@@ -120,6 +144,7 @@ class NoteSkin
 	public static function get(id:String):NoteSkin
 	{
 		if (id == null || id.length == 0) id = DEFAULT_ID;
+		hook();
 
 		var cached = cache.get(id);
 		if (cached != null) return cached;
@@ -166,7 +191,15 @@ class NoteSkin
 	/** Atlas del skin (null si no existe; Note/Strum caen a un cuadro blanco). */
 	public function frames():FlxAtlasFrames
 	{
-		if (framesCache != null || framesTried) return framesCache;
+		if (framesCache != null)
+		{
+			// Si el atlas se destruyo por debajo (cambio de estado, limpieza de memoria), se vuelve a cargar.
+			var graphic = framesCache.parent;
+			if (graphic != null && !graphic.isDestroyed && graphic.bitmap != null) return framesCache;
+			framesCache = null;
+			framesTried = false;
+		}
+		if (framesTried) return null;
 		framesTried = true;
 
 		framesCache = Addons.getSparrowAtlas(atlasRel());

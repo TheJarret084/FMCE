@@ -98,7 +98,8 @@ class Addons
 			var external = externalRoot() + "/" + rel;
 			if (sys.FileSystem.exists(external) && !sys.FileSystem.isDirectory(external)) return BitmapData.fromFile(external);
 			#end
-			if (OpenFlAssets.exists(ID_ROOT + rel)) return OpenFlAssets.getBitmapData(ID_ROOT + rel);
+			// Sin la cache de OpenFL: Flixel hace dispose() del BitmapData al destruir el grafico y la cache lo seguiria entregando muerto.
+			if (OpenFlAssets.exists(ID_ROOT + rel)) return OpenFlAssets.getBitmapData(ID_ROOT + rel, false);
 		}
 		catch (e:Dynamic)
 		{
@@ -159,9 +160,15 @@ class Addons
 
 		// Mismo grafico para todos los que piden este atlas, y persistente: si ningun sprite lo usa en el state actual,
 		// el cache de Flixel no lo tira ni deja el BitmapData invalido (igual que Paths.getSparrowAtlas).
+		// `FlxG.bitmap.get` tambien rescata la imagen de la limpieza del cambio de estado (ver NoteSkin.hook).
 		var key = "addon:" + rel;
 		var graphic = FlxG.bitmap.get(key);
-		if (graphic == null || graphic.bitmap == null || !graphic.bitmap.readable)
+		if (graphic != null && (graphic.isDestroyed || graphic.bitmap == null))
+		{
+			try FlxG.bitmap.removeByKey(key) catch (_:Dynamic) {}
+			graphic = null;
+		}
+		if (graphic == null)
 		{
 			var bitmap = getBitmap(rel + ".png");
 			if (bitmap == null) return null;
