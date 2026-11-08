@@ -589,7 +589,7 @@ final class CoolUtil
 	}
 
 	/** Nombre del archivo de música de menú (`assets/music/$MENU_SONG.ogg`). */
-	public static var MENU_SONG:String = "Looping_Rooms";
+	public static var MENU_SONG:String = "freakyMenu";
 
 	/** Musica de los editores (`assets/music/breakfast.ogg`), la de Codename Engine. */
 	public static var EDITOR_SONG:String = "breakfast";
