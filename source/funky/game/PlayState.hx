@@ -1079,7 +1079,7 @@ class PlayState extends MusicBeatState
 
 		try
 		{
-			funky.core.CoolUtil.playSound("missSFX" + Std.string(FlxRandom.int(0, 4)), FlxRandom.float(0.2, 0.8));
+			funky.core.CoolUtil.playSound("missSFX" + Std.string(FlxG.random.int(0, 4)), FlxG.random.float(0.2, 0.8));
 		}
 		catch (e:Dynamic) {}
 	}
@@ -1344,7 +1344,7 @@ class PlayState extends MusicBeatState
 				[
 					{
 						label: "Salir",
-						color: FlxRandom.color(), //FlxColor.RED,
+						color: FlxG.random.color, // color: FlxRandom.color(), //FlxColor.RED,
 						onClick: function(_) exitToMenu()
                     }
 				],
