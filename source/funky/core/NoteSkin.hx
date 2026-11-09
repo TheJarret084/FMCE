@@ -15,6 +15,8 @@ typedef NoteSkinLane =
 	var receptor:String;
 	var press:String;
 	var confirm:String;
+	/** Splash al acertar un SICK. Si el atlas no tiene esa animacion, el splash usa la flecha de la nota (`note`). */
+	var splash:String;
 }
 
 /**
@@ -102,6 +104,8 @@ class NoteSkin
 		{
 			skin.framesCache = null;
 			skin.framesTried = false;
+			skin.splashFramesCache = null;
+			skin.splashTried = false;
 		}
 	}
 
@@ -124,6 +128,30 @@ class NoteSkin
 	public var restColor:Null<Int> = null;
 	/** Paleta multikey (9 colores, mismo orden que noteColors de settings.xml). */
 	public var palette:Array<Null<NoteSkinColor>>;
+
+	/**
+	 * Escala (multiplo de la base) que toma el receptor al apretarse / confirmar; al soltar vuelve a la base. 1 = no hace nada.
+	 * `<pressedScale value="1.15"/>`. Si el skin es `tint` y no lo define, usa `DEFAULT_TINT_PRESSED_SCALE` (su confirm reusa la flecha, asi que
+	 * sin esto no se notaria el golpe); con `value="1"` se apaga.
+	 */
+	public var pressedScale:Float = 1;
+	public static inline var DEFAULT_TINT_PRESSED_SCALE:Float = 1.15;
+
+	/**
+	 * Ajustes del splash (`<splash scale="1" alpha="0.8" fps="24"/>`, todo opcional). El splash usa el MISMO sistema que las notas:
+	 * el atlas del skin, la animacion `splash` de cada `<lane>` y el mismo coloreado (rgb / tint / sparrow).
+	 */
+	public var splashScale:Float = 1;
+	/**
+	 * Atlas aparte del splash (nombre sin extension, en images/ del skin): `<splash atlas="NOTE_splash"/>`. Sin declarar busca `splash.png/.xml`
+	 * en el skin; si no hay ninguno, el splash usa el atlas principal del skin.
+	 */
+	public var splashAtlas:String = "splash";
+	var splashAtlasDeclared:Bool = false;
+	var splashFramesCache:Null<FlxAtlasFrames>;
+	var splashTried:Bool = false;
+	public var splashAlpha:Float = 0.8;
+	public var splashFps:Int = 24;
 
 	var framesCache:Null<FlxAtlasFrames>;
 	/** Ya se intento cargar el atlas (con o sin exito): si fallo no se vuelve a buscar en cada nota. */
@@ -217,11 +245,32 @@ class NoteSkin
 		return framesCache;
 	}
 
+	/** Atlas del splash (imagen aparte) o null si no hay: entonces el splash sale del atlas principal (`frames()`). */
+	public function splashFrames():Null<FlxAtlasFrames>
+	{
+		if (splashFramesCache != null)
+		{
+			var graphic = splashFramesCache.parent;
+			if (graphic != null && !graphic.isDestroyed && graphic.bitmap != null) return splashFramesCache;
+			splashFramesCache = null;
+			splashTried = false;
+		}
+		if (splashTried) return null;
+		splashTried = true;
+
+		var name = haxe.io.Path.withoutDirectory(splashAtlas);
+		splashFramesCache = Addons.getSparrowAtlas(ROOT + id + "/images/" + name);
+		if (splashFramesCache == null && splashAtlasDeclared && Paths.framesExists(splashAtlas)) splashFramesCache = Paths.getSparrowAtlas(splashAtlas);
+		if (splashFramesCache == null && splashAtlasDeclared)
+			Log.warn('[NoteSkin] no se pudo cargar el atlas de splash "$splashAtlas" de "$id": el splash usa el atlas principal');
+		return splashFramesCache;
+	}
+
 	/** `noteskins/<id>/images/<atlas>` (ruta relativa a addons/, sin extension). */
 	function atlasRel():String
 		return ROOT + id + "/images/" + atlas;
 
-	/** Nombre de animacion para `note` / `hold` / `holdEnd` / `receptor` / `press` / `confirm`. */
+	/** Nombre de animacion para `note` / `hold` / `holdEnd` / `receptor` / `press` / `confirm` / `splash`. */
 	public function animFor(state:String, lane:Int):String
 	{
 		var a = anims[dirForLane(lane)];
@@ -234,6 +283,7 @@ class NoteSkin
 			case "receptor": a.receptor;
 			case "press": a.press;
 			case "confirm": a.confirm;
+			case "splash": a.splash;
 			default: a.note;
 		}
 	}
@@ -341,6 +391,14 @@ class NoteSkin
 			var legacy:NoteSkinType = rgbNode != null && !parseBool(attr(rgbNode, "enabled", "true"), true) ? SPARROW : RGB;
 			skin.type = NoteSkinType.parse(attr(root, "type", null), legacy);
 
+			skin.pressedScale = skin.type == TINT ? DEFAULT_TINT_PRESSED_SCALE : 1;
+			var pressedNode = firstElement(root, "pressedScale");
+			if (pressedNode != null)
+				skin.pressedScale = Math.max(0.1, parseFloat(attr(pressedNode, "value", null), skin.pressedScale));
+
+			var splashNode = firstElement(root, "splash");
+			if (splashNode != null) parseSplash(skin, splashNode);
+
 			var holdNode = firstElement(root, "holdAlpha");
 			if (holdNode != null) skin.holdAlpha = parseFloat(attr(holdNode, "value", "0.65"), 0.65);
 
@@ -376,6 +434,19 @@ class NoteSkin
 				confirm: attr(lane, "confirm", base.confirm)
 			};
 		}
+	}
+
+	static function parseSplash(skin:NoteSkin, node:Xml):Void
+	{
+		var atlas = attr(node, "atlas", attr(node, "path", null));
+		if (atlas != null)
+		{
+			skin.splashAtlas = atlas;
+			skin.splashAtlasDeclared = true;
+		}
+		skin.splashScale = Math.max(0.05, parseFloat(attr(node, "scale", null), 1));
+		skin.splashAlpha = Math.max(0, Math.min(1, parseFloat(attr(node, "alpha", null), 0.8)));
+		skin.splashFps = Std.int(Math.max(1, parseFloat(attr(node, "fps", null), 24)));
 	}
 
 	static function parseColors(skin:NoteSkin, node:Xml):Void
@@ -447,7 +518,8 @@ class NoteSkin
 				holdEnd: dir + " hold tail",
 				receptor: dir + " receptor",
 				press: dir + " press",
-				confirm: dir + " confirm"
+				confirm: dir + " confirm",
+				splash: dir + " splash"
 			});
 		return out;
 	}

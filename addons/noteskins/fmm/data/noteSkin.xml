@@ -9,10 +9,17 @@
     <atlas path="NOTE_assets"/>
     <holdAlpha value="0.7"/>
 
+    <!-- El receptor / confirm crece a esta escala al apretar y vuelve a la base al soltar (tint: 1.15 por defecto). -->
+    <pressedScale value="1.15"/>
+
+    <!-- Splash en imagen aparte (NOTE_splashes.png/xml): una sola animacion "splash" (4 frames de 700x700) para todas las lanes, se tiñe con el color de la lane.
+         scale 0.4 porque sus frames son enormes frente a la flecha (160px). -->
+    <splash atlas="NOTE_splashes" scale="0.4" alpha="0.85" fps="16"/>
+
     <animations>
-        <lane dir="left"  note="left"  hold="tail0" holdEnd="tailEnd" receptor="left"  press="left"  confirm="left"/>
-        <lane dir="down"  note="down"  hold="tail0" holdEnd="tailEnd" receptor="down"  press="down"  confirm="down"/>
-        <lane dir="up"    note="up"    hold="tail0" holdEnd="tailEnd" receptor="up"    press="up"    confirm="up"/>
-        <lane dir="right" note="right" hold="tail0" holdEnd="tailEnd" receptor="right" press="right" confirm="right"/>
+        <lane dir="left"  note="left"  hold="tail0" holdEnd="tailEnd" receptor="left"  press="left"  confirm="left" splash="splash"/>
+        <lane dir="down"  note="down"  hold="tail0" holdEnd="tailEnd" receptor="down"  press="down"  confirm="down" splash="splash"/>
+        <lane dir="up"    note="up"    hold="tail0" holdEnd="tailEnd" receptor="up"    press="up"    confirm="up" splash="splash"/>
+        <lane dir="right" note="right" hold="tail0" holdEnd="tailEnd" receptor="right" press="right" confirm="right" splash="splash"/>
     </animations>
 </noteSkin>

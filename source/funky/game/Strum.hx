@@ -1,5 +1,6 @@
 package funky.game;
 
+import flixel.FlxG;
 import flixel.FlxSprite;
 import funky.core.ClientPrefs;
 import funky.core.NoteRGBShader;
@@ -23,6 +24,11 @@ class Strum extends FlxSprite
 
 	/** `confirm(..., false)` lo marca cada frame que un sustain sigue sonando; `updateInput` lo consume. */
 	var holding:Bool = false;
+
+	/** Multiplo de la escala base que tiene ahora el receptor por `pressedScale` del skin (1 = base). */
+	var pressFactor:Float = 1;
+	/** Que tan rapido (por segundo) se acerca `pressFactor` a su objetivo: sube casi de golpe y vuelve a la base en ~0.1 s. */
+	static inline var PRESS_SCALE_SPEED:Float = 30;
 
 	/**
 	 * The "confirm" frames are ~230px wide against a ~154px receptor. Playing them on
@@ -94,9 +100,36 @@ class Strum extends FlxSprite
 		}
 	}
 
+	/**
+	 * `pressedScale` del skin: al apretar / confirmar el receptor crece a esa escala y al terminar vuelve a la base.
+	 * Se aplica como razon sobre la escala actual (no se guarda una escala base fija), asi lo que un script o evento le
+	 * haga a `scale` no se pisa. El receptor escala desde su centro (no se llama updateHitbox: `width` / `height` siguen
+	 * siendo los de la base y las notas no se mueven).
+	 */
+	function updatePressScale(active:Bool):Void
+	{
+		var target = active ? skin.pressedScale : 1;
+		if (pressFactor == target) return;
+
+		var next = pressFactor + (target - pressFactor) * Math.min(1, FlxG.elapsed * PRESS_SCALE_SPEED);
+		if (Math.abs(target - next) < 0.002) next = target;
+
+		var ratio = next / pressFactor;
+		scale.x *= ratio;
+		scale.y *= ratio;
+		if (confirmSprite != null)
+		{
+			confirmSprite.scale.x *= ratio;
+			confirmSprite.scale.y *= ratio;
+		}
+		pressFactor = next;
+	}
+
 	public function updateInput(pressed:Bool, justPressed:Bool):Void
 	{
 		applyColor(pressed);
+		if (skin.pressedScale != 1 || pressFactor != 1)
+			updatePressScale(pressed || (confirmSprite != null && confirmSprite.visible));
 		if (animation.numFrames > 0 || animation.getNameList().length > 0) animation.play(pressed ? "pressed" : "static");
 		if (confirmSprite != null)
 		{

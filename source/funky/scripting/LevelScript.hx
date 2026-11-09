@@ -236,6 +236,10 @@ class LevelScript
 		if (reported.exists(message)) return;
 		reported.set(message, true);
 		Log.error('[Script ' + name + '] ' + message);
+
+		// Modo test: el juego para y sale la ventana de error. Jugando normal solo queda en el log.
+		var game = funky.game.PlayState.instance;
+		if (game != null) game.scriptFailed(name + ":\n" + message);
 	}
 
 	public function toString():String

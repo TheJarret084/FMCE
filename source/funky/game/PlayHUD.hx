@@ -113,7 +113,11 @@ class PlayHUD extends FlxGroup
 	/** Strumline del jugador: el texto de botplay se pega a sus receptores y los sigue (si un script o evento los mueve). */
 	var botplayLine:Null<StrumLine>;
 	/** Separacion (px) entre el borde de abajo del texto de botplay y el borde de arriba de los receptores. */
-	public static inline var BOTPLAY_GAP:Float = 6;
+	public static inline var BOTPLAY_GAP:Float = 14;
+	/** Cuanto (px) se separan score y precision del borde de la barra de vida, hacia afuera, para que no se encimen con los fallos del centro. */
+	public static inline var STAT_SIDE_PAD:Float = 170;
+	/** Con scroll normal el texto de botplay va DEBAJO de los receptores (arriba chocaba con la barra de tiempo); con downscroll, arriba. */
+	var botplayBelow:Bool = true;
 	/** Debajo de la barra de vida, como en Codename: puntos (derecha), fallos (centro) y precision (izquierda). */
 	public var scoreTxt(default, null):FlxText;
 	public var missesTxt(default, null):FlxText;
@@ -150,6 +154,7 @@ class PlayHUD extends FlxGroup
 		this.songLength = Math.max(songLength, 1);
 		this.songName = songName;
 		var down = ClientPrefs.isDownScroll();
+		botplayBelow = !down;
 
 		barY = FlxG.height * (down ? 0.11 : 0.89);
 		
@@ -164,10 +169,12 @@ class PlayHUD extends FlxGroup
 		add(iconPlayer);
 		placeIcons();
 
-		// Tres textos separados bajo la barra, igual que Codename: mismo rectangulo (barra menos 50px por lado), cada uno alineado distinto.
-		var textX = healthBar.x + 50;
+		// Tres textos bajo la barra: mismo rectangulo, cada uno alineado distinto. El rectangulo sobresale de la barra por los dos
+		// lados (STAT_SIDE_PAD) para que precision y puntos queden hacia afuera y no se pisen con los fallos del centro.
+		var pad = Math.max(0, Math.min(STAT_SIDE_PAD, healthBar.x - 10));
+		var textX = healthBar.x - pad;
 		var textY = barY + 40;
-		var textWidth = Std.int(Math.max(1, healthBar.frameWidth - 100));
+		var textWidth = Std.int(Math.max(1, healthBar.frameWidth + pad * 2));
 		scoreTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.RIGHT);
 		missesTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.CENTER);
 		accuracyTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.LEFT);
@@ -247,7 +254,9 @@ class PlayHUD extends FlxGroup
 	public function placeBotplay(lineX:Float, lineY:Float, lineWidth:Float):Void
 	{
 		if (botplayText == null) return;
-		setBotplayRect(lineX, lineY, lineWidth);
+		// Aun no hay receptores: el alto de un receptor es aprox. el ancho de su slot (4 lanes como minimo).
+		var slot = lineWidth / Math.max(4, laneCount);
+		setBotplayRect(lineX, lineY, lineY + slot, lineWidth);
 	}
 
 	/** El texto de botplay se pega a los receptores de `line` (su x, ancho y alto reales) y los sigue cada frame. */
@@ -257,11 +266,20 @@ class PlayHUD extends FlxGroup
 		syncBotplay();
 	}
 
-	/** Centra el texto sobre [left, left + width] con su borde de abajo `BOTPLAY_GAP` px arriba de `top`. */
-	function setBotplayRect(left:Float, top:Float, width:Float):Void
+	/**
+	 * Centra el texto sobre [left, left + width]. Scroll normal: `BOTPLAY_GAP` px debajo de `bottom` (borde de abajo de los
+	 * receptores). Downscroll: con su borde de abajo `BOTPLAY_GAP` px arriba de `top`.
+	 */
+	function setBotplayRect(left:Float, top:Float, bottom:Float, width:Float):Void
 	{
 		if (botplayText.fieldWidth != width) botplayText.fieldWidth = width;
 		botplayText.x = left;
+
+		if (botplayBelow)
+		{
+			botplayText.y = bottom + BOTPLAY_GAP;
+			return;
+		}
 
 		// textHeight sale del texto ya armado: no depende de que el FlxText se haya redibujado todavia.
 		var textHeight = botplayText.textField.textHeight + 4;
@@ -276,16 +294,18 @@ class PlayHUD extends FlxGroup
 		var left = Math.POSITIVE_INFINITY;
 		var right = Math.NEGATIVE_INFINITY;
 		var top = Math.POSITIVE_INFINITY;
+		var bottom = Math.NEGATIVE_INFINITY;
 		for (strum in botplayLine.members)
 		{
 			if (strum == null || !strum.exists) continue;
 			left = Math.min(left, strum.x);
 			right = Math.max(right, strum.x + strum.width);
 			top = Math.min(top, strum.y);
+			bottom = Math.max(bottom, strum.y + strum.height);
 		}
 		if (left > right) return; // la linea no tiene receptores
 
-		setBotplayRect(left, top, right - left);
+		setBotplayRect(left, top, bottom, right - left);
 	}
 
 	function makeStatText(x:Float, y:Float, width:Int, align:FlxTextAlign):FlxText

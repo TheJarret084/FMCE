@@ -434,6 +434,10 @@ class PlayState extends MusicBeatState
 		for (line in activeLines)
 			add(line.notes);
 
+		// Splashes encima de las notas
+		for (line in activeLines)
+			add(line.splashes);
+
 		// Mini strumline CPU de middlescroll: las notas siguen su curso (el CPU las "toca" y el receptor reacciona) pero no se dibujan.
 		if (middle)
 			for (line in activeLines)
@@ -447,6 +451,7 @@ class PlayState extends MusicBeatState
 		{
 			guiGroups.push(line);
 			guiGroups.push(line.notes);
+			guiGroups.push(line.splashes);
 		}
 
 		for (group in confirmGroups)
@@ -562,6 +567,14 @@ class PlayState extends MusicBeatState
 			var message = pendingError;
 			pendingError = null;
 			showError(message);
+			return;
+		}
+
+		if (pendingScriptError != null)
+		{
+			var message = pendingScriptError;
+			pendingScriptError = null;
+			showScriptError(message);
 			return;
 		}
 
@@ -1001,6 +1014,10 @@ class PlayState extends MusicBeatState
 
 		playerLine.receptor(note.noteData).confirm(songTime);
 
+		// Opcion "Note splashes": salpicadura solo con SICK (ver ConfigScreens).
+		if (rating == "sick" && ClientPrefs.isNoteSplashes())
+			playerLine.splash(note.noteData);
+
 		if (stage != null)
 			stage.sing(0, note.noteData);
 
@@ -1323,6 +1340,8 @@ class PlayState extends MusicBeatState
 
 	/** Error de carga pendiente: el create no puede abrir substates todavia, asi que se muestra en el primer update. */
 	var pendingError:Null<String> = null;
+	/** Error de un script en modo test: sale la ventana directo (sin el video, que es solo para errores graves de chart / escena). */
+	var pendingScriptError:Null<String> = null;
     var showWarning:Void->Void;
     var warningInstanced:Bool = false;
 
@@ -1344,7 +1363,7 @@ class PlayState extends MusicBeatState
 				[
 					{
 						label: "Salir",
-						color: FlxG.random.color(), // color: FlxRandom.color(), //FlxColor.RED,
+						color: FlxG.random.color(), // FlxColor.RED
 						onClick: function(_) exitToMenu()
                     }
 				],
@@ -1356,6 +1375,35 @@ class PlayState extends MusicBeatState
 		openSubState(cutscene);
 		cutscene.play("fatalerrorisocurred", showWarning);
         warningInstanced = true;
+	}
+
+	/**
+	 * Un script fallo (lo llama `LevelScript`). En modo test (el nivel se abrio desde el editor) el juego se detiene y sale la
+	 * ventana de error, directo y sin video, para poder arreglarlo; jugando normal (Freeplay) solo queda en el log y todo sigue.
+	 */
+	public function scriptFailed(message:String):Void
+	{
+		if (returnToEditor == null || pendingError != null || pendingScriptError != null || warningInstanced) return;
+		pendingScriptError = message;
+	}
+
+	/** Para el juego y abre la ventana de error de un script (sin el video de `showError`). */
+	function showScriptError(message:String):Void
+	{
+		warningInstanced = true;
+		safely("music.stop (script error)", function() if (FlxG.sound.music != null) FlxG.sound.music.stop());
+
+		openSubState(new UIWarningSubstate(
+			"Error en un script",
+			message,
+			[
+				{
+					label: "Salir",
+					onClick: function(_) exitToMenu()
+				}
+			],
+			true
+		));
 	}
 
 	/** Corre `action`. Si truena, lo manda al log (F2) con `label` y el juego sigue: un detalle no debe tumbar el countdown. */

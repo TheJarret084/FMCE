@@ -4,6 +4,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.tweens.FlxTween;
 import funky.backend.chart.FNMMNote;
+import funky.core.NoteSkin;
 import funky.game.Note.QueueNote;
 import funky.scripting.Scripts;
 
@@ -20,6 +21,8 @@ class StrumLine extends FlxTypedGroup<Strum>
 	static inline var SLOT_FILL:Float = 0.96;
 
 	public var notes(default, null):FlxTypedGroup<Note> = new FlxTypedGroup<Note>();
+	/** Splashes de esta linea (pool). PlayState lo agrega a la escena encima de las notas. */
+	public var splashes(default, null):FlxTypedGroup<NoteSplash> = new FlxTypedGroup<NoteSplash>();
 	public var cpu(default, null):Bool;
 	public var opponentSide(default, null):Bool;
 	public var laneCount(default, null):Int;
@@ -158,6 +161,17 @@ class StrumLine extends FlxTypedGroup<Strum>
 		}
 		if (Scripts.has) Scripts.call("onSpawnNotePost", [head]);
 		return head;
+	}
+
+	/** Splash del skin actual sobre el receptor de `lane` (centrado en el, con el color de la lane). */
+	public function splash(lane:Int):Void
+	{
+		var strum = receptor(lane);
+		if (strum == null) return;
+
+		var splash = splashes.recycle(NoteSplash, NoteSplash.new);
+		splash.cameras = strum.cameras;
+		splash.burst(NoteSkin.current(), lane, laneCount, strum);
 	}
 
 	public inline function receptor(lane:Int):Null<Strum> return lane >= 0 && lane < members.length ? members[lane] : null;

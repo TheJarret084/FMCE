@@ -8,10 +8,13 @@
     <atlas path="NOTE_assets"/>
     <holdAlpha value="0.65"/>
 
+    <!-- Splash en imagen aparte (NOTE_splashes.png/xml). Cada lane usa su color: "note impact 1 <color>" (la variante 2 tambien existe). -->
+    <splash atlas="NOTE_splashes" scale="1" alpha="0.8" fps="24"/>
+
     <animations>
-        <lane dir="left"  note="purple0" hold="purple hold piece" holdEnd="pruple end hold"  receptor="arrowLEFT"  press="left press"  confirm="left confirm"/>
-        <lane dir="down"  note="blue0"   hold="blue hold piece"   holdEnd="blue hold end"    receptor="arrowDOWN"  press="down press"  confirm="down confirm"/>
-        <lane dir="up"    note="green0"  hold="green hold piece"  holdEnd="green hold end"   receptor="arrowUP"    press="up press"    confirm="up confirm"/>
-        <lane dir="right" note="red0"    hold="red hold piece"    holdEnd="red hold end"     receptor="arrowRIGHT" press="right press" confirm="right confirm"/>
+        <lane dir="left"  note="purple0" hold="purple hold piece" holdEnd="pruple end hold"  receptor="arrowLEFT"  press="left press"  confirm="left confirm"  splash="note impact 1 purple"/>
+        <lane dir="down"  note="blue0"   hold="blue hold piece"   holdEnd="blue hold end"    receptor="arrowDOWN"  press="down press"  confirm="down confirm"  splash="note impact 1 blue"/>
+        <lane dir="up"    note="green0"  hold="green hold piece"  holdEnd="green hold end"   receptor="arrowUP"    press="up press"    confirm="up confirm"    splash="note impact 1 green"/>
+        <lane dir="right" note="red0"    hold="red hold piece"    holdEnd="red hold end"     receptor="arrowRIGHT" press="right press" confirm="right confirm" splash="note impact 1 red"/>
     </animations>
 </noteSkin>
