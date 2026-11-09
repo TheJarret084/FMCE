@@ -36,12 +36,10 @@ class CursorManager
 	public static function shouldHide():Bool
 	{
 		if (forceHidden) return true;
-		#if (android || ios)
-		return true; // en el celular no hay mouse: el dedo es el puntero, no se dibuja cursor
-		#else
+		// Misma regla en PC y mobile: solo se oculta dentro del PlayState. En mobile tambien vale
+		// (con un mouse fisico conectado se comporta igual que en PC).
 		var state = FlxG.state;
 		return state != null && Std.isOfType(state, PlayState) && state.subState == null;
-		#end
 	}
 
 	/** Aplica la regla. Se llama sola cada frame; llamala tu si necesitas el resultado en el mismo frame. */

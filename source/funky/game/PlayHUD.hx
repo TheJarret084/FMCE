@@ -86,9 +86,12 @@ class PlayHUD extends FlxGroup
 	/** Ancho / alto de la barra de tiempo. */
 	static inline var TIME_BAR_WIDTH:Int = 400;
 	static inline var TIME_BAR_HEIGHT:Int = 18;
+	/** Cuanto sobresale el fondo de la barra de tiempo por cada lado (px). */
+	static inline var TIME_BAR_BG_PAD:Int = 4;
 
 	public var healthBar(default, null):HealthBar;
 	public var timeBar(default, null):FlxBar;
+	public var timeBarBG(default, null):FlxSprite;
 	public var timeText(default, null):FlxText;
 	/** Estilo actual de la barra de tiempo. Cambiarlo con `setTimeBarStyle`. */
 	public var timeBarStyle(default, null):TimeBarStyle = TimeBarStyle.PINK_LIME;
@@ -100,14 +103,8 @@ class PlayHUD extends FlxGroup
 	var botplaySine:Float = 0;
 	/** Strumline del jugador: el texto de botplay se pega a sus receptores y los sigue (si un script o evento los mueve). */
 	var botplayLine:Null<StrumLine>;
-	/** Separacion (px) entre el borde de abajo del texto de botplay y el borde de arriba de los receptores. */
-	public static inline var BOTPLAY_GAP:Float = 26;
-	/** Cuanto se baja el texto de botplay desde su posicion calculada. */
-	static inline var BOTPLAY_DROP:Float = 8;
 	/** Cuanto (px) se separan score y precision del borde de la barra de vida, hacia afuera, para que no se encimen con los fallos del centro. */
 	public static inline var STAT_SIDE_PAD:Float = 110;
-	/** Con scroll normal el texto de botplay va DEBAJO de los receptores (arriba chocaba con la barra de tiempo); con downscroll, arriba. */
-	var botplayBelow:Bool = true;
 	/** Debajo de la barra de vida, como en Codename: puntos (derecha), fallos (centro) y precision (izquierda). */
 	public var scoreTxt(default, null):FlxText;
 	public var missesTxt(default, null):FlxText;
@@ -144,7 +141,6 @@ class PlayHUD extends FlxGroup
 		this.songLength = Math.max(songLength, 1);
 		this.songName = songName;
 		var down = ClientPrefs.isDownScroll();
-		botplayBelow = !down;
 
 		barY = FlxG.height * (down ? 0.11 : 0.89);
 
@@ -179,6 +175,12 @@ class PlayHUD extends FlxGroup
 		timeBar.numDivisions = TIME_BAR_WIDTH;
 		setTimeBarStyle(TimeBarStyle.parse(ClientPrefs.getTimeBarStyle()));
 		timeBar.alpha = 0;
+
+		// Fondo de la barra: negro, sobresale TIME_BAR_BG_PAD px por cada lado. Va antes que la barra para quedar detras.
+		timeBarBG = new FlxSprite().makeGraphic(TIME_BAR_WIDTH + TIME_BAR_BG_PAD * 2, TIME_BAR_HEIGHT + TIME_BAR_BG_PAD * 2, FlxColor.BLACK);
+		timeBarBG.alpha = 0;
+		syncTimeBarBG();
+		add(timeBarBG);
 		add(timeBar);
 		add(timeText);
 
@@ -257,24 +259,19 @@ class PlayHUD extends FlxGroup
 	}
 
 	/**
-	 * Centra el texto sobre [left, left + width]. Scroll normal: `BOTPLAY_GAP` px debajo de `bottom` (borde de abajo de los
-	 * receptores). Downscroll: con su borde de abajo `BOTPLAY_GAP` px arriba de `top`.
+	 * Centra el texto sobre [left, left + width] x [top, bottom]: queda ENCIMA de las notas (receptores) de la strumline, en el
+	 * medio de ellas. El HUD se dibuja despues de las strumlines, asi que el texto tapa a los receptores.
 	 */
 	function setBotplayRect(left:Float, top:Float, bottom:Float, width:Float):Void
 	{
 		if (botplayText.fieldWidth != width) botplayText.fieldWidth = width;
 		botplayText.x = left;
 
-		if (botplayBelow)
-		{
-			botplayText.y = bottom + BOTPLAY_GAP + BOTPLAY_DROP;
-			return;
-		}
-
 		// textHeight sale del texto ya armado: no depende de que el FlxText se haya redibujado todavia.
 		var textHeight = botplayText.textField.textHeight + 4;
 		if (!(textHeight > 4)) textHeight = botplayText.size * 1.3;
-		botplayText.y = top - textHeight - BOTPLAY_GAP + BOTPLAY_DROP;
+
+		botplayText.y = top + ((bottom - top) - textHeight) / 2;
 	}
 
 	function syncBotplay():Void
@@ -354,6 +351,15 @@ class PlayHUD extends FlxGroup
 		// el degradado necesita 2 colores como minimo
 		if (out.length == 1) out.push(out[0]);
 		return out;
+	}
+
+	/** Deja el fondo centrado detras de la barra y con su mismo alpha (por si un script mueve o desvanece la barra). */
+	function syncTimeBarBG():Void
+	{
+		if (timeBarBG == null || timeBar == null) return;
+		timeBarBG.setPosition(timeBar.x - TIME_BAR_BG_PAD, timeBar.y - TIME_BAR_BG_PAD);
+		timeBarBG.alpha = timeBar.alpha;
+		timeBarBG.visible = timeBar.visible;
 	}
 
 	/** El tiempo y su barra aparecen al empezar la cancion. */
@@ -563,6 +569,7 @@ class PlayHUD extends FlxGroup
 	{
 		shownHealth += (health - shownHealth) * Math.min(1, elapsed * 8);
 		super.update(elapsed);
+		syncTimeBarBG();
 
 		if (botplayText != null)
 		{

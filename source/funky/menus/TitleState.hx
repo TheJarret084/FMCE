@@ -51,7 +51,7 @@ class TitleState extends FlxState
 		COMPILATION = TU.translate("title.mobile", null, "MOBILE");
 		#end
 
-		background = FlxGradient.createGradientFlxSprite(FlxG.width, FlxG.height, [0xFF0B0B16, 0xFF1B1030, 0xFF2D1646], 24);
+		background = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);// FlxGradient.createGradientFlxSprite(FlxG.width, FlxG.height, [0xFF0B0B16, 0xFF1B1030, 0xFF2D1646], 24);
 		background.scrollFactor.set();
 		add(background);
 

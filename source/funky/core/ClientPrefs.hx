@@ -108,6 +108,7 @@ class ClientPrefs
 			strumAlpha: 0.95,
 			editorSFX: true,
 			bypassEditorsResize: false,
+            
 
 			/**
 			 * noteColors: [ 0xCA4E9D, 0x00FFFE, 0x10FA05, 0xFC3844, 0x35B162, 0xFF0001, 0xEF05FA, 0x03C7BB,
