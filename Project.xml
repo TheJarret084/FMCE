@@ -128,7 +128,7 @@
 	<icon path="art/icon-android64.png" size="64" if="android" />
 	<icon path="art/icon-android128.png" size="128" if="android" />
 	<icon path="art/icon-android512.png" size="512" if="android" />
-    <icon path="art/icon-androidOG.png" if="android" />
+   <icon path="art/icon-androidOG.png" if="android" />
 
 	<!-- Iconos para Desktop (Windows / Linux / Mac) -->
 	<icon path="art/icon-16.png" size="16" if="desktop" />
