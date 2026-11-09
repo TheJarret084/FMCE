@@ -431,7 +431,8 @@ class NoteSkin
 				holdEnd: attr(lane, "holdEnd", base.holdEnd),
 				receptor: attr(lane, "receptor", base.receptor),
 				press: attr(lane, "press", base.press),
-				confirm: attr(lane, "confirm", base.confirm)
+				confirm: attr(lane, "confirm", base.confirm),
+				splash: attr(lane, "splash", base.splash)
 			};
 		}
 	}

@@ -41,6 +41,11 @@ class StrumLine extends FlxTypedGroup<Strum>
 		this.laneCount = laneCount < 1 ? 1 : laneCount;
 		spacing = lineWidth / Math.max(4, this.laneCount);
 		slotWidth = spacing * SLOT_FILL;
+
+		// El atlas del splash se pide ya (como el de los receptores): si se pidiera recien al primer SICK, el Flixel de Codename
+		// lo habria marcado como destruible al cambiar de estado (ver NoteSkin.hook) y habria que recargarlo en pleno juego.
+		NoteSkin.current().splashFrames();
+
 		for (lane in 0...this.laneCount)
 		{
 			Scripts.call("preReceptorGeneration", [this, lane]);
