@@ -432,7 +432,7 @@ class ConfigScreens
 					color: FlxColor.fromRGB(255, 209, 102)
 				}
 			]
-		}/*
+		}*/
 	];
 
 	public static function credits(menu:ConfigMenu):ConfigScreen
