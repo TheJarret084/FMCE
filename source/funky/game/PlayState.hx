@@ -1537,7 +1537,7 @@ class PlayState extends MusicBeatState
 
         if (warningInstanced) {
             try {
-                showWarning.destroy();
+                // showWarning.destroy();
                 showWarning = null;
             } catch(_:Dynamic) {
                 Log.warn("[warningSubState]: tu mierda exploto");
