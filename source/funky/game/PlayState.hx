@@ -1344,7 +1344,7 @@ class PlayState extends MusicBeatState
 				[
 					{
 						label: "Salir",
-						color: FlxG.random.color, // color: FlxRandom.color(), //FlxColor.RED,
+						color: FlxG.random.color(), // color: FlxRandom.color(), //FlxColor.RED,
 						onClick: function(_) exitToMenu()
                     }
 				],
