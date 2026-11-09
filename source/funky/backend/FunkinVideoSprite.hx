@@ -16,10 +16,7 @@ private typedef VideoBase = FlxVideoSprite;
 private typedef VideoBase = FlxSprite;
 #end
 
-/**
- * Video dentro de un sprite (`FlxVideoSprite` de hxvlc), SIEMPRE SIN AUDIO: el video es decoracion
- * (fondos, cutscenes mudas); la musica la lleva el juego.
- */
+/** Video decorativo dentro de un sprite, siempre sin audio. */
 class FunkinVideoSprite extends VideoBase
 {
 	/** true si este build trae hxvlc. */

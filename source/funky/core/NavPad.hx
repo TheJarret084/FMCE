@@ -8,12 +8,7 @@ import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
 import flixel.util.FlxSpriteUtil;
 
-/**
- * Dos botones (arriba / abajo) a la izquierda para navegar los menus en el celular.
- * Son sprites propios (flecha blanca sobre cuadro oscuro) y se detectan con `TouchNav.hit`,
- * el mismo metodo que ya usan las filas y los botones de texto de los menus.
- * En escritorio no se crea nada: `NavPad.make` devuelve null.
- */
+/** Dos botones (arriba / abajo) a la izquierda para navegar los menus en el celular. */
 class NavPad extends FlxGroup
 {
 	/** Lado (px) de cada boton. */

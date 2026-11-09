@@ -3,10 +3,7 @@ package funky.api;
 #if DISCORD_SDK
 import cpp.ConstCharStar;
 
-/**
- * Discord Social SDK (puente en `native/DiscordBridge.cpp`). Solo Android (el escritorio usa hxdiscord_rpc, ver DiscordClient).
- * Para el codigo del juego usa `DiscordClient`, no esto.
- */
+/** Discord Social SDK para Android (puente nativo; usar `DiscordClient`). */
 @:build(funky.api.DiscordBuild.xml())
 @:include("DiscordBridge.h")
 @:native("fmce::discord")

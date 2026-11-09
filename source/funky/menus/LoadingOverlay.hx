@@ -8,14 +8,7 @@ import flixel.text.FlxText.FlxTextAlign;
 import flixel.text.FlxText.FlxTextBorderStyle;
 import funky.backend.FunkinSprite;
 
-/**
- * Pantalla de carga: fondo oscuro, la Jazmin de `menus/Loading/JazminDeliveryMode` caminando
- * (`work`), un titulo, la barra de avance y lo que se esta haciendo.
- *
- * Es un spritemap de Adobe Animate (FlxAnimate): `assets/images/menus/Loading/JazminDeliveryMode/` con
- * `Animation.json` + `spritemap1.json` + `spritemap1.png`, tal cual lo exporta Animate. `work` es el simbolo
- * `anims/walk` y `give` es `anims/give`.
- */
+/** Pantalla de carga con Jazmin, titulo y barra de avance. */
 class LoadingOverlay extends FlxGroup
 {
 	static inline var ATLAS:String = "menus/Loading/JazminDeliveryMode";

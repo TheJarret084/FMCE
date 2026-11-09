@@ -6,10 +6,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Cuando cambia el orden de `scene.json > objects` (subir/bajar capa, duplicar, borrar), los eventos de `events.json`
- * que apuntan a un objeto por su numero tienen que seguir al mismo objeto. Aqui se reescriben esos numeros.
- */
+/** Reindexa los eventos cuando cambia el orden de los objetos de scene.json. */
 class EventRemap
 {
 	/** `map[viejo]` = numero nuevo del objeto, o -1 si se borro. */

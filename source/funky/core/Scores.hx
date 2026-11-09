@@ -19,22 +19,7 @@ typedef BestScore =
 	var misses:Int;
 }
 
-/**
- * Puntajes guardados por nivel y por dificultad. Solo se guarda el mejor de cada par nivel / dificultad.
- *
- * Van en un archivo binario propio (`scores.fmsc`), no en un JSON que se abre con cualquier editor:
- * - Android: carpeta PRIVADA de la app (`/data/data/<paquete>/...`), que sin root no se puede ver ni tocar
- *   (antes estaba en la carpeta publica `.JarretLabs-FMCE`).
- * - Escritorio: `.JarretLabs-FMCE/scores.fmsc` junto al ejecutable.
- * - El contenido va ofuscado (XOR con un flujo derivado de la clave) y firmado con HMAC-SHA256: cambiar un solo byte
- *   invalida el archivo. Un archivo alterado se aparta (`scores.fmsc.invalid`) y se empieza vacio.
- *
- * Formato (little-endian): "FMSC", u8 version, u32 largo, datos ofuscados, HMAC-SHA256 (32 bytes) de version+largo+datos planos.
- * Datos planos: u32 cantidad, y por registro [u16 largo][id utf-8][u8 dificultad][i32 puntaje][u16 precision*100][i32 fallas].
- *
- * Limite honesto: la clave viaja dentro del juego. Esto frena editar con un editor de texto/hex y copiar archivos
- * modificados, no a alguien que desensamble el ejecutable.
- */
+/** Puntajes guardados por nivel y por dificultad. */
 class Scores
 {
 	static inline var MAGIC:String = "FMSC";

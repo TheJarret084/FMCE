@@ -14,10 +14,7 @@ import flixel.util.FlxColor;
 import funky.core.Log;
 import funkin.backend.utils.TranslationUtil as TU;
 
-/**
- * Un nodo del arbol de creditos (como los nodos <credit> y <menu> del credits.xml de Codename).
- * Si trae `menu` es una SECCION (abre otra pantalla con esas entradas); si no, es una persona/enlace.
- */
+/** Un nodo del arbol de creditos (como los nodos <credit> y <menu> del credits.xml de Codename). */
 typedef CreditEntry =
 {
 	var name:String;
@@ -31,8 +28,8 @@ typedef CreditEntry =
 	@:optional var color:Int;
 	/** Entradas de la seccion (si existe, esta entrada es una seccion). */
 	@:optional var menu:Array<CreditEntry>;
-    /** BG DEL MENU, TOTALMENTE CAMBIABLE*/
-    @:optional var background:String;
+	/** BG DEL MENU, TOTALMENTE CAMBIABLE*/
+	@:optional var background:String;
 }
 
 /** Contenido de cada pantalla de opciones y de creditos. Aqui se decide QUE hay; ConfigMenu decide COMO se ve. */
@@ -288,81 +285,92 @@ class ConfigScreens
 		{
 			name: "ENGINE",
 			desc: "Equipo de desarrollo, y sus artistas",
-            background: "credits_1",
+			background: "credits_1",
 			menu: [
 				{
 					name: "TheJarret084",
 					desc: "Creador y programador principal de FMCE... y artista novato",
 					url: "https://github.com/TheJarret084",
 					avatar: "https://cdn.discordapp.com/avatars/1361447743444226088/a5ce44e72dec1919333a5c036d4f190c.png?size=2048",
-                    color: FlxColor.RED
+					color: FlxColor.RED
 				},
-                {
+				{
 					name: "Cubicko",
 					desc: "Artista Principal",
 					url: "https://www.youtube.com/@TheCubicko2014",
 					avatar: "https://cdn.discordapp.com/avatars/944071738982031401/3b2c81d4c34c28bcc2a59c208a18c8a5.png?size=2048",
-                    color: FlxColor.fromRGB(0, 255, 170)
+					color: FlxColor.fromRGB(0, 255, 170)
 				},
-                {
+				{
 					name: "UnwiFoxy",
 					desc: "No se que hiso este wei",
 					url: "https://youtube.com/@unwifoxy11",
 					avatar: "https://cdn.discordapp.com/avatars/897985259805749269/8ef9afd4a95ecf7818b97b09d0434a47.png?size=2048",
-                    color: FlxColor.fromRGB(139, 0, 93)
+					color: FlxColor.fromRGB(139, 0, 93)
 				},
-                {
+				{
 					name: "Papas",
 					desc: "BGS entre menus y mas assets",
 					url: "https://youtube.com/@unwifoxy11",
 					avatar: "https://cdn.discordapp.com/avatars/1410318769347363071/07fe3880e7573b7342009782d73d911e.png?size=2048",
-                    color: FlxColor.fromRGB(139, 0, 93)
-                }
+					color: FlxColor.fromRGB(139, 0, 93)
+				}
 			]
 		},
 		{
 			name: "Basado en",
-            background: "othersEngines",
+			background: "othersEngines",
 			desc: "Proyectos en los que se apoya este Engine",
 			menu: [
-                {
+				{
 					name: "Funky Maker!: Mobile (de KingGC)",
 					desc: "Literalmente usamos su nombre, base principal de todo (nota de creador: espero algun dia ser revisor, es mi unico sueño en ese juego)",
 					url: "https://play.google.com/store/apps/details?id=com.kingamescreator.fnmm",
 					color: FlxColor.fromRGB(242,255,119)  // DORADO rgb(242,255,119)
-                    // no ponemos avatar porque en fallback es el icon de el GGs
+					// no ponemos avatar porque en fallback es el icon de el GGs
 				},
 				{
 					name: "Codename Engine",
 					desc: "Referencia de editores, charts y menus",
 					url: "https://github.com/CodenameCrew/CodenameEngine",
-                    avatar: "https://github.com/CodenameCrew/CodenameEngine/blob/main/assets%2Fimages%2Ficon.png",
+					avatar: "https://github.com/CodenameCrew/CodenameEngine/blob/main/assets%2Fimages%2Ficon.png",
 					color: 0xFFFFC107
 				},
 				{
 					name: "Friday Night Funkin'",
 					desc: "El juego original",
 					url: "https://ninja-muffin24.itch.io/funkin",
-                    avatar: "https://github.com/FunkinCrew/funkin.art/blob/main/icons%2Fbf-iOS-Default-1024x1024.png",
-                    color: FlxColor.YELLOW
+					avatar: "https://github.com/FunkinCrew/funkin.art/blob/main/icons%2Fbf-iOS-Default-1024x1024.png",
+					color: FlxColor.YELLOW
 				},
-                {
+				{
 					name: "KADE ENGINE: Mobile",
 					desc: "Engine modificado, mas modificado, pero de aqui saque la Hitbox para mobile, y mas utilidades",
 					url: "https://github.com/TheLeerName/Kade-Engine-android",
-                    avatar: "https://github.com/TheLeerName/Kade-Engine-android/blob/master/art/icon16.png",
-                    color: FlxColor.GRAY
-                    
+					avatar: "https://github.com/TheLeerName/Kade-Engine-android/blob/master/art/icon16.png",
+					color: FlxColor.GRAY
+
 				},
 				{
 					name: "HaxeFlixel",
 					desc: "El framework sobre el que corre todo",
 					url: "https://haxeflixel.com",
-                    avatar: "https://github.com/HaxeFlixel/flixel/blob/dev/assets/images/logo/logo.png",
-                    color: FlxColor.ORANGE
+					avatar: "https://github.com/HaxeFlixel/flixel/blob/dev/assets/images/logo/logo.png",
+					color: FlxColor.ORANGE
 				}
 			]
-		},
+		},{
+			name: "Testers",
+			desc: "Quienes se aninaron a probar el engine y reportaron bugs",
+			background: "othersEngines",
+			menu: [
+				{
+					name: "Pecela",
+					desc: "Reporto 15 Crashes en Windows, todos en el chart Editor, que cosas no?",
+					color: FlxColor.WHITE
+				}
+			]
+		}/*,
 		// ---- PLACEHOLDERS: cambia name / desc / url / avatar / color por los datos reales (sin avatar sale el icono de FMCE) ----
 		{
 			name: "Colaboradores",
@@ -424,7 +432,7 @@ class ConfigScreens
 					color: FlxColor.fromRGB(255, 209, 102)
 				}
 			]
-		}
+		}/*
 	];
 
 	public static function credits(menu:ConfigMenu):ConfigScreen

@@ -256,7 +256,7 @@ class CharterBackdrop extends FlxTypedGroup<FlxBasic> {
 			cameraHighlight.color = strumLine.highlightColor;
 		} else alpha = 0.9;
 
-		for (spr in [gridBackDrop, beatSeparator, topLimit, bottomLimit, 
+		for (spr in [gridBackDrop, beatSeparator, topLimit, bottomLimit,
 				topSeparator, bottomSeparator, conductorFollowerSpr, waveformSprite, cameraHighlight]) {
 			spr.x = x; if (spr != waveformSprite) spr.alpha = alpha;
 			spr.cameras = this.cameras;

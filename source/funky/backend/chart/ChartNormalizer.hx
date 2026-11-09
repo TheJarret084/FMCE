@@ -9,16 +9,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Deja `chart.json` en el formato del engine antes de que lo lea el juego o el charter.
- *
- *  - `"fmceChart": true`  -> es un chart de FMCE: se usa tal cual, sin adivinar nada.
- *  - sin la marca         -> se mira de que tipo es (`ChartImporter.detect`: FNMM, Codename, Psych/Legacy, FNF .fnfc o un
- *                            FMCE viejo) y se convierte a FMCE. El archivo se reescribe con la marca (el original queda
- *                            en `chart.orig.json`), asi la conversion solo pasa una vez.
- *
- * Si no se puede escribir el archivo (carpeta de solo lectura) el nivel se carga igual con el chart convertido en memoria.
- */
+/** Deja `chart.json` en el formato del engine antes de que lo lea el juego o el charter. */
 class ChartNormalizer
 {
 	public static inline var FLAG:String = "fmceChart";

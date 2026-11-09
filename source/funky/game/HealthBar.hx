@@ -8,11 +8,7 @@ import flixel.util.FlxColor;
 import funky.core.Log;
 import funky.core.Paths;
 
-/**
- * Barra de vida con el sprite `assets/images/game/healthBar.png` (el marco negro) como en el
- * legacy (`funkin.objects.Bar`): debajo del marco va un `FlxBar` de derecha a izquierda: el
- * relleno es el color del jugador y el fondo vacio el del oponente.
- */
+/** Barra de vida con marco propio y relleno de dos colores. */
 class HealthBar extends FlxGroup
 {
 	public static inline var IMAGE:String = "game/healthBar";

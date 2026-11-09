@@ -5,19 +5,7 @@ import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxAtlasFrames;
 import funky.core.Log;
 
-/**
- * Precarga de los sprites de un nivel, para que `Stage.setSprite` (ObjectSpriteSet) no tenga que leer disco,
- * parsear JSON ni subir texturas en pleno juego.
- *
- * Mientras `active` es true:
- *  - `Paths.getLevelSprite` reutiliza los `FlxAtlasFrames` ya armados (`frames`).
- *  - `SpriteBuilder.build` entrega primero un sprite de repuesto de este `pool` (`take`).
- *  - `Stage.setSprite` devuelve el sprite que reemplaza al pool (`give`) en vez de destruirlo, asi volver a un
- *    sprite anterior tambien es gratis.
- *
- * Fuera de un nivel (`active` = false) no hace nada: los editores siguen leyendo siempre de disco.
- * Lo llena `LoadingLevelState` antes de cada cancion y se vacia solo al entrar a cualquier otra pantalla.
- */
+/** Precarga los sprites de un nivel para evitar lecturas en pleno juego. */
 class SpriteCache
 {
 	/** true entre `begin` y `clear`. */

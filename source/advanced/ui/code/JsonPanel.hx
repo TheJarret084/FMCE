@@ -211,13 +211,7 @@ private class JsonScan
 	}
 }
 
-/**
- * Inspector JSON (panel de la derecha, reemplaza al explorador mientras hay un .json abierto).
- *
- * - Arbol plegable con el orden real del archivo, colores por tipo y scroll con la rueda.
- * - Clic en una fila: el editor salta a esa clave. La flecha pliega/despliega.
- * - Sigue al cursor: al moverte por el texto se marca la fila que estas editando y abajo sale su ruta.
- */
+/** Inspector JSON (panel de la derecha, reemplaza al explorador mientras hay un .json abierto). */
 class JsonPanel extends FlxSpriteGroup
 {
 	/** Pide al editor ir a una posicion: (inicio, largo). */

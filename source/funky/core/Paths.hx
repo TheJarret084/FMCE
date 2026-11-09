@@ -10,10 +10,7 @@ import animate.FlxAnimateAssets;
 import animate.FlxAnimateFrames;
 import openfl.utils.Assets as OpenFlAssets;
 
-/**
- * Paths
- * Resuelve rutas de assets del motor y de niveles FNMM.
- */
+/** Resuelve rutas de assets del motor y de niveles FNMM. */
 class Paths
 {
 	public static final ASSETS = "assets/";

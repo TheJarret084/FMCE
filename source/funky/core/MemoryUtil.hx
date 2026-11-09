@@ -8,10 +8,7 @@ import hl.Gc;
 import neko.vm.Gc;
 #end
 import openfl.system.System;
-/**
- * FunkyMaker2 - MemoryUtil Adaptado de `MemoryUtil` (CodenameEngine), recortado a garbage
- * collection.
- */
+/** FunkyMaker2 - MemoryUtil Adaptado de `MemoryUtil` (CodenameEngine), recortado a garbage collection. */
 final class MemoryUtil
 {
 	/** Corre una recolección de basura menor (rápida). */

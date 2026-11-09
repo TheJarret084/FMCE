@@ -7,18 +7,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Monta `assets.pack` (todo `assets/`, compilado por `building/pack-assets.py`) como la libreria "default" de OpenFL.
- * Se llama una sola vez en `Main`, antes de que nada pida un asset.
- *
- * - Escritorio: lee `assets.pack` directo junto al ejecutable (Lime lo copia ahi desde `building/_pack/`).
- * - Android: el .pack viaja dentro del APK, y de ahi no se puede leer con seek. La primera vez (y cada vez que cambia
- *   `assets.id`) se copia a la carpeta privada de la app; despues se lee de ahi.
- *
- * Detras del .pack queda la libreria original de Lime: de ahi salen las fuentes embebidas y `addons/...`.
- *
- * Build con `-DFMCE_LOOSE_ASSETS`: Project.xml mete `assets/` suelto como antes (sin .pack), asi que no se monta nada.
- */
+/** Monta `assets.pack` (todo `assets/`, compilado por `building/pack-assets.py`) como la libreria "default" de OpenFL. */
 class AssetPack
 {
 	public static inline var FILE:String = "assets.pack";

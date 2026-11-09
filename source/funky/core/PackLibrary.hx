@@ -13,18 +13,7 @@ import sys.io.File;
 import sys.io.FileInput;
 import sys.io.FileSeek;
 
-/**
- * Libreria de OpenFL/Lime que lee de `assets.pack` (lo arma `building/pack-assets.py`).
- *
- * Los IDs son los de siempre (`assets/images/menus/menuBG.png`), asi que el resto del juego sigue usando
- * `OpenFlAssets.getBitmapData / getText / getSound...` sin enterarse. Lo que NO esta en el .pack (las fuentes embebidas,
- * `addons/...`) se pide a `fallback`, que es la libreria "default" original de Lime.
- *
- * El archivo se abre una sola vez y cada lectura es un `seek` + leer ese archivo: el .pack nunca se carga entero en RAM.
- *
- * Formato FMPK v1 (little-endian): "FMPK", u32 version, u32 cantidad, u32 tamano del indice,
- * indice [u16 largo][ruta utf-8][u32 offset][u32 tamano] por archivo, y los datos.
- */
+/** Libreria de OpenFL/Lime que lee de `assets.pack` (lo arma `building/pack-assets.py`). */
 class PackLibrary extends AssetLibrary
 {
 	static inline var MAGIC:String = "FMPK";

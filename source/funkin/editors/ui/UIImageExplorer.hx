@@ -9,11 +9,7 @@ import openfl.display.BitmapData;
 import sys.FileSystem;
 import sys.io.File;
 
-/**
- * Cuadro para elegir una imagen, adaptado del `UIImageExplorer` del character editor de Codename: se elige un
- * `.png`/`.jpg`, se muestra una vista previa y, si al lado hay un `.xml` (Sparrow) o un `.json` (Aseprite) con el
- * mismo nombre, se toma como atlas y se listan sus animaciones. No guarda nada: eso lo hace `SpriteImporter.importBytes`.
- */
+/** Cuadro para elegir una imagen con vista previa y animaciones del atlas. */
 class UIImageExplorer extends UIFileExplorer
 {
 	/** Nombre limpio del sprite (sin extension, solo letras/numeros/`_`/`-`). */

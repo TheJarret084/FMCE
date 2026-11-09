@@ -13,13 +13,7 @@ import funky.core.Log;
 import funky.core.Storage;
 #end
 
-/**
- * Video (.mp4) -> frames -> spritesheet. El .FNMM no soporta video, asi que al exportar la carpeta de un sprite de video
- * se sacan los frames con ffmpeg, se arma un atlas `sprite.png` + `sprite.json` (Aseprite Hash, un tag por video) en una carpeta
- * temporal y el exportador sigue su flujo normal como si fuera un sprite cualquiera. El nivel original no se toca.
- *
- * Necesita `ffmpeg` (junto al .exe o en el PATH). Solo escritorio.
- */
+/** Video (.mp4) -> frames -> spritesheet. */
 class VideoSheet
 {
 	/** Frames por segundo a los que se muestrea el video. */

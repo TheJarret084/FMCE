@@ -27,10 +27,7 @@ typedef ImportResult = {
 	var ?droppedKinds:Int;
 }
 
-/**
- * Lee charts de otros motores y los deja como notas de FMCE (strumlines con `ChartNote`).
- * Los tiempos de los tres formatos ya vienen en ms, asi que no hace falta BPM para convertirlos.
- */
+/** Lee charts de otros motores y los deja como notas de FMCE (strumlines con `ChartNote`). */
 class ChartImporter {
 	public static function detect(raw:Dynamic):Null<String> {
 		if (raw == null || Std.isOfType(raw, Array)) return null;

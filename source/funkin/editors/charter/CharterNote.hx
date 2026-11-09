@@ -139,7 +139,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 			angleTween.cancel();
 
 		destAngle = CoolUtil.getClosestAngle(angle, destAngle);
-		
+
 		angleTween = FlxTween.angle(this, angle, destAngle, (2/3)/__animSpeed, {ease: function(t) {
 			return ((Math.sin(t * Math.PI) * 0.35) * 3 * t * Math.sqrt(1 - t)) + t;
 		}});

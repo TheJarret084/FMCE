@@ -8,10 +8,7 @@ import funky.core.NoteSkin;
 import funky.game.Note.QueueNote;
 import funky.scripting.Scripts;
 
-/**
- * Reduced Codename-style strumline: owns receptors and its note group.
- * Input, characters, scripting and vocals remain PlayState concerns for now.
- */
+/** Reduced Codename-style strumline: owns receptors and its note group. */
 class StrumLine extends FlxTypedGroup<Strum>
 {
 	/** Lane spacing of a 4-lane line. Wider lines keep the same 440px total width. */

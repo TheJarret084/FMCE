@@ -14,10 +14,7 @@ import flixel.util.FlxAxes;
 import hxvlc.flixel.FlxVideo;
 #end
 
-/**
- * Intro del juego: `addons/videos/splash.mp4` con su AUDIO, en un `FlxVideo` normal de hxvlc (un video de OpenFL a pantalla
- * completa, no un sprite del State). Tocar la pantalla o una tecla lo salta.
- */
+/** Intro del juego con el video splash y su audio. */
 class SplashState extends FlxState
 {
 	/** Si el video no arranca en este tiempo (seg) se pasa al TITLE para no quedarse en negro. */

@@ -11,9 +11,7 @@ import openfl.text.TextFieldType;
 import openfl.text.TextFormat;
 import openfl.ui.Keyboard;
 
-/**
- * Barra de busqueda (Ctrl+F). Si escribes ":42" salta a la linea 42 (Ctrl+G la abre ya con ":").
- */
+/** Barra de busqueda (Ctrl+F). */
 class FindBar extends FlxSpriteGroup
 {
 	public var isOpen(default, null):Bool = false;

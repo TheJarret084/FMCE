@@ -4,11 +4,7 @@ import flixel.util.FlxSort;
 import funkin.backend.system.Conductor;
 import funkin.editors.charter.CharterBackdropGroup.EventBackdrop;
 
-/**
- * Grupo de eventos del charter. Igual que `CharterNoteGroup`, solo actualiza y dibuja los eventos que caen
- * dentro de la ventana de steps visible (busqueda binaria sobre `members`, que esta ordenado por step) mas la
- * seleccion. Antes recorria TODOS los eventos en cada frame (update, draw y filterEvents).
- */
+/** Grupo de eventos del charter. */
 class CharterEventGroup extends FlxTypedGroup<CharterEvent> {
 	public static var stopThisFuckingShitDudeIstg = false;
 	public var eventsBackdrop:EventBackdrop;

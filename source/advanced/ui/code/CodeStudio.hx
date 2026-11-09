@@ -11,12 +11,7 @@ import haxe.Json;
 import openfl.events.KeyboardEvent;
 import openfl.ui.Keyboard;
 
-/**
- * Code Studio del modo avanzado: menu, barra de herramientas, pestanas, editor con colores,
- * explorador de archivos a la derecha, panel de salida y barra de estado. Solo PC (teclado y mouse).
- *
- * Los pedazos viven en esta carpeta (`advanced/ui/code/`): cada uno hace una sola cosa y CodeStudio los conecta.
- */
+/** Code Studio: menu, editor, explorador de archivos, salida y estado (solo PC). */
 class CodeStudio extends FlxSpriteGroup
 {
 	public var files:Array<CodeStudioFile> = [];

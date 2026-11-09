@@ -9,7 +9,7 @@ class UIScaleMode extends StageSizeScaleMode {
 				FlxG.width = FlxG.initialWidth;
 				FlxG.height = FlxG.initialHeight;
 			}
-	
+
 			updateGameSize(Width, Height);
 			updateDeviceSize(Width, Height);
 			updateScaleOffset();

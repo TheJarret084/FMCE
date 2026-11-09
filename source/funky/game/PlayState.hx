@@ -10,14 +10,10 @@ import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 import flixel.sound.FlxSound;
 import flixel.text.FlxText;
-import flixel.text.FlxText.FlxTextAlign;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
-import flixel.math.FlxRandom;
-import hxvlc.flixel.FlxVideo;
-import funky.backend.FunkinVideoSprite;
 import funky.backend.MusicBeatState;
 import funky.backend.chart.FNMMNote;
 import funky.backend.chart.LevelLoader;
@@ -34,24 +30,15 @@ import funky.game.PlayHUD.PressScore;
 import funky.menus.FreeplayState;
 import funky.menus.GameOverSubState;
 import funky.menus.PauseSubState;
-import funkin.editors.ui.*;
 import funkin.editors.ui.UIWarningSubstate;
-import funkin.editors.ui.UIWarningSubstate.WarningButton;
 import funky.scripting.Scripts;
 import funky.backend.JarretVideo;
 
-/**
- * PlayState
- *
- * `@:keep`: los scripts usan este objeto como "padre" (como en Codename) y resuelven `healthBar`, `hud`, `score`...
- * por reflexion, asi que ningun campo puede desaparecer por DCE.
- */
+/** Juego: HUD, notas, escenario, eventos y scripts. */
 @:keep
 class PlayState extends MusicBeatState
 {
 	public static var instance:PlayState;
-
-	// ───────────── Accesos directos para scripts ─────────────
 
 	public var healthBar(get, never):HealthBar;
 	public var iconP1(get, never):HealthIcon;
@@ -123,7 +110,6 @@ class PlayState extends MusicBeatState
 
 	/** Nivel al que se vuelve al salir del juego cuando se abrio desde el chart editor. null = Freeplay. */
 	public static var returnToEditor:Null<String> = null;
-
 
 	/** State al que se sale del juego: el chart editor si vino de ahi, o Freeplay. */
 	public static function menuState():FlxState
@@ -327,7 +313,7 @@ class PlayState extends MusicBeatState
 		seeking = false;
 
 		camGame = FlxG.camera;
-        camGame.bgColor = FlxColor.BLACK;
+		camGame.bgColor = FlxColor.BLACK;
 		camHUD = new FlxCamera();
 		camHUD.bgColor = FlxColor.TRANSPARENT;
 		FlxG.cameras.add(camHUD, false);
@@ -1342,8 +1328,7 @@ class PlayState extends MusicBeatState
 	var pendingError:Null<String> = null;
 	/** Error de un script en modo test: sale la ventana directo (sin el video, que es solo para errores graves de chart / escena). */
 	var pendingScriptError:Null<String> = null;
-    var showWarning:Void->Void;
-    var warningInstanced:Bool = false;
+	var warningInstanced:Bool = false;
 
 	/**
 	 * Muestra el error de carga de un nivel: primero un video solo (`fatalerrorisocurred`) y al terminar (o si el video
@@ -1355,7 +1340,7 @@ class PlayState extends MusicBeatState
 		safely("transitionIn (error)", function() transitionIn());
 		safely("music.stop (error)", function() if (FlxG.sound.music != null) FlxG.sound.music.stop());
 
-		showWarning = function():Void
+		var showWarning = function():Void
 		{
 			openSubState(new UIWarningSubstate(
 				"Error al cargar el nivel",
@@ -1363,9 +1348,9 @@ class PlayState extends MusicBeatState
 				[
 					{
 						label: "Salir",
-						color: FlxG.random.color(), // FlxColor.RED
+						color: FlxG.random.color(),
 						onClick: function(_) exitToMenu()
-                    }
+					}
 				],
 				false
 			));
@@ -1374,7 +1359,7 @@ class PlayState extends MusicBeatState
 		var cutscene = new JarretVideo();
 		openSubState(cutscene);
 		cutscene.play("fatalerrorisocurred", showWarning);
-        warningInstanced = true;
+		warningInstanced = true;
 	}
 
 	/**
@@ -1583,14 +1568,14 @@ class PlayState extends MusicBeatState
 		if (guiFadeTween != null) guiFadeTween.cancel();
 		releaseGuiFade();
 
-        if (warningInstanced) {
-            try {
-                // showWarning.destroy();
-                showWarning = null;
-            } catch(_:Dynamic) {
-                Log.warn("[warningSubState]: tu mierda exploto");
-            }
-        }
+		if (warningInstanced) {
+			try {
+				// showWarning.destroy();
+				showWarning = null;
+			} catch(_:Dynamic) {
+				Log.warn("[warningSubState]: tu mierda exploto");
+			}
+		}
 
 		cancelCountdown();
 

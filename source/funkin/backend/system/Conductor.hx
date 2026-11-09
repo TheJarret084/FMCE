@@ -180,7 +180,6 @@ final class Conductor
 	 */
 	public static var curMeasureFloat:Float = 0;
 
-
 	@:dox(hide) public static var lastSongPos:Float = 0;
 	@:dox(hide) public static var offset:Float = 0;
 

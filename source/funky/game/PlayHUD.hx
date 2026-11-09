@@ -19,13 +19,7 @@ import funky.core.NoteSkin;
 import funkin.backend.utils.TranslationUtil as TU;
 import openfl.utils.Assets;
 
-/**
- * Resultado de tocar una nota: lo que se muestra y lo que reciben los scripts (`onNoteScored`).
- *  - rating:    sick / good / bad / shit
- *  - score:     puntos que dio esa pulsacion
- *  - precision: 100 = justo en el tiempo de la nota, 0 = al borde de la ventana de golpe
- *  - ms:        desfase de la pulsacion: negativo = temprano, positivo = tarde
- */
+/** Resultado de tocar una nota: lo que se muestra y lo que reciben los scripts (`onNoteScored`). */
 typedef PressScore =
 {
 	var rating:String;
@@ -55,16 +49,10 @@ enum abstract TimeBarStyle(String) to String
 	}
 }
 
-/**
- * HUD con la misma distribucion que `PsychHUD` del legacy.
- *
- * `@:keep` para que los scripts (que resuelven `healthBar`, `timeBar`, `scoreTxt`... por reflexion sobre el PlayState)
- * puedan ver todos los campos aunque el DCE los vea sin uso.
- */
+/** HUD con la misma distribucion que `PsychHUD` del legacy. */
 @:keep
 class PlayHUD extends FlxGroup
 {
-	/** Vida inicial del jugador, como en FNF. */
 	/** Vida maxima (el minimo es 0). */
 	public static inline var MAX_HEALTH:Float = 1;
 	public static inline var START_HEALTH:Float = 0.5;
@@ -113,9 +101,11 @@ class PlayHUD extends FlxGroup
 	/** Strumline del jugador: el texto de botplay se pega a sus receptores y los sigue (si un script o evento los mueve). */
 	var botplayLine:Null<StrumLine>;
 	/** Separacion (px) entre el borde de abajo del texto de botplay y el borde de arriba de los receptores. */
-	public static inline var BOTPLAY_GAP:Float = 14;
+	public static inline var BOTPLAY_GAP:Float = 26;
+	/** Cuanto se baja el texto de botplay desde su posicion calculada. */
+	static inline var BOTPLAY_DROP:Float = 8;
 	/** Cuanto (px) se separan score y precision del borde de la barra de vida, hacia afuera, para que no se encimen con los fallos del centro. */
-	public static inline var STAT_SIDE_PAD:Float = 170;
+	public static inline var STAT_SIDE_PAD:Float = 110;
 	/** Con scroll normal el texto de botplay va DEBAJO de los receptores (arriba chocaba con la barra de tiempo); con downscroll, arriba. */
 	var botplayBelow:Bool = true;
 	/** Debajo de la barra de vida, como en Codename: puntos (derecha), fallos (centro) y precision (izquierda). */
@@ -132,14 +122,14 @@ class PlayHUD extends FlxGroup
 	var barY:Float;
 	var shownSecond:Int = -1;
 
-    public var defaultFont:String;
+	public var defaultFont:String;
 
 	/** Vida del jugador, 0..1. La barra sigue a `shownHealth`, que la alcanza suavizada. */
 	public var health:Float = START_HEALTH;
 	@:keep public var shownHealth:Float = START_HEALTH;
 	public var songTime:Float = 0;
 
-    // estos
+	// Iconos de vida del jugador y del oponente.
 	public var iconPlayer(default, null):HealthIcon;
 	public var iconOpponent(default, null):HealthIcon;
 
@@ -149,17 +139,17 @@ class PlayHUD extends FlxGroup
 
 		if (laneCount != null) this.laneCount = laneCount;
 
-        if (defaultFont == null || defaultFont == "") defaultFont = Paths.fontPath("PhantomMuff.ttf");
-        
+		if (defaultFont == null || defaultFont == "") defaultFont = Paths.fontPath("PhantomMuff.ttf");
+
 		this.songLength = Math.max(songLength, 1);
 		this.songName = songName;
 		var down = ClientPrefs.isDownScroll();
 		botplayBelow = !down;
 
 		barY = FlxG.height * (down ? 0.11 : 0.89);
-		
-		healthBar = new HealthBar(FlxColor.RED, FlxColor.GREEN); // BRUH, en otra actualizacion los hago custom
-	
+
+		healthBar = new HealthBar(FlxColor.RED, FlxColor.GREEN);
+
 		healthBar.setPosition(FlxG.width / 2 - healthBar.frameWidth / 2, barY);
 		add(healthBar);
 
@@ -277,14 +267,14 @@ class PlayHUD extends FlxGroup
 
 		if (botplayBelow)
 		{
-			botplayText.y = bottom + BOTPLAY_GAP;
+			botplayText.y = bottom + BOTPLAY_GAP + BOTPLAY_DROP;
 			return;
 		}
 
 		// textHeight sale del texto ya armado: no depende de que el FlxText se haya redibujado todavia.
 		var textHeight = botplayText.textField.textHeight + 4;
 		if (!(textHeight > 4)) textHeight = botplayText.size * 1.3;
-		botplayText.y = top - textHeight - BOTPLAY_GAP;
+		botplayText.y = top - textHeight - BOTPLAY_GAP + BOTPLAY_DROP;
 	}
 
 	function syncBotplay():Void
@@ -389,7 +379,6 @@ class PlayHUD extends FlxGroup
 	/** Misma tabla de rangos que `Highscore.getLetterRank` del legacy. */
 	public static function letterRank(accuracy:Float, misses:Int = 0):String
 	{
-		if (accuracy == 100 && misses == 0) return "P";
 		if (accuracy > 99 && misses == 0) return "P";
 		if (accuracy > 95 && misses == 0) return "S";
 		if (accuracy > 90 && misses <= 20) return "A";
@@ -401,9 +390,12 @@ class PlayHUD extends FlxGroup
 
 	public function doScoreBop():Void
 	{
-		FlxTween.cancelTweensOf(scoreTxt.scale);
-		scoreTxt.scale.set(1.075, 1.075);
-		FlxTween.tween(scoreTxt.scale, {x: 1, y: 1}, 0.2);
+		for (text in [scoreTxt, accuracyTxt, missesTxt])
+		{
+			FlxTween.cancelTweensOf(text.scale);
+			text.scale.set(1.075, 1.075);
+			FlxTween.tween(text.scale, {x: 1, y: 1}, 0.2);
+		}
 	}
 
 	/** Popup de rating + combo, como `PsychHUD.popUpScore`. Con imagenes si estan en `game/score/`, si no con texto. */
@@ -427,7 +419,7 @@ class PlayHUD extends FlxGroup
 			FlxTween.cancelTweensOf(image.scale);
 			image.scale.set(RATING_SCALE * RATING_POP, RATING_SCALE * RATING_POP);
 			FlxTween.tween(image.scale, {x: RATING_SCALE, y: RATING_SCALE}, 0.5, {ease: FlxEase.expoOut});
-			FlxTween.tween(image, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+			FlxTween.tween(image, {alpha: 0, y: image.y + 100}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
 		}
 		else
 		{
@@ -440,7 +432,7 @@ class PlayHUD extends FlxGroup
 			FlxTween.cancelTweensOf(ratingText.scale);
 			ratingText.scale.set(RATING_SCALE * RATING_POP, RATING_SCALE * RATING_POP);
 			FlxTween.tween(ratingText.scale, {x: RATING_SCALE, y: RATING_SCALE}, 0.5, {ease: FlxEase.expoOut});
-			FlxTween.tween(ratingText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+			FlxTween.tween(ratingText, {alpha: 0, y: ratingText.y + 100}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
 		}
 
 		var digits = Std.string(combo);
@@ -477,7 +469,7 @@ class PlayHUD extends FlxGroup
 				slot.alpha = 1;
 				slot.scale.set(COMBO_SCALE * COMBO_POP, COMBO_SCALE * COMBO_POP);
 				FlxTween.tween(slot.scale, {x: COMBO_SCALE, y: COMBO_SCALE}, 0.5, {ease: FlxEase.expoOut});
-				FlxTween.tween(slot, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+				FlxTween.tween(slot, {alpha: 0, y: slot.y + 100}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
 			}
 		}
 		else
@@ -490,7 +482,7 @@ class PlayHUD extends FlxGroup
 			FlxTween.cancelTweensOf(comboText.scale);
 			comboText.scale.set(COMBO_SCALE * COMBO_POP, COMBO_SCALE * COMBO_POP);
 			FlxTween.tween(comboText.scale, {x: COMBO_SCALE, y: COMBO_SCALE}, 0.5, {ease: FlxEase.expoOut});
-			FlxTween.tween(comboText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+			FlxTween.tween(comboText, {alpha: 0, y: comboText.y + 100}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
 		}
 
 		if (press != null) showPress(press, posX, delay);
@@ -511,7 +503,7 @@ class PlayHUD extends FlxGroup
 		pressText.alpha = 1;
 		pressText.scale.set(1.2, 1.2);
 		FlxTween.tween(pressText.scale, {x: 1, y: 1}, 0.15, {ease: FlxEase.expoOut});
-		FlxTween.tween(pressText, {alpha: 0}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
+		FlxTween.tween(pressText, {alpha: 0, y: pressText.y + 50}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
 	}
 
 	/** "91.3%" (precision 0..100, un decimal). */
@@ -545,7 +537,7 @@ class PlayHUD extends FlxGroup
 		var second = Std.int(songTime / 1000);
 		if (second == shownSecond) return;
 		shownSecond = second;
-		timeText.text = /*songName + " - " + */ FlxStringUtil.formatTime(Math.floor(Math.max(0, songLength - songTime) / 1000), false);
+		timeText.text = FlxStringUtil.formatTime(Math.floor(Math.max(0, songLength - songTime) / 1000), false);
 	}
 
 	/** Suma (o resta) vida del jugador, limitada a 0..1. */

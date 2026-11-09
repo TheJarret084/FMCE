@@ -4,10 +4,7 @@ import flixel.addons.display.FlxBackdrop;
 import flixel.util.FlxAxes;
 import funky.core.Paths;
 
-/**
- * Fondo de las pantallas del modo avanzado: `editors/bgs/default` en mosaico (se repite en X e Y) que se desliza
- * de izquierda a derecha, tenue sobre negro.
- */
+/** Fondo en mosaico que se desliza, usado por el modo avanzado. */
 class EditorBackdrop extends FlxBackdrop
 {
 	/** Pixeles por segundo hacia la derecha. */

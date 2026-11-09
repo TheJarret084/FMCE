@@ -12,16 +12,7 @@ import hxdiscord_rpc.Discord;
 import hxdiscord_rpc.Types;
 #end
 
-/**
- * Discord Rich Presence. Un solo `DiscordClient` para todo el juego, con el backend que toque segun la plataforma:
- *
- * - **Android** (`DISCORD_SDK`): Discord Social SDK, desde el `.aar` (ver `DiscordSdk` y `source/libs/discord/README.md`).
- * - **Escritorio, target cpp** (`DISCORD_RPC`): el haxelib `hxdiscord_rpc` (Windows, Linux y Mac; no pide DLL ni login).
- * - Otros (HashLink, HTML5): no hace nada, y el resto del juego lo llama igual.
- *
- * El nombre que se ve ("Funky Maker: CNE") es el de la aplicacion en https://discord.com/developers: Discord lo toma
- * de ahi, no se puede cambiar por codigo.
- */
+/** Discord Rich Presence. */
 class DiscordClient
 {
 	#if (DISCORD_SDK || DISCORD_RPC)

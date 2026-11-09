@@ -5,14 +5,7 @@ import haxe.io.Bytes;
 import haxe.io.BytesOutput;
 import haxe.zip.Compress;
 
-/**
- * Codificador de PNG en Haxe puro, al estilo de UPNG.js: elige solo el mejor formato y comprime fuerte.
- *  - si la imagen usa 256 colores o menos, la guarda con paleta (PLTE + tRNS), sin perdida;
- *  - si usa mas y se pide `colors`, la cuantiza a esa cantidad de colores (median cut, como UPNG con `cnum`);
- *  - si no, RGBA de 8 bits;
- *  - elige el filtro de cada fila (el que deja menos diferencia), y comprime con zlib al maximo;
- *  - el color de los pixeles transparentes se pone en 0, asi comprimen mejor y se juntan colores.
- */
+/** Codificador de PNG en Haxe puro, al estilo de UPNG.js: elige solo el mejor formato y comprime fuerte. */
 class PngHandler
 {
 	/**

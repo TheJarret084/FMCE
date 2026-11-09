@@ -228,7 +228,7 @@ class UIContextMenuOptionSpr extends UISliceSprite {
 	public var icon:UIContextMenuOptionIcon;
 	public var option:UIContextMenuOption;
 	public var optionType:UIContextMenuOptionType = DEFAULT;
-	
+
 	public var slider:UISlider = null;
 
 	var parent:UIContextMenu;
@@ -255,9 +255,9 @@ class UIContextMenuOptionSpr extends UISliceSprite {
 					var sliderWidth = option.slider.width != null ? Std.int(option.slider.width) : 120;
 					w += 120 + slider.barWidth;
 				} else {
-					h *= 2;	
+					h *= 2;
 				}
-				
+
 			default:
 				if (option.keybinds == null) {
 					if (option.keybind != null) {
@@ -291,7 +291,7 @@ class UIContextMenuOptionSpr extends UISliceSprite {
 		updateIcon();
 
 		if (labelKeybind != null)
-			members.push(labelKeybind);			
+			members.push(labelKeybind);
 	}
 
 	//Called after all options are created and the context menu width/height is final
@@ -304,7 +304,7 @@ class UIContextMenuOptionSpr extends UISliceSprite {
 					option.slider.width != null ? Std.int(option.slider.width) : 120;
 				}
 
-				slider = new UISlider(0, 0, sliderWidth, option.slider.value, 
+				slider = new UISlider(0, 0, sliderWidth, option.slider.value,
 					[{start: option.slider.min, end: option.slider.max, size: option.slider.max-option.slider.min}], false);
 
 				slider.onChange = function(v) {
@@ -359,7 +359,7 @@ class UIContextMenuOptionSpr extends UISliceSprite {
 			case SUBMENU:
 				parent.openChildContextMenu(this);
 			case SLIDER:
-				
+
 			default:
 				if (FlxG.mouse.justReleased)
 					parent.select(option);

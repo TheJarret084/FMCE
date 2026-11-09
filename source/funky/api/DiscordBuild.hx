@@ -6,10 +6,7 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import sys.FileSystem;
 
-/**
- * Le pasa a hxcpp (por `@:buildXml`) las rutas ABSOLUTAS del puente nativo y del Discord Social SDK, que viven en
- * `source/libs/discord/` y `source/funky/api/native/` (hxcpp no sabe donde esta el proyecto).
- */
+/** Rutas absolutas del puente nativo y del Discord SDK para hxcpp. */
 class DiscordBuild
 {
 	public static function xml():Array<Field>

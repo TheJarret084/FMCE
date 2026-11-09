@@ -37,10 +37,7 @@ private class History
 	public function new() {}
 }
 
-/**
- * Editor de texto: numeros de linea, linea actual, colores de sintaxis, deshacer/rehacer,
- * auto-indentado y busqueda. El texto lo escribe un TextField de OpenFL; el resto se dibuja con Flixel.
- */
+/** Editor de texto: numeros de linea, linea actual, colores de sintaxis, deshacer/rehacer, auto-indentado y busqueda. */
 class CodeEditor extends FlxSpriteGroup
 {
 	static inline var HL_MARGIN:Int = 30;

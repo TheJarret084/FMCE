@@ -1,9 +1,6 @@
 package funky.backend.chart;
 
-/**
- * Chart normalizado que consume PlayState. Todos los tiempos (`FNMMNote.time`,
- * `FNMMNote.length`) estan en milisegundos, sin importar el formato de origen.
- */
+/** Chart normalizado que consume PlayState. */
 typedef FNMMChart = {
 	var name:String;
 	var bpm:Float;

@@ -38,9 +38,7 @@ import flixel.animation.FlxAnimationController;
 
 using StringTools;
 
-/**
- * Various utilities, that have no specific Util class.
-**/
+/** Various utilities, that have no specific Util class. */
 @:allow(funkin.game.PlayState)
 final class CoolUtil
 {
@@ -148,10 +146,6 @@ final class CoolUtil
 		}
 		#end
 	}
-
-
-
-
 
 	/**
 	 * Creates eventual missing folders to the specified `path`
@@ -279,7 +273,6 @@ final class CoolUtil
 		}
 		return Std.int(rSize) + ((label <= 1) ? "" : "." + addZeros(Std.string(Std.int((rSize % 1) * 100)), 2)) + sizeLabels[label];
 	}
-
 
 	/**
 	 * Replaces in a string any kind of IP with `[Your IP]` making the string safer to trace.
@@ -1442,9 +1435,7 @@ class PropertyInfo {
 	}
 }
 
-/**
- * SFXs to play using `CoolUtil.playMenuSFX`.
- */
+/** SFXs to play using `CoolUtil.playMenuSFX`. */
 enum abstract CoolSfx(Int) from Int {
 	var SCROLL = 0;
 	var CONFIRM = 1;

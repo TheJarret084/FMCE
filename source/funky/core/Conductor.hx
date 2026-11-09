@@ -1,6 +1,6 @@
 package funky.core;
 
-/** Conductor Lleva la cuenta del BPM, crochet, y tiempo de la canción. */
+/** Lleva el BPM, crochet y tiempo de la cancion. */
 class Conductor
 {
 	private static var _bpm:Float = DEFAULT_BPM;

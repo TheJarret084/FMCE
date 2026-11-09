@@ -192,10 +192,7 @@ class FNMMSpriteImporter
 	}
 }
 
-/**
- * La conversion de UN sprite, en pedazos: cada `step()` hace una cosa chica (leer una tira,
- * escribir una pagina...) y devuelve true mientras quede mas.
- */
+/** Conversion de un sprite paso a paso, reanudable. */
 class SpriteImportTask
 {
 	public var result(default, null):ImportResult;

@@ -6,10 +6,7 @@ import flixel.group.FlxGroup;
 import funky.core.Paths;
 import openfl.utils.Assets;
 
-/**
- * Controles tactiles sobre el `Hitbox`: la franja inferior de la pantalla (`Hitbox.HEIGHT_RATIO`)
- * se divide en columnas iguales, una por lane.
- */
+/** Controles tactiles sobre el `Hitbox`: la franja inferior de la pantalla (`Hitbox.HEIGHT_RATIO`) se divide en columnas iguales, una por lane. */
 class MobileControls extends FlxGroup
 {
 	/** Lado (px) con el que se dibuja el boton de pausa. */

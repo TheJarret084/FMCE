@@ -2,10 +2,7 @@ package advanced.ui.code;
 
 import StringTools;
 
-/**
- * Colorea codigo. `tokenize` devuelve una lista plana de tripletas [inicio, fin, color, inicio, fin, color, ...]
- * ordenada por inicio; lo que no aparece usa el color por defecto.
- */
+/** Colorea codigo. */
 class Highlighter
 {
 	static var haxeWords:Map<String, Int> = buildHaxeWords();

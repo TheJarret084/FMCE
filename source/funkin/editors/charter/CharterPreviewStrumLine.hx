@@ -63,7 +63,6 @@ class CharterPreviewStrumLine extends FlxTypedGroup<FlxSprite>
 			strum.updateHitbox();
 		}
 
-
 		scroll = CoolUtil.fpsLerp(scroll, scrollSpeed, 0.2);
 		noteTime -= FlxG.elapsed * scroll * 1000 * 0.45;
 		if (noteTime <= 0.0)

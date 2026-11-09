@@ -22,7 +22,7 @@ class CharterBookmarkList extends UISubstateWindow {
 
 		bookmarkList = new UIButtonList<BookmarkButton>(20, title.y + title.height + 10, winWidth - 40, 342 - 85 - 16, null, FlxPoint.get(winWidth - 40, (342 - 85 - 16)/4), null, 0);
 		bookmarkList.cameraSpacing = 0;
-		
+
 		for (b in Charter.instance.getBookmarkList())
 			bookmarkList.add(new BookmarkButton(0, 0, b, bookmarkList));
 
@@ -48,9 +48,9 @@ class CharterBookmarkList extends UISubstateWindow {
 	public function saveList() {
 		var oldList:Array<ChartBookmark> = Charter.instance.getBookmarkList();
 		var newList:Array<ChartBookmark> = [for (btn in bookmarkList.buttons.members) {time: btn.bookmark.time, name: btn.textBox.label.text, color: btn.bookmark.color}];
-		
+
 		PlayState.SONG.bookmarks = newList;
-		Charter.instance.updateBookmarks();	
+		Charter.instance.updateBookmarks();
 		Charter.undos.addToUndo(CEditBookmarks(oldList, newList));
 	}
 }

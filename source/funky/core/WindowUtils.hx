@@ -3,7 +3,7 @@ package funky.core;
 import openfl.Lib;
 import funky.backend.system.Flags;
 
-/** WindowUtils. */
+/** Titulo de la ventana y cierre controlado del juego. */
 final class WindowUtils
 {
 	public static var preventClosing:Bool = false;
@@ -54,8 +54,8 @@ final class WindowUtils
 
 	public static function getTitle(?stateName:String):String
 	{
-    var name:String = stateName;
-    if (stateName == null) name = state;
+	var name:String = stateName;
+	if (stateName == null) name = state;
 		return 'FMCE REWORK — ${Flags.VERSION} — $name';
 	}
 

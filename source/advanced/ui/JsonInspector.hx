@@ -1,6 +1,5 @@
 package advanced.ui;
 
-
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;

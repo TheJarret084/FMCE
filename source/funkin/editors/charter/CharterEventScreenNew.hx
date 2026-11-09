@@ -351,7 +351,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		bg.bHeight = cam.height = cast winHeight + 10;
 		eventsList.bHeight = cast winHeight - 10;
 
-		// Bound stuff from being off screen 
+		// Bound stuff from being off screen
 		var screenSpaceY:Float = (screenPos.y + winHeight + 10) - FlxG.height;
 		screenPos.x = FlxMath.bound(screenPos.x, 4, (FlxG.width - 20) - bWidth - 4); // FlxG.width - 20 for the scroll bar on the right
 		if (screenSpaceY > -8) { // border of 8 of screen >:D
@@ -395,7 +395,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 					eventCam.scroll.y = CoolUtil.bound(eventCam.scroll.y - (FlxG.mouse.wheel * 12), 0, boundingParamYHeight - eventCam.height);
 			}
 		} else if (Charter.instance.curContextMenu == null && ((FlxG.mouse.justReleased && !__clickedWhileHovering) || FlxG.mouse.wheel != 0)) {
-			if (__ignoreLastClick) 
+			if (__ignoreLastClick)
 				__ignoreLastClick = false;
 			else {
 				Charter.instance.shouldScroll = true;
@@ -403,7 +403,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 			}
 		}
 		super.update(elapsed);
-		
+
 		if (FlxG.mouse.justReleased) __clickedWhileHovering = false;
 
 		sinner += elapsed;

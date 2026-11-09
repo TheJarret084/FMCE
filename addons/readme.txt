@@ -12,4 +12,5 @@ Donde se buscan (el externo gana, asi puedes reemplazar uno que trae el juego):
   1. Carpeta externa: addons/ junto al ejecutable (escritorio) o .JarretLabs-FMCE/addons/ (Android)
   2. Lo que trae el build (Project.xml mete esta carpeta)
 
-Una noteskin nueva = copiar su carpeta a addons/noteskins/ (sin recompilar). Detalles: DOCS/addons-y-pack.md
+Una noteskin nueva = copiar su carpeta a addons/noteskins/
+.Detalles: DOCS/addons-y-pack.md

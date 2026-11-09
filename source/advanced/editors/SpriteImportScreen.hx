@@ -4,11 +4,7 @@ import funkin.editors.ui.*;
 import funkin.editors.ui.UIWarningSubstate.WarningButton;
 import funky.game.SpriteBuilder;
 
-/**
- * Ventana "Importar sprite", al estilo del `CharacterSpriteScreen` de Codename: se elige el `.png` (con su `.xml`
- * Sparrow o `.json` Aseprite al lado, si lo tiene), se ve la vista previa con las animaciones que trae, se pone el
- * nombre y se guarda en `levels/<nivel>/sprites/<nombre>/`. Solo escritorio; en movil se sigue usando `import-sprites`.
- */
+/** Ventana para importar un sprite PNG con su atlas y vista previa (solo escritorio). */
 class SpriteImportScreen extends UISubstateWindow
 {
 	var levelDir:String;

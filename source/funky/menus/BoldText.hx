@@ -6,10 +6,7 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.text.FlxText;
 import funky.core.Paths;
 
-/**
- * Texto con la fuente bold del menu (`menus/alphabet-bold`), como el Alphabet de Codename.
- * Si el atlas falta o un caracter no existe, ese caracter se omite (y sin atlas cae a FlxText).
- */
+/** Texto con la fuente bold del menu (`menus/alphabet-bold`), como el Alphabet de Codename. */
 class BoldText extends FlxSpriteGroup
 {
 	static var atlas:FlxAtlasFrames;

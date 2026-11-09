@@ -23,15 +23,7 @@ typedef ArchiveResult =
 	var error:String;
 }
 
-/**
- * Niveles `.FMCE`: un zip normal con lo que hay DENTRO de la carpeta del nivel (`meta.json`, `chart.json`,
- * `scene.json`, `data/`, `sprites/`...), sin copias de seguridad (`.bak` / `.bck`).
- *
- * - Exportar = comprimir la carpeta del nivel en `exports/<Nivel>.FMCE`.
- * - Importar = descomprimir un `.FMCE` en `levels/<Nivel>/` (si el zip trae todo dentro de una carpeta, se le quita).
- *
- * Como es un zip, tambien se puede abrir con cualquier compresor (renombrandolo a .zip).
- */
+/** Niveles .FMCE: zip con el contenido de la carpeta del nivel. */
 class LevelArchive
 {
 	public static inline var EXT:String = ".FMCE";

@@ -15,10 +15,7 @@ typedef FnfcAudio =
 	var target:String;
 }
 
-/**
- * Un `.fnfc` de Friday Night Funkin' (un zip): `<cancion>-chart.json`, `<cancion>-metadata.json`, `Inst.ogg` y las `Voices*.ogg`.
- * Aqui solo se lee; `ChartImporter` convierte las notas.
- */
+/** Un `.fnfc` de Friday Night Funkin' (un zip): `<cancion>-chart.json`, `<cancion>-metadata.json`, `Inst.ogg` y las `Voices*.ogg`. */
 class FnfcPackage
 {
 	public var chart(default, null):String = null;

@@ -45,11 +45,7 @@ typedef RawNote = {
 	@:optional var onMiss:Null<Int>;
 }
 
-/**
- * Un archivo del zip. Se descomprime SOLO cuando se pide (`bytes()`), y `release()` suelta los bytes:
- * asi nunca estan todos los archivos del .fnmm descomprimidos a la vez en memoria (en el celular eso
- * era lo que tumbaba la conversion de niveles grandes).
- */
+/** Un archivo del zip. */
 class ArchiveFile
 {
 	public var path:String;

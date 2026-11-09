@@ -15,7 +15,6 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** CrashHandler */
 final class CrashHandler
 {
 	public static var crashDir:String = "crashes/";

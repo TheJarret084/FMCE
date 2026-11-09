@@ -53,7 +53,7 @@ class Main extends Sprite
 
 		addChild(new FlxGame(GAME_WIDTH, GAME_HEIGHT, SplashState, 60, 60, true));
 		FlxG.signals.focusLost.add(function() ClientPrefs.save());
-    funky.core.CursorManager.init(); // yea
+		funky.core.CursorManager.init();
 		addChild(new Framerate());
 		addChild(new LogOverlay()); // logs en pantalla (F2)
 		Log.info("Juego iniciado :happy:");

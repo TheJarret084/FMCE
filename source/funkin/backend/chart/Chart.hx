@@ -10,17 +10,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Puente entre el charter (ChartData) y los archivos de un nivel de FMCE. Un nivel tiene:
- *  - chart.json:  las notas. `strumLines` = una lista de {time, lane, length} por strumline, en segundos.
- *                 `fmceChart: true` marca que ya es de FMCE; si falta, `ChartNormalizer` detecta el tipo (FNMM, Codename,
- *                 Psych/Legacy, FNF) y lo convierte al cargar el nivel.
- *                 Es la unica dificultad base (la dificultad del juego es la velocidad de scroll).
- *  - events.json: los eventos GLOBALES (`events`, acciones agrupadas por tiempo) + `action_packs`.
- *                 No hay eventos locales ni charts/*.json.
- *  - meta.json:   bpm, stepsPerBeat, offset, displayName, color, stage, ...
- * Lo que el charter no conoce (campos extra, acciones de eventos desconocidas) se conserva tal cual al guardar.
- */
+/** Puente entre el charter (ChartData) y los archivos de un nivel de FMCE. */
 class Chart {
 	public static inline var version:String = "fmce-1";
 

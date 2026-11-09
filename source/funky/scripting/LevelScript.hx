@@ -13,19 +13,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Un `.hx` de un nivel, con su propio interprete (hscript-improved: clases, `import`, `using`).
- * Hace el papel de `HScript` en Codename:
- *
- *  - Su "padre" es el PlayState (`setParent`): lo que el script no define lo busca ahi, asi que `healthBar.visible = false;`,
- *    `hud`, `score`, `stage`... funcionan sin prefijo, y `score = 10;` asigna al PlayState.
- *  - Comparte el mapa de variables publicas con todos los demas scripts (`setPublicMap`): `public var x`, `public function f()`
- *    y `static var` se ven desde cualquier script.
- *  - Se crea primero (se parsea) y se ejecuta despues con `load()`, cuando ya tiene padre y mapa publico.
- *
- * Las clases propias van en `<nivel>/source/` (NO en `data/scripts/`, porque todo lo de `data/scripts/` se ejecuta
- * solo): `import MiClase;` carga `<nivel>/source/MiClase.hx`, `import jefe.Boss;` carga `<nivel>/source/jefe/Boss.hx`.
- */
+/** Un `.hx` de un nivel, con su propio interprete (hscript-improved: clases, `import`, `using`). */
 class LevelScript
 {
 	static var EXTENSIONS:Array<String> = ["hx", "hscript", "hsc", "hxs"];

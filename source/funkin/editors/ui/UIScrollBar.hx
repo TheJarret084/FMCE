@@ -57,7 +57,7 @@ class UIScrollBar extends UISprite {
 					onChange(value);
 			}
 			mousePos.put();
-		} 
+		}
 		if (FlxG.mouse.justReleased && isScrolling) {
 			isScrolling = false;
 			thumb.framesOffset = lastHoveredThumb ? 9 : 0;

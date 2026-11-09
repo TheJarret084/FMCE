@@ -23,10 +23,7 @@ private typedef Tool =
 	var ?text:FlxText;
 }
 
-/**
- * Despues de elegir el nivel en el modo avanzado: elige que herramienta abrir (o exportar el nivel como .FMCE).
- * Cada herramienta es un icono de `editors/icons`; izquierda/derecha para moverse, o toca el icono directo.
- */
+/** Despues de elegir el nivel en el modo avanzado: elige que herramienta abrir (o exportar el nivel como .FMCE). */
 class AdvancedToolsState extends FlxState
 {
 	static inline var MUTED:Int = 0xFF858B97;

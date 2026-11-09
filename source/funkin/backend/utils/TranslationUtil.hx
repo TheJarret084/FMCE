@@ -2,12 +2,7 @@ package funkin.backend.utils;
 
 import funkin.backend.utils.Translations;
 
-/**
- * Fachada compatible con Codename Engine (`TU`).
- *
- * Todo el trabajo lo hace `Translations`; aqui solo queda la API que usan
- * los editores portados y los menus de FMCE.
- */
+/** Fachada compatible con Codename Engine (`TU`). */
 class TranslationUtil
 {
 	/** Idioma actual (`es`, `en`...). */

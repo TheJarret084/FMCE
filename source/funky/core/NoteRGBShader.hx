@@ -3,10 +3,7 @@ package funky.core;
 import flixel.system.FlxAssets.FlxShader;
 import flixel.util.FlxColor;
 
-/**
- * Tinte RGB por canales para notas y receptores, en el mismo spirit que el `RGBSprite` de
- * impostorLegacy pero montado sobre Flixel 6.2.0 pelado.
- */
+/** Tinte RGB por canales para notas y receptores. */
 class NoteRGBShader extends FlxShader
 {
 	/**

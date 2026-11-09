@@ -3,10 +3,7 @@ package advanced.ui.code;
 import flixel.FlxG;
 import openfl.display.Sprite;
 
-/**
- * Capa de OpenFL donde viven los TextField (editor, buscador). Cuelga de FlxG.game y copia la escala del
- * modo de escala de Flixel, asi los campos de texto quedan alineados con la UI aunque cambies el tamano de la ventana.
- */
+/** Capa de OpenFL donde viven los TextField (editor, buscador). */
 class StudioOverlay
 {
 	public var root(default, null):Sprite;

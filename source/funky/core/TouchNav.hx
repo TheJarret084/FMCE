@@ -6,13 +6,7 @@ import flixel.math.FlxPoint;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
 
-/**
- * Entrada de puntero para los menus: el DEDO (celular) y el MOUSE (PC) se tratan igual. Un "toque" es un dedo que se apoya
- * o un clic izquierdo; `hit`, `tapped` y `rowTapped` valen para los dos, asi que un menu escrito una vez funciona con tactil,
- * mouse y (aparte) teclado.
- *
- * Los puntos son de PANTALLA (como se ve el objeto): un objeto con `scrollFactor` 0 se prueba bien aunque la camara se mueva.
- */
+/** Entrada de puntero para los menus: el DEDO (celular) y el MOUSE (PC) se tratan igual. */
 class TouchNav
 {
 	/** True on platforms where there is normally no keyboard. */

@@ -19,10 +19,7 @@ typedef SpriteConvertResult = {
 	var error:Null<String>;
 }
 
-/**
- * Recorre carpetas buscando atlas Sparrow (`*.xml` con raiz `TextureAtlas`) y escribe al lado un
- * `.json` estilo Aseprite con el mismo nombre base (`sprite.xml` -> `sprite.json`).
- */
+/** Convierte atlas Sparrow (*.xml) a JSON estilo Aseprite. */
 class SpriteFolderConverter
 {
 	/** Convierte todo lo que cuelgue de `root`. Devuelve un resultado por atlas encontrado. */

@@ -9,10 +9,7 @@ import flixel.util.FlxColor;
 import openfl.display.BitmapData;
 import openfl.geom.Rectangle;
 
-/**
- * Port del `Hitbox` del Kade/Android: la pantalla completa dividida en columnas iguales, una por
- * lane, con un brillo que aparece al tocar y una guia tenue siempre visible.
- */
+/** Hitbox tactil a pantalla completa dividida por lanes. */
 class Hitbox extends FlxSpriteGroup
 {
 	static inline var DOWN_ALPHA:Float = 0.75;

@@ -1,10 +1,6 @@
 package funkin.backend.utils;
 
-/**
- * Tools to work with sorted arrays, in a more efficient way.
- *
- * DISCLAIMER: All types of utils only usable in a sorted array.
- */
+/** Tools to work with sorted arrays, in a more efficient way. */
 final class SortedArrayUtil {
 	/**
 	 * Gets the index of a possible new element of an Array of T using an efficient algorithm.

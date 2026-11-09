@@ -1,10 +1,6 @@
 package hscript;
 
-/**
- * Sobrescribe `hscript.Config` de hscript-improved (igual que hace Codename Engine).
- * Define que clases del juego se pueden EXTENDER desde un script (`class Boss extends FunkinSprite`).
- * Agrega aqui un paquete o una clase concreta si necesitas extender mas cosas.
- */
+/** Sobrescribe `hscript.Config` de hscript-improved (igual que hace Codename Engine). */
 class Config
 {
 	public static final ALLOWED_CUSTOM_CLASSES:Array<String> = [

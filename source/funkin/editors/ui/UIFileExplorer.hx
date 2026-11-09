@@ -15,7 +15,7 @@ class UIFileExplorer extends UISliceSprite {
 	public var onFile:(String, Bytes)->Void;
 
 	public var uiElement:FlxSprite;
-	
+
 	public var fileType:String = "txt";
 
 	public function new(x:Float, y:Float, ?w:Int, ?h:Int, fileType:String = "txt", ?onFile:(String, Bytes)->Void) {

@@ -2,11 +2,7 @@ package funkin.editors.charter;
 
 import funkin.backend.chart.ChartData.ChartMetaData;
 
-/**
- * Datos del nivel que se guardan en `meta.json`: nombre a mostrar, bpm, compas, color de la tarjeta
- * y los iconos del jugador y del enemigo (`icons.P1` / `icons.P2`, sprites de `<nivel>/sprites/`).
- * (Dificultades, modos y valores custom ya no existen: la dificultad es la velocidad de scroll.)
- */
+/** Datos del nivel guardados en meta.json (nombre, bpm, compas, color e iconos). */
 class CharterMetaDataScreen extends UISubstateWindow {
 	public var metadata:ChartMetaData;
 	public var saveButton:UIButton;

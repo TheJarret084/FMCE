@@ -15,11 +15,7 @@ typedef MixResult =
 	var seconds:Float;
 }
 
-/**
- * Suma varias pistas de audio en una sola (para el .FNMM, que solo tiene un `music`).
- * Decodifica con lime (ogg/wav...), pasa todo a estereo a la frecuencia de la primera pista y lo codifica a OGG Vorbis
- * con `OggVorbisEncoder` (el FNMM de Funky Maker: Mobile solo lee OGG).
- */
+/** Suma varias pistas de audio en una sola (para el .FNMM, que solo tiene un `music`). */
 class AudioMixer
 {
 	static inline var HEADER:Int = 44;

@@ -8,11 +8,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Lo que el charter necesita saber de `scene.json` y de `sprites/` para ofrecer listas en vez de numeros:
- * objetos, sus posiciones (`transform`), las camaras, los sprites y las animaciones de un sprite.
- * Las listas salen siempre del disco, asi que reflejan lo ultimo que se guardo en el editor de escena.
- */
+/** Datos de scene.json y sprites/ que usa el charter para sus listas. */
 class SceneInfo
 {
 	static function readJson(path:String):Dynamic

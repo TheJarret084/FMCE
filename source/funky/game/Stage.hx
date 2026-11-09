@@ -945,4 +945,3 @@ class Stage extends FlxGroup
 		super.destroy();
 	}
 }
-

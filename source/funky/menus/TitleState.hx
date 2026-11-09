@@ -16,10 +16,7 @@ import funky.core.TouchNav;
 import funky.core.TransitionHandler;
 import funkin.backend.utils.TranslationUtil as TU;
 
-/**
- * Pantalla de titulo basica: degradado, logo, GF bailando y el aviso de "Press Enter", todo al ritmo
- * de la musica del menu. Sin franjas de lane ni notas cayendo.
- */
+/** Pantalla de titulo basica: degradado, logo, GF bailando y el aviso de "Press Enter", todo al ritmo de la musica del menu. */
 class TitleState extends FlxState
 {
 	public static final TITLE:String = "FMCE";

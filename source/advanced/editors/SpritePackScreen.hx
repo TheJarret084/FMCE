@@ -14,15 +14,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Administrador de sprites del nivel: una cuadricula con la miniatura de cada sprite de `<nivel>/sprites/`.
- * Sirve para elegir el sprite de un objeto de la escena y los iconos de la barra de vida (charter).
- * Usa solo los helpers de Codename (UISubstateWindow, UIButton, UIText) y la paleta del editor de escena.
- *  - clic = elegir, doble clic o USAR = aplicar, rueda = mas filas, ESC = cerrar;
- *  - filtros TODOS / ICONOS (los de `config.json` > `type: "icon"`) / OTROS;
- *  - "+ Nuevo" importa un sprite nuevo (la misma ventana de importar del editor de sprites);
- *  - QUITAR (solo si `allowNone`) deja el campo sin sprite.
- */
+/** Administrador de sprites del nivel: una cuadricula con la miniatura de cada sprite de `<nivel>/sprites/`. */
 class SpritePackScreen extends UISubstateWindow
 {
 	static inline var COLS:Int = 4;

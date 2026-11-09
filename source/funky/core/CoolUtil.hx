@@ -35,7 +35,6 @@ import sys.io.File;
 
 using StringTools;
 
-/** CoolUtil */
 final class CoolUtil
 {
 	public static function getLastExceptionStack():String

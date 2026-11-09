@@ -5,11 +5,7 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import funky.core.NoteSkin;
 
-/**
- * Splash al acertar una nota (SICK). Usa el mismo sistema que las notas y receptores del skin: su atlas, la animacion
- * `splash` de cada `<lane>` y el mismo coloreado (`NoteSkin.applyTo`: shader RGB, tinte o nada). Si el atlas no trae
- * animacion de splash (como Funky Maker: Mobile, que solo tiene flechas), el splash es la flecha de la nota: crece y se desvanece.
- */
+/** Splash al acertar una nota (SICK). */
 class NoteSplash extends FlxSprite
 {
 	/** Cuanto crece (x) la flecha cuando se usa de splash. */

@@ -27,15 +27,7 @@ import haxe.ds.ObjectMap;
 import funky.backend.chart.EventRemap;
 import haxe.io.Path;
 
-/**
- * Editor de escena (solo escritorio), con la interfaz de los editores de Codename.
- * Edita el `scene.json` del nivel sobre una vista que usa las mismas cuentas que el `Stage` del juego
- * (camara, parallax, objetos `fixed` pegados a la pantalla).
- *  - objetos: sprite, posicion, escala (negativa = espejo), parallax, opacidad, color, strumline, fixed, visible y orden de capas
- *    (arrastra los botones de la lista);
- *  - camaras: posicion y zoom de cada punto de camara.
- * Se edita la primera entrada de `transform` de cada objeto; las demas, `icons` y todo lo que el editor no conoce se conserva.
- */
+/** Editor de escena (solo escritorio), con la interfaz de los editores de Codename. */
 class SceneEditorState extends UIState
 {
 	static inline var TOP:Int = 25;

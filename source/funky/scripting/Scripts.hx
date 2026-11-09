@@ -28,16 +28,7 @@ import haxe.io.Path;
 import sys.FileSystem;
 #end
 
-/**
- * Scripts de un nivel: todo `.hx` de `<nivel>/data/scripts/` (en orden alfabetico). hscript-improved: clases, import, using.
- * Funciona como el `ScriptPack` de Codename:
- *
- *  - Los scripts tienen de "padre" al PlayState: `healthBar.visible = false;` sin prefijo (ver `setParent`).
- *  - Todos comparten las variables y funciones `public` y las `static`: en un script `public var combo2 = 0;` y en otro `combo2++;`;
- *    `public function brillar(spr) {...}` y desde otro script `brillar(sprite);`. Con `scripts.getByName("a.hx").call("f", [x])`
- *    se llama a una funcion de un script concreto y con `importScript("ruta")` se carga otro `.hx` del nivel.
- *  - `setVar` / `getVar` siguen existiendo y leen/escriben ese mismo mapa, asi que son intercambiables con `public var`.
- */
+/** Scripts de un nivel: todo `.hx` de `<nivel>/data/scripts/` (en orden alfabetico). */
 class Scripts
 {
 	/** Carpeta de los scripts dentro del nivel. */

@@ -162,14 +162,7 @@ private class Book
 	}
 }
 
-/**
- * Codificador de OGG Vorbis en Haxe puro, hecho para que el .FNMM (Funky Maker: Mobile, que pide OGG) pueda llevar una mezcla.
- *
- * Es un codificador sencillo, no un libvorbis: un solo tamano de bloque (2048), un floor tipo 1 de dos puntos (el mismo paso de
- * cuantizacion para todo el frame, con una pendiente hacia los agudos), cuantizacion escalar con cinco clases de residuo,
- * acoplamiento magnitud/angulo en estereo y corte de agudos. Pesa mas que un OGG de libvorbis al mismo nivel de calidad,
- * pero cualquier decodificador de Vorbis lo lee.
- */
+/** Codificador de OGG Vorbis en Haxe puro, hecho para que el .FNMM (Funky Maker: Mobile, que pide OGG) pueda llevar una mezcla. */
 class OggVorbisEncoder
 {
 	static inline var BLOCK:Int = 2048;

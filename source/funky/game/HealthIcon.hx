@@ -1,8 +1,6 @@
 package funky.game;
 
-/**
- * Icono de la barra de vida de un jugador.
- */
+/** Icono de la barra de vida de un jugador. */
 class HealthIcon extends LevelSprite
 {
 	/** Lado (px de pantalla) al que se ajusta el icono antes de aplicar la escala del config. */
@@ -22,13 +20,13 @@ class HealthIcon extends LevelSprite
 	var normalAnim:Null<String> = null;
 	var losingAnim:Null<String> = null;
 	var winningAnim:Null<String> = null;
-    var levelDirectory:Null<String>;
+	var levelDirectory:Null<String>;
 
 	public function new(levelDir:Null<String>, name:Null<String>, isPlayer:Bool)
 	{
 		super();
 		this.isPlayer = isPlayer;
-        this.levelDirectory = levelDir;
+		this.levelDirectory = levelDir;
 		scrollFactor.set();
 		if (levelDir != null && name != null && name != "") load(levelDir, name);
 
@@ -97,32 +95,32 @@ class HealthIcon extends LevelSprite
 		scale.set(next, next);
 	}
 
-    public function changeIcon(name:String = ""):Void
-    {
-        if (name == "" || levelDirectory == null) return;
-    
-        if (!load(levelDirectory, name))
-        {
-            normalAnim = null;
-            losingAnim = null;
-            winningAnim = null;
-            return;
-        }
-    
-        normalAnim = pick(NORMAL_NAMES);
-        if (normalAnim == null) normalAnim = firstAnim;
-    
-        losingAnim = pick(LOSING_NAMES);
-        winningAnim = pick(WINNING_NAMES);
-    
-        baseScale = FIT / Math.max(1, Math.max(frameWidth, frameHeight));
-    
-        setSpriteScale(baseScale);
-    
-        state = "";
-        setState("anim0");
-    
-        antialiasing = true;
-        flipX = false;
-    }
+	public function changeIcon(name:String = ""):Void
+	{
+		if (name == "" || levelDirectory == null) return;
+
+		if (!load(levelDirectory, name))
+		{
+			normalAnim = null;
+			losingAnim = null;
+			winningAnim = null;
+			return;
+		}
+
+		normalAnim = pick(NORMAL_NAMES);
+		if (normalAnim == null) normalAnim = firstAnim;
+
+		losingAnim = pick(LOSING_NAMES);
+		winningAnim = pick(WINNING_NAMES);
+
+		baseScale = FIT / Math.max(1, Math.max(frameWidth, frameHeight));
+
+		setSpriteScale(baseScale);
+
+		state = "";
+		setState("anim0");
+
+		antialiasing = true;
+		flipX = false;
+	}
 }

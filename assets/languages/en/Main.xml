@@ -63,6 +63,9 @@
 	<group name="Game" prefix="game.">
 		<str id="botplay">BOTPLAY</str>
 		<str id="notAvailable">N/A</str>
+		<str id="score">Score: {0}</str>
+		<str id="misses">Misses: {0}</str>
+		<str id="accuracy">Accuracy: {0} ({1})</str>
 		<str id="stats">Score: {0} | Misses: {1} | Accuracy: {2} | Rank: {3}</str>
 	</group>
 

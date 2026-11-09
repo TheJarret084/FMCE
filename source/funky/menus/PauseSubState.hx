@@ -38,12 +38,7 @@ private typedef Row =
 	var action:String;
 }
 
-/**
- * Pausa estilo Impostor Legacy: fondo que se oscurece, opciones grandes con borde pegadas a la
- * izquierda que se deslizan al elegirlas, titulo de la cancion arriba a la derecha y un boton para
- * "echar un vistazo" al juego sin salir de la pausa (el `looksie` de Legacy; TAB o tocar en
- * movil).
- */
+/** Pausa estilo Impostor Legacy con opciones deslizantes. */
 class PauseSubState extends FlxSubState
 {
 	/** Acciones que piden confirmacion. */

@@ -73,11 +73,7 @@ class AnimateTimeline
 	public function new() {}
 }
 
-/**
- * Lee un spritemap de Adobe Animate (`Animation.json` + `spritemap*.json`, con las claves cortas AN/SD/MD o las largas)
- * y calcula, para cualquier frame de cualquier simbolo o label, la lista de sprites del atlas con su matriz final.
- * No dibuja nada: eso lo hace el exportador con BitmapData. Asi solo se tocan los simbolos que se piden.
- */
+/** Lee un spritemap de Adobe Animate y arma sus animaciones. */
 class AnimateAtlas
 {
 	static inline var MAX_DEPTH:Int = 24;

@@ -444,7 +444,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		group.copyColorTransformToChildren = false;
 	}
 
-
 	public function handleSelection(selectionBox:UISliceSprite):Bool {
 		return (selectionBox.x + selectionBox.bWidth > x) && (selectionBox.x < x + bWidth) && (selectionBox.y + selectionBox.bHeight > y) && (selectionBox.y < y + bHeight);
 	}

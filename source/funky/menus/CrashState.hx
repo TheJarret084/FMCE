@@ -6,11 +6,7 @@ import flixel.FlxState;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 
-/**
- * Pantalla de error dentro del juego (la muestra CrashHandler ante un error de Haxe recuperable). A proposito no usa
- * assets del juego ni nada de los editores: solo formas planas y la fuente por defecto de Flixel, para que no pueda
- * fallar por lo mismo que ya fallo. Funciona igual en PC y en Android (mouse o toque).
- */
+/** Pantalla de error dentro del juego (la muestra CrashHandler ante un error de Haxe recuperable). */
 class CrashState extends FlxState
 {
 	var report:String;

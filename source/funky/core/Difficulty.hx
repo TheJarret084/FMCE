@@ -1,9 +1,6 @@
 package funky.core;
 
-/**
- * Dificultad = velocidad de scroll. Cada una es un multiplicador de `Note.BASE_PX_PER_MS`
- * (0.45 px/ms, que equivale a scroll speed 1). Se cambia en Freeplay con izquierda/derecha.
- */
+/** Dificultad = velocidad de scroll. */
 class Difficulty
 {
 	public static final NAMES:Array<String> = ["EASY", "NORMAL", "HARD", "VERY HARD"];

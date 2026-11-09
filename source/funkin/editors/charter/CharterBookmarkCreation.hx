@@ -42,7 +42,7 @@ class CharterBookmarkCreation extends UISubstateWindow {
 		textBox.antialiasing = true;
 		add(textBox);
 		addLabelOn(textBox, TU.translate("charter.bookmarks.createBookmarkName"));
-		
+
 		colorPicker = new UICompactColorwheel(textBox.x, textBox.y + textBox.bHeight + 34, flixel.util.FlxColor.RED);
 		add(colorPicker);
 		addLabelOn(colorPicker, TU.translate("charter.bookmarks.createBookmarkColor"));

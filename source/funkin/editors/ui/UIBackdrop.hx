@@ -26,7 +26,6 @@ class UIBackdrop extends UISprite {
 			x = defX;
 		}
 
-
 		setPosition(__oldPos.x, __oldPos.y);
 		scrollFactor.set(__oldScroll.x, __oldScroll.y);
 		__oldPos.put();

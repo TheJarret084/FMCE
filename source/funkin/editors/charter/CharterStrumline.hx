@@ -163,7 +163,6 @@ class CharterStrumline extends UISprite {
 
 		highlightColor = 0xFFFFFFFF;
 		if (icons[0] != null) {
-			
 
 			//make darker colors more visible for the highlight
 			highlightColor.brightness = Math.max(highlightColor.brightness, 0.65);

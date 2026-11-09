@@ -1,6 +1,5 @@
 package advanced;
 
-
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;

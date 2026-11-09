@@ -12,14 +12,7 @@ import funky.game.SpriteCache;
 import haxe.Timer;
 import openfl.Assets as OpenFlAssets;
 
-/**
- * Pantalla previa a cada cancion: lee el chart y precarga los sprites que el nivel usa (`SpriteCache`). Al terminar
- * entra a `PlayState`. Todo lo que abre un nivel pasa por aqui (`PlayState.archivePath` ya fijado), incluidos los
- * reintentos. Los saltos de la pausa (adelantar / retroceder) NO pasan por aqui: ver `PlayState.seekTo`.
- *
- * Look: fondo negro y, abajo a la derecha, la silueta blanca corriendo sobre una barra blanca hasta el microfono.
- * Los PNG van en `assets/images/menus/Loading/` (`runner.png` y `mic.png`); si faltan se dibuja algo simple.
- */
+/** Pantalla previa a cada cancion: lee el chart y precarga los sprites que el nivel usa (`SpriteCache`). */
 class LoadingLevelState extends MusicBeatState
 {
 	/** Barra (px del juego): ancho, alto, y lo que queda de margen a la derecha y abajo. */

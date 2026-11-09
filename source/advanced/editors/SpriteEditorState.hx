@@ -19,14 +19,7 @@ import funky.game.LevelSprite;
 import funky.game.SpriteBuilder;
 import haxe.io.Path;
 
-/**
- * Editor de sprites (solo escritorio), con la interfaz de los editores de Codename.
- * Edita el `config.json` de cada carpeta de `sprites/`: tipo y bilinear del sprite, y por animacion
- * el nombre, el tag del atlas, indices, velocidad, escala, loop y pivote (`offset`). Como en el editor de personajes de
- * Codename, el pivote de la animacion va clavado en la cruz del lienzo (igual que lo coloca el juego) y se pueden
- * dejar animaciones como ghost para alinear las demas contra ellas. El atlas nunca se modifica y lo que
- * el editor no conoce de `config.json` (`index`, `num`...) se conserva tal cual.
- */
+/** Editor de sprites (solo escritorio), con la interfaz de los editores de Codename. */
 class SpriteEditorState extends UIState
 {
 	static inline var TOP:Int = 25;

@@ -19,12 +19,7 @@ typedef NoteSkinLane =
 	var splash:String;
 }
 
-/**
- * Colores de una direccion (igual para `rgb` que para `tint`). Todos son opcionales: lo que falta cae a settings.xml.
- *  - idle:    color de la nota
- *  - pressed: color del receptor / confirm apretado (si falta, el de `idle`)
- *  - rest:    color del receptor EN REPOSO (el "modo mimido"); solo lo usa el tipo `tint`. Si falta, `strumDefaultColor`.
- */
+/** Colores de una direccion (igual para `rgb` que para `tint`). */
 typedef NoteSkinColor =
 {
 	var idle:Null<Int>;
@@ -32,12 +27,7 @@ typedef NoteSkinColor =
 	var rest:Null<Int>;
 }
 
-/**
- * Como se colorean las notas de un skin (atributo `type` del `<noteSkin>`):
- * - `sparrow`: atlas completo y ya pintado (flechas de colores, colas, receptores...). Se dibuja tal cual. Ej: Codename.
- * - `rgb`: atlas tipo mascara (rojo = color, verde = brillo, azul = sombra) pintado con NoteRGBShader. Ej: FMCE.
- * - `tint`: atlas claro/gris que se tiñe con un solo color (FlxSprite.color). Ej: Funky Maker: Mobile.
- */
+/** Formas de colorear las notas de un skin (sparrow, rgb, tint). */
 enum abstract NoteSkinType(String) to String
 {
 	var SPARROW = "sparrow";
@@ -57,20 +47,7 @@ enum abstract NoteSkinType(String) to String
 	}
 }
 
-/**
- * Skin de notas configurable con un `noteSkin.xml` (con DOCTYPE, como los XML de Codename).
- *
- * Cada skin es un addon (ver `Addons`):
- *   addons/noteskins/<id>/data/noteSkin.xml      <- esta configuracion
- *   addons/noteskins/<id>/images/<atlas>.png/.xml <- el atlas (Sparrow)
- *
- * El `<atlas path="..."/>` es el nombre del atlas SIN extension, dentro de la carpeta images/ del propio skin
- * (un skin queda aislado: copiar su carpeta basta para instalarlo). Si ahi no esta, se busca en assets/images/.
- *
- * El XML dice que atlas usar, como se llaman las animaciones de cada direccion, de que tipo es
- * (`type="sparrow|rgb|tint"`, ver NoteSkinType) y, para rgb / tint, que colores usar (si no, los de settings.xml).
- * Compatibilidad: sin `type`, `<rgb enabled="true"/>` = rgb y `<rgb enabled="false"/>` = sparrow.
- */
+/** Skin de notas configurable con un `noteSkin.xml` (con DOCTYPE, como los XML de Codename). */
 class NoteSkin
 {
 	public static inline var DEFAULT_ID:String = "default";

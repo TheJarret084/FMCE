@@ -182,10 +182,7 @@ private class Row extends FlxGroup
 	}
 }
 
-/**
- * Menu de opciones estilo Codename (TreeMenu): lista vertical con la fila elegida al centro, barra
- * de titulo/descripcion arriba y pantallas que se apilan (CONTROLES > ...).
- */
+/** Menu de opciones estilo Codename (TreeMenu) con fila centrada. */
 class ConfigMenu extends FlxGroup
 {
 	static var font:Null<String> = null;

@@ -9,11 +9,7 @@ import hxvlc.flixel.FlxVideo;
 import funky.core.Log;
 import funky.core.Paths;
 
-/**
- * Substate que reproduce un video a pantalla completa y, cuando termina, avisa. Se usa para el video de error de carga.
- * Uso: `var v = new JarretVideo(); openSubState(v); v.play("nombre", function() { ... });`
- * `onDone` se llama SIEMPRE: al terminar el video, si el video falta o si falla (asi el aviso que sigue nunca se pierde).
- */
+/** Substate que reproduce un video a pantalla completa y, cuando termina, avisa. */
 class JarretVideo extends FlxSubState
 {
 	#if FMCE_VIDEO

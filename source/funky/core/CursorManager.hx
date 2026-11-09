@@ -5,14 +5,7 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import funky.core.Paths;
 import funky.game.PlayState;
 
-/**
- * Cursor del juego y su regla unica: el mouse esta SIEMPRE activo (visible y funcionando) en todos los states, menos
- * en el PlayState. Dentro del PlayState se oculta; si se abre un substate encima (pausa, game over) vuelve.
- *
- * La regla se aplica sola cada frame (despues del update), asi que ningun state tiene que acordarse de prender o apagar
- * `FlxG.mouse.visible`: no hace falta tocar nada al crear ni al destruir un state.
- * Si algun dia necesitas esconderlo a proposito (un video, una cinematica), usa `CursorManager.forceHidden = true`.
- */
+/** Cursor del juego y su regla unica: el mouse esta SIEMPRE activo (visible y funcionando) en todos los states, menos en el PlayState. */
 class CursorManager
 {
 	/** true = el mouse se esconde en cualquier state (para cinematicas o videos). Acuerdate de regresarlo a false. */

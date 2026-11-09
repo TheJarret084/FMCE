@@ -111,7 +111,7 @@ class UITextBox extends UISliceSprite implements IUIFocusable {
 	public inline static function findWholeWord(text:String, pos:Int, ?isDelete:Bool = false):Null<Array<Int>> {
 		if (text.length == 0)
 			return null;
-		
+
 		var start = pos;
 		var end = pos;
 
@@ -212,7 +212,7 @@ class UITextBox extends UISliceSprite implements IUIFocusable {
 				}
 
 				UIState.playEditorSound(Flags.DEFAULT_EDITOR_PASTE_SOUND);
-				
+
 				// we pasting
 				var data:String = Clipboard.generalClipboard.getData(TEXT_FORMAT);
 				if (data != null)

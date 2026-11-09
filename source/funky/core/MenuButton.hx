@@ -10,14 +10,7 @@ import flixel.text.FlxText.FlxTextBorderStyle;
 import flixel.util.FlxColor;
 import flixel.util.FlxSpriteUtil;
 
-/**
- * Boton de menu unico para TODOS los menus (mismo tamano, mismo estilo, mismo lugar): pastilla oscura con borde y texto.
- * Se prueba con `clicked()` (dedo o mouse). En PC se ilumina al pasar el mouse; al tocarlo hace un "pop" corto.
- *
- * Acomodo (igual en cada menu para que ya no anden cada quien por su lado):
- *  - ATRAS: esquina de arriba a la izquierda (`BackButton.place()`).
- *  - Acciones (CONVERTIDOR, REFRESCAR, VER JUEGO...): en una fila abajo a la izquierda, con `MenuButton.bottomRow([...])`.
- */
+/** Boton de menu unico para TODOS los menus (mismo tamano, mismo estilo, mismo lugar): pastilla oscura con borde y texto. */
 class MenuButton extends FlxSpriteGroup
 {
 	public static inline var HEIGHT:Int = 52;

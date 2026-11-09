@@ -3,10 +3,7 @@ package funkin.editors.charter;
 import flixel.math.FlxPoint;
 import funkin.backend.chart.ChartData;
 
-/**
- * Editor de `action_packs` de events.json. Un pack es una lista de acciones (las mismas que un evento)
- * que corre el evento `RunActionPack`. Cada pack se edita con la misma pantalla que los eventos.
- */
+/** Editor de `action_packs` de events.json. */
 class CharterActionPacksScreen extends UISubstateWindow {
 	public static inline var WIN_WIDTH:Int = 440;
 

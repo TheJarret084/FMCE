@@ -47,8 +47,4 @@ class Flags
 		return "V " + version;
 		#end
 	}
-
-  /*
-   * static function get_STATE():String {}
-   */
 }

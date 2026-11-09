@@ -8,21 +8,7 @@ import openfl.utils.Assets as OpenFlAssets;
 
 using StringTools;
 
-/**
- * Addons: extensiones que el juego carga siempre (noteskins, videos...), separadas de `assets/` (que va en el `assets.pack`).
- *
- *     addons/
- *       noteskins/<id>/data/noteSkin.xml      <- la configuracion
- *       noteskins/<id>/images/NOTE_assets.*   <- el atlas
- *       videos/<nombre>.mp4                   <- hxvlc necesita un archivo real, por eso no entran en el .pack
- *
- * Dos origenes para la misma ruta relativa (`noteskins/default/data/noteSkin.xml`); el externo gana, asi un addon
- * puesto a mano reemplaza al que trae el juego:
- *
- * 1. Carpeta externa en disco: `addons/` junto al ejecutable (escritorio) o `.JarretLabs-FMCE/addons/` (Android).
- * 2. Lo que trae el build: Project.xml mete `addons/` como assets de OpenFL (ids `addons/...`).
- *    En escritorio Lime los copia junto al ejecutable (== el origen 1); en Android quedan dentro del APK.
- */
+/** Addons: extensiones que el juego carga siempre (noteskins, videos...), separadas de `assets/` (que va en el `assets.pack`). */
 class Addons
 {
 	/** Prefijo de los ids de OpenFL de lo que trae el build. */

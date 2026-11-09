@@ -41,11 +41,7 @@ private class Item
 	}
 }
 
-/**
- * Logs en pantalla (el `DebugText` del legacy, pero bonito): cada linea de `Log` aparece como una
- * tarjeta con fondo negro que ENTRA por la izquierda (alpha 0 -> 1 y X de fuera de pantalla a su
- * sitio), se queda unos segundos y SALE por la izquierda otra vez (alpha 1 -> 0 y X hacia fuera).
- */
+/** Logs en pantalla como tarjetas que entran y salen. */
 class LogOverlay extends Sprite
 {
 	public static var instance:LogOverlay;

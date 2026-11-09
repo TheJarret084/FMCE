@@ -4,10 +4,7 @@ import flixel.math.FlxPoint;
 import openfl.display.DisplayObject;
 import funky.backend.system.framerate.Framerate as RealFramerate;
 
-/**
- * Pieza suelta (visible / alpha) del contador real. El charter portado de Codename la usa como `Framerate.fpsCounter.alpha = 0.4`;
- * aqui se redirige al objeto de verdad (`funky.backend.system.framerate.Framerate`) en vez de ser un stub que no hacia nada.
- */
+/** Pieza suelta (visible / alpha) del contador real. */
 class FramerateStub
 {
 	var target:Void->DisplayObject;
@@ -48,12 +45,7 @@ class FramerateStub
 	}
 }
 
-/**
- * Puente para el codigo portado de Codename (`funkin.*`): todo lo que toque `Framerate` aqui mueve el contador REAL del juego.
- * Antes esto era un stub vacio, por eso `Framerate.offset.y = 30` del UIState no bajaba nada y el contador tapaba el menu del charter.
- * Para mover el contador desde codigo propio usa `funky.backend.system.framerate.Framerate.setPosition(x, y)` / `.move(dx, dy)` /
- * `.resetPosition()` (o `setPosition` desde un script: `Framerate.setPosition(6, 40)`).
- */
+/** Puente para el codigo portado de Codename (`funkin.*`): todo lo que toque `Framerate` aqui mueve el contador REAL del juego. */
 class Framerate
 {
 	public static var isLoaded(get, never):Bool;

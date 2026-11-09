@@ -10,17 +10,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Motor de traducciones estilo Codename Engine.
- *
- * Los idiomas viven en `assets/languages/<codigo>/`:
- *   - `config.ini` con `name`, `credits`, `version` y (opcional) `showMissingIds`.
- *   - Uno o varios `.xml` con raiz `<language>`.
- *
- * Dentro del XML se aceptan `<group prefix="x.">`, `<str id="...">`, `<text>`,
- * `<trans>`, `<lang>` y `<string>`. Los `{0}`, `{1}`... se reemplazan con
- * `Translations.translate(id, [valor])`.
- */
+/** Motor de traducciones estilo Codename Engine. */
 class Translations
 {
 	/** Idioma por defecto (respaldo). Se puede cambiar desde Flags. */

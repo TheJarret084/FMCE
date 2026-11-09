@@ -34,10 +34,7 @@ typedef EventParamInfo = {
 	var ?saveIfDefault:Bool;
 }
 
-/**
- * Los eventos del charter son las acciones de `events.json` de FMCE (ver docs/eventos.md):
- * el nombre del evento es el `type` de la accion y sus parametros son los `props`, en el orden de abajo.
- */
+/** Eventos del charter: acciones de events.json y sus props. */
 class EventsData {
 	static final UNITS:Array<String> = ["seconds", "beats", "steps"];
 

@@ -7,11 +7,7 @@ import funky.core.Paths;
 import funky.core.TouchNav;
 import funkin.backend.utils.TranslationUtil as TU;
 
-/**
- * Boton de retroceso para movil: `assets/images/backButton/texture` (atlas con el prefijo "back").
- * Queda quieto en su primer frame y `press()` reproduce la animacion una vez; el ultimo frame
- * es igual al primero, asi que no hace falta volver a poner el idle.
- */
+/** Boton de retroceso para movil: `assets/images/backButton/texture` (atlas con el prefijo "back"). */
 class BackButton extends FlxSprite
 {
 	/** Atlas: images/backButton/texture.png + texture.xml. */

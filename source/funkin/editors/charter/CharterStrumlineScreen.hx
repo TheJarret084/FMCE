@@ -6,11 +6,7 @@ import funkin.game.Character;
 import funkin.game.HealthIcon;
 import haxe.io.Path;
 
-/**
- * Ventana de strumline del charter de FMCE. El chart de un nivel solo guarda las notas de cada strumline
- * (lane/time/length); lo unico editable aca es el sufijo de voces (<nivel>/music/Voices<sufijo>.ogg).
- * El resto (personajes, tipo, posicion, escala, velocidad...) lo define el nivel, no el chart.
- */
+/** Ventana de strumline del charter de FMCE. */
 class CharterStrumlineScreen extends UISubstateWindow {
 	public var strumLineID:Int = -1;
 	public var strumLine:ChartStrumLine;

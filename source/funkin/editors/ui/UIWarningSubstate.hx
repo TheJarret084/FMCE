@@ -3,10 +3,7 @@ package funkin.editors.ui;
 import funky.core.Log;
 import haxe.CallStack;
 
-/**
- * Aviso con botones (guardar cambios, archivos repetidos...). Usa la misma base que el resto de los dialogos de los
- * editores (`UISubstateWindow`: camara propia, desenfoque y ventana centrada), en vez de armar su propia camara.
- */
+/** Aviso con botones (guardar cambios, archivos repetidos...). */
 class UIWarningSubstate extends UISubstateWindow {
 	var message:String;
 	var buttons:Array<WarningButton>;

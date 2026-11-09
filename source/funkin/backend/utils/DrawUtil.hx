@@ -17,7 +17,7 @@ final class DrawUtil {
 
 		square.scale.set(scale, scale);
 		square.updateHitbox();
-		
+
 		square.x -= square.width / 2;
 		square.y -= square.height / 2;
 		square.draw();
@@ -30,7 +30,7 @@ final class DrawUtil {
 
 		dot.scale.set(scale, scale);
 		dot.updateHitbox();
-		
+
 		dot.x -= dot.width / 2;
 		dot.y -= dot.height / 2;
 		dot.draw();
@@ -61,7 +61,7 @@ final class DrawUtil {
 
 		point1.putWeak(); point2.putWeak();
 	}
- 
+
 	public static inline function drawRect(rect:FlxRect, thickness:Float = 1, ?color:Null<FlxColor>) {
 		if (rect.width <= 0 || rect.height <= 0) return;
 		DrawUtil.drawLine(FlxPoint.weak(rect.x, rect.y), FlxPoint.weak(rect.x + rect.width, rect.y), thickness, color);

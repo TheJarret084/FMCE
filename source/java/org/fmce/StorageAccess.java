@@ -8,12 +8,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
 
-/**
- * Acceso a /storage/emulated/0/.JarretLabs-FMCE.
- * Android 11+ (API 30): hace falta "Acceso a todos los archivos" (MANAGE_EXTERNAL_STORAGE), que se da en Ajustes.
- * Android 10 o menos: alcanza con READ/WRITE_EXTERNAL_STORAGE, que se piden en tiempo de ejecucion.
- * Lo llama Storage.hx por JNI.
- */
+/** Acceso a /storage/emulated/0/.JarretLabs-FMCE en Android. */
 public class StorageAccess
 {
 	/** true si ya se puede escribir en la carpeta publica. */

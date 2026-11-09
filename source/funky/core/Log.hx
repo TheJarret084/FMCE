@@ -8,9 +8,7 @@ import sys.io.File;
 import sys.io.FileOutput;
 #end
 
-/**
- * Severidad de un log, la misma del legacy (`funkin.backend.Logger`): decide la etiqueta y el color ANSI.
- */
+/** Severidad de un log, la misma del legacy (`funkin.backend.Logger`): decide la etiqueta y el color ANSI. */
 enum abstract Severity(Int) to Int
 {
 	var PRINT;
@@ -30,7 +28,6 @@ enum abstract Severity(Int) to Int
 	}
 }
 
-/** Log */
 class Log
 {
 	static var initialized:Bool = false;

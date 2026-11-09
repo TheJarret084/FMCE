@@ -31,11 +31,7 @@ import openfl.utils.Assets as OpenFlAssets;
 
 using StringTools;
 
-/**
- * Lista de niveles: fondo `menuDesat` que cambia de color por nivel, nombres en fuente bold en una lista recta que se desliza
- * alrededor del seleccionado, barra arriba (nivel, dificultad y mejor puntaje guardado) y un banner fijo a la derecha.
- * Lista las carpetas de niveles ya convertidas.
- */
+/** Lista de niveles con fondo animado y nombres en fuente bold. */
 class FreeplayState extends FlxState
 {
 	private static final ACTIVE:Int = 0xFFFFFFFF;

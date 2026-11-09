@@ -18,9 +18,7 @@ import funky.game.HealthIcon;
 import funky.menus.BoldText;
 import funky.menus.MainMenuState;
 
-/**
- * Entrada al modo avanzado: elige el nivel y despues la herramienta (Code Studio o Chart Editor).
- */
+/** Entrada al modo avanzado: elige el nivel y despues la herramienta (Code Studio o Chart Editor). */
 class AdvancedModeState extends FlxState
 {
 	/**

@@ -22,15 +22,7 @@ typedef SpriteImportResult =
 	var failed:Array<String>;
 }
 
-/**
- * Importa sprites a un nivel desde la carpeta `import-sprites` (junto a `levels/`; en Android
- * `.JarretLabs-FMCE/import-sprites`). Cada `nombre.png` se vuelve `levels/<nivel>/sprites/<nombre>/sprite.png`:
- *  - con `nombre.xml` (atlas Sparrow) al lado: se copia como `sprite.xml` y se genera su `sprite.json`;
- *  - con `nombre.json` (Aseprite): se copia como `sprite.json`;
- *  - sin nada: queda de un solo frame (animacion `anim0`, la idle).
- * Es un "mover": lo importado se borra de la carpeta (despues de copiarlo y comprobar que quedo bien).
- * Un sprite que ya existe en el nivel no se pisa.
- */
+/** Importa sprites a un nivel desde la carpeta `import-sprites` (junto a `levels/`; en Android `.JarretLabs-FMCE/import-sprites`). */
 class SpriteImporter
 {
 	public static inline var INBOX:String = "import-sprites";

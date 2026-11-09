@@ -6,10 +6,7 @@ import funky.core.Log;
 import funky.core.Paths;
 import funky.game.SpriteBuilder;
 
-/**
- * Un sprite de `levels/<nivel>/sprites/<nombre>/` ya cargado: atlas Aseprite, animaciones (los
- * frameTags de `sprite.json`) y el pivote de cada una.
- */
+/** Sprite de nivel cargado con atlas, animaciones y pivote. */
 class LevelSprite extends FunkinSprite
 {
 	public var spriteName(default, null):String = "";
@@ -27,33 +24,33 @@ class LevelSprite extends FunkinSprite
 		animEnabled = true;
 	}
 
-    // resetea el sprite en caso de cambio
-    function resetSprite():Void
-    {
-        frames = null;
-        animation.destroyAnimations();
-        anims.clear();
-        firstAnim = null;
-        loaded = false;
-        spriteName = "";
-        spriteType = "sprite";
-    }
+	// resetea el sprite en caso de cambio
+	function resetSprite():Void
+	{
+		frames = null;
+		animation.destroyAnimations();
+		anims.clear();
+		firstAnim = null;
+		loaded = false;
+		spriteName = "";
+		spriteType = "sprite";
+	}
 
 	/** Carga `sprites/<name>/` de `levelDir`. Devuelve false (y deja el sprite vacio) si falla. */
 	public function load(levelDir:String, name:String):Bool
-    {
-        resetSprite();
-        spriteName = name;
+	{
+		resetSprite();
+		spriteName = name;
 
-        // Spritemap de Animate: `sprites/<n>/sprite/Animation.json` + `sprites/<n>/config.json`.
-        if (SpriteBuilder.isAtlas(levelDir, name)) return loadAtlas(levelDir, name);
-    
-        var atlas = Paths.getLevelSprite(levelDir, name);
-        if (atlas == null)
-        {
-            Log.warn('[LevelSprite] sin atlas para ' + name + ' en ' + levelDir);
-            return false;
-        }
+		// Spritemap de Animate: `sprites/<n>/sprite/Animation.json` + `sprites/<n>/config.json`.
+		if (SpriteBuilder.isAtlas(levelDir, name)) return loadAtlas(levelDir, name);
+
+		var atlas = Paths.getLevelSprite(levelDir, name);
+		if (atlas == null)
+		{
+			Log.warn('[LevelSprite] sin atlas para ' + name + ' en ' + levelDir);
+			return false;
+		}
 
 		var config = SpriteBuilder.readConfig(levelDir, name);
 		frames = atlas;

@@ -20,13 +20,7 @@ import funky.core.TransitionHandler;
 import funky.menus.options.BackButton;
 import funkin.backend.utils.TranslationUtil as TU;
 
-/**
- * Menu principal con la vista de Codename Engine: fondo que se desplaza con la camara,
- * botones de los atlas `menus/mainmenu/<nombre>` (animaciones "basic" y "white"),
- * parpadeo magenta al elegir.
- *
- * El convertidor sigue en Freeplay (tecla C) y en Opciones > Miscelanea.
- */
+/** Menu principal estilo Codename con fondo y botones de atlas. */
 class MainMenuState extends FlxState
 {
 	static final ITEMS:Array<String> = ["freeplay", "options", "credits"];

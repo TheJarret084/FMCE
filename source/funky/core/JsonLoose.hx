@@ -2,10 +2,7 @@ package funky.core;
 
 import haxe.Json;
 
-/**
- * JSON de los niveles hechos a mano: acepta la coma de sobra antes de `}` o `]` (`"bpm": 158,\n}`), que el
- * parser de Haxe rechaza y dejaba el meta.json (bpm, pasos por beat, iconos...) sin leer en silencio.
- */
+/** JSON tolerante: acepta comas de mas antes de } o ]. */
 class JsonLoose
 {
 	public static function parse(raw:String):Dynamic

@@ -70,7 +70,7 @@ class UIButtonList<T:UIButton> extends UIWindow {
 		var endButtonY:Float = 0;
 		for (i => button in buttons.members) {
 			if (button == null) continue;
-			
+
 			if (curMoving != button) {
 				button.setPosition(
 					(bWidth/2) - (buttonSize.x/2) + buttonOffset.x,

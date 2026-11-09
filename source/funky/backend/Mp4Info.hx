@@ -6,10 +6,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Lee el ancho y el alto de un .mp4 sin reproducirlo: busca la caja `moov > trak > tkhd` del contenedor (ISO base media),
- * donde el tamano va como punto fijo 16.16. Sirve igual con o sin hxvlc, asi el editor puede dibujar el video con su tamano real.
- */
+/** Lee ancho y alto de un .mp4 sin reproducirlo. */
 class Mp4Info
 {
 	/** Una caja `moov` mas grande que esto se considera corrupta (los .mp4 normales miden unos KB). */

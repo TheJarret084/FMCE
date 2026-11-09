@@ -8,10 +8,7 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/**
- * Donde quedo una conversion, en un JSON (`levels/<id>/.convert.json`), para retomarla si el juego
- * se cae.
- */
+/** Donde quedo una conversion, en un JSON (`levels/<id>/.convert.json`), para retomarla si el juego se cae. */
 class ConversionProgress
 {
 	public static inline var VERSION:Int = 1;

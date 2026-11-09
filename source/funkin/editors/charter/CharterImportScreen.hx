@@ -6,12 +6,7 @@ import funkin.backend.chart.FnfcPackage;
 import haxe.io.Bytes;
 import haxe.io.Path;
 
-/**
- * Importa las notas de un chart de FNMM (data.json), Codename, Legacy/Psych (o FMCE) y reemplaza las del chart abierto.
- * Tambien abre un `.fnfc` de Friday Night Funkin' (un zip con -chart.json, -metadata.json y los .ogg): se elige la dificultad,
- * se ajusta el BPM del nivel y se puede copiar Inst y Voices a `music/`.
- * Un nivel de FMCE tiene un solo chart (`chart.json`): importar reemplaza sus notas, sin dificultades.
- */
+/** Importa las notas de un chart de FNMM (data.json), Codename, Legacy/Psych (o FMCE) y reemplaza las del chart abierto. */
 class CharterImportScreen extends UISubstateWindow {
 	public var explorer:UIFileExplorer;
 	public var info:UIText;
