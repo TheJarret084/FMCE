@@ -1568,15 +1568,6 @@ class PlayState extends MusicBeatState
 		if (guiFadeTween != null) guiFadeTween.cancel();
 		releaseGuiFade();
 
-		if (warningInstanced) {
-			try {
-				// showWarning.destroy();
-				showWarning = null;
-			} catch(_:Dynamic) {
-				Log.warn("[warningSubState]: tu mierda exploto");
-			}
-		}
-
 		cancelCountdown();
 
 		if (eventos != null)
