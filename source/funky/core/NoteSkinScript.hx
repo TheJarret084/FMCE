@@ -6,7 +6,7 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
-#if !nme && !flash
+#if (!nme && !flash)
 import funky.backend.shaders.CustomShader;
 #end
 import hscript.Expr;
@@ -14,24 +14,6 @@ import hscript.Expr.Error;
 import hscript.Interp;
 import hscript.Parser;
 
-/**
- * Script de un noteskin (`addons/noteskins/<id>/data/noteSkin.hx`). Se ejecuta una sola vez al cargar el skin y
- * despues el motor le avisa cuando crea cada nota / receptor / confirm / splash. Sirve para cualquier cosa que se
- * pueda hacer con un `FlxSprite` (shaders, tweens, escalas, animaciones...).
- *
- * Callbacks:
- *  - `onLoad()` (o `create()` / `new()`): con el skin ya leido. `skin` esta disponible.
- *  - `onNoteCreate(nota, lane)` / `onNote(nota, lane)`: cada nota (cabeza, sustain y final).
- *  - `onReceptorCreate(strum, lane)` / `onReceptor(strum, lane)`: cada receptor.
- *  - `onReceptorColor(strum, lane, pressed)`: cada vez que el receptor cambia de color (apretar/soltar).
- *  - `onConfirmCreate(sprite, lane)` / `onConfirm(sprite, lane)`: el sprite del confirm.
- *  - `onSplashCreate(splash, lane)` / `onSplash(splash, lane)`: el splash del SICK.
- *  - `onUpdate(elapsed)`: cada frame, mientras se juega.
- *
- * Ademas de las clases normales (`FlxSprite`, `FlxG`, `FlxTween`, `FlxColor`...), hay dos ayudas:
- *  - `shader("nombre")`: crea el shader del skin (`noteskins/<id>/shaders/nombre.frag`) o de `assets/shaders/nombre.frag`.
- *  - `skin`: el `NoteSkin` que se esta cargando.
- */
 class NoteSkinScript
 {
 	public static var CONTINUE:Int = 0;
