@@ -94,8 +94,6 @@ class FMCEToFNMMExporter
 	 */
 	public static inline var CROP_CELLS:Bool = true;
 
-	/** Eventos que solo existen en FMCE. */
-	public static final FMCE_EVENTS:Array<String> = ["ObjectSpriteSet", "ObjectChartChange"];
 	static final KEEP:Array<String> = ["chart.json", "meta.json", "events.json", "scene.json", "sprites"];
 	public static final AUDIO:Array<String> = ["ogg", "mp3", "wav", "m4a"];
 

@@ -7,7 +7,7 @@ import funky.backend.converter.AnimateAtlas.AnimateTimeline;
 import funky.backend.converter.AnimateAtlas.DrawOp;
 import funky.backend.FunkinVideoSprite;
 import funky.backend.converter.VideoStrip.VideoClip;
-#if (sys && !android)
+#if sys
 import funky.backend.converter.VideoStrip.VideoStripTask;
 #end
 import funky.core.JsonLoose;
@@ -56,9 +56,7 @@ class FNMMSpriteExport
 	/** Sprite de video (`config.json` type video): cada video sale como una tira. */
 	var videoClips:Array<VideoClip> = [];
 	var ffmpeg:Null<String> = null;
-	#if !android
 	var videoTask:Null<VideoStripTask> = null;
-	#end
 	#end
 
 	public function new(levelDir:String, name:String)
@@ -77,9 +75,7 @@ class FNMMSpriteExport
 	{
 		#if sys
 		if (phase == 4 && jobs.length > 0) return index / jobs.length;
-		#if !android
 		if (phase == 5 && videoClips.length > 0) return (index + (videoTask != null ? videoTask.fraction : 0)) / videoClips.length;
-		#end
 		return phase == 1 && anims.length > 0 ? index / anims.length : 0;
 		#else
 		return 0;
@@ -119,13 +115,11 @@ class FNMMSpriteExport
 		pages = new Map<Int, BitmapData>();
 		for (bitmap in cutouts) if (bitmap != null) bitmap.dispose();
 		cutouts = new Map<String, Null<BitmapData>>();
-		#if !android
 		if (videoTask != null)
 		{
 			videoTask.dispose();
 			videoTask = null;
 		}
-		#end
 		#end
 	}
 
@@ -655,18 +649,17 @@ class FNMMSpriteExport
 		return bitmap;
 	}
 
-	/** `spd` en FNMM es un multiplicador de 24 fps; en FMCE puede venir en fps crudos (`spd_fps`). */
+	/** `spd` y `spd_fps` salen tal cual vienen en el config (velocidad base, sin convertir a multiplicador de 24 fps). */
 	function animEntry(cfg:Dynamic, count:Int, cropX:Float, cropY:Float):Dynamic
 	{
 		var offset = FMCEToFNMMExporter.field(cfg, "offset");
 		var spd = FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(cfg, "spd"), 1);
-		if (FMCEToFNMMExporter.field(cfg, "spd_fps") == true) spd = spd / 24;
 		return {
 			// el pivote se mide desde la esquina de la celda: si la celda se recorto, se corre lo mismo
 			offset: {x: FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(offset, "x"), 0) - cropX, y: FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(offset, "y"), 0) - cropY},
 			num: count,
 			spd: spd,
-			spd_fps: false,
+			spd_fps: FMCEToFNMMExporter.field(cfg, "spd_fps") == true,
 			scale: FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(cfg, "scale"), 1),
 			bilinear: FMCEToFNMMExporter.field(cfg, "bilinear") == true,
 			loop: FMCEToFNMMExporter.field(cfg, "loop") != false
@@ -677,23 +670,21 @@ class FNMMSpriteExport
 
 	function openVideo():Void
 	{
-		#if android
-		throw "exportar videos solo funciona en escritorio (hace falta ffmpeg)";
-		#else
 		label = "video";
+		#if !android
+		// en Android no hace falta ffmpeg: los frames los saca MediaMetadataRetriever (AndroidFrames)
 		ffmpeg = VideoStrip.findFfmpeg();
 		if (ffmpeg == null) throw "los videos necesitan ffmpeg: ponlo junto al .exe o en el PATH";
+		#end
 		videoClips = VideoStrip.clips(dir, warnings);
 		if (videoClips.length == 0) throw "el sprite de video no tiene videos";
 		index = 0;
 		phase = 5;
-		#end
 	}
 
 	/** Un video por vez: ffmpeg saca los frames, FunkFMPEG arma la tira (en otro hilo) y aqui solo se espera. Un video que falla no tira a los demas. */
 	function stepVideo():Void
 	{
-		#if !android
 		if (videoTask == null)
 		{
 			if (index >= videoClips.length)
@@ -740,7 +731,6 @@ class FNMMSpriteExport
 		warnings.push("video " + file + ": " + task.frames + " frames de " + task.frameWidth + "x" + task.frameHeight + " a " + Math.round(task.fps * 100) / 100 + " fps"
 			+ (task.resampled ? " (el original tiene otro fps)" : "") + (shrink < 1 ? ", al " + Math.round(shrink * 100) + "% del tamano original" : ", a tamano completo"));
 		index++;
-		#end
 	}
 
 	/** La animacion queda como un pixel transparente para que las de abajo conserven su numero (en vez de dejar el hueco sin avisar). */

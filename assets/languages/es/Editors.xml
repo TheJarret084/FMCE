@@ -316,6 +316,21 @@
 				<str id="altAnimationToggle">Animaciones Alternativas</str>
 				<str id="playAnimation">Reproducir Animación</str>
 				<str id="hscriptCall">Llamada HScript</str>
+				<!-- Eventos del motor: el id (ObjectOpacitySet) es lo que se guarda en events.json, esto es solo el nombre visual. La clave es el id en minusculas. -->
+				<str id="cameraset">Definir cámara</str>
+				<str id="camerazoom">Definir zoom de cámara</str>
+				<str id="camerashake">Sacudir cámara</str>
+				<str id="objectpositionset">Definir posición de objeto</str>
+				<str id="objectvisibilityset">Definir visibilidad de objeto</str>
+				<str id="objectopacityset">Definir opacidad de objeto</str>
+				<str id="objectanimationset">Definir animación de objeto</str>
+				<str id="objectspriteset">Definir sprite de objeto</str>
+				<str id="objectchartchange">Definir strumline de objeto</str>
+				<str id="bariconchange">Cambiar icono de la barra</str>
+				<str id="screenflash">Destello de pantalla</str>
+				<str id="runactionpack">Ejecutar action pack</str>
+				<str id="playerhealth">Modificar vida del jugador</str>
+				<str id="gui">Mostrar / ocultar GUI</str>
 			</group>
 
 			<group name="StrumlineOptions" prefix="strumLine.">

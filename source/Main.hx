@@ -8,5 +8,6 @@ class Main
 	{
 		super();
 		instance = this;
+    trace(":3");
 	}
 }

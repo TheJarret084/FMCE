@@ -48,6 +48,38 @@ class EventsData {
 			p("easingType", "Curva (default, quad, cubeOut...)", TString, "default")
 		];
 
+	/**
+	 * Nombre que se VE en el charter para cada evento. Lo que se guarda en events.json sigue siendo el id del motor
+	 * (`ObjectOpacitySet`), esto es solo visual. Un evento sin entrada aqui se muestra con su id.
+	 */
+	static final DISPLAY_NAMES:Map<String, String> = [
+		"CameraSet" => "Definir cámara",
+		"CameraZoom" => "Definir zoom de cámara",
+		"CameraShake" => "Sacudir cámara",
+		"ObjectPositionSet" => "Definir posición de objeto",
+		"ObjectVisibilitySet" => "Definir visibilidad de objeto",
+		"ObjectOpacitySet" => "Definir opacidad de objeto",
+		"ObjectAnimationSet" => "Definir animación de objeto",
+		"ObjectSpriteSet" => "Definir sprite de objeto",
+		"ObjectChartChange" => "Definir strumline de objeto",
+		"BarIconChange" => "Cambiar icono de la barra",
+		"ScreenFlash" => "Destello de pantalla",
+		"RunActionPack" => "Ejecutar action pack",
+		"PlayerHealth" => "Modificar vida del jugador",
+		"GUI" => "Mostrar / ocultar GUI"
+	];
+
+	/**
+	 * Nombre visual de un evento a partir de su id: primero la traduccion del idioma (`charter.events.<id en minusculas>`
+	 * en languages/*/Editors.xml), luego la tabla de arriba y, si no hay ninguna, el mismo id.
+	 */
+	public static function displayName(id:String):String {
+		var tuId = "charter.events." + TU.raw2Id(id);
+		if (TU.exists(tuId)) return TU.translate(tuId);
+		var name = DISPLAY_NAMES.get(id);
+		return name != null ? name : id;
+	}
+
 	public static var eventsList:Array<String> = [];
 	static var defs:Map<String, Array<EventParamInfo>> = new Map();
 

@@ -228,30 +228,8 @@ class FNMMExportJob
 			if (FileSystem.exists(path)) result.warnings.push("events.json ilegible: se exporto vacio");
 			parsed = {events: [], action_packs: []};
 		}
-		else warnFmceEvents(parsed);
 		add("events.json", Bytes.ofString(Json.stringify(parsed)));
 		stage = "scene";
-	}
-
-	function warnFmceEvents(events:Dynamic):Void
-	{
-		var found:Array<String> = [];
-		var lists:Array<Dynamic> = [];
-		var top = Reflect.field(events, "events");
-		if (Std.isOfType(top, Array)) for (item in (cast top:Array<Dynamic>)) lists.push(Reflect.field(item, "actions"));
-		var packs = Reflect.field(events, "action_packs");
-		if (Std.isOfType(packs, Array)) for (item in (cast packs:Array<Dynamic>)) lists.push(Reflect.field(item, "actions"));
-		for (actions in lists)
-		{
-			if (!Std.isOfType(actions, Array)) continue;
-			for (action in (cast actions:Array<Dynamic>))
-			{
-				var type = FMCEToFNMMExporter.text(Reflect.field(action, "type"), "");
-				if (FMCEToFNMMExporter.FMCE_EVENTS.indexOf(type) >= 0 && found.indexOf(type) < 0) found.push(type);
-			}
-		}
-		if (found.length > 0)
-			result.warnings.push("eventos solo de FMCE (" + found.join(", ") + "): se dejan en events.json, el FNMM original puede no reconocerlos");
 	}
 
 	function stepScene():Void

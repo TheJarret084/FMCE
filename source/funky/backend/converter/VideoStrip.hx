@@ -9,12 +9,14 @@ import funky.core.Log;
 import sys.FileSystem;
 import sys.io.File;
 #end
-#if (sys && !android)
+#if sys
 import funkfmpeg.FrameScale;
 import funkfmpeg.FunkFMPEG;
 import funkfmpeg.TapeOptions;
 import funky.core.Storage;
+#if !android
 import sys.io.Process;
+#end
 #if target.threaded
 import sys.thread.Deque;
 import sys.thread.Thread;
@@ -43,6 +45,9 @@ typedef VideoInfo =
  * Video (.mp4) -> UNA tira horizontal de PNG indexado (frames pegados, sin huecos ni recortes) con FunkFMPEG.
  * El fps queda dentro de VIDEO_MIN_FPS..VIDEO_MAX_FPS (12..24).
  * Es lo que el .FNMM entiende: el FNMM no tiene video, pero una tira con `num` frames y `spd` = fps / 24 se ve igual.
+ *
+ * Los frames los saca ffmpeg en escritorio y `MediaMetadataRetriever` (source/java/org/fmce/VideoFrames.java, via `AndroidFrames`) en Android;
+ * FunkFMPEG (Haxe puro) arma la tira igual en los dos.
  *
  * Cada frame se saca a su fps real si esta en el rango (nada de saltar frames) y al mayor tamano que entre en los limites de la tira
  * (`FMCEToFNMMExporter.VIDEO_MAX_*`), sin agrandar jamas el video.
@@ -118,7 +123,7 @@ class VideoStrip
 	}
 	#end
 
-	#if (sys && !android)
+	#if sys
 	/** Opciones de FunkFMPEG para un video: el frame mas grande que quepa en los limites, paleta global de 256 colores. */
 	public static function tapeOptions():TapeOptions
 	{
@@ -126,7 +131,12 @@ class VideoStrip
 		o.scaleDivisor = 0;
 		o.maxWidth = FMCEToFNMMExporter.VIDEO_MAX_WIDTH;
 		o.maxHeight = FMCEToFNMMExporter.VIDEO_MAX_HEIGHT;
+		#if android
+		// la tira se arma en memoria (un buffer del tamano de la tira): en el telefono no pasa del tope de las tiras de atlas
+		o.maxPixels = Math.min(FMCEToFNMMExporter.VIDEO_MAX_PIXELS, FMCEToFNMMExporter.MAX_PIXELS);
+		#else
 		o.maxPixels = FMCEToFNMMExporter.VIDEO_MAX_PIXELS;
+		#end
 		o.colors = 256;
 		o.compression = 9;
 		o.refine = 4;
@@ -135,6 +145,7 @@ class VideoStrip
 		return o;
 	}
 
+	#if !android
 	/** Tamano, fps y duracion del video, leidos con ffmpeg (copia de flujo: no decodifica nada, es instantaneo). */
 	public static function probe(ffmpeg:String, path:String):Null<VideoInfo>
 	{
@@ -203,6 +214,8 @@ class VideoStrip
 		return {w: w, h: h, fps: fps, seconds: seconds};
 	}
 
+	#end
+
 	/** Carpeta de trabajo (frames temporales) de un video. */
 	public static function workDir(spriteDir:String, index:Int):String
 		return Path.join([Storage.cacheDirectory(), "video-export", Path.withoutDirectory(Path.removeTrailingSlashes(Path.directory(Path.removeTrailingSlashes(spriteDir)))) + "__" + Path.withoutDirectory(Path.removeTrailingSlashes(spriteDir)) + "__" + index]);
@@ -221,7 +234,7 @@ class VideoStrip
 	#end
 }
 
-#if (sys && !android)
+#if sys
 /**
  * Un video -> una tira. Todo el trabajo pesado (ffmpeg y FunkFMPEG) corre en OTRO hilo; `step()` solo mira si ya termino, asi
  * la pantalla sigue viva (y se puede cancelar) mientras se procesa un video de cientos de frames.
@@ -249,7 +262,8 @@ class VideoStripTask
 	public var resampled(default, null):Bool = false;
 	public var paletteSize(default, null):Int = 0;
 
-	var ffmpeg:String;
+	/** null en Android (ahi los frames salen de `AndroidFrames`). */
+	var ffmpeg:Null<String>;
 	var path:String;
 	var work:String;
 	var started:Bool = false;
@@ -261,7 +275,7 @@ class VideoStripTask
 	var inbox:Deque<Dynamic> = new Deque<Dynamic>();
 	#end
 
-	public function new(ffmpeg:String, path:String, work:String)
+	public function new(ffmpeg:Null<String>, path:String, work:String)
 	{
 		this.ffmpeg = ffmpeg;
 		this.path = path;
@@ -278,7 +292,9 @@ class VideoStripTask
 	public function step():Bool
 	{
 		if (done) return false;
-		#if target.threaded
+		#if android
+		return stepAndroid();
+		#elseif target.threaded
 		if (!started)
 		{
 			started = true;
@@ -321,9 +337,84 @@ class VideoStripTask
 	public function dispose():Void
 	{
 		cancelled = true;
+		#if android
+		if (stage == 1) AndroidFrames.cancel();
+		if (stage == 2 && !done) return; // el hilo de FunkFMPEG borra al terminar
+		#else
 		if (started && !done) return; // el hilo borra al terminar
+		#end
 		try VideoStrip.wipe(work) catch (_:Dynamic) {}
 	}
+
+	#if android
+	var stage:Int = 0;
+	var total:Int = 0;
+	var target:Array<Int> = [0, 0];
+
+	/** Android: Java saca los frames (se consulta desde aqui) y despues FunkFMPEG arma la tira en un hilo de Haxe. */
+	function stepAndroid():Bool
+	{
+		try
+		{
+			switch (stage)
+			{
+				case 0:
+					started = true;
+					label = "leyendo " + Path.withoutDirectory(path);
+					var info = AndroidFrames.probe(path);
+					if (info == null) throw "no se pudo leer el video (MediaMetadataRetriever)";
+					if (info.seconds <= 0) throw "no se pudo leer la duracion del video";
+					sourceWidth = info.w;
+					sourceHeight = info.h;
+					fps = Math.min(FMCEToFNMMExporter.VIDEO_MAX_FPS, Math.max(FMCEToFNMMExporter.VIDEO_MIN_FPS, info.fps));
+					resampled = Math.abs(fps - info.fps) > 0.01;
+					total = Std.int(Math.max(1, Math.round(info.seconds * fps)));
+					target = FrameScale.fit(info.w, info.h, total, options);
+					label = "sacando frames " + target[0] + "x" + target[1];
+					FMCEToFNMMExporter.ensureDir(Path.directory(work));
+					VideoStrip.wipe(work);
+					FileSystem.createDirectory(work);
+					if (!AndroidFrames.start(path, work, fps, target[0], target[1], total)) throw AndroidFrames.error();
+					percent = 2;
+					stage = 1;
+				case 1:
+					var state = AndroidFrames.state();
+					var count = AndroidFrames.progress();
+					percent = 2 + Std.int(33 * Math.min(1, count / total));
+					label = "sacando frames " + target[0] + "x" + target[1] + " (" + count + "/" + total + ")";
+					if (state == AndroidFrames.RUNNING) return true;
+					if (state != AndroidFrames.DONE) throw state == AndroidFrames.CANCELLED ? "cancelado" : AndroidFrames.error();
+					percent = 35;
+					label = "armando la tira (" + count + " frames)";
+					var box = inbox;
+					Thread.create(function()
+					{
+						try
+						{
+							buildTape();
+							box.add("ok");
+						}
+						catch (e:Dynamic)
+						{
+							box.add("error: " + Std.string(e));
+						}
+						if (cancelled) try VideoStrip.wipe(work) catch (_:Dynamic) {}
+					});
+					stage = 2;
+				default:
+					var message:Null<Dynamic> = inbox.pop(false);
+					if (message == null) return true;
+					if (message == "ok") finish();
+					else fail(StringTools.replace(Std.string(message), "error: ", ""));
+			}
+		}
+		catch (e:Dynamic)
+		{
+			fail(Std.string(e));
+		}
+		return !done;
+	}
+	#end
 
 	function finish():Void
 	{
@@ -341,6 +432,7 @@ class VideoStripTask
 
 	// ------------------------------------------------------------------ trabajo (en el hilo)
 
+	#if !android
 	function run():Void
 	{
 		var info = VideoStrip.probe(ffmpeg, path);
@@ -362,7 +454,13 @@ class VideoStripTask
 		extract(info, target);
 		if (cancelled) throw "cancelado";
 		percent = 35;
+		buildTape();
+	}
+	#end
 
+	/** FunkFMPEG: los f000001.png de `work` -> una tira. Igual en escritorio y Android. */
+	function buildTape():Void
+	{
 		var names = [for (f in FileSystem.readDirectory(work)) if (~/^f\d+\.png$/i.match(f)) f];
 		names.sort(Reflect.compare);
 		if (names.length == 0) throw "el video no dio ningun frame";
@@ -378,6 +476,7 @@ class VideoStripTask
 		percent = 100;
 	}
 
+	#if !android
 	/** ffmpeg: todos los frames del video (a `fps` si hay que ajustarlo) ya al tamano final, PNG RGB sin perdida. */
 	function extract(info:VideoInfo, target:Array<Int>):Void
 	{
@@ -407,5 +506,6 @@ class VideoStripTask
 			throw "ffmpeg fallo (codigo " + code + "): " + StringTools.trim(message);
 		}
 	}
+	#end
 }
 #end

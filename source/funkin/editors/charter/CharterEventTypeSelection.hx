@@ -46,7 +46,7 @@ class CharterEventTypeSelection extends UISubstateWindow {
 		}
 
 		for(k=>eventName in EventsData.eventsList) {
-			var visualName = eventName;
+			var visualName = EventsData.displayName(eventName);
 			var tuId = "charter.events." + TU.raw2Id(eventName);
 			if(TU.exists(tuId))
 				visualName = TU.translate(tuId);

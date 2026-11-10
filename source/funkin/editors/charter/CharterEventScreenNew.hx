@@ -133,7 +133,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		if (id >= 0 && id < events.length) {
 			curEvent = id;
 			var curEvent = events[curEvent];
-			eventName.text = curEvent.name;
+			eventName.text = EventsData.displayName(curEvent.name);
 			bWidth = eventName.x + eventName.width+16;
 
 			// add new elements

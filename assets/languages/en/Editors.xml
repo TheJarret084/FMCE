@@ -308,6 +308,21 @@
 				<!-- Example: HScript Call -> hscriptCall -->
 				<!-- Example: Change Character -> changeCharacter -->
 				<str id="hscriptCall">HScript Call</str>
+				<!-- Eventos del motor: el id (ObjectOpacitySet) es lo que se guarda en events.json, esto es solo el nombre visual. La clave es el id en minusculas. -->
+				<str id="cameraset">Set Camera</str>
+				<str id="camerazoom">Set Camera Zoom</str>
+				<str id="camerashake">Shake Camera</str>
+				<str id="objectpositionset">Set Object Position</str>
+				<str id="objectvisibilityset">Set Object Visibility</str>
+				<str id="objectopacityset">Set Object Opacity</str>
+				<str id="objectanimationset">Set Object Animation</str>
+				<str id="objectspriteset">Set Object Sprite</str>
+				<str id="objectchartchange">Set Object Strumline</str>
+				<str id="bariconchange">Change Bar Icon</str>
+				<str id="screenflash">Screen Flash</str>
+				<str id="runactionpack">Run Action Pack</str>
+				<str id="playerhealth">Change Player Health</str>
+				<str id="gui">Show / Hide GUI</str>
 				<str id="cameraMovement">Camera Movement</str>
 				<str id="addCameraZoom">Add Camera Zoom</str>
 				<str id="cameraModuloChange">Camera Modulo Change</str>

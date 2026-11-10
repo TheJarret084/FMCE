@@ -91,8 +91,8 @@
 	<define name="FMCE_VIDEO" if="android" unless="FMCE_NO_VIDEO_ANDROID" />
 	<haxelib name="hxvlc" if="FMCE_VIDEO" />
 
-	<!-- FunkFMPEG (1.1.0+): video -> tira de PNG indexado, la usa el exportador a .FNMM. Solo escritorio (ffmpeg no existe en Android). -->
-	<haxelib name="funkfmpeg" unless="android" />
+	<!-- FunkFMPEG (1.1.0+): video -> tira de PNG indexado, la usa el exportador a .FNMM. Escritorio saca los frames con ffmpeg; Android con MediaMetadataRetriever (source/java/org/fmce/VideoFrames.java). -->
+	<haxelib name="funkfmpeg" />
 
 	<!-- Discord Rich Presence. Android: Discord Social SDK desde el .aar (source/libs/discord/, ver su README). Escritorio con target cpp:
 	     el haxelib hxdiscord_rpc (sin DLL ni login). HashLink y HTML5 quedan sin presencia. Apagalo con -DFMCE_NO_DISCORD. -->

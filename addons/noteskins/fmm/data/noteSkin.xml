@@ -5,8 +5,8 @@
     Solo trae las flechas y el sustain (tail / tailEnd), asi que el receptor y el confirm reusan
     el frame de la flecha. El atlas es a escala de grises: se tiñe con un solo color (type="tint").
 -->
-<noteSkin type="tint" name="Funky Maker: Mobile" author="KingGC" version="0.9">
-    <atlas path="NOTE_assets"/>
+<noteSkin type="tint" name="Funky Maker: Mobile" author="KingGC" version="1.0">
+    <atlas path="NOTE_assets" scale="0.8"/> <!-- las del fmm son más pequeñas, debo poder meterle scripts a una de estas -->
     <holdAlpha value="0.7"/>
 
     <!-- El receptor / confirm crece a esta escala al apretar y vuelve a la base al soltar (tint: 1.15 por defecto). -->
@@ -14,7 +14,7 @@
 
     <!-- Splash en imagen aparte (NOTE_splashes.png/xml): una sola animacion "splash" (4 frames de 700x700) para todas las lanes, se tiñe con el color de la lane.
          scale 0.4 porque sus frames son enormes frente a la flecha (160px). -->
-    <splash atlas="NOTE_splashes" scale="0.4" alpha="0.85" fps="16"/>
+    <splash atlas="NOTE_splashes" scale="0.6" alpha="0.85" fps="20"/>
 
     <animations>
         <lane dir="left"  note="left"  hold="tail0" holdEnd="tailEnd" receptor="left"  press="left"  confirm="left" splash="splash"/>
