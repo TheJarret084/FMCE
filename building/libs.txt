@@ -10,5 +10,6 @@ flixel-addons git https://github.com/CodenameCrew/cne-flixel-addons old
 flixel-animate git https://github.com/CodenameCrew/cne-flixel-animate old
 hxcpp
 hscript-improved git https://github.com/CodenameCrew/hscript-improved.git codename-dev
-hxvlc
-hxdiscord_rpc
+# hxvlc: el fork de Codename (mismo nombre de haxelib, asi Project.xml no cambia).
+hxvlc git https://github.com/CodenameCrew/cne-hxvlc main
+hxdiscord_rpc git https://github.com/CodenameCrew/cne-hxdiscord_rpc old

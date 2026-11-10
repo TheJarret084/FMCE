@@ -50,6 +50,13 @@ jobs:
           echo "target=$target" >> "$GITHUB_OUTPUT"
           echo "type=$type" >> "$GITHUB_OUTPUT"
 
+      # hxvlc compila contra libVLC: sin estos paquetes falla con "vlc/vlc.h: No such file or directory".
+      - name: Instalar libVLC (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y vlc libvlc-dev libvlccore-dev vlc-bin
+
       - name: Build (Linux)
         if: runner.os == 'Linux'
         run: bash building/build.sh ${{ steps.cfg.outputs.target }} ${{ steps.cfg.outputs.type }}
