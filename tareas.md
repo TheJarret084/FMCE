@@ -35,7 +35,7 @@
 
 - [X] Probar en telefono: permisos de `.JarretLabs-FMCE`
 
-- [ ] limpiar scene y events, a esto refiero abrirlo y no dejarlo aplastado que no se puede leer bien
+- [X] limpiar scene y events, a esto refiero abrirlo y no dejarlo aplastado que no se puede leer bien
 
 - [X] Logger bonito en pantalla (`LogOverlay`, hijo de `Main` como el contador de FPS): tarjetas con fondo negro que entran y salen por la izquierda con alpha + X, apiladas abajo, duplicados "xN", errores duran mas. F2 lo enciende/apaga (tambien en Pausa > Opciones). Falta verlo en pantalla.
 
@@ -67,7 +67,7 @@
 - [X] Preferencia `SALTAR INTRO` (Opciones > Apariencia): va directo al TITLE; si no, el splash se salta tocando la pantalla / click / tecla.
 - [X] Menu principal y Freeplay con la vista de Codename (`BoldText` = fuente bold del atlas).
 - [X] Botones arriba/abajo del movil (`NavPad`) rehechos con sprites propios + `TouchNav.hit` (antes `FlxVirtualPad` no respondia). Tocar una fila: la primera vez la selecciona, la segunda entra; el espacio vacio no hace nada.
-- [ ] Probar todo esto en CI/telefono (no se compilo al escribirlo).
+- [X] Probar todo esto en CI/telefono (no se compilo al escribirlo).
 - [X] Splash: el video ya se escala al llegar `onFormatSetup`, termina al acabar el video (o error / 6 s sin arrancar) y no se salta solo en el primer frame. Video activo en Android (`-DFMCE_NO_VIDEO_ANDROID` lo apaga).
 - [X] Freeplay: icono del oponente (meta.json icons.P2 o scene.json icons[0]) a la derecha de cada nivel.
 - [X] Android: `latest.log`/`previous.log` van en `<carpeta del juego>/logs` y los crashes en `<carpeta del juego>/crashes` (`.JarretLabs-FMCE`, o `Android/media/<package>` sin permiso), no en la carpeta privada de la app.
@@ -79,9 +79,9 @@
 
 ### ERRORES URGENTES DE ARREGLAR!
 
-- [ ] sprite tipo video no detectado en gamaplay ni editor
-- [ ] ventanas crashean el juego, especificamente advertencias o mendajes en editores
-- [ ] crashhandler no inicia, en mobile peta el juego (ademas que ni da crash.txt, debo revisar esto)
+- [X] sprite tipo video no detectado en gamaplay ni editor
+- [X] ventanas crashean el juego, especificamente advertencias o mendajes en editores
+- [X] crashhandler no inicia, en mobile peta el juego (ademas que ni da crash.txt, debo revisar esto) nota: no sale el popup pero si da el .txt
 
 Hecho hoy (sin probar, no se compilo):
 - [X] Colores de notas al reves: `ClientPrefs.colorIndexForLane` (4K = morado, celeste, verde, rojo; multikey tambien)
