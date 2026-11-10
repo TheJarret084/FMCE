@@ -8,7 +8,7 @@ import flixel.FlxState;
 import funkin.editors.ui.*;
 import funkin.editors.ui.UIWarningSubstate.WarningButton;
 import funky.backend.converter.FMCEToFNMMExporter;
-import funky.backend.converter.FMCEToFNMMExporter.FNMMExportJob;
+import funky.backend.converter.FNMMExportJob;
 import funky.backend.converter.FMCEToFNMMExporter.FNMMExportPlan;
 import funky.core.KeyBinds;
 
@@ -69,7 +69,7 @@ class FNMMExportState extends UIState
 		line += 34;
 		add(new UIText(x + 20, line, textW, "Destino: " + FMCEToFNMMExporter.outputPath(levelName), 14, MUTED));
 		line += 52;
-		add(new UIText(x + 20, line, textW, "Se exporta: chart, events, scene, audio y sprites (como tiras, igual que un .FNMM de Funky Maker: Mobile).", 14));
+		add(new UIText(x + 20, line, textW, "Se exporta: chart, events, scene, audio, sprites y videos (todo como tiras de PNG indexado, igual que un .FNMM de Funky Maker: Mobile; los videos van a 12-24 fps).", 14));
 		line += 56;
 		add(new UIText(x + 20, line, textW, ignoredSummary(), 14, plan.ignored.length > 0 ? 0xFFFFD866 : MUTED));
 		line += 62;
