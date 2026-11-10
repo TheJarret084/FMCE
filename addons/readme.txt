@@ -5,7 +5,9 @@ Aqui vive lo que NO va dentro de assets.pack: extensiones que el juego carga sie
 
   addons/
     noteskins/<id>/data/noteSkin.xml      configuracion del skin
+    noteskins/<id>/data/noteSkin.hx       script opcional del skin (shaders, tweens...)
     noteskins/<id>/images/NOTE_assets.*   atlas Sparrow (.png + .xml)
+    noteskins/<id>/shaders/<nombre>.frag  shaders propios del skin (opcional)
     videos/<nombre>.mp4                   videos (hxvlc no puede leer de un .pack)
 
 Donde se buscan (el externo gana, asi puedes reemplazar uno que trae el juego):

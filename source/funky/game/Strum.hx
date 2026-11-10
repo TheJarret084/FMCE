@@ -74,6 +74,10 @@ class Strum extends FlxSprite
 			skin.applyTo(confirmSprite, lane, true, laneCount);
 			confirmSprite.visible = false;
 		}
+
+		// Script del skin (si trae): puede cambiar shader, tinte, escala, animacion...
+		skin.notify("onReceptorCreate", "onReceptor", [this, lane]);
+		if (confirmSprite != null) skin.notify("onConfirmCreate", "onConfirm", [confirmSprite, lane]);
 	}
 
 	/**
@@ -98,6 +102,9 @@ class Strum extends FlxSprite
 				var colors = pressed ? skin.rgbFor(lane, true, laneCount) : ClientPrefs.idleRgb();
 				shader = colors == null ? null : NoteRGBShader.forColors(colors);
 		}
+
+		// El script puede volver a poner su shader (el de arriba lo limpia en `tint` / `sparrow`).
+		skin.notify("onReceptorColor", null, [this, lane, pressed]);
 	}
 
 	/**

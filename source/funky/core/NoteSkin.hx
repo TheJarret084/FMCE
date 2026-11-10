@@ -130,6 +130,9 @@ class NoteSkin
 	public var splashAlpha:Float = 0.8;
 	public var splashFps:Int = 24;
 
+	/** Script del skin (`data/noteSkin.hx`), o null si no trae. Ver `NoteSkinScript`. */
+	public var script(default, null):Null<NoteSkinScript> = null;
+
 	var framesCache:Null<FlxAtlasFrames>;
 	/** Ya se intento cargar el atlas (con o sin exito): si fallo no se vuelve a buscar en cada nota. */
 	var framesTried:Bool = false;
@@ -246,6 +249,21 @@ class NoteSkin
 	/** `noteskins/<id>/images/<atlas>` (ruta relativa a addons/, sin extension). */
 	function atlasRel():String
 		return ROOT + id + "/images/" + atlas;
+
+	/** Codigo de un shader propio del skin (`noteskins/<id>/shaders/<nombre>.frag`), o null si no existe. */
+	public function shaderSource(name:String):Null<String>
+		return Addons.getText(ROOT + id + "/shaders/" + name + ".frag");
+
+	/**
+	 * Llama un callback del script del skin. `alias` es el nombre viejo/alternativo (ej. `onNote` para `onNoteCreate`);
+	 * si el script define los dos se llaman los dos, como en los scripts de nivel.
+	 */
+	public function notify(primary:String, ?alias:String, ?args:Array<Dynamic>):Void
+	{
+		if (script == null) return;
+		script.call(primary, args);
+		if (alias != null && alias != primary) script.call(alias, args);
+	}
 
 	/** Nombre de animacion para `note` / `hold` / `holdEnd` / `receptor` / `press` / `confirm` / `splash`. */
 	public function animFor(state:String, lane:Int):String
@@ -385,12 +403,36 @@ class NoteSkin
 			var colorsNode = firstElement(root, "colors");
 			if (colorsNode != null) parseColors(skin, colorsNode);
 
+			skin.loadScript();
 			return skin;
 		}
 		catch (e:Dynamic)
 		{
 			Log.error('[NoteSkin] no se pudo leer $id/data/noteSkin.xml: ' + Std.string(e));
 			return null;
+		}
+	}
+
+	/**
+	 * Carga el script del skin (`data/noteSkin.hx`), si trae. Un archivo vacio se ignora, asi que no hace falta
+	 * borrarlo para que el skin funcione.
+	 */
+	function loadScript():Void
+	{
+		var source = Addons.getText(ROOT + id + "/data/noteSkin.hx");
+		if (source == null) source = Addons.getText(ROOT + id + "/data/noteSkin.hscript");
+		if (source == null || StringTools.trim(source).length == 0) return;
+
+		try
+		{
+			script = new NoteSkinScript("noteSkin.hx", source, this);
+			script.load();
+		}
+		catch (e:Dynamic)
+		{
+			// Un script roto no debe dejar sin skin al juego.
+			script = null;
+			Log.error('[NoteSkin] script de $id: ' + Std.string(e));
 		}
 	}
 

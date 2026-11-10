@@ -6,7 +6,7 @@
     el frame de la flecha. El atlas es a escala de grises: se tiñe con un solo color (type="tint").
 -->
 <noteSkin type="tint" name="Funky Maker: Mobile" author="KingGC" version="1.0">
-    <atlas path="NOTE_assets" scale="0.8"/> <!-- las del fmm son más pequeñas, debo poder meterle scripts a una de estas -->
+    <atlas path="NOTE_assets" scale="0.8"/> <!-- script en data/noteSkin.hx: le pone una sombra (dropShadow) a notas y receptores -->
     <holdAlpha value="0.7"/>
 
     <!-- El receptor / confirm crece a esta escala al apretar y vuelve a la base al soltar (tint: 1.15 por defecto). -->

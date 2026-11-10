@@ -24,6 +24,7 @@ import funky.api.DiscordClient;
 import funky.core.Difficulty;
 import funky.core.KeyBinds;
 import funky.core.Log;
+import funky.core.NoteSkin;
 import funky.core.Paths;
 import funky.game.Note.NoteSharedTailState;
 import funky.game.PlayHUD.PressScore;
@@ -39,6 +40,8 @@ import funky.backend.JarretVideo;
 class PlayState extends MusicBeatState
 {
 	public static var instance:PlayState;
+
+	var forceExit:Bool = #if (debug || mobile) true #else false #end;
 
 	public var healthBar(get, never):HealthBar;
 	public var iconP1(get, never):HealthIcon;
@@ -359,9 +362,9 @@ class PlayState extends MusicBeatState
 		var strumX = middle ? (FlxG.width - span) / 2 : FlxG.width - span - SIDE_MARGIN;
 		var strumY = ClientPrefs.isDownScroll() ? FlxG.height - STRUM_BOTTOM_GAP : STRUM_TOP;
 
-		// Strumlines CPU visibles, de izquierda a derecha: la 1 (si tiene notas, o si no hay extras)
-		// y cada extra (2, 3, ...) con notas. Una linea vacia no se dibuja.
-		var showOpponent = song.hasOpponentNotes || song.extraLines.length == 0;
+		// Strumlines CPU visibles, de izquierda a derecha: la 1 solo si la cancion tiene notas del
+		// enemigo, y cada extra (2, 3, ...) con notas. Una linea vacia no se dibuja.
+		var showOpponent = song.hasOpponentNotes;
 		var cpuIndexes:Array<Int> = [];
 
 		if (showOpponent)
@@ -582,6 +585,10 @@ class PlayState extends MusicBeatState
 
 		if (Scripts.has)
 			Scripts.call("onUpdate", [elapsed]);
+
+		// Script del noteskin (si trae): `onUpdate(elapsed)`.
+		var noteSkin = NoteSkin.current();
+		if (noteSkin.script != null) noteSkin.script.call("onUpdate", [elapsed]);
 
 		if (song == null)
 		{

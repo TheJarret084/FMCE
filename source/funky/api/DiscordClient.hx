@@ -10,6 +10,7 @@ import cpp.ConstCharStar;
 #if DISCORD_RPC
 import hxdiscord_rpc.Discord;
 import hxdiscord_rpc.Types;
+import hxdiscord_rpc.Types.ActivityType;
 #end
 
 /** Discord Rich Presence. */
@@ -117,11 +118,12 @@ class DiscordClient
 		trace("Discord SDK listo.");
 		menuPresence();
 		#else
-		var handlers:DiscordEventHandlers = new DiscordEventHandlers();
+		var handlers:DiscordEventHandlers = DiscordEventHandlers.create();
 		handlers.ready = cpp.Function.fromStaticFunction(onRpcReady);
 		handlers.disconnected = cpp.Function.fromStaticFunction(onRpcDisconnected);
 		handlers.errored = cpp.Function.fromStaticFunction(onRpcError);
-		Discord.Initialize(ConstCharStar.fromString(clientID), cpp.RawPointer.addressOf(handlers), false, null);
+		// autoRegister es Int en el API de Discord RPC (0 = no registrar el juego automaticamente).
+		Discord.Initialize(ConstCharStar.fromString(clientID), cpp.RawPointer.addressOf(handlers), 0, null);
 
 		started = true;
 		startTimestamp = Std.int(Date.now().getTime() / 1000);
@@ -221,8 +223,8 @@ class DiscordClient
 		DiscordSdk.update(ConstCharStar.fromString(details), ConstCharStar.fromString(state), ConstCharStar.fromString(image),
 			ConstCharStar.fromString(largeText), ConstCharStar.fromString(smallImage), ConstCharStar.fromString(smallText), start, end);
 		#else
-		var presence:DiscordRichPresence = new DiscordRichPresence();
-		presence.type = DiscordActivityType_Playing;
+		var presence:DiscordRichPresence = DiscordRichPresence.create();
+		presence.activityType = ActivityType.Playing;
 		presence.details = ConstCharStar.fromString(details);
 		presence.state = ConstCharStar.fromString(state);
 		presence.largeImageKey = ConstCharStar.fromString(image);

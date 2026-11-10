@@ -76,6 +76,9 @@ class NoteSplash extends FlxSprite
 		// igual que las notas: shader RGB / tinte / nada segun el type del skin
 		skin.applyTo(this, lane, false, laneCount);
 
+		// Script del skin (si trae).
+		skin.notify("onSplashCreate", "onSplash", [this, lane]);
+
 		// sin updateHitbox: el origen es el centro del frame, asi que se coloca por el centro y crece desde ahi
 		setPosition(strum.x + strum.width * 0.5 - frameWidth * 0.5, strum.y + strum.height * 0.5 - frameHeight * 0.5);
 	}

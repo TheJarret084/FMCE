@@ -47,7 +47,7 @@ class HealthIcon extends LevelSprite
 		}
 		// Se achican de 150 a 96 px: sin suavizado salen dentados.
 		antialiasing = true;
-		flipX = false;
+		// flipX = false; alert
 		setState("anim0");
 	}
 
@@ -88,7 +88,6 @@ class HealthIcon extends LevelSprite
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
-		flipX = false; // nada (animaciones, atlas) debe voltear el icono
 		var target = baseScale;
 		var rate = Math.exp(-elapsed * 9);
 		var next = target + (scale.x - target) * rate;
@@ -121,6 +120,6 @@ class HealthIcon extends LevelSprite
 		setState("anim0");
 
 		antialiasing = true;
-		flipX = false;
+		// flipX = false;
 	}
 }

@@ -233,6 +233,9 @@ class Note extends FlxSprite
 		// Segun el tipo del skin: shader RGB, tinte (color) o nada (atlas ya pintado). Tambien limpia lo del uso anterior.
 		skin.applyTo(this, noteData, false, laneCount);
 
+		// Script del skin (si trae): puede cambiar shader, tinte, escala, animacion...
+		skin.notify("onNoteCreate", "onNote", [this, noteData]);
+
 		return this;
 	}
 

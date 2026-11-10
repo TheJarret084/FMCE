@@ -234,3 +234,11 @@ Para tener spritemaps empaquetados en el juego (sin nivel), `assets/images/<carp
 
 En Android esto funciona porque `Paths.init()` le agrega a flixel-animate el respaldo de leer del disco
 (la libreria solo lo hace en desktop).
+
+## Scripts de noteskin
+
+Aparte de los scripts de nivel, cada skin de notas puede traer su propio `addons/noteskins/<id>/data/noteSkin.hx`.
+No se cargan desde `<nivel>/data/scripts/`: son parte del skin y reciben callbacks cuando se crean las notas,
+receptores, confirms y splashes. Sirven, por ejemplo, para ponerle un shader de sombra al skin `fmm`.
+La lista de callbacks y las ayudas (`shader("...")`, `setShader`, `clearShader`...) estan en
+[`addons-y-pack.md`](addons-y-pack.md#scripts-de-noteskin).

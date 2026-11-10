@@ -4,6 +4,7 @@ import flixel.addons.display.FlxRuntimeShader;
 import openfl.utils.Assets;
 
 /** Shader `.frag` de assets/shaders/<nombre>.frag (misma API que el CustomShader de Codename). */
+@:keep // los scripts de noteskin lo usan por reflection (hset/hget): que DCE no lo borre
 class CustomShader extends FlxRuntimeShader {
 	public var path:String;
 

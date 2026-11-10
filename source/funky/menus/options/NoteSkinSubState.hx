@@ -227,6 +227,8 @@ class NoteSkinSubState extends FlxSubState
 			receptor.setGraphicSize(Std.int(PREVIEW_SIZE));
 			receptor.updateHitbox();
 			skin.applyTo(receptor, dir, true, 4);
+			skin.notify("onReceptorCreate", "onReceptor", [receptor, dir]);
+			skin.notify("onReceptorColor", null, [receptor, dir, true]);
 			receptor.setPosition(laneX, previewY);
 			add(receptor);
 			receptors.push(receptor);
@@ -242,6 +244,7 @@ class NoteSkinSubState extends FlxSubState
 			note.setGraphicSize(Std.int(PREVIEW_SIZE));
 			note.updateHitbox();
 			skin.applyTo(note, dir, false, 4);
+			skin.notify("onNoteCreate", "onNote", [note, dir]);
 			note.setPosition(laneX, previewY - 220);
 			add(note);
 			notes.push(note);
