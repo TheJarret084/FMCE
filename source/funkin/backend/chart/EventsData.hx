@@ -71,7 +71,7 @@ class EventsData {
 
 	/**
 	 * Nombre visual de un evento a partir de su id: primero la traduccion del idioma (`charter.events.<id en minusculas>`
-	 * en languages/*/Editors.xml), luego la tabla de arriba y, si no hay ninguna, el mismo id.
+	 * en languages/<idioma>/Editors.xml), luego la tabla de arriba y, si no hay ninguna, el mismo id.
 	 */
 	public static function displayName(id:String):String {
 		var tuId = "charter.events." + TU.raw2Id(id);
