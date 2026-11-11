@@ -191,11 +191,11 @@ typedef UIContextMenuSliderOptionData = {
 	var max:Float;
 	var value:Float;
 	var ?onChange:UIContextMenuOption->Void;
-	//default = 120, ignored if sameLine = false
+
 	var ?width:Float;
-	//disables stepper and text if false, default = false
+
 	var ?showValues:Bool;
-	//if true, the slider will be on the same line as the label text, otherwise it will be on the next line below the label
+
 	var ?sameLine:Bool;
 }
 
@@ -250,7 +250,7 @@ class UIContextMenuOptionSpr extends UISliceSprite {
 				labelKeybind = new UIText(label.x + label.frameWidth + 10, 2, 0, ">");
 			case SLIDER:
 				labelKeybind = new UIText(label.x + label.frameWidth + 10, 2, 0, "");
-				//slider needs to be created after so that it can match the menu width (when not on the same line)
+
 				if (option.slider.sameLine != null && option.slider.sameLine) {
 					var sliderWidth = option.slider.width != null ? Std.int(option.slider.width) : 120;
 					w += 120 + slider.barWidth;
@@ -294,7 +294,6 @@ class UIContextMenuOptionSpr extends UISliceSprite {
 			members.push(labelKeybind);
 	}
 
-	//Called after all options are created and the context menu width/height is final
 	public function postCreate() {
 		switch(optionType) {
 			case SLIDER:
@@ -310,7 +309,7 @@ class UIContextMenuOptionSpr extends UISliceSprite {
 				slider.onChange = function(v) {
 					option.slider.value = v;
 					if (option.slider.onChange != null) option.slider.onChange(option);
-					updateIcon(); //check if icon has changed
+					updateIcon();
 					@:privateAccess
 					labelKeybind.text = '${CoolUtil.quantize(slider.__barProgress * 100, 1)}%';
 				};
@@ -393,7 +392,6 @@ class UIContextMenuOptionIcon extends UISprite {
 		if (_lastState == state) return;
 		_lastState = state;
 
-		// un estado sin frame en la hoja (context-icons.png) no debe crear la animacion: se oculta y se avisa una vez
 		var valid = state > 0 && frames != null && state - 1 < frames.numFrames;
 		visible = valid;
 		if (state > 0 && !valid) Logs.trace('[UIContextMenu] icono $state fuera de context-icons.png (${frames == null ? 0 : frames.numFrames} frames)', WARNING);

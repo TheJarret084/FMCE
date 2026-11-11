@@ -3,7 +3,6 @@ package org.fmce;
 import android.app.Activity;
 import android.util.Log;
 
-/** Prepara el Discord Social SDK en Android (por reflexion, para compilar sin el .aar). */
 public class DiscordInit
 {
 	public static boolean init()

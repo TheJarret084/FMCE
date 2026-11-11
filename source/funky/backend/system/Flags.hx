@@ -3,7 +3,6 @@ package funky.backend.system;
 import flixel.FlxG;
 import lime.app.Application;
 
-/** Small editor-facing subset of Codename's Flags. */
 class Flags
 {
 	public static inline var DEFAULT_FONT:String = "_typewriter";
@@ -21,7 +20,6 @@ class Flags
 	public static inline var DEFAULT_EDITOR_CUT_SOUND:String = "editor/cut";
 
 	public static var VERSION(get, never):String;
-	// public static var STATE(get, never):String;
 
 	static function get_VERSION():String
 	{

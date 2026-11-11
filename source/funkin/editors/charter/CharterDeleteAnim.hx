@@ -56,8 +56,8 @@ class CharterDeleteAnim extends CharterNote {
 
 	public override function draw() @:privateAccess {
 		for (deleteData in deleteNotes) {
-			y = deleteData.note.y + (deleteData.time>deleteTime*.5 ? (deleteData.time/deleteTime)*FlxG.random.float(-1.1, 1.1) : 0); // lunar when no shake :((
-			x = deleteData.note.x + (deleteData.time>deleteTime*.5 ? (deleteData.time/deleteTime)*FlxG.random.float(-1.1, 1.1) : 0); // lunar when no shake :((
+			y = deleteData.note.y + (deleteData.time>deleteTime*.5 ? (deleteData.time/deleteTime)*FlxG.random.float(-1.1, 1.1) : 0);
+			x = deleteData.note.x + (deleteData.time>deleteTime*.5 ? (deleteData.time/deleteTime)*FlxG.random.float(-1.1, 1.1) : 0);
 			angle = deleteData.note.angle; alpha = 1;
 			animation.curAnim.curFrame = 3;
 
@@ -67,9 +67,6 @@ class CharterDeleteAnim extends CharterNote {
 
 			type = deleteData.note.type;
 			typeAlpha = .4;
-			//typeText.text = Std.string(deleteData.note.type);
-			//typeText.exists = deleteData.note.type != 0; typeAlpha = .4;
-			//typeText.follow(this, 20 - (typeText.frameWidth/2), 20 - (typeText.frameHeight/2));
 
 			var mult = FlxEase.quadInOut(deleteData.time/deleteTime);
 

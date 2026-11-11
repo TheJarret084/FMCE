@@ -5,9 +5,8 @@ import flixel.FlxSubState;
 import funkin.backend.system.Conductor;
 import funkin.backend.system.interfaces.IBeatReceiver;
 
-/** Base de los substates del charter (equivalente al MusicBeatSubstate de Codename, sin scripting). */
 class MusicBeatSubstate extends FlxSubState implements IBeatReceiver {
-	/** State que abrio este substate (lo asigna MusicBeatState.openSubState). */
+
 	public var parent:FlxState;
 
 	public var curStep(get, never):Int; inline function get_curStep() return Conductor.curStep;
@@ -20,11 +19,6 @@ class MusicBeatSubstate extends FlxSubState implements IBeatReceiver {
 		closeCallback = function() onSubstateClose();
 	}
 
-	/**
-	 * Abre un substate ANIDADO (desde otro substate). MusicBeatState.openSubState le asigna `parent` a los suyos, pero este camino
-	 * no pasaba por ahi: el substate hijo se quedaba con `parent == null` y UISubstateWindow.onSubstateOpen() reventaba al tocar
-	 * "+" en la ventana de eventos (lista de tipos).
-	 */
 	public override function openSubState(subState:FlxSubState) {
 		if (subState is MusicBeatSubstate)
 			cast(subState, MusicBeatSubstate).parent = this;

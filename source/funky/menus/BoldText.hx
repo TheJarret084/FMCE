@@ -6,7 +6,6 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.text.FlxText;
 import funky.core.Paths;
 
-/** Texto con la fuente bold del menu (`menus/alphabet-bold`), como el Alphabet de Codename. */
 class BoldText extends FlxSpriteGroup
 {
 	static var atlas:FlxAtlasFrames;
@@ -20,7 +19,6 @@ class BoldText extends FlxSpriteGroup
 		"%" => "percent", "$" => "dollar", "#" => "pound", "@" => "at", "*" => "asterisk", "~" => "tilde"
 	];
 
-	/** Distancia entre letras y alto de linea, en px. */
 	static inline var SPACE:Float = 30;
 	static inline var KERN:Float = 3;
 

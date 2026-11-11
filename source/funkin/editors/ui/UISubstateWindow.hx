@@ -7,12 +7,11 @@ import flixel.tweens.FlxTween;
 import funkin.backend.shaders.CustomShader;
 import openfl.filters.ShaderFilter;
 
-// TODO: make UIWarningSubstate extend this
 class UISubstateWindow extends MusicBeatSubstate {
 	var camShaders:Array<FlxCamera> = [];
-	/** Desenfoque del fondo. null si no se pudo crear (Android o error): entonces se usa un fondo oscuro. */
+
 	var blurShader:Null<CustomShader> = makeBlurShader();
-	/** Fondo oscuro de reemplazo cuando no hay blur. */
+
 	var dimCam:Null<FlxCamera>;
 
 	static function makeBlurShader():Null<CustomShader> {
@@ -21,8 +20,7 @@ class UISubstateWindow extends MusicBeatSubstate {
 		#else
 		try {
 			var _ = new CustomShader(Options.intensiveBlur ? "engine/editorBlur" : "engine/editorBlurFast");
-			// El Flixel de Codename llama setCamSize() cada frame a los shaders de camara: sin `_camSize` revienta.
-			// (Pasa si el .frag no existe o no usa `#pragma header`.) Mejor sin blur que un crash en loop.
+
 			if (Reflect.field(_.data, "_camSize") == null) {
 				funky.core.Log.warn('[UISubstateWindow] el shader de blur no tiene _camSize (revisa assets/shaders/engine/), se usa un fondo oscuro');
 				return null;
@@ -70,7 +68,7 @@ class UISubstateWindow extends MusicBeatSubstate {
 		if(blurShader != null) {
 			try {
 				for(c in FlxG.cameras.list) {
-					// Prevent adding a shader if it already has one
+
 					if(c.filters != null) {
 						var shouldSkip = false;
 						for(filter in c.filters) {
@@ -152,7 +150,7 @@ class UISubstateWindow extends MusicBeatSubstate {
 
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
-		// Si create() fallo a medio armar, no hay ventana ni camara todavia: no se toca nada (antes era un null reference cada frame).
+
 		if(subCam == null || windowSpr == null) return;
 		subCam.scroll.set(Std.int(-(FlxG.width - windowSpr.bWidth) / 2), Std.int(-(FlxG.height - windowSpr.bHeight) / 2));
 	}

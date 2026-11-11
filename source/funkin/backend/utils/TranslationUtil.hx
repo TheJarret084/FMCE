@@ -2,23 +2,21 @@ package funkin.backend.utils;
 
 import funkin.backend.utils.Translations;
 
-/** Fachada compatible con Codename Engine (`TU`). */
 class TranslationUtil
 {
-	/** Idioma actual (`es`, `en`...). */
+
 	public static var curLanguage(get, set):String;
-	/** Nombre visible del idioma actual. */
+
 	public static var curLanguageName(get, set):String;
-	/** Lista `codigo/Nombre` de los idiomas encontrados. */
+
 	public static var foundLanguages(get, never):Array<String>;
-	/** Config del idioma actual. */
+
 	public static var config(get, never):Map<String, String>;
-	/** `true` si el idioma actual es el de por defecto. */
+
 	public static var isDefaultLanguage(get, never):Bool;
-	/** `true` si hay alguna traduccion cargada. */
+
 	public static var isLanguageLoaded(get, never):Bool;
 
-	/** Carga los idiomas y el guardado. Llamar una vez al arrancar. */
 	public static function init():Void
 	{
 		Translations.ensureLoaded();
@@ -48,7 +46,6 @@ class TranslationUtil
 	public static function translateDiff(?id:String, ?params:Array<Dynamic>):String
 		return Translations.translateDiff(id, params);
 
-	/** Texto sin formatear; conserva `.format([...])` gracias a `using CoolUtil`. */
 	public static function getRaw(id:String, ?def:String):String
 		return Translations.raw(id, def);
 
@@ -69,8 +66,6 @@ class TranslationUtil
 
 	public static function humanize(id:String):String
 		return Translations.humanize(id);
-
-	// getters/setters
 
 	static function get_curLanguage():String
 	{

@@ -3,16 +3,16 @@
 ---
 (24 sep):
 
-[X] hacer la hitbox más pequeña verticalmente
-[X] arreglar la hitbox de las notas
-[X] arreglar el input de las notas para que detecte correctamente todas las teclas/lane y no se quede agarrando solamente la key morada
-[X] arreglar la conversión del nivel
-[X] hacer más decente y usable el formato de meta
-[X] revisar y arreglar los sprites del nivel
-[X] mejorar el titleScreen sin aplastar/deformar los textos
-[X] rehacer el conversor como un State completo, no solo el .py
-[X] dejar el nivel completamente jugable después de la conversión
-[X] modificar scrollSpeed según dificultad:
+- [X] hacer la hitbox más pequeña verticalmente
+- [X] arreglar la hitbox de las notas
+- [X] arreglar el input de las notas para que detecte correctamente todas las teclas/lane y no se quede agarrando solamente la key morada
+- [X] arreglar la conversión del nivel
+- [X] hacer más decente y usable el formato de meta
+- [X] revisar y arreglar los sprites del nivel
+- [X] mejorar el titleScreen sin aplastar/deformar los textos
+- [X] rehacer el conversor como un State completo, no solo el .py
+- [X] dejar el nivel completamente jugable después de la conversión
+- [X] modificar scrollSpeed según dificultad:
 
   [V] Fácil
 
@@ -22,11 +22,11 @@
 
   [V] Fast
 
-[X] corregir colores de notas idle a un gris decente
-[X] en el splash del principio poner los sprites ligeramente mas pequeño
-[X] agregar dos tipos nuevos de sprites FlxVideoSprite (sin audio), y FlxAnimatedAtlas (spritemap de adove), con esto importar funkinSprite de codename
-[X] arreglar la pausa ya que no trae configuracion, y demas hacer una, ademas de no hacer que no se salga de una vez
-[X] arreglar el pitero countdown que creo que lo rompi pero non tengo forma de confirmarlo
+- [X] corregir colores de notas idle a un gris decente
+- [X] en el splash del principio poner los sprites ligeramente mas pequeño
+- [X] agregar dos tipos nuevos de sprites FlxVideoSprite (sin audio), y FlxAnimatedAtlas (spritemap de adove), con esto importar funkinSprite de codename
+- [X] arreglar la pausa ya que no trae configuracion, y demas hacer una, ademas de no  hacer que no se salga de una vez
+- [X] arreglar el pitero countdown que creo que lo rompi pero non tengo forma de confirmarlo
 
 ---
 
@@ -72,7 +72,6 @@
 - [X] Freeplay: icono del oponente (meta.json icons.P2 o scene.json icons[0]) a la derecha de cada nivel.
 - [X] Android: `latest.log`/`previous.log` van en `<carpeta del juego>/logs` y los crashes en `<carpeta del juego>/crashes` (`.JarretLabs-FMCE`, o `Android/media/<package>` sin permiso), no en la carpeta privada de la app.
 
-
 ---
 
 (18 oct):
@@ -82,8 +81,6 @@
 - [X] sprite tipo video no detectado en gamaplay ni editor
 - [X] ventanas crashean el juego, especificamente advertencias o mendajes en editores
 - [X] crashhandler no inicia, en mobile peta el juego (ademas que ni da crash.txt, debo revisar esto) nota: no sale el popup pero si da el .txt
-
-Hecho hoy (sin probar, no se compilo):
 - [X] Colores de notas al reves: `ClientPrefs.colorIndexForLane` (4K = morado, celeste, verde, rojo; multikey tambien)
 - [X] `NOTE_assets.xml` renombrado a `left note`, `left receptor`, `left hold piece/tail`... e `imagePath` corregido
 - [X] Video: se busca `<carpeta>/<anim>.mp4` (`FunkinVideoSprite`); `SpriteEditorState` ya no pide sprite.png y previsualiza el video
@@ -94,3 +91,23 @@ Hecho hoy (sin probar, no se compilo):
 - [X] Rich presence para mobile LEST GOOOO
 - [ ] Pulida a la pausa
 - [X] parte de herramientas mejor trabajada
+
+
+(11 nov):
+- [X] exportar videos para que la mierda esta los agarre
+- [ ] cuando el video no tenga header bonito igual exportarlo a la verga
+- [ ] poner público el repositorio 
+- [ ] arreglar el puto readme que no sale el maldito desgraciado banner
+- [ ] addons parte 1: agregar noteSkins con esto su propio sistema y scripts para las notas
+- [ ] addons parte 2: scripting en chartEditor (ojalá nunca pidan esto wei porfavor)
+- [ ] ganarle a fénix sisisis
+- [ ] ser revisor (imposible al parecer, pero creo en mi mismo)
+- [ ] corregir crashHandler con la ventanita nativa de mobile ✅✅✅✅✅✅✅✅✅✅
+- [ ] terminar los assets que faltan, y con esto relimpiar/rehacer states como 
+     [ ] titleScreen  
+     [ ] mainMenu 
+     [ ] Freeplay o levelList 
+     [ ] loadingScreen A y B aunque B está perfecto 
+     [ ] Opciones 
+     [ ] creditos 
+     [ ] agregar a donigay a los betatesters de desktop junto a pecela

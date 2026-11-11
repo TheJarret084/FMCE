@@ -9,16 +9,14 @@ import openfl.display.BitmapData;
 import sys.FileSystem;
 import sys.io.File;
 
-/** Cuadro para elegir una imagen con vista previa y animaciones del atlas. */
 class UIImageExplorer extends UIFileExplorer
 {
-	/** Nombre limpio del sprite (sin extension, solo letras/numeros/`_`/`-`). */
+
 	public var imageName:String = null;
 
 	public var imageBytes:Bytes = null;
 	public var isJpg:Bool = false;
 
-	/** `"xml"` (Sparrow), `"json"` (Aseprite) o null si la imagen va sola. */
 	public var dataKind:Null<String> = null;
 	public var dataText:Null<String> = null;
 	public var animationList:Array<String> = [];
@@ -51,7 +49,6 @@ class UIImageExplorer extends UIFileExplorer
 		isJpg = ["jpg", "jpeg"].contains(Path.extension(path).toLowerCase());
 		imageName = cleanName(Path.withoutExtension(Path.withoutDirectory(path)));
 
-		// datos del atlas junto a la imagen: primero Sparrow (.xml), si no Aseprite (.json)
 		try
 		{
 			var xmlPath = Path.withExtension(path, "xml");
@@ -82,7 +79,6 @@ class UIImageExplorer extends UIFileExplorer
 		}
 		if (dataKind == null) animationList = ["anim0"];
 
-		// vista previa
 		var bmp:BitmapData = null;
 		try bmp = BitmapData.fromBytes(bytes) catch (e:Dynamic) {}
 		if (bmp == null)
@@ -99,7 +95,7 @@ class UIImageExplorer extends UIFileExplorer
 			scale = Math.max(Math.min(300, maxSize.x) / uiElement.width, Math.min(200, maxSize.y) / uiElement.height);
 		else if (uiElement.width > maxSize.x || uiElement.height > maxSize.y)
 			scale = Math.min(maxSize.x / uiElement.width, maxSize.y / uiElement.height);
-		// una imagen diminuta no se estira sin limite
+
 		scale = Math.min(scale, 4);
 		uiElement.scale.set(scale, scale);
 		uiElement.updateHitbox();
@@ -164,7 +160,6 @@ class UIImageExplorer extends UIFileExplorer
 		return ~/^_+|_+$/g.replace(name, "");
 	}
 
-	/** Animaciones de un JSON estilo Aseprite: sus `frameTags`; si no tiene, una sola (`anim0`). */
 	static function animsFromAseprite(text:String):Array<String>
 	{
 		var out:Array<String> = [];

@@ -8,16 +8,10 @@ import android.os.Build;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Locale;
 
-/**
- * Saca los frames de un video (.mp4) a PNG en Android: es lo que en escritorio hace ffmpeg
- * (ver funky.backend.converter.VideoStrip / AndroidFrames.hx). FunkFMPEG arma la tira despues.
- *
- * El trabajo corre en un hilo de Java propio y Haxe solo consulta `state()` / `progress()`, asi la pantalla sigue viva.
- * Solo hay una extraccion a la vez (el exportador procesa un video por vez).
- */
 public class VideoFrames
 {
 	public static final int IDLE = 0;
@@ -32,21 +26,84 @@ public class VideoFrames
 	private static volatile boolean cancelRequested = false;
 	private static volatile String errorText = "";
 
-	/**
-	 * "ancho,alto,fps,segundos" del video tal como se va a ver (ya con la rotacion aplicada), o "error: ..." si no se pudo leer.
-	 * El tamano sale del primer frame de verdad, asi no hay que adivinar como se aplica la rotacion en cada telefono.
-	 */
-	public static String probe(String path)
+	private static volatile String lastProbeError = "";
+
+	public static String probeError()
 	{
+		return lastProbeError;
+	}
+
+	private static MediaMetadataRetriever open(String path) throws Exception
+	{
+		File file = new File(path);
+		if (!file.isFile()) throw new RuntimeException("no existe el archivo " + path);
+		if (!file.canRead()) throw new RuntimeException("sin permiso de lectura: " + path);
+
+		String byPath;
 		MediaMetadataRetriever retriever = new MediaMetadataRetriever();
 		try
 		{
 			retriever.setDataSource(path);
+			return retriever;
+		}
+		catch (Throwable t)
+		{
+			byPath = String.valueOf(t);
+			try { retriever.release(); } catch (Throwable ignored) {}
+		}
+
+		retriever = new MediaMetadataRetriever();
+		FileInputStream stream = null;
+		try
+		{
+			stream = new FileInputStream(file);
+			retriever.setDataSource(stream.getFD());
+			return retriever;
+		}
+		catch (Throwable t)
+		{
+			try { retriever.release(); } catch (Throwable ignored) {}
+			throw new RuntimeException("por ruta: " + byPath + " | por descriptor: " + t);
+		}
+		finally
+		{
+
+			if (stream != null)
+			{
+				try { stream.close(); } catch (Throwable ignored) {}
+			}
+		}
+	}
+
+	private static Bitmap grab(MediaMetadataRetriever retriever, long timeUs, int index)
+	{
+		Bitmap frame = null;
+		try { frame = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST); } catch (Throwable ignored) {}
+		if (frame != null) return frame;
+		try { frame = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC); } catch (Throwable ignored) {}
+		if (frame != null) return frame;
+		if (Build.VERSION.SDK_INT >= 28)
+		{
+			try { frame = retriever.getFrameAtIndex(index); } catch (Throwable ignored) {}
+			if (frame != null) return frame;
+		}
+		try { frame = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_PREVIOUS_SYNC); } catch (Throwable ignored) {}
+		return frame;
+	}
+
+	public static String probe(String path)
+	{
+		MediaMetadataRetriever retriever = null;
+		lastProbeError = "";
+		try
+		{
+			retriever = open(path);
 
 			long durationMs = parseLong(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION));
 			int width = 0;
 			int height = 0;
-			Bitmap first = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+			Bitmap first = null;
+			try { first = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC); } catch (Throwable ignored) {}
 			if (first != null)
 			{
 				width = first.getWidth();
@@ -80,18 +137,18 @@ public class VideoFrames
 		}
 		catch (Throwable t)
 		{
+			lastProbeError = String.valueOf(t);
 			return "error: " + t;
 		}
 		finally
 		{
-			try { retriever.release(); } catch (Throwable ignored) {}
+			if (retriever != null)
+			{
+				try { retriever.release(); } catch (Throwable ignored) {}
+			}
 		}
 	}
 
-	/**
-	 * Empieza a sacar `count` frames (el i-esimo en el segundo i / fps) como `f000001.png`, `f000002.png`... dentro de `outDir`,
-	 * ya escalados a `width` x `height`. `fpsMilli` = fps x 1000 (23.976 fps -> 23976). Devuelve false si no pudo arrancar.
-	 */
 	public static boolean start(final String path, final String outDir, final int fpsMilli, final int width, final int height, final int count)
 	{
 		Thread previous = worker;
@@ -133,13 +190,11 @@ public class VideoFrames
 		return true;
 	}
 
-	/** Frames ya escritos. */
 	public static int progress()
 	{
 		return written;
 	}
 
-	/** IDLE, RUNNING, DONE, FAILED o CANCELLED. */
 	public static int state()
 	{
 		return state;
@@ -150,7 +205,6 @@ public class VideoFrames
 		return errorText;
 	}
 
-	/** Pide parar y espera (poco) a que termine el frame en curso. */
 	public static void cancel()
 	{
 		cancelRequested = true;
@@ -161,15 +215,13 @@ public class VideoFrames
 		}
 	}
 
-	// ------------------------------------------------------------------ hilo
-
 	private static void extract(String path, String outDir, int fpsMilli, int width, int height, int count)
 	{
-		MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+		MediaMetadataRetriever retriever = null;
 		Bitmap last = null;
 		try
 		{
-			retriever.setDataSource(path);
+			retriever = open(path);
 			for (int i = 0; i < count; i++)
 			{
 				if (cancelRequested)
@@ -179,7 +231,7 @@ public class VideoFrames
 				}
 
 				long timeUs = (long) (i * 1000000000.0 / fpsMilli);
-				Bitmap frame = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST);
+				Bitmap frame = grab(retriever, timeUs, i);
 				Bitmap scaled;
 				if (frame != null)
 				{
@@ -190,9 +242,9 @@ public class VideoFrames
 				}
 				else
 				{
-					// el decodificador no dio frame (pasa cerca del final): se repite el ultimo para no romper la cuenta
+
 					scaled = last;
-					if (scaled == null) throw new RuntimeException("el video no dio el frame " + i);
+					if (scaled == null) throw new RuntimeException("el decodificador del telefono no dio el frame " + i + " (probado por tiempo, keyframe e indice)");
 				}
 
 				writePng(scaled, new File(outDir, String.format(Locale.US, "f%06d.png", i + 1)));
@@ -208,11 +260,13 @@ public class VideoFrames
 		finally
 		{
 			if (last != null) last.recycle();
-			try { retriever.release(); } catch (Throwable ignored) {}
+			if (retriever != null)
+			{
+				try { retriever.release(); } catch (Throwable ignored) {}
+			}
 		}
 	}
 
-	/** Reduce a la mitad mientras sobre mas del doble (el filtro bilineal solo no promedia todos los pixeles) y luego ajusta al tamano exacto. */
 	private static Bitmap fit(Bitmap source, int width, int height)
 	{
 		if (source.getWidth() == width && source.getHeight() == height) return source;

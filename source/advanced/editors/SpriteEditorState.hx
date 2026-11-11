@@ -19,7 +19,6 @@ import funky.game.LevelSprite;
 import funky.game.SpriteBuilder;
 import haxe.io.Path;
 
-/** Editor de sprites (solo escritorio), con la interfaz de los editores de Codename. */
 class SpriteEditorState extends UIState
 {
 	static inline var TOP:Int = 25;
@@ -57,7 +56,7 @@ class SpriteEditorState extends UIState
 	var ghostCheck:UICheckbox;
 	var animWidgets:Array<UISprite> = [];
 	var deleteButton:UIButton;
-	/** Animacion que espera el segundo toque de "Borrar animacion" (y cuando se pidio). */
+
 	var deleteArmed:Null<Dynamic> = null;
 	var deleteArmedAt:Float = 0;
 
@@ -69,10 +68,9 @@ class SpriteEditorState extends UIState
 
 	var sprite:LevelSprite = null;
 
-	/** Sprite de tipo video: NO usa sprite.png, el video de cada animacion es `<carpeta>/<anim>.mp4`. */
 	var isVideo:Bool = false;
 	var video:FunkinVideoSprite = null;
-	/** `<anim>.mp4` que se esperaba y no esta (para avisarlo en la barra de info). */
+
 	var videoMissing:Null<String> = null;
 	var zoom:Float = 1;
 	var dirty:Bool = false;
@@ -83,7 +81,6 @@ class SpriteEditorState extends UIState
 	var crossV:FlxSprite;
 	var frameBars:Array<FlxSprite> = [];
 
-	/** Nombres de las animaciones que se dibujan como ghost (solo del editor, no se guardan). */
 	var ghostNames:Array<String> = [];
 	var ghostSprites:Array<FlxSprite> = [];
 	var ghostEntries:Array<Dynamic> = [];
@@ -160,8 +157,6 @@ class SpriteEditorState extends UIState
 
 	function notify(text:String):Void
 		displayNotification(new UIBaseNotification(text, 3));
-
-	// ───────────────────────── interfaz ─────────────────────────
 
 	function buildTopMenu():Void
 	{
@@ -294,15 +289,11 @@ class SpriteEditorState extends UIState
 		ghostCheck = ui(new UICheckbox(x0 + 20, y1 + 430, "Ghost (alinear las demas contra esta)", false));
 		ghostCheck.onChecked = function(b:Bool) setGhost(entry(), b);
 
-		// Borrar la animacion elegida (tambien en el menu Archivo > Borrar animacion y con SUPR). Solo quita la entrada del
-		// config.json: el atlas nunca se toca. No se puede deshacer, asi que se pide un segundo toque para confirmar.
 		deleteButton = ui(new UIButton(x0 + 20, y1 + 468, "Borrar animacion", requestDeleteAnim, RIGHT_W - 40, 32));
 		deleteButton.color = 0xFFFF8A8A;
 
 		animWidgets = [nameBox, tagBox, speedStep, animScaleStep, pivotXStep, pivotYStep, loopCheck, spdFpsCheck, indicesBox, ghostCheck, play, deleteButton];
 	}
-
-	// ───────────────────────── listas ─────────────────────────
 
 	function addSpriteButton(name:String):Void
 	{
@@ -319,10 +310,6 @@ class SpriteEditorState extends UIState
 		for (name in sprites) addSpriteButton(name);
 	}
 
-	/**
-	 * "+" / Archivo > Importar sprite: en escritorio abre la ventana de importar (elegir imagen, ver sus animaciones,
-	 * nombre); en movil no hay selector de archivos, asi que sigue usando la carpeta `import-sprites`.
-	 */
 	function importSprites():Void
 	{
 		#if (sys && !android && !ios)
@@ -332,7 +319,6 @@ class SpriteEditorState extends UIState
 			sprites = SpriteBuilder.listSprites(levelDir);
 			rebuildSpriteList();
 
-			// con cambios sin guardar no se salta a otro sprite (cargarlo los perderia)
 			if (current != null && dirty)
 			{
 				spriteIdx = Std.int(Math.max(0, sprites.indexOf(current)));
@@ -348,10 +334,6 @@ class SpriteEditorState extends UIState
 		#end
 	}
 
-	/**
-	 * Mete en este nivel los `.png` que haya en la carpeta `import-sprites` (junto a `levels/`), cada uno como un sprite nuevo.
-	 * Si trae su `.xml` (Sparrow) o `.json` (Aseprite) con el mismo nombre, se usa de atlas; si no, queda de un solo frame.
-	 */
 	function importFromInbox():Void
 	{
 		#if sys
@@ -364,7 +346,6 @@ class SpriteEditorState extends UIState
 			sprites = SpriteBuilder.listSprites(levelDir);
 			rebuildSpriteList();
 
-			// con cambios sin guardar no se salta a otro sprite (cargarlo los perderia)
 			if (current != null && dirty)
 			{
 				spriteIdx = Std.int(Math.max(0, sprites.indexOf(current)));
@@ -417,7 +398,6 @@ class SpriteEditorState extends UIState
 			}
 	}
 
-	/** Si se arrastro un boton para cambiar el orden, el orden de los datos lo sigue. */
 	function syncOrders():Void
 	{
 		var order = [for (b in spriteList.buttons.members) if (b != null) Std.string(b.item)];
@@ -439,8 +419,6 @@ class SpriteEditorState extends UIState
 		touch();
 	}
 
-	// ───────────────────────── carga ─────────────────────────
-
 	function selectSprite(index:Int):Void
 	{
 		if (sprites.length == 0) return;
@@ -450,7 +428,6 @@ class SpriteEditorState extends UIState
 		loadCurrent(0);
 	}
 
-	/** Lee `config.json` del sprite actual (o lo arma desde lo que ya resuelve el juego) y recarga la vista previa. */
 	function loadCurrent(keepAnim:Int):Void
 	{
 		var name = sprites[spriteIdx];
@@ -468,16 +445,16 @@ class SpriteEditorState extends UIState
 			var resolved = atlas ? SpriteBuilder.readAtlasConfig(levelDir, name) : SpriteBuilder.readConfig(levelDir, name);
 			for (a in resolved.anims)
 			{
-				// los alias anim0..3 que el juego agrega a singLEFT.. no son entradas del config
+
 				if (~/^anim[0-9]+$/.match(a.name) && Lambda.exists(resolved.anims, o -> SpriteBuilder.laneOfSing(o.name) == Std.parseInt(a.name.substr(4)))) continue;
 				entries.push({anim: a.name, name: a.name, spd: JsonFile.round(a.spd), spd_fps: a.spdFps, indices: ([] : Array<Int>), loop: a.loop, offset: {x: a.offsetX, y: a.offsetY}, scale: a.scale});
 			}
 			if (Reflect.field(cfg, "type") == null) Reflect.setField(cfg, "type", resolved.type == "sprite" ? "item" : resolved.type);
 			if (Reflect.field(cfg, "bilinear") == null) Reflect.setField(cfg, "bilinear", resolved.bilinear);
 		}
-		// Sprites normales: sin `name` ni `index` en el archivo (name = anim<posicion> solo en memoria). Atlas de Animate: sin cambios.
+
 		if (!atlas) SpriteBuilder.normalizeEntries(entries);
-		// Formatos viejos: `spd` multiplicador -> FPS + `spd_fps`; y sin escala global (cada animacion tiene la suya).
+
 		for (e in entries) SpriteBuilder.migrateSpd(e);
 		Reflect.deleteField(cfg, "scale");
 		Reflect.setField(cfg, "data", entries);
@@ -490,7 +467,7 @@ class SpriteEditorState extends UIState
 		}
 		clearVideo();
 		isVideo = Std.string(Reflect.field(cfg, "type")) == "video" || SpriteBuilder.videoCount(levelDir, name) > 0;
-		// un sprite de video no tiene atlas: se evita buscar sprite.png/sprite.json
+
 		sprite = isVideo ? new LevelSprite() : SpriteBuilder.build(levelDir, name);
 		sprite.scrollFactor.set();
 		insert(members.indexOf(crossH), sprite);
@@ -515,7 +492,6 @@ class SpriteEditorState extends UIState
 	inline function entry():Dynamic
 		return entries.length == 0 ? null : entries[animIdx];
 
-	/** "0,1,2, 5-8" -> [0,1,2,5,6,7,8] (los rangos pueden ir al reves: "8-5"). Lo que no sea numero se ignora. */
 	static function parseIndices(text:String):Array<Int>
 	{
 		var out:Array<Int> = [];
@@ -536,8 +512,6 @@ class SpriteEditorState extends UIState
 		}
 		return out;
 	}
-
-	// ───────────────────────── widgets <-> datos ─────────────────────────
 
 	function syncSpriteWidgets():Void
 	{
@@ -603,8 +577,6 @@ class SpriteEditorState extends UIState
 		touch();
 	}
 
-	// ───────────────────────── animaciones ─────────────────────────
-
 	function newAnim():Void
 	{
 		var n = entries.length;
@@ -627,7 +599,7 @@ class SpriteEditorState extends UIState
 		if (e == null) return;
 		if (!atlas)
 		{
-			// el nombre es siempre anim<posicion en data>
+
 			notify("El nombre es automatico: anim + la posicion en data.");
 			nameBox.label.text = Std.string(Reflect.field(e, "name"));
 			return;
@@ -640,7 +612,7 @@ class SpriteEditorState extends UIState
 			nameBox.label.text = Std.string(Reflect.field(e, "name"));
 			return;
 		}
-		// `anim` es el tag del atlas: solo cambia `name` (el nombre que usa el juego)
+
 		if (Reflect.field(e, "anim") == null) Reflect.setField(e, "anim", Reflect.field(e, "name"));
 		var ghostAt = ghostNames.indexOf(Std.string(Reflect.field(e, "name")));
 		if (ghostAt >= 0) ghostNames[ghostAt] = name;
@@ -649,7 +621,6 @@ class SpriteEditorState extends UIState
 		refreshAnimList();
 	}
 
-	/** Primer toque: avisa y arma el borrado (el boton se pone rojo y dice "Confirmar"); segundo toque en 3 s: borra. */
 	function requestDeleteAnim():Void
 	{
 		var e = entry();
@@ -676,7 +647,6 @@ class SpriteEditorState extends UIState
 		deleteButton.color = 0xFFFF8A8A;
 	}
 
-	/** Despues de borrar una animacion, las de abajo suben una posicion (anim3 pasa a anim2...). Los ghosts siguen a su animacion. */
 	function renumber():Void
 	{
 		var ghosts = [for (e in entries) if (isGhost(e)) e];
@@ -733,7 +703,6 @@ class SpriteEditorState extends UIState
 		videoMissing = null;
 	}
 
-	/** Carga `<carpeta del sprite>/<anim>.mp4` de la animacion seleccionada (sin audio). */
 	function playVideo():Void
 	{
 		clearVideo();
@@ -770,7 +739,6 @@ class SpriteEditorState extends UIState
 		place();
 	}
 
-	/** Velocidad y loop se aplican en vivo (los atlas de Animate lo toman al volver a reproducir). */
 	function applyLive():Void
 	{
 		if (isVideo)
@@ -786,7 +754,7 @@ class SpriteEditorState extends UIState
 		{
 			var spd = Math.max(0.05, JsonFile.num(Reflect.field(e, "spd"), 24));
 			cur.frameRate = Reflect.field(e, "spd_fps") == false ? Math.max(1, cur.numFrames) * funky.core.Conductor.bpm / (60 * spd) : spd;
-			@:privateAccess cur.looped = Reflect.field(e, "loop") != false; // (looped es de solo lectura en el flixel del fork)
+			@:privateAccess cur.looped = Reflect.field(e, "loop") != false;
 		}
 		place();
 	}
@@ -805,8 +773,6 @@ class SpriteEditorState extends UIState
 
 	inline function scaleOf(e:Dynamic):Float
 		return zoom * Math.max(0.01, JsonFile.num(Reflect.field(e, "scale"), 1));
-
-	// ───────────────────────── ghosts ─────────────────────────
 
 	function isGhost(e:Dynamic):Bool
 		return e != null && ghostNames.contains(Std.string(Reflect.field(e, "name")));
@@ -836,7 +802,6 @@ class SpriteEditorState extends UIState
 		markAnims();
 	}
 
-	/** Un FlxSprite por ghost con el ULTIMO frame de su animacion (como los ghosts del editor de personajes de Codename). */
 	function rebuildGhosts():Void
 	{
 		for (g in ghostSprites)
@@ -868,7 +833,6 @@ class SpriteEditorState extends UIState
 		}
 	}
 
-	/** El pivote de la animacion va clavado en la cruz (centro del lienzo), igual que `placePivot` en el juego. */
 	function place():Void
 	{
 		if (isVideo)
@@ -948,12 +912,10 @@ class SpriteEditorState extends UIState
 		crossV.setPosition(ax - 1, ay - 13);
 	}
 
-	// ───────────────────────── guardar / salir ─────────────────────────
-
 	function save():Void
 	{
 		if (sprites.length == 0) return;
-		// sprites normales: sin `name` ni `index` en el archivo (la posicion en `data` es el numero)
+
 		Reflect.setField(cfg, "data", atlas ? entries : SpriteBuilder.entriesForSave(entries));
 		var written = JsonFile.write(cfgPath, cfg);
 		Reflect.setField(cfg, "data", entries);
@@ -989,8 +951,6 @@ class SpriteEditorState extends UIState
 		], false));
 	}
 
-	// ───────────────────────── frame ─────────────────────────
-
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
@@ -999,7 +959,6 @@ class SpriteEditorState extends UIState
 		var typing = currentFocus != null;
 		if (FlxG.keys.justPressed.ANY && !typing && curContextMenu == null && !topMenuSpr.anyMenuOpened) UIUtil.processShortcuts(topMenu);
 
-		// Mismo origen de coordenadas que usa el hover de todos los botones (camara de la UI).
 		FlxG.mouse.getScreenPosition(uiCamera, mouseP);
 		var mx = mouseP.x;
 		var my = mouseP.y;
@@ -1018,7 +977,7 @@ class SpriteEditorState extends UIState
 		if (!FlxG.mouse.pressed) dragging = false;
 		if (dragging && entry() != null && ((sprite != null && sprite.loaded) || (isVideo && video != null)))
 		{
-			// arrastrar mueve el sprite (el pivote cambia al reves, porque la cruz queda quieta)
+
 			var s = Math.max(0.0001, scaleOf(entry()));
 			setPivot(Math.round((dragPivot.x - (mx - dragStart.x) / s) * 10) / 10, Math.round((dragPivot.y - (my - dragStart.y) / s) * 10) / 10);
 			syncPivotSteppers();
@@ -1031,7 +990,7 @@ class SpriteEditorState extends UIState
 			var dy = (FlxG.keys.justPressed.DOWN ? 1 : 0) - (FlxG.keys.justPressed.UP ? 1 : 0);
 			if (dx != 0 || dy != 0)
 			{
-				// la flecha mueve el sprite en esa direccion
+
 				setPivot(pivotXOf(entry()) - dx * step, pivotYOf(entry()) - dy * step);
 				syncPivotSteppers();
 			}

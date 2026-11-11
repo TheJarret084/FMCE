@@ -1,4 +1,4 @@
-/* Generated with <3 by Discord.Sdk.Derive */
+
 #pragma once
 #ifndef DISCORD_HEADER_CDISCORD_H_
 #define DISCORD_HEADER_CDISCORD_H_
@@ -1957,4 +1957,4 @@ uint64_t DISCORD_API Discord_CallInfoHandle_GuildId(Discord_CallInfoHandle* self
 }
 #endif
 
-#endif /* DISCORD_HEADER_CDISCORD_H_ */
+#endif

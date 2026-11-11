@@ -9,8 +9,6 @@ import funky.backend.utils.NativeAPI.MessageBoxIcon;
 </target>
 ')
 
-// Adaptado de Codename Engine (funkin.backend.utils.native.Windows), recortado
-// a lo estrictamente necesario para el CrashHandler (solo el message box nativo).
 @:cppFileCode('
 #include <windows.h>
 ')

@@ -11,16 +11,15 @@ import haxe.Json;
 import openfl.events.KeyboardEvent;
 import openfl.ui.Keyboard;
 
-/** Code Studio: menu, editor, explorador de archivos, salida y estado (solo PC). */
 class CodeStudio extends FlxSpriteGroup
 {
 	public var files:Array<CodeStudioFile> = [];
 	public var currentFile(default, null):Int = -1;
-	/** true en el frame en que CodeStudio uso ESC (cerrar menu o buscador): el state no debe salir. */
+
 	public var escapeHandled(default, null):Bool = false;
-	/** true mientras una cortina de transicion tapa la pantalla: los TextField se cambian por una foto para que no floten encima. */
+
 	public var covered(default, null):Bool = false;
-	/** Lo llama "Archivo > Volver". */
+
 	public var onExit:Void->Void;
 
 	var onSave:CodeStudioFile->Bool;
@@ -67,7 +66,6 @@ class CodeStudio extends FlxSpriteGroup
 		var outH = CodeTheme.OUTPUT_H;
 		var editorH = statusY - outH - bodyY;
 
-		// el teclado de Flixel no debe silenciar/subir volumen mientras escribes ("0", "+", "-")
 		oldMute = FlxG.sound.muteKeys;
 		oldUp = FlxG.sound.volumeUpKeys;
 		oldDown = FlxG.sound.volumeDownKeys;
@@ -127,13 +125,12 @@ class CodeStudio extends FlxSpriteGroup
 		};
 		menu.onClose = function()
 		{
-			// si el menu se cierra porque se esta saliendo, la pantalla sigue congelada
+
 			if (covered) return;
 			editor.thaw();
 			findBar.thaw();
 		};
 
-		// el orden de add es el orden de dibujo: el menu va al final para tapar todo
 		add(tabs);
 		add(editor);
 		add(welcome);
@@ -152,8 +149,6 @@ class CodeStudio extends FlxSpriteGroup
 
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 	}
-
-	// ------------------------------------------------------------------ construccion
 
 	function buildToolbar(levelName:Null<String>):ToolBar
 	{
@@ -234,8 +229,6 @@ class CodeStudio extends FlxSpriteGroup
 		];
 	}
 
-	// ------------------------------------------------------------------ layout
-
 	function relayout():Void
 	{
 		var bodyY = CodeTheme.MENU_H + CodeTheme.TOOL_H + CodeTheme.TAB_H;
@@ -243,11 +236,9 @@ class CodeStudio extends FlxSpriteGroup
 		var outH = output.currentHeight();
 		var top = bodyY + findH;
 		editor.setRect(0, top, mainW, statusY - outH - top);
-		// la barra de busqueda siempre esta justo debajo de las pestanas; se mueve con el editor
+
 		welcome.y = top + Std.int((statusY - outH - top) / 2) - 30;
 	}
-
-	// ------------------------------------------------------------------ archivos
 
 	function currentOpen():Null<CodeStudioFile>
 		return currentFile >= 0 && currentFile < files.length ? files[currentFile] : null;
@@ -301,7 +292,7 @@ class CodeStudio extends FlxSpriteGroup
 		f.closeArmed = false;
 		if (f.dirty)
 		{
-			// descartar: vuelve a lo que hay en disco
+
 			if (f.saved == null)
 			{
 				var i = files.indexOf(f);
@@ -358,8 +349,6 @@ class CodeStudio extends FlxSpriteGroup
 			if (f.dirty && f.editable) return true;
 		return false;
 	}
-
-	// ------------------------------------------------------------------ guardar / ejecutar
 
 	public function getCode():String
 		return editor != null ? editor.getText() : "";
@@ -431,8 +420,6 @@ class CodeStudio extends FlxSpriteGroup
 	public function previewSprites():Void
 		onPreview();
 
-	// ------------------------------------------------------------------ buscar / formatear / salida
-
 	function openFind(prefill:String):Void
 	{
 		if (currentOpen() == null) return;
@@ -466,7 +453,6 @@ class CodeStudio extends FlxSpriteGroup
 		runJsonCheck();
 	}
 
-	/** Muestra el inspector (en vez del explorador) si hay un .json abierto y lo pone al dia con el texto del editor. */
 	function syncInspector(f:Null<CodeStudioFile>):Void
 	{
 		var show = inspectorOn && f != null && f.kind == "json";
@@ -478,7 +464,6 @@ class CodeStudio extends FlxSpriteGroup
 		inspector.follow(editor.field.caretIndex);
 	}
 
-	/** Una cortina de transicion va a tapar (o acaba de dejar de tapar) la pantalla. */
 	public function setCovered(value:Bool):Void
 	{
 		if (covered == value) return;
@@ -498,7 +483,6 @@ class CodeStudio extends FlxSpriteGroup
 		}
 	}
 
-	/** Revisa el JSON abierto y marca la linea del error. */
 	function runJsonCheck():Void
 	{
 		jsonTimer = -1;
@@ -568,8 +552,6 @@ class CodeStudio extends FlxSpriteGroup
 		if (!f.editable && updateMessage) warn("[FMCE] " + f.readOnlyReason);
 	}
 
-	// ------------------------------------------------------------------ log
-
 	public function log(message:String):Void
 	{
 		var lower = message.toLowerCase();
@@ -597,8 +579,6 @@ class CodeStudio extends FlxSpriteGroup
 
 	function error(message:String):Void
 		output.log(timeTag() + message, CodeTheme.ERROR);
-
-	// ------------------------------------------------------------------ teclado
 
 	function onKeyDown(event:KeyboardEvent):Void
 	{
@@ -666,8 +646,6 @@ class CodeStudio extends FlxSpriteGroup
 		}
 		if (!menu.isOpen) editor.onKey(event);
 	}
-
-	// ------------------------------------------------------------------ frame
 
 	override public function update(elapsed:Float):Void
 	{

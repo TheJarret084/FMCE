@@ -16,16 +16,6 @@ import openfl.display.ShaderParameterType;
 
 using StringTools;
 
-/**
- * An wrapper for Flixel/OpenFL's shaders, which takes fragment and vertex source
- * in the constructor instead of using macros so it can be provided at runtime.
- *
- * @author MasterEric
- * @author Mihai Alexandru (M.A. Jigsaw)
- *
- * @see https://github.com/openfl/openfl/blob/develop/src/openfl/utils/_internal/ShaderMacro.hx
- * @see https://dixonary.co.uk/blog/shadertoy
- */
 class FlxRuntimeShader extends FlxGraphicsShader
 {
 	private static final BASE_VERTEX_HEADER:String = "attribute float openfl_Alpha;
@@ -86,8 +76,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		uniform bool hasTransform;
 		uniform bool hasColorTransform;
 
-		// El Flixel de Codename llama shader.setCamSize() CADA FRAME a todo shader que este en cam.filters.
-		// Si el uniform no existe, data._camSize es null y revienta (Null Object Reference en FlxCamera.update).
 		uniform vec4 _camSize;
 
 		vec4 flixel_texture2D(sampler2D bitmap, vec2 coord)
@@ -141,7 +129,7 @@ class FlxRuntimeShader extends FlxGraphicsShader
 			colorMultiplier[0][0] = openfl_ColorMultiplierv.x;
 			colorMultiplier[1][1] = openfl_ColorMultiplierv.y;
 			colorMultiplier[2][2] = openfl_ColorMultiplierv.z;
-			colorMultiplier[3][3] = 1.0; // openfl_ColorMultiplierv.w;
+			colorMultiplier[3][3] = 1.0;
 
 			color = clamp (openfl_ColorOffsetv + (color * colorMultiplier), 0.0, 1.0);
 
@@ -166,13 +154,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 			gl_FragColor = flixel_texture2D(bitmap, openfl_TextureCoordv);
 		}";
 
-	/**
-	 * Creates a `FlxRuntimeShader` with specified shader sources.
-	 * If none is provided, it will use the default shader sources.
-	 *
-	 * @param fragmentSource The fragment shader source.
-	 * @param vertexSource The vertex shader source.
-	 */
 	public function new(?fragmentSource:String, ?vertexSource:String):Void
 	{
 		if (fragmentSource != null && fragmentSource.length > 0)
@@ -188,12 +169,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		super();
 	}
 
-	/**
-	 * Modify a float parameter of the shader.
-	 *
-	 * @param name The name of the parameter to modify.
-	 * @param value The new value to use.
-	 */
 	public function setFloat(name:String, value:Float):Void
 	{
 		var prop:ShaderParameter<Float> = Reflect.field(data, name);
@@ -207,11 +182,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		prop.value = [value];
 	}
 
-	/**
-	 * Retrieve a float parameter of the shader.
-	 *
-	 * @param name The name of the parameter to retrieve.
-	 */
 	public function getFloat(name:String):Null<Float>
 	{
 		var prop:ShaderParameter<Float> = Reflect.field(data, name);
@@ -225,12 +195,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		return prop.value[0];
 	}
 
-	/**
-	 * Modify a float array parameter of the shader.
-	 *
-	 * @param name The name of the parameter to modify.
-	 * @param value The new value to use.
-	 */
 	public function setFloatArray(name:String, value:Array<Float>):Void
 	{
 		var prop:ShaderParameter<Float> = Reflect.field(data, name);
@@ -244,11 +208,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		prop.value = value;
 	}
 
-	/**
-	 * Retrieve a float array parameter of the shader.
-	 *
-	 * @param name The name of the parameter to retrieve.
-	 */
 	public function getFloatArray(name:String):Null<Array<Float>>
 	{
 		var prop:ShaderParameter<Float> = Reflect.field(data, name);
@@ -262,12 +221,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		return prop.value;
 	}
 
-	/**
-	 * Modify an integer parameter of the shader.
-	 *
-	 * @param name The name of the parameter to modify.
-	 * @param value The new value to use.
-	 */
 	public function setInt(name:String, value:Int):Void
 	{
 		var prop:ShaderParameter<Int> = Reflect.field(data, name);
@@ -281,11 +234,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		prop.value = [value];
 	}
 
-	/**
-	 * Retrieve an integer parameter of the shader.
-	 *
-	 * @param name The name of the parameter to retrieve.
-	 */
 	public function getInt(name:String):Null<Int>
 	{
 		var prop:ShaderParameter<Int> = Reflect.field(data, name);
@@ -299,12 +247,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		return prop.value[0];
 	}
 
-	/**
-	 * Modify an integer array parameter of the shader.
-	 *
-	 * @param name The name of the parameter to modify.
-	 * @param value The new value to use.
-	 */
 	public function setIntArray(name:String, value:Array<Int>):Void
 	{
 		var prop:ShaderParameter<Int> = Reflect.field(data, name);
@@ -318,11 +260,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		prop.value = value;
 	}
 
-	/**
-	 * Retrieve an integer array parameter of the shader.
-	 *
-	 * @param name The name of the parameter to retrieve.
-	 */
 	public function getIntArray(name:String):Null<Array<Int>>
 	{
 		var prop:ShaderParameter<Int> = Reflect.field(data, name);
@@ -336,12 +273,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		return prop.value;
 	}
 
-	/**
-	 * Modify a bool parameter of the shader.
-	 *
-	 * @param name The name of the parameter to modify.
-	 * @param value The new value to use.
-	 */
 	public function setBool(name:String, value:Bool):Void
 	{
 		var prop:ShaderParameter<Bool> = Reflect.field(data, name);
@@ -355,11 +286,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		prop.value = [value];
 	}
 
-	/**
-	 * Retrieve a bool parameter of the shader.
-	 *
-	 * @param name The name of the parameter to retrieve.
-	 */
 	public function getBool(name:String):Null<Bool>
 	{
 		var prop:ShaderParameter<Bool> = Reflect.field(data, name);
@@ -373,12 +299,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		return prop.value[0];
 	}
 
-	/**
-	 * Modify a bool array parameter of the shader.
-	 *
-	 * @param name The name of the parameter to modify.
-	 * @param value The new value to use.
-	 */
 	public function setBoolArray(name:String, value:Array<Bool>):Void
 	{
 		var prop:ShaderParameter<Bool> = Reflect.field(data, name);
@@ -392,11 +312,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		prop.value = value;
 	}
 
-	/**
-	 * Retrieve a bool array parameter of the shader.
-	 *
-	 * @param name The name of the parameter to retrieve.
-	 */
 	public function getBoolArray(name:String):Null<Array<Bool>>
 	{
 		var prop:ShaderParameter<Bool> = Reflect.field(data, name);
@@ -410,12 +325,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		return prop.value;
 	}
 
-	/**
-	 * Modify a bitmap data parameter of the shader.
-	 *
-	 * @param name The name of the parameter to modify.
-	 * @param value The new value to use.
-	 */
 	public function setSampler2D(name:String, value:BitmapData):Void
 	{
 		var prop:ShaderInput<BitmapData> = Reflect.field(data, name);
@@ -429,12 +338,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		prop.input = value;
 	}
 
-	/**
-	 * Retrieve a bitmap data parameter of the shader.
-	 *
-	 * @param name The name of the parameter to retrieve.
-	 * @return The value of the parameter.
-	 */
 	public function getSampler2D(name:String):Null<BitmapData>
 	{
 		var prop:ShaderInput<BitmapData> = Reflect.field(data, name);
@@ -448,7 +351,6 @@ class FlxRuntimeShader extends FlxGraphicsShader
 		return prop.input;
 	}
 
-	// Overrides
 	@:noCompletion private override function __processGLData(source:String, storageType:String):Void
 	{
 		var lastMatch = 0, position, regex, name, type;

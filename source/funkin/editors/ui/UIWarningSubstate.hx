@@ -3,7 +3,6 @@ package funkin.editors.ui;
 import funky.core.Log;
 import haxe.CallStack;
 
-/** Aviso con botones (guardar cambios, archivos repetidos...). */
 class UIWarningSubstate extends UISubstateWindow {
 	var message:String;
 	var buttons:Array<WarningButton>;
@@ -22,7 +21,7 @@ class UIWarningSubstate extends UISubstateWindow {
 	}
 
 	public override function create() {
-		// Si armar el aviso falla, el error sale en pantalla (Log.error) y el aviso se cierra: no tumba el editor.
+
 		try {
 			build();
 		} catch (e:Dynamic) {
@@ -46,7 +45,6 @@ class UIWarningSubstate extends UISubstateWindow {
 		var messageSpr = new UIText(sprIcon.x + 70 + 16 + 20, sprIcon.y, windowSpr.bWidth - 100 - (26 * 2), message);
 		add(messageSpr);
 
-		// la ventana crece si el mensaje es mas alto que el icono
 		windowSpr.bHeight = Std.int(winHeight + Math.abs(Math.min(sprIcon.height - messageSpr.height, 0)));
 
 		var xPos = (windowSpr.bWidth - (30 + (170 * buttons.length))) / 2;

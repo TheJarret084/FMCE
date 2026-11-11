@@ -9,7 +9,7 @@ typedef ChartData = {
 	public var stage:String;
 	public var noteTypes:Array<String>;
 	public var ?bookmarks:Array<ChartBookmark>;
-	/** `action_packs` de events.json: cada pack es una lista de acciones que corre un `RunActionPack`. */
+
 	public var ?actionPacks:Array<ChartActionPack>;
 
 	public var ?chartVersion:String;
@@ -25,7 +25,6 @@ typedef ChartMetaData = {
 
 	public var ?color:FlxColor;
 
-	/** Sprites (carpeta en `<nivel>/sprites/`) de los iconos de la barra de vida: `meta.json` > `icons.P1` / `icons.P2`. */
 	public var ?iconPlayer:String;
 	public var ?iconOpponent:String;
 
@@ -44,18 +43,18 @@ typedef ChartStrumLine = {
 	var ?strumScale:Float;
 	var ?strumSpacing:Float;
 	var ?vocalsSuffix:String;
-	var ?keyCount:Int; // default=4
+	var ?keyCount:Int;
 
-	var ?strumLinePos:Float; // Backwards compatibility
+	var ?strumLinePos:Float;
 }
 
 typedef ChartNote = {
-	var time:Float; // time at which the note will be hit (ms)
-	var id:Int; // strum id of the note
-	var type:Int; // type (int) of the note
-	var sLen:Float; // sustain length of the note (ms)
-	var ?onPress:Int; // action pack (events.json) al acertar la nota; -1 o falta = ninguno
-	var ?onMiss:Int; // action pack (events.json) al fallar la nota
+	var time:Float;
+	var id:Int;
+	var type:Int;
+	var sLen:Float;
+	var ?onPress:Int;
+	var ?onMiss:Int;
 }
 
 typedef ChartBookmark = {
@@ -70,7 +69,7 @@ typedef ChartActionPack = {
 }
 
 typedef ChartEvent = {
-	/** Accion que el charter no conoce: se guarda tal cual vino. */
+
 	var ?raw:Dynamic;
 	var name:String;
 	var time:Float;
@@ -79,16 +78,10 @@ typedef ChartEvent = {
 }
 
 enum abstract ChartStrumLineType(Int) from Int to Int {
-	/**
-	 * STRUMLINE IS MARKED AS OPPONENT - WILL BE PLAYED BY CPU, OR PLAYED BY PLAYER IF OPPONENT MODE IS ON
-	 */
+
 	var OPPONENT = 0;
-	/**
-	 * STRUMLINE IS MARKED AS PLAYER - WILL BE PLAYED AS PLAYER, OR PLAYED AS CPU IF OPPONENT MODE IS ON
-	 */
+
 	var PLAYER = 1;
-	/**
-	 * STRUMLINE IS MARKED AS ADDITIONAL - WILL BE PLAYED AS CPU EVEN IF OPPONENT MODE IS ENABLED
-	 */
+
 	var ADDITIONAL = 2;
 }

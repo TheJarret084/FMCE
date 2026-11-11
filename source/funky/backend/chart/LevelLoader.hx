@@ -9,7 +9,6 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Carga un chart para jugarlo desde cualquiera de las fuentes que entiende el motor. */
 class LevelLoader
 {
 	public static function isArchive(path:String):Bool
@@ -24,7 +23,6 @@ class LevelLoader
 		#end
 	}
 
-	/** Notas del nivel. Es la unica dificultad base: la dificultad del juego es la velocidad (`Difficulty`). */
 	public static inline var CHART_FILE:String = "chart.json";
 
 	#if sys
@@ -38,7 +36,6 @@ class LevelLoader
 		var chart:Dynamic = parseObject(File.getContent(chartPath), chartPath);
 		var meta:Dynamic = readMeta(dir);
 
-		// `fmceChart: true` = chart del engine, se usa tal cual; si no, se detecta el tipo y se convierte (ChartNormalizer).
 		chart = ChartNormalizer.ensure(dir, chartPath, chart, meta);
 
 		var name = text(Reflect.field(chart, "name"), "");
@@ -50,8 +47,6 @@ class LevelLoader
 		var bpm:Float = number(Reflect.field(chart, "bpm"), number(Reflect.field(meta, "bpm"), 120));
 		if (bpm <= 0) bpm = 120;
 
-		// chart.json: `strumLines` = una lista de notas `{time, lane, length}` por strumline.
-		// 0 = jugador, 1 = oponente, 2+ = extras (CPU, cada una con sus notas, sin mezclar).
 		var strumLines = Reflect.field(chart, "strumLines");
 		if (!Std.isOfType(strumLines, Array)) throw 'chart.json de $dir no tiene "strumLines"';
 
@@ -83,7 +78,7 @@ class LevelLoader
 		var iconOpponent:Null<String> = icons != null ? nullableText(Reflect.field(icons, "P2")) : null;
 		if (iconPlayer == null && iconOpponent == null)
 		{
-			// Sin `icons` en meta.json: scene.json lista [oponente, jugador] (asi sale en levels/ferti).
+
 			var sceneIcons = readSceneIcons(dir);
 			if (sceneIcons.length > 0) iconOpponent = sceneIcons[0];
 			if (sceneIcons.length > 1) iconPlayer = sceneIcons[1];
@@ -93,11 +88,10 @@ class LevelLoader
 		var actionPacks = readActionPacks(dir);
 		var music = findMusic(dir, Reflect.field(meta, "song"));
 		var voices = findVoices(dir, "", Reflect.field(meta, "voices"));
-		// Pasos por beat: meta.json manda; si no, el `npb` del chart (asi sale en el data.json de un .fnmm).
+
 		var stepsPerBeat = number(Reflect.field(meta, "stepsPerBeat"), number(Reflect.field(chart, "npb"), 4));
 		if (stepsPerBeat <= 0) stepsPerBeat = 4;
 
-		// Sparrow -> Aseprite: cubre niveles hechos a mano o viejos. Solo escribe los .json que faltan.
 		for (converted in funky.backend.converter.SpriteFolderConverter.convertTree(Path.join([dir, "sprites"]), false))
 			if (!converted.ok) Log.warn('[LevelLoader] sprite ' + converted.xml + ': ' + converted.error);
 
@@ -120,7 +114,6 @@ class LevelLoader
 		};
 	}
 
-	/** Milisegundos que dura una unidad de tiempo del chart. */
 	static function unitToMs(unit:String, bpm:Float):Float
 	{
 		return switch (unit.toLowerCase())
@@ -156,10 +149,6 @@ class LevelLoader
 		}
 	}
 
-	/**
-	 * Nombre del icono del oponente de un nivel sin cargar el chart (para Freeplay): `meta.json` > icons.P2,
-	 * o el primero de `scene.json` > icons. null si el nivel no trae.
-	 */
 	public static function opponentIcon(dir:String):Null<String>
 	{
 		var icons = Reflect.field(readMeta(dir), "icons");
@@ -189,7 +178,6 @@ class LevelLoader
 		}
 	}
 
-	/** Eventos globales: `events.json` = `{events: [{time, actions}], action_packs: [{actions}]}`. */
 	static function readEvents(dir:String):Array<Dynamic>
 	{
 		var parsed = readEventsFile(dir);
@@ -197,7 +185,6 @@ class LevelLoader
 		return Std.isOfType(list, Array) ? cast list : [];
 	}
 
-	/** `action_packs` de events.json: cada pack es la lista de `actions` que corre un `RunActionPack`. */
 	static function readActionPacks(dir:String):Array<Array<Dynamic>>
 	{
 		var out:Array<Array<Dynamic>> = [];
@@ -234,7 +221,6 @@ class LevelLoader
 		if (relative == "null") relative = "";
 		var folders = [Path.join([dir, "music"]), dir];
 
-		// 1) lo que declara meta.song, buscado primero dentro de music/ y luego en la raiz
 		if (relative != "")
 			for (folder in folders)
 			{
@@ -242,7 +228,6 @@ class LevelLoader
 				if (FileSystem.exists(path)) return path;
 			}
 
-		// Preferido: <nivel>/music/music.ogg. Respaldo: los mismos nombres en la raiz del nivel (niveles viejos).
 		var names = ["music.ogg", "inst.ogg", "song.ogg", "music.mp3", "music.wav", "music.m4a"];
 		for (folder in folders)
 			for (name in names)
@@ -250,10 +235,6 @@ class LevelLoader
 		return null;
 	}
 
-	/**
-	 * Voces separadas (opcional): <nivel>/music/Voices.ogg, o Voices<suffix>.ogg para strumlines con voces propias.
-	 * Respaldo: la raiz del nivel. `declared` (meta.voices) manda si existe y no hay suffix. null = sin voces.
-	 */
 	public static function findVoices(dir:String, ?suffix:String, ?declared:Dynamic):Null<String>
 	{
 		if (suffix == null) suffix = "";
@@ -273,10 +254,6 @@ class LevelLoader
 		return null;
 	}
 
-	/**
-	 * Carga un audio desde disco. `FlxG.sound.playMusic("ruta")` solo entiende assets
-	 * empaquetados en OpenFL, no archivos sueltos, asi que hay que armar el Sound a mano.
-	 */
 	public static function loadSound(path:String):Null<openfl.media.Sound>
 	{
 		try
@@ -291,10 +268,6 @@ class LevelLoader
 	}
 	#end
 
-	/**
-	 * @param factor ms por unidad de tiempo del chart.
-	 * @param line   strumline a la que pertenece (el indice dentro de `strumLines`).
-	 */
 	static function appendNote(out:Array<FNMMNote>, value:Dynamic, factor:Float, line:Int):Void
 	{
 		if (!Reflect.isObject(value) || Std.isOfType(value, Array)) return;
@@ -312,7 +285,6 @@ class LevelLoader
 		});
 	}
 
-	/** `onPress` / `onMiss` de una nota de chart.json: indice de action pack, -1 si falta. */
 	static function packOf(value:Dynamic, name:String):Int
 	{
 		var n = number(Reflect.field(value, name), -1);
@@ -326,7 +298,6 @@ class LevelLoader
 		return Math.isNaN(parsed) ? fallback : parsed;
 	}
 
-	/** Std.string(null) is "null", so a missing field has to be caught before the cast. */
 	static function text(value:Dynamic, fallback:String):String
 	{
 		if (value == null) return fallback;

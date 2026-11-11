@@ -24,11 +24,6 @@ class UIState extends MusicBeatState {
 	private inline static function get_state()
 		return FlxG.state is UIState ? cast FlxG.state : getFallback();
 
-	/**
-	 * Cuando una ventana de UI (UIWarningSubstate, menus contextuales...) se abre en un state que NO es un UIState (por ejemplo el
-	 * PlayState), `UIState.state` ya no es null: devuelve este UIState "sin cabeza". Nunca se agrega al juego; se actualiza solo
-	 * despues de cada frame (hover, clics, foco), que es lo que un UIState hace en `tryUpdate`.
-	 */
 	static function getFallback():UIState {
 		if (fallbackState == null) {
 			fallbackState = new UIState();
@@ -39,9 +34,8 @@ class UIState extends MusicBeatState {
 		return fallbackState;
 	}
 
-	/** Lo que `tryUpdate` hace al terminar el frame, para el UIState sin cabeza. */
 	function __headlessTick():Void {
-		// Si el state actual es un UIState de verdad, el se encarga: aqui solo se limpia.
+
 		if (FlxG.state is UIState) {
 			buttonHandler = null;
 			hoveredSprite = null;
@@ -73,11 +67,9 @@ class UIState extends MusicBeatState {
 	public var buttonHandler:Void->Void = null;
 	public var hoveredSprite:UISprite = null;
 
-	/** El `hoveredSprite` del frame anterior (el de este se asigna recien durante el update). */
 	public var prevHoveredSprite:UISprite = null;
 	public var currentFocus:IUIFocusable = null;
 
-	/** El teclado en pantalla (Android) y el texto de lime solo llegan con `textInputEnabled`: se prende al enfocar un campo de texto. */
 	var __textInputOn:Bool = false;
 
 	public var currentCursor:CodeCursor = ARROW;
@@ -241,19 +233,14 @@ class UIState extends MusicBeatState {
 		add(notification);
 		notification.update(0);
 		notification.appearAnimation();
-		// TODO: future tooltips
-		//notification.x = __mousePos.x;
-		//notification.y = __mousePos.y;
-		//notification.alpha = 0;
-		//notification.appearAnimation();
-		//FlxTween.tween(notification, {x: __mousePos.x, y: __mousePos.y, alpha: 1}, .3, {ease: FlxEase.circInOut});
+
 	}
 
 	public static var resolutionAware:Bool = false;
 	public static var uiScaleMode:UIScaleMode = new UIScaleMode();
 
 	public static function setResolutionAware() {
-		if (!resolutionAware) funkin.backend.system.Main.scaleMode = FlxG.scaleMode; // se restaura al salir
+		if (!resolutionAware) funkin.backend.system.Main.scaleMode = FlxG.scaleMode;
 		resolutionAware = true;
 		FlxG.scaleMode = uiScaleMode;
 	}

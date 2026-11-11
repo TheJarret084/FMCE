@@ -19,7 +19,6 @@ import funkin.backend.utils.TranslationUtil as TU;
 
 using StringTools;
 
-/** Mini substate de skins de notas: lista a la izquierda, preview animada de los 4 carriles a la derecha. */
 class NoteSkinSubState extends FlxSubState
 {
 	static var font:Null<String> = null;

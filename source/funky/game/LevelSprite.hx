@@ -6,12 +6,11 @@ import funky.core.Log;
 import funky.core.Paths;
 import funky.game.SpriteBuilder;
 
-/** Sprite de nivel cargado con atlas, animaciones y pivote. */
 class LevelSprite extends FunkinSprite
 {
 	public var spriteName(default, null):String = "";
 	public var spriteType(default, null):String = "sprite";
-	/** false si faltaba el sprite o no se pudo leer; el objeto sigue siendo seguro de usar. */
+
 	public var loaded(default, null):Bool = false;
 
 	var anims:Map<String, SpriteAnim> = new Map<String, SpriteAnim>();
@@ -24,7 +23,6 @@ class LevelSprite extends FunkinSprite
 		animEnabled = true;
 	}
 
-	// resetea el sprite en caso de cambio
 	function resetSprite():Void
 	{
 		frames = null;
@@ -36,13 +34,11 @@ class LevelSprite extends FunkinSprite
 		spriteType = "sprite";
 	}
 
-	/** Carga `sprites/<name>/` de `levelDir`. Devuelve false (y deja el sprite vacio) si falla. */
 	public function load(levelDir:String, name:String):Bool
 	{
 		resetSprite();
 		spriteName = name;
 
-		// Spritemap de Animate: `sprites/<n>/sprite/Animation.json` + `sprites/<n>/config.json`.
 		if (SpriteBuilder.isAtlas(levelDir, name)) return loadAtlas(levelDir, name);
 
 		var atlas = Paths.getLevelSprite(levelDir, name);
@@ -77,10 +73,6 @@ class LevelSprite extends FunkinSprite
 		return true;
 	}
 
-	/**
-	 * Sprite tipo atlas (Adobe Animate). El spritemap se lee tal cual, sin tocarlo; las animaciones salen del
-	 * `name` de cada entrada de `config.json`, que debe ser un simbolo o label del atlas.
-	 */
 	function loadAtlas(levelDir:String, name:String):Bool
 	{
 		loadAnimate(SpriteBuilder.atlasDir(levelDir, name));
@@ -99,7 +91,6 @@ class LevelSprite extends FunkinSprite
 		{
 			register(entry.name, entry.name, entry);
 
-			// `singLEFT/DOWN/UP/RIGHT` tambien como `anim0..3` (ver SpriteBuilder.addLaneAliases).
 			var lane = config.type == "icon" ? -1 : SpriteBuilder.laneOfSing(entry.name);
 			if (lane >= 0 && !hasAnim("anim" + lane))
 				register("anim" + lane, entry.name, entry);
@@ -114,7 +105,6 @@ class LevelSprite extends FunkinSprite
 		return true;
 	}
 
-	/** Registra `gameName` apuntando al simbolo (o, si no es simbolo, al label) `atlasName`. */
 	function register(gameName:String, atlasName:String, entry:SpriteAnim):Void
 	{
 		addAnim(gameName, atlasName, entry.fps, entry.loop);
@@ -131,7 +121,6 @@ class LevelSprite extends FunkinSprite
 		if (firstAnim == null) firstAnim = gameName;
 	}
 
-	/** Animaciones con `spd_fps: false` duran `spd` beats (la animacion completa): se reajusta con el BPM actual. */
 	override public function update(elapsed:Float):Void
 	{
 		var data = currentAnim();
@@ -149,10 +138,6 @@ class LevelSprite extends FunkinSprite
 
 	public function animNames():Array<String> return [for (key in anims.keys()) key];
 
-	/**
-	 * Deja el sprite como recien cargado para devolverlo a `SpriteCache`: lo que el Stage o un evento le toquen
-	 * (color, flips, blend, escala, camara...) no debe pasar al siguiente objeto que lo use.
-	 */
 	public function recycle():Void
 	{
 		color = 0xFFFFFFFF;
@@ -173,7 +158,6 @@ class LevelSprite extends FunkinSprite
 		if (firstAnim != null) playAnim(firstAnim, true);
 	}
 
-	/** Toca la animacion cuyo `index` (posicion en el sprite original del .fnmm) es `index`. */
 	public function playIndex(index:Int, force:Bool = true):Bool
 	{
 		for (anim in anims)
@@ -185,10 +169,8 @@ class LevelSprite extends FunkinSprite
 		return false;
 	}
 
-	/** Datos de la animacion que se esta tocando (pivote, escala), o null. */
 	public inline function currentAnim():Null<SpriteAnim> return animation.name == null ? null : anims.get(animation.name);
 
-	/** Toca `anim<lane>` (alias de `singLEFT/DOWN/UP/RIGHT`, ver `SpriteBuilder`). */
 	public function playLane(lane:Int, force:Bool = true):Bool
 	{
 		if (!hasAnim("anim" + lane)) return false;
@@ -196,10 +178,6 @@ class LevelSprite extends FunkinSprite
 		return true;
 	}
 
-	/**
-	 * Los sprites `character` traen UNA sola animacion de fallo (no una por lane), asi que no hay
-	 * `anim#` para miss: se toca esta, sea cual sea la lane. Acepta `miss`, `singMISS` o `sing-miss`.
-	 */
 	public function playMiss(force:Bool = true):Bool
 	{
 		for (name in ["miss", "singMISS", "sing-miss"])
@@ -211,18 +189,12 @@ class LevelSprite extends FunkinSprite
 		return false;
 	}
 
-	/** Escala absoluta del sprite y recalcula la caja. La escala de cada animacion la aplica quien lo coloca (ver `SpriteAnim.scale`). */
 	public function setSpriteScale(factor:Float):Void
 	{
 		scale.set(factor, factor);
 		updateHitbox();
 	}
 
-	/**
-	 * Coloca el sprite de modo que el pivote de la animacion actual caiga en (px, py).
-	 * Sin pivote definido usa el centro. Es lo que necesitara el stage para respetar el
-	 * `position` de cada objeto de `scene.json`.
-	 */
 	public function placePivot(px:Float, py:Float):Void
 	{
 		var anim = animation.name == null ? null : anims.get(animation.name);
@@ -231,7 +203,6 @@ class LevelSprite extends FunkinSprite
 		setPosition(px - pivotX, py - pivotY);
 	}
 
-	/** Centra la caja del sprite en (cx, cy), ignorando pivotes. */
 	public inline function centerAt(cx:Float, cy:Float):Void
 		setPosition(cx - width / 2, cy - height / 2);
 }

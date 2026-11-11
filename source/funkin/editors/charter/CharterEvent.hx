@@ -77,14 +77,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		transform.blueOffset += selected ? 168 : 0;
 	}
 
-	/**
-	 * Pack data is a list of 5 strings separated by `________PACKSEP________`
-	 * [0] Event Name
-	 * [1] Event Script
-	 * [2] Event JSON Info
-	 * [3] Event Icon
-	 * [4] Event UI Script / Icon Script
-	**/
 	@:dox(hide) public static function getPackData(name:String):Array<String> {
 		var packFile = Paths.pack('events/${name}');
 		if (Assets.exists(packFile)) {
@@ -108,9 +100,9 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		}
 
 		if(script != null && !(script is DummyScript)) {
-			// classes and functions
-			script.set("EventIconGroup", EventIconGroup); // automatically imported
-			script.set("EventNumber", EventNumber); // automatically imported
+
+			script.set("EventIconGroup", EventIconGroup);
+			script.set("EventNumber", EventNumber);
 			script.set("getIconFromStrumline", getIconFromStrumline);
 			script.set("getIconFromCharName", getIconFromCharName);
 			script.set("generateDefaultIcon", generateDefaultIcon);
@@ -119,7 +111,7 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 			script.set("generateEventIconWarning", generateEventIconWarning);
 			script.set("getPackData", getPackData);
 			script.set("getEventComponent", getEventComponent);
-			// data
+
 			script.set("event", event);
 			script.set("caller", caller);
 
@@ -129,11 +121,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		return script;
 	}
 
-	/**
-	 * Generates the default event icon for the wanted event
-	 * @param name The name of the event
-	 * @return The icon
-	**/
 	private static function generateDefaultIcon(name:String) {
 		var isBase64:Bool = false;
 		var path:String = Paths.image('editors/charter/event-icons/$name');
@@ -165,7 +152,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 				graphic = defaultPath;
 		}
 
-		// Un icono que falta o no carga no debe tumbar el charter: se cae a un cuadro de color.
 		var spr:FlxSprite = try new FlxSprite(graphic) catch (e:Dynamic) null;
 		if (spr == null || spr.graphic == null) {
 			Logs.trace('Event icon "$name" could not be loaded, using a placeholder', WARNING);
@@ -174,14 +160,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		return spr;
 	}
 
-	/**
-	 * Gets a component sprite from the editors/charter/event-icons/components folder
-	 * If you wanna use a number, please use the EventNumber class instead
-	 * @param type The type of component to get
-	 * @param x The x position of the sprite (optional)
-	 * @param y The y position of the sprite (optional)
-	 * @return The component sprite
-	**/
 	public static function getEventComponent(type:String, x:Float = 0.0, y:Float = 0.0) {
 		var componentPath = Paths.image("editors/charter/event-icons/components/" + type);
 		if (Assets.exists(componentPath)) return new FlxSprite(x, y, componentPath);
@@ -190,10 +168,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		return null;
 	}
 
-	/**
-	 * Expected to be called from inside of a ui script,
-	 * calling this elsewhere might cause unexpected results or crashes
-	**/
 	public static function getIconFromStrumline(index:Null<Int>) {
 		var state = cast(FlxG.state, Charter);
 		if (index != null && index >= 0 && index < state.strumLines.length) {
@@ -211,10 +185,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		return healthIcon;
 	}
 
-	/**
-	 * Igual que `generateEventIcon`, pero si el icono (o su script ui) falla, devuelve un cuadro de color y deja el error en el log
-	 * en vez de tumbar el editor. El icono de un evento es `assets/images/editors/charter/event-icons/<NombreDelEvento>.png`.
-	 */
 	public static function safeEventIcon(event:ChartEvent, inMenu:Bool = true):FlxSprite {
 		var icon:FlxSprite = null;
 		try {
@@ -241,12 +211,12 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 				if(event.params != null && (event.params[0] >= 0 || event.params[1] >= 0)) {
 					var group = new EventIconGroup();
 					group.add(generateDefaultIcon(event.name));
-					group.add({ // top
+					group.add({
 						var num = new EventNumber(9, -1, event.params[0], EventNumber.ALIGN_CENTER);
 						num.active = false;
 						num;
 					});
-					group.add({ // bottom
+					group.add({
 						var num = new EventNumber(9, 10, event.params[1], EventNumber.ALIGN_CENTER);
 						num.active = false;
 						num;
@@ -294,8 +264,8 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 				var shouldDoArrow:Bool = false;
 				var icon:Null<FlxSprite> = null;
 				if (event.params != null) {
-					shouldDoArrow = event.params[1] && event.params[3] != "CLASSIC"; // is Tweened and isnt Lerped
-					icon = getIconFromStrumline(event.params[0]); // camera movement, use health icon
+					shouldDoArrow = event.params[1] && event.params[3] != "CLASSIC";
+					icon = getIconFromStrumline(event.params[0]);
 				}
 
 				if (icon == null) icon = generateDefaultIcon(event.name);
@@ -313,7 +283,7 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 			case "Camera Position":
 				var shouldDoArrow:Bool = false;
 				if (event.params != null)
-					shouldDoArrow = event.params[2] && event.params[4] != "CLASSIC"; // is Tweened and isnt Lerped
+					shouldDoArrow = event.params[2] && event.params[4] != "CLASSIC";
 
 				if(event.params != null && shouldDoArrow && !inMenu) {
 					var group = new EventIconGroup();
@@ -335,7 +305,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 				}
 		}
 
-		// Eventos de FMCE con duracion (transicion, flash, sacudida): flecha que muestra cuanto dura.
 		var duration = fmceDurationSteps(event);
 		if (!inMenu && duration >= 0.55) {
 			var group = new EventIconGroup();
@@ -346,10 +315,6 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		return generateDefaultIcon(event.name);
 	}
 
-	/**
-	 * Duracion en steps de un evento de FMCE, o 0 si no tiene. Los params van en el orden de `EventsData`;
-	 * en segundos cuenta con los cambios de BPM desde el tiempo del evento.
-	 */
 	static function fmceDurationSteps(event:ChartEvent):Float {
 		if (event.params == null) return 0;
 		var infos = EventsData.getEventParams(event.name);
@@ -399,14 +364,12 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 	}
 
 	private static function generateEventIconDurationArrow(group:EventIconGroup, stepDuration:Float) {
-		//var group = new EventIconGroup();
-		//group.add(generateDefaultIcon(startIcon));
 
 		var xOffset = 4;
 		var yGap = 24;
 		var endGap = 2;
 
-		if (stepDuration >= 0.55) { //min time for showing arrow
+		if (stepDuration >= 0.55) {
 			var tail = new FlxSprite(xOffset, yGap);
 			var arrow = new FlxSprite(xOffset, (stepDuration * 40) + endGap);
 			var arrowSegment = new FlxSprite(xOffset, yGap);
@@ -502,14 +465,14 @@ class EventIconGroup extends FlxSpriteGroup {
 	override function set_x(Value:Float):Float
 	{
 		if (exists && x != Value)
-			transformChildren(xTransform, Value - x); // offset
+			transformChildren(xTransform, Value - x);
 		return x = Value;
 	}
 
 	override function set_y(Value:Float):Float
 	{
 		if (exists && y != Value)
-			transformChildren(yTransform, Value - y); // offset
+			transformChildren(yTransform, Value - y);
 		return y = Value;
 	}
 

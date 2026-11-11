@@ -74,10 +74,6 @@ final class CoolUtil
 	public static inline function quantize(value:Float, quant:Float):Float
 		return Math.fround(value * quant) / quant;
 
-	/**
-	 * Interpolación exponencial independiente del framerate: `a` "persigue" a `b`. `ratio` es la
-	 * velocidad de acercamiento (ej.
-	 */
 	public static inline function fpsLerp(a:Float, b:Float, ratio:Float):Float
 		return b + (a - b) * Math.exp(-ratio);
 
@@ -157,7 +153,6 @@ final class CoolUtil
 		return result;
 	}
 
-	/** Convierte "1..3,5,7..9" en [1,2,3,5,7,8,9]. Útil para eventos/steps de charts. */
 	public static function parseNumberRange(input:String):Array<Int>
 	{
 		var result:Array<Int> = [];
@@ -233,7 +228,6 @@ final class CoolUtil
 	public static function removeBOM(str:String):String
 		return StringTools.replace(str, String.fromCharCode(0xFEFF), "");
 
-	/** "01:22.500" a partir de ms (mm:ss.ms) */
 	public static inline function timeToStr(time:Float):String
 		return '${addZeros(Std.string(Std.int(time / 60000)), 2)}:${addZeros(Std.string(Std.int(time / 1000) % 60), 2)}.${addZeros(Std.string(Std.int(time % 1000)), 3)}';
 
@@ -291,7 +285,6 @@ final class CoolUtil
 	public static inline function isMapEmpty<K, V>(map:Map<K, V>):Bool
 		return !map.keys().hasNext();
 
-	/** Comparación profunda (arrays, mapas, objetos anidados). Útil para tests / diffs de eventos. */
 	public static function deepEqual<T>(a:T, b:T):Bool
 	{
 		if (a == b) return true;
@@ -353,9 +346,6 @@ final class CoolUtil
 	static inline function isNull(a:Dynamic):Bool return Type.enumEq(Type.typeof(a), TNull);
 	static inline function isFunction(a:Dynamic):Bool return Type.enumEq(Type.typeof(a), TFunction);
 
-	// FlxTween.parseFieldString existe en Flixel pero es PRIVADO (uso interno
-	// de VarTween), no se puede llamar desde afuera. Lo reimplementamos acá,
-	// mismo formato de salida (Array<String o Int>).
 	static var PROPERTY_TOKEN = ~/([^.\[\]]+)|\[(\d+)\]/g;
 
 	public static function parsePropertyString(fieldPath:String):Array<OneOfTwo<String, Int>>
@@ -372,7 +362,7 @@ final class CoolUtil
 
 			var mpos = PROPERTY_TOKEN.matchedPos();
 			pos = mpos.pos + mpos.len;
-			if (mpos.len == 0) pos++; // no quedarse trabado en match vacío
+			if (mpos.len == 0) pos++;
 		}
 		return result;
 	}
@@ -494,7 +484,6 @@ final class CoolUtil
 		spr.scale.set(1, 1);
 	}
 
-	/** Intercambia los frames de dos animaciones (in-place). */
 	public static function switchAnimFrames(anim1:FlxAnimation, anim2:FlxAnimation):Void
 	{
 		if (anim1 == null || anim2 == null) return;
@@ -503,7 +492,6 @@ final class CoolUtil
 		anim2.frames = old;
 	}
 
-	/** Intercambia los nombres/entradas de dos animaciones en un controller (ej: swap idle/confirm). */
 	public static function swapAnims(animation:FlxAnimationController, anim1:String, anim2:String):Void
 	{
 		@:privateAccess
@@ -533,7 +521,7 @@ final class CoolUtil
 	}
 
 	#if sys
-	/** Devuelve "xml"/"txt"/"json" según qué archivo de datos de frames exista junto a la imagen, o null. */
+
 	public static function imageHasFrameData(path:String):String
 	{
 		if (FileSystem.exists(Path.withExtension(path, "xml"))) return "xml";
@@ -543,7 +531,6 @@ final class CoolUtil
 	}
 	#end
 
-	/** Carga frames desde texto (Sparrow XML / SpriteSheetPacker TXT), sin imagen real (para parseo). */
 	public static function loadFramesFromData(data:String, ext:String = null):FlxFramesCollection
 	{
 		var frames:FlxFramesCollection = null;
@@ -576,10 +563,6 @@ final class CoolUtil
 		return animsList;
 	}
 
-	/**
-	 * Reproduce música desde `Paths.music(name)`, opcionalmente persistente entre estados.
-	 * Reemplaza a la música actual si había una sonando.
-	 */
 	public static function playMusic(name:String, persist:Bool = false, volume:Float = 1, looped:Bool = true, group:FlxSoundGroup = null):Void
 	{
 		if (FlxG.sound.music != null) FlxG.sound.music.stop();
@@ -587,19 +570,14 @@ final class CoolUtil
 		if (FlxG.sound.music != null) FlxG.sound.music.persist = persist;
 	}
 
-	/** Nombre del archivo de música de menú (`assets/music/$MENU_SONG.ogg`). */
 	public static var MENU_SONG:String = "freakyMenu";
 
-	/** Musica de los editores (`assets/music/breakfast.ogg`), la de Codename Engine. */
 	public static var EDITOR_SONG:String = "breakfast";
 
-	/** Ultima musica de menu / editores que se puso con playMenuSong / playEditorSong. */
 	static var currentMusic:String = null;
 
-	/** El FlxSound de esa musica: si el charter / un nivel lo reemplaza, `breakfast` se vuelve a poner al volver a un editor. */
 	static var currentSound:flixel.sound.FlxSound = null;
 
-	/** Musica de los editores (modo avanzado y sus pantallas): breakfast en vez de la del menu. No reinicia si ya suena. */
 	public static function playEditorSong():Void
 	{
 		if (FlxG.sound.music != null && FlxG.sound.music == currentSound && FlxG.sound.music.playing && currentMusic == EDITOR_SONG) return;
@@ -616,14 +594,9 @@ final class CoolUtil
 		}
 	}
 
-	/**
-	 * Música de menú (igual que `CoolUtil.playMenuSong` en Codename Engine): si ya está sonando
-	 * (porque venís de otro menú y la dejaste `persist`), NO la reinicia — sigue tal cual, sin el
-	 * corte feo de reiniciar el tema cada vez que cambiás de menú.
-	 */
 	public static function playMenuSong(fadeIn:Bool = false):Void
 	{
-		// Si suena la de los editores (breakfast) se cambia a la de menu; cualquier otra musica se respeta como antes.
+
 		if (FlxG.sound.music != null && FlxG.sound.music.playing && currentMusic != EDITOR_SONG) return;
 
 		try
@@ -636,16 +609,14 @@ final class CoolUtil
 		}
 		catch (e:Dynamic)
 		{
-			// No tirar el menú abajo si falta el .ogg (assets sueltos, build sin música, etc).
+
 			funky.core.Log.warn('[CoolUtil] No se pudo cargar la música de menú ($MENU_SONG): $e');
 		}
 	}
 
-	/** Reproduce un sonido puntual desde `Paths.sound(name)` (ej: menú, confirmar, cancelar). */
 	public static inline function playSound(name:String, volume:Float = 1):FlxSound
 		return FlxG.sound.play(Paths.sound(name), volume * ClientPrefs.getSfxVolume() * ClientPrefs.getMasterVolume());
 
-	/** Reproduce un sonido de `assets/sounds/menu/` (scroll, confirm, cancel...). */
 	public static inline function playMenuSound(name:String, volume:Float = 1):FlxSound
 		return FlxG.sound.play(Paths.SOUNDS + "menu/" + name + ".ogg", volume * ClientPrefs.getSfxVolume() * ClientPrefs.getMasterVolume());
 
@@ -656,10 +627,6 @@ final class CoolUtil
 	{
 		if (frontEnd.music == music) return;
 
-		// SoundFrontEnd.destroySound() no existe como API pública/privada
-		// accesible en esta versión de Flixel — se logra lo mismo a mano:
-		// frenar y destruir el FlxSound que estaba de música antes de
-		// reemplazarlo.
 		if (frontEnd.music != null)
 		{
 			frontEnd.music.stop();
@@ -696,7 +663,6 @@ final class CoolUtil
 	#end
 }
 
-/** Referencia a una propiedad anidada (`obj.a.b[2].c`), usado por `CoolUtil.parseProperty`. */
 class PropertyInfo
 {
 	public var object:Dynamic;

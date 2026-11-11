@@ -7,10 +7,9 @@ import openfl.text.TextField;
 import openfl.text.TextFormat;
 import funky.core.MemoryUtil;
 
-/** Linea 1: RAM que usa el juego (proceso) / pico. */
 class MemoryCounter extends Sprite
 {
-	/** Cada cuanto se relee /proc (ms): leerlo cada frame no hace falta. */
+
 	static inline var PROC_INTERVAL:Int = 500;
 
 	public var memoryText:TextField;

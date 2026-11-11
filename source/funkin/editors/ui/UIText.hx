@@ -5,7 +5,7 @@ import funkin.backend.FunkinText;
 
 class UIText extends FunkinText {
 	public var optimized:Bool = false;
-	// PUTTING THIS HERE IN CASE IMMA MAKE FUTURE CHANGES
+
 	public function new(x, y, w, text, size:Int = 15, color:FlxColor = 0xFFFFFFFF, ?outline:Bool = true) {
 		super(x, y, w, text, size, false);
 		this.color = color;
@@ -18,8 +18,6 @@ class UIText extends FunkinText {
 		this.active = false;
 		this.antialiasing = false;
 
-		// this.textField.antiAliasType = ADVANCED;
-		// this.textField.sharpness = 400;
 	}
 
 	public override function applyBorderStyle() {
@@ -36,10 +34,10 @@ class UIText extends FunkinText {
 			var curDelta:Float = delta;
 			for (i in 0...iterations)
 			{
-				copyTextWithOffset(-curDelta, -curDelta); // upper-left
-				copyTextWithOffset(curDelta * 2, curDelta * 2); // lower-right
+				copyTextWithOffset(-curDelta, -curDelta);
+				copyTextWithOffset(curDelta * 2, curDelta * 2);
 
-				_matrix.translate(-curDelta, -curDelta); // return to center
+				_matrix.translate(-curDelta, -curDelta);
 				curDelta += delta;
 			}
 			return;

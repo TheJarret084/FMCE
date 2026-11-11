@@ -83,6 +83,6 @@ jobs:
       - name: Publicar en el release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.rel.outputs.tag }}
+          tag_name: ${{ github.ref_name }}
           files: building/artifacts/FMCE-${{ matrix.name }}-x64-${{ steps.cfg.outputs.target }}-${{ steps.cfg.outputs.type }}.zip
           fail_on_unmatched_files: true

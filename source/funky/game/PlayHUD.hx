@@ -19,7 +19,6 @@ import funky.core.NoteSkin;
 import funkin.backend.utils.TranslationUtil as TU;
 import openfl.utils.Assets;
 
-/** Resultado de tocar una nota: lo que se muestra y lo que reciben los scripts (`onNoteScored`). */
 typedef PressScore =
 {
 	var rating:String;
@@ -28,14 +27,13 @@ typedef PressScore =
 	var ms:Float;
 }
 
-/** Estilos de la barra de tiempo (opcion `timeBarStyle`). */
 enum abstract TimeBarStyle(String) to String
 {
-	/** Rosa y lima. */
+
 	var PINK_LIME = "pinklime";
-	/** Blanco y negro. */
+
 	var MONO = "mono";
-	/** Degradado con los colores de las notas del skin (los de cada lane). */
+
 	var MULTI = "multi";
 
 	public static function parse(value:Null<String>):TimeBarStyle
@@ -49,27 +47,23 @@ enum abstract TimeBarStyle(String) to String
 	}
 }
 
-/** HUD con la misma distribucion que `PsychHUD` del legacy. */
 @:keep
 class PlayHUD extends FlxGroup
 {
-	/** Vida maxima (el minimo es 0). */
+
 	public static inline var MAX_HEALTH:Float = 1;
 	public static inline var START_HEALTH:Float = 0.5;
 
-	/** Cuanto se mete cada icono en la barra respecto del borde de relleno. */
 	static inline var ICON_OVERLAP:Float = 0.3;
 
-	// Igual que PsychHUD: el rating nace ampliado y se encoge.
 	public static inline var RATING_SCALE:Float = 0.7;
 	public static inline var RATING_POP:Float = 0.785 / 0.7;
 	public static inline var COMBO_SCALE:Float = 0.5;
 	public static inline var COMBO_POP:Float = 0.6 / 0.5;
 	public static inline var MIN_COMBO_DIGITS:Int = 3;
 
-	/** Imagenes del popup: `images/game/score/<sick|good|bad|shit>.png` y `num0.png`..`num9.png`. */
 	static inline var SCORE_DIR:String = "game/score/";
-	/** Cifras maximas que muestra el combo con imagenes (si pasa, se ven las ultimas). */
+
 	static inline var COMBO_SLOTS:Int = 5;
 
 	static final RATING_COLORS:Map<String, FlxColor> = [
@@ -79,38 +73,36 @@ class PlayHUD extends FlxGroup
 		"shit" => 0xFFFF5555
 	];
 
-	/** Colores de la barra de tiempo (FlxColor ARGB, opacos). Publicos por si un script los quiere cambiar. */
 	public static var PINK:FlxColor = 0xFFFF8AFF;
 	public static var LIME:FlxColor = 0xFF8FFF8A;
 
-	/** Ancho / alto de la barra de tiempo. */
 	static inline var TIME_BAR_WIDTH:Int = 400;
 	static inline var TIME_BAR_HEIGHT:Int = 18;
-	/** Cuanto sobresale el fondo de la barra de tiempo por cada lado (px). */
+
 	static inline var TIME_BAR_BG_PAD:Int = 4;
 
 	public var healthBar(default, null):HealthBar;
 	public var timeBar(default, null):FlxBar;
 	public var timeBarBG(default, null):FlxSprite;
 	public var timeText(default, null):FlxText;
-	/** Estilo actual de la barra de tiempo. Cambiarlo con `setTimeBarStyle`. */
+
 	public var timeBarStyle(default, null):TimeBarStyle = TimeBarStyle.PINK_LIME;
 	var laneCount:Int = 4;
-	/** Nombre de la cancion: el texto de la barra de tiempo es `songName - tiempo`. */
+
 	var songName:String;
-	/** Texto de botplay (null si no esta activo). Lo coloca `placeBotplay` y parpadea. */
+
 	public var botplayText(default, null):FlxText;
 	var botplaySine:Float = 0;
-	/** Strumline del jugador: el texto de botplay se pega a sus receptores y los sigue (si un script o evento los mueve). */
+
 	var botplayLine:Null<StrumLine>;
-	/** Cuanto (px) se separan score y precision del borde de la barra de vida, hacia afuera, para que no se encimen con los fallos del centro. */
+
 	public static inline var STAT_SIDE_PAD:Float = 110;
-	/** Debajo de la barra de vida, como en Codename: puntos (derecha), fallos (centro) y precision (izquierda). */
+
 	public var scoreTxt(default, null):FlxText;
 	public var missesTxt(default, null):FlxText;
 	public var accuracyTxt(default, null):FlxText;
 	var ratingText:FlxText;
-	/** Debajo del rating: puntos, precision y desfase de la ultima pulsacion. */
+
 	var pressText:FlxText;
 	var comboText:FlxText;
 	var ratingImages:Map<String, FlxSprite> = new Map();
@@ -121,12 +113,10 @@ class PlayHUD extends FlxGroup
 
 	public var defaultFont:String;
 
-	/** Vida del jugador, 0..1. La barra sigue a `shownHealth`, que la alcanza suavizada. */
 	public var health:Float = START_HEALTH;
 	@:keep public var shownHealth:Float = START_HEALTH;
 	public var songTime:Float = 0;
 
-	// Iconos de vida del jugador y del oponente.
 	public var iconPlayer(default, null):HealthIcon;
 	public var iconOpponent(default, null):HealthIcon;
 
@@ -155,8 +145,6 @@ class PlayHUD extends FlxGroup
 		add(iconPlayer);
 		placeIcons();
 
-		// Tres textos bajo la barra: mismo rectangulo, cada uno alineado distinto. El rectangulo sobresale de la barra por los dos
-		// lados (STAT_SIDE_PAD) para que precision y puntos queden hacia afuera y no se pisen con los fallos del centro.
 		var pad = Math.max(0, Math.min(STAT_SIDE_PAD, healthBar.x - 10));
 		var textX = healthBar.x - pad;
 		var textY = barY + 40;
@@ -169,14 +157,13 @@ class PlayHUD extends FlxGroup
 		timeText.setFormat(defaultFont, 32, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		timeText.borderSize = 2;
 		timeText.alpha = 0;
-		// Sin parentRef: `updateTime` le pasa el valor a mano (antes apuntaba a una variable que no existe y la barra nunca se llenaba).
+
 		timeBar = new FlxBar(FlxG.width / 2 - TIME_BAR_WIDTH / 2, timeText.y + timeText.height / 4, FlxBarFillDirection.LEFT_TO_RIGHT, TIME_BAR_WIDTH, TIME_BAR_HEIGHT, null, "", 0, this.songLength);
-		// Un paso por pixel (por defecto son 100 y la barra avanzaba a saltos).
+
 		timeBar.numDivisions = TIME_BAR_WIDTH;
 		setTimeBarStyle(TimeBarStyle.parse(ClientPrefs.getTimeBarStyle()));
 		timeBar.alpha = 0;
 
-		// Fondo de la barra: negro, sobresale TIME_BAR_BG_PAD px por cada lado. Va antes que la barra para quedar detras.
 		timeBarBG = new FlxSprite().makeGraphic(TIME_BAR_WIDTH + TIME_BAR_BG_PAD * 2, TIME_BAR_HEIGHT + TIME_BAR_BG_PAD * 2, FlxColor.BLACK);
 		timeBarBG.alpha = 0;
 		syncTimeBarBG();
@@ -200,7 +187,6 @@ class PlayHUD extends FlxGroup
 		pressText.alpha = 0;
 		add(pressText);
 
-		// Rating y combo con las imagenes de images/game/score/. Lo que falte se queda con el texto de siempre.
 		for (name in ["sick", "good", "bad", "shit"])
 		{
 			var file = Paths.image(SCORE_DIR + name);
@@ -226,7 +212,6 @@ class PlayHUD extends FlxGroup
 			}
 		}
 
-		// Botplay se guarda en las opciones y no cuenta fallos ni puntos: se deja a la vista para no jugar con el sin querer.
 		if (ClientPrefs.isBotplay())
 		{
 			botplayText = new FlxText(0, 0, FlxG.width, TU.translate("game.botplay", null, "BOTPLAY"), 32);
@@ -239,35 +224,25 @@ class PlayHUD extends FlxGroup
 		updateTime(0);
 	}
 
-	/**
-	 * Pone el texto de botplay encima de la strumline del jugador, centrado sobre ella. Esta version usa los numeros que se
-	 * pasan (sirve antes de que existan los receptores); `followBotplay` lo deja pegado a los receptores de verdad.
-	 */
 	public function placeBotplay(lineX:Float, lineY:Float, lineWidth:Float):Void
 	{
 		if (botplayText == null) return;
-		// Aun no hay receptores: el alto de un receptor es aprox. el ancho de su slot (4 lanes como minimo).
+
 		var slot = lineWidth / Math.max(4, laneCount);
 		setBotplayRect(lineX, lineY, lineY + slot, lineWidth);
 	}
 
-	/** El texto de botplay se pega a los receptores de `line` (su x, ancho y alto reales) y los sigue cada frame. */
 	public function followBotplay(line:StrumLine):Void
 	{
 		botplayLine = line;
 		syncBotplay();
 	}
 
-	/**
-	 * Centra el texto sobre [left, left + width] x [top, bottom]: queda ENCIMA de las notas (receptores) de la strumline, en el
-	 * medio de ellas. El HUD se dibuja despues de las strumlines, asi que el texto tapa a los receptores.
-	 */
 	function setBotplayRect(left:Float, top:Float, bottom:Float, width:Float):Void
 	{
 		if (botplayText.fieldWidth != width) botplayText.fieldWidth = width;
 		botplayText.x = left;
 
-		// textHeight sale del texto ya armado: no depende de que el FlxText se haya redibujado todavia.
 		var textHeight = botplayText.textField.textHeight + 4;
 		if (!(textHeight > 4)) textHeight = botplayText.size * 1.3;
 
@@ -290,7 +265,7 @@ class PlayHUD extends FlxGroup
 			top = Math.min(top, strum.y);
 			bottom = Math.max(bottom, strum.y + strum.height);
 		}
-		if (left > right) return; // la linea no tiene receptores
+		if (left > right) return;
 
 		setBotplayRect(left, top, bottom, right - left);
 	}
@@ -305,7 +280,6 @@ class PlayHUD extends FlxGroup
 		return text;
 	}
 
-	/** Cambia el estilo de la barra de tiempo (un script puede llamarlo en cualquier momento). */
 	public function setTimeBarStyle(style:TimeBarStyle):Void
 	{
 		timeBarStyle = style;
@@ -313,21 +287,20 @@ class PlayHUD extends FlxGroup
 		switch (style)
 		{
 			case TimeBarStyle.MONO:
-				// Blanco sobre negro; el borde blanco deja ver la parte vacia aunque el fondo sea oscuro.
+
 				timeBar.createFilledBar(FlxColor.BLACK, FlxColor.WHITE, true, FlxColor.WHITE);
 			case TimeBarStyle.MULTI:
 				var fill = laneColors();
 				var empty = [for (color in fill) FlxColor.interpolate(color, FlxColor.BLACK, 0.75)];
 				timeBar.createGradientBar(empty, fill, 1, 180, true, FlxColor.BLACK);
 			case TimeBarStyle.PINK_LIME:
-				// Los colores van en ARGB: antes eran `0x8fff8aff` / `0x1f0038ff` (RGBA), asi que salian con alfa raro y casi transparentes.
+
 				timeBar.createFilledBar(LIME, PINK, true, FlxColor.BLACK);
 		}
 
 		timeBar.value = songTime;
 	}
 
-	/** Colores de la barra con dos colores sueltos (empty = lo que falta, fill = lo avanzado). Deja el estilo en `PINK_LIME`. */
 	public function setTimeBarColors(empty:FlxColor, fill:FlxColor, border:FlxColor = FlxColor.BLACK):Void
 	{
 		timeBarStyle = TimeBarStyle.PINK_LIME;
@@ -335,7 +308,6 @@ class PlayHUD extends FlxGroup
 		timeBar.value = songTime;
 	}
 
-	/** Un color por lane (los del skin de notas o, si no define, los de settings.xml): el degradado del modo multicolor. */
 	function laneColors():Array<FlxColor>
 	{
 		var skin = NoteSkin.current();
@@ -348,12 +320,10 @@ class PlayHUD extends FlxGroup
 			out.push(FlxColor.fromInt(0xFF000000 | color));
 		}
 
-		// el degradado necesita 2 colores como minimo
 		if (out.length == 1) out.push(out[0]);
 		return out;
 	}
 
-	/** Deja el fondo centrado detras de la barra y con su mismo alpha (por si un script mueve o desvanece la barra). */
 	function syncTimeBarBG():Void
 	{
 		if (timeBarBG == null || timeBar == null) return;
@@ -362,14 +332,12 @@ class PlayHUD extends FlxGroup
 		timeBarBG.visible = timeBar.visible;
 	}
 
-	/** El tiempo y su barra aparecen al empezar la cancion. */
 	public function onSongStart():Void
 	{
 		FlxTween.tween(timeBar, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 		FlxTween.tween(timeText, {alpha: 1}, 0.5, {ease: FlxEase.circOut});
 	}
 
-	/** @param accuracy porcentaje 0..100, o negativo si todavia no se juzgo ninguna nota. */
 	public function onUpdateScore(score:Int, accuracy:Float, misses:Int, missed:Bool = false):Void
 	{
 		var played = accuracy >= 0;
@@ -382,7 +350,6 @@ class PlayHUD extends FlxGroup
 		if (!missed) doScoreBop();
 	}
 
-	/** Misma tabla de rangos que `Highscore.getLetterRank` del legacy. */
 	public static function letterRank(accuracy:Float, misses:Int = 0):String
 	{
 		if (accuracy > 99 && misses == 0) return "P";
@@ -404,7 +371,6 @@ class PlayHUD extends FlxGroup
 		}
 	}
 
-	/** Popup de rating + combo, como `PsychHUD.popUpScore`. Con imagenes si estan en `game/score/`, si no con texto. */
 	public function popUpScore(rating:String, combo:Int, ?press:PressScore):Void
 	{
 		var posX = FlxG.width * 0.35;
@@ -419,7 +385,7 @@ class PlayHUD extends FlxGroup
 				other.alpha = 0;
 			}
 			ratingText.alpha = 0;
-			// el origen es el centro: se coloca por el centro sin escalar y la escala crece desde ahi
+
 			image.setPosition(posX - 40 - image.frameWidth / 2, FlxG.height / 2 - image.frameHeight / 2 - 60);
 			image.alpha = 1;
 			FlxTween.cancelTweensOf(image.scale);
@@ -494,7 +460,6 @@ class PlayHUD extends FlxGroup
 		if (press != null) showPress(press, posX, delay);
 	}
 
-	/** Texto chico (celeste) arriba del rating con la precision de la pulsacion. Entra con un mini pop. */
 	function showPress(press:PressScore, posX:Float, delay:Float):Void
 	{
 		pressText.text = formatPercent(press.precision);
@@ -512,21 +477,15 @@ class PlayHUD extends FlxGroup
 		FlxTween.tween(pressText, {alpha: 0, y: pressText.y + 50}, 0.5, {startDelay: delay, ease: FlxEase.expoOut});
 	}
 
-	/** "91.3%" (precision 0..100, un decimal). */
 	public static function formatPercent(value:Float):String
 		return Std.string(Math.round(value * 10) / 10) + "%";
 
-	/** "-12.4ms" / "+8ms": negativo = temprano, positivo = tarde. */
 	public static function formatMs(ms:Float):String
 	{
 		var rounded = Math.round(ms * 10) / 10;
 		return (rounded > 0 ? "+" : "") + Std.string(rounded) + "ms";
 	}
 
-	/**
-	 * Numero para el HUD: con separador de miles (`55,150`) y, de 10 millones para arriba, abreviado (`12.3M`) para que nunca
-	 * salgan filas enormes de digitos.
-	 */
 	public static function formatNumber(value:Int):String
 	{
 		var abs = Math.abs(value);
@@ -535,7 +494,6 @@ class PlayHUD extends FlxGroup
 		return FlxStringUtil.formatMoney(value, false);
 	}
 
-	/** "Time Left" de Psych: lo que falta de cancion, una vez por segundo. */
 	public function updateTime(time:Float):Void
 	{
 		songTime = Math.min(time, songLength);
@@ -546,19 +504,16 @@ class PlayHUD extends FlxGroup
 		timeText.text = FlxStringUtil.formatTime(Math.floor(Math.max(0, songLength - songTime) / 1000), false);
 	}
 
-	/** Suma (o resta) vida del jugador, limitada a 0..1. */
 	public function addHealth(amount:Float):Void
 	{
 		setHealth(health + amount);
 	}
 
-	/** Pone la vida del jugador, limitada a 0..MAX_HEALTH. */
 	public function setHealth(value:Float):Void
 	{
 		health = Math.max(0, Math.min(MAX_HEALTH, value));
 	}
 
-	/** Llamar una vez por beat: los iconos hacen su pulso. */
 	public function beatHit():Void
 	{
 		iconPlayer.bop();
@@ -583,7 +538,6 @@ class PlayHUD extends FlxGroup
 		placeIcons();
 	}
 
-	/** Cada icono se apoya en el borde del relleno, hacia su propio lado. */
 	function placeIcons():Void
 	{
 		var edge = healthBar.edgeX(shownHealth);

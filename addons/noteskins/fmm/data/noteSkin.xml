@@ -13,7 +13,7 @@
     <pressedScale value="1.15"/>
 
     <!-- Splash en imagen aparte (NOTE_splashes.png/xml): una sola animacion "splash" (4 frames de 700x700) para todas las lanes, se tiñe con el color de la lane.
-         scale 0.4 porque sus frames son enormes frente a la flecha (160px). -->
+         scale 0.6 porque sus frames son enormes frente a la flecha (160px). -->
     <splash atlas="NOTE_splashes" scale="0.6" alpha="0.85" fps="20"/>
 
     <animations>

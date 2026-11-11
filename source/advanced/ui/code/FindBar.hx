@@ -11,11 +11,10 @@ import openfl.text.TextFieldType;
 import openfl.text.TextFormat;
 import openfl.ui.Keyboard;
 
-/** Barra de busqueda (Ctrl+F). */
 class FindBar extends FlxSpriteGroup
 {
 	public var isOpen(default, null):Bool = false;
-	/** Cambio de altura del editor: se avisa al abrir/cerrar. */
+
 	public var onToggle:Void->Void;
 
 	var editor:CodeEditor;
@@ -88,7 +87,7 @@ class FindBar extends FlxSpriteGroup
 		if (prefill != "") input.text = prefill;
 		if (prefill == "" && input.text == "")
 		{
-			// usa la palabra seleccionada si hay una
+
 			var sel = editor.field.text.substring(editor.field.selectionBeginIndex, editor.field.selectionEndIndex);
 			if (sel.length > 0 && sel.indexOf("\n") < 0) input.text = sel;
 		}

@@ -87,16 +87,14 @@ class UITopMenuButton extends UISliceSprite {
 		if (curMenu != null && curMenu.contextMenuOpened()) {
 			UIState.state.curContextMenu.preventOutOfBoxClickDeletion();
 		} else {
-			if (/*(parent != null && !parent.anyMenuOpened) || */FlxG.mouse.justReleased && justClosed == 0) {
+			if (FlxG.mouse.justReleased && justClosed == 0) {
 				openContextMenu();
 			}
 		}
 	}
 
 	public function openContextMenu() {
-		//if(UIState.state.curContextMenu != null) {
-		//	UIState.state.curContextMenu.close();
-		//}
+
 		var screenPos = getScreenPosition(null, __lastDrawCameras[0] == null ? FlxG.camera : __lastDrawCameras[0]);
 		curMenu = UIState.state.openContextMenu(contextMenu, null, screenPos.x, screenPos.y + bHeight);
 	}

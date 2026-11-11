@@ -28,16 +28,14 @@ class UICheckbox extends UISprite {
 	}
 
 	public override function update(elapsed:Float) {
-		// ANIMATION HANDLING
+
 		animation.play(hovered && selectable ? (pressed ? "pressed" : "hover") : "normal");
 		this.alpha = field.alpha = selectable ? 1 : 0.4;
 
-		// CHECKMARK HANDLING
 		check.alpha = selectable ? (checked ? 1 : 0) : 0;
 		check.scale.x = CoolUtil.fpsLerp(check.scale.x, 1, 0.25);
 		check.scale.y = CoolUtil.fpsLerp(check.scale.y, 1, 0.25);
 
-		// POSITION HANDLING
 		updatePositions();
 
 		super.update(elapsed);
@@ -56,7 +54,7 @@ class UICheckbox extends UISprite {
 	public override function onHovered() {
 		super.onHovered();
 		if (FlxG.mouse.justReleased) {
-			// clicked
+
 			checked = !checked;
 			check.scale.set(1.25, 1.25);
 

@@ -16,46 +16,32 @@ private typedef VideoBase = FlxVideoSprite;
 private typedef VideoBase = FlxSprite;
 #end
 
-/** Video decorativo dentro de un sprite, siempre sin audio. */
 class FunkinVideoSprite extends VideoBase
 {
-	/** true si este build trae hxvlc. */
+
 	public static inline final SUPPORTED:Bool = #if hxvlc true #else false #end;
 
 	public static inline final EXTENSION:String = ".mp4";
 
-	/** Ruta del video cargado, o null. */
 	public var videoPath(default, null):Null<String>;
 
-	/**
-	 * true desde que se pide reproducir (`playWhenReady` / `playSpriteVideo`) hasta que se detiene: lo que el juego quiere ver,
-	 * aunque el player todavia este arrancando.
-	 */
 	public var wantPlaying(default, null):Bool = false;
 
 	#if hxvlc
-	/** Espera (s) entre `load` y `play`: hxvlc no quiere el `play` en el mismo instante en que se carga el medio. */
+
 	static inline final PLAY_DELAY:Float = 0.05;
 
-	/** Si `play` todavia no arranca, cuantas veces mas se intenta y cada cuanto (s). */
 	static inline final PLAY_RETRIES:Int = 10;
 
 	static inline final RETRY_DELAY:Float = 0.1;
 
 	var startTimer:Null<FlxTimer>;
 
-	/** El juego pauso el video: si arranca mientras tanto, queda pausado en el primer cuadro. */
 	var heldPaused:Bool = false;
 	#end
 
-	/** Si el video cargado se repite (lo decide `loadVideo` / el `sprite.json`). */
 	public var looping(default, null):Bool = true;
 
-	/**
-	 * Carga `addons/videos/<name>.mp4` (o una ruta tal cual si ya trae extension) sin audio.
-	 * @param loop repetir al terminar.
-	 * @return true si el video quedo listo para `play()`.
-	 */
 	public function loadVideo(name:String, loop:Bool = true):Bool
 	{
 		var path = resolve(name);
@@ -84,11 +70,6 @@ class FunkinVideoSprite extends VideoBase
 		#end
 	}
 
-	/**
-	 * Reproduce el video ya cargado en cuanto el player este listo, con reintentos. Es lo que usa el Stage en vez de `play()`
-	 * directo: llamar a `play()` justo despues de `load()` fallaba y el video se quedaba parado.
-	 * @return false si no hay video cargado (o este build no trae hxvlc).
-	 */
 	public function playWhenReady():Bool
 	{
 		if (videoPath == null) return false;
@@ -103,16 +84,12 @@ class FunkinVideoSprite extends VideoBase
 		#end
 	}
 
-	/**
-	 * Carga el video `index` de una carpeta de sprite y lo arranca desde el principio, aunque ya fuera ese: es el `playAnim`
-	 * de un objeto de video (evento ObjectAnimationSet). Una peticion nueva cancela la anterior que siga pendiente.
-	 */
 	public function playSpriteVideo(dir:String, index:Int):Bool
 	{
 		#if hxvlc
 		cancelStart();
 		wantPlaying = false;
-		// Sin `stop()` antes del `load`: load cambia el medio del player, y parar + cargar seguidos lo dejaba a medias.
+
 		if (!loadSpriteVideo(dir, index)) return false;
 		return playWhenReady();
 		#else
@@ -185,20 +162,14 @@ class FunkinVideoSprite extends VideoBase
 	}
 	#end
 
-	/** Tamano real (px) del video `index` de una carpeta de sprite, leido del propio .mp4 sin reproducirlo. null si no se pudo. */
 	public static function sizeOf(dir:String, index:Int):Null<{w:Int, h:Int}>
 	{
 		var file = videoFile(dir, index);
 		return file == null ? null : Mp4Info.size(file);
 	}
 
-	/** Cuantos videos tiene la carpeta cargada con `loadSpriteVideo` (0 si no es de video). */
 	public var videoCount(default, null):Int = 0;
 
-	/**
-	 * Video de una carpeta de sprite de nivel (`levels/<n>/sprites/<nombre>/`).
-	 * @param index cual de los `count` videos cargar.
-	 */
 	public function loadSpriteVideo(dir:String, index:Int = 0):Bool
 	{
 		var info = readInfo(dir);
@@ -225,7 +196,6 @@ class FunkinVideoSprite extends VideoBase
 		return ok;
 	}
 
-	/** Lee `meta.fmce.video` de `<dir>/sprite.json` (o `Sprite.json`). null si no es una carpeta de video. */
 	public static function readInfo(dir:String):Null<{count:Int, loop:Bool, scale:Float}>
 	{
 		#if sys
@@ -250,8 +220,7 @@ class FunkinVideoSprite extends VideoBase
 				Log.warn('[FunkinVideoSprite] json invalido ($path): $e');
 			}
 		}
-		// Sprite de tipo video sin sprite.json: `config.json` con "type": "video" y un .mp4 en la carpeta
-		// (sprite.mp4, o video0.mp4, video1.mp4... si son varios). loop / escala salen de la primera animacion de `data`.
+
 		var files = videoFiles(dir);
 		if (files.length == 0) return null;
 		var config:Dynamic = null;
@@ -268,7 +237,7 @@ class FunkinVideoSprite extends VideoBase
 			}
 		}
 		var isVideoType = config != null && Std.string(config.type) == "video";
-		// una carpeta con atlas (sprite.png) y un .mp4 suelto sigue siendo un sprite normal
+
 		if (!isVideoType && sys.FileSystem.exists(haxe.io.Path.join([dir, "sprite.png"]))) return null;
 		if (!isVideoType && config != null) return null;
 		var data:Array<Dynamic> = config != null && Std.isOfType(config.data, Array) ? config.data : [];
@@ -285,7 +254,6 @@ class FunkinVideoSprite extends VideoBase
 		return null;
 	}
 
-	/** Los .mp4 de una carpeta de sprite, ordenados por nombre (`sprite.mp4`, o `video0.mp4`, `video1.mp4`...). */
 	public static function videoFiles(dir:String):Array<String>
 	{
 		var out:Array<String> = [];
@@ -302,11 +270,10 @@ class FunkinVideoSprite extends VideoBase
 		return out;
 	}
 
-	/** Ruta del video `index`: `video<index>.mp4` si existe (formato viejo), si no el `index`-esimo .mp4 de la carpeta. */
 	public static function videoFile(dir:String, index:Int):Null<String>
 	{
 		#if sys
-		// Lo primero: el video que dice `anim` de la entrada `index` del config.json (anim: "videotal" -> videotal.mp4).
+
 		var byAnim = animFile(dir, animOf(dir, index));
 		if (byAnim != null) return byAnim;
 		var legacy = haxe.io.Path.join([dir, "video" + index + EXTENSION]);
@@ -317,7 +284,6 @@ class FunkinVideoSprite extends VideoBase
 		return null;
 	}
 
-	/** `anim` de la entrada `index` de `<dir>/config.json` (null si no hay). */
 	public static function animOf(dir:String, index:Int):Null<String>
 	{
 		#if sys
@@ -339,7 +305,6 @@ class FunkinVideoSprite extends VideoBase
 		return null;
 	}
 
-	/** `<dir>/<anim>.mp4` si existe, si no null. Los sprites de video NO usan sprite.png: el video es el `anim`. */
 	public static function animFile(dir:String, anim:Null<String>):Null<String>
 	{
 		#if sys
@@ -351,15 +316,11 @@ class FunkinVideoSprite extends VideoBase
 		return null;
 	}
 
-	/** `intro` -> `addons/videos/intro.mp4`. Una ruta con extension se respeta. */
 	public static function resolve(name:String):String
 	{
 		var path = haxe.io.Path.extension(name) == "" ? Paths.video(name) : name;
 		#if (hxvlc && !desktop)
-		// `Paths.video` ya devuelve la ruta real de addons/videos/. Esto cubre un id explicito con extension
-		// (`addons/videos/x.mp4`): en Android lo que trae el build vive dentro del APK y OpenFL sabe donde queda en disco.
-		// Assets.getPath lanza una excepcion ("no asset with an ID") si el archivo no es un asset empaquetado: los videos
-		// de un nivel (/storage/.../levels/<nivel>/sprites/...) son archivos sueltos y se abren por su ruta.
+
 		if (openfl.utils.Assets.exists(path))
 		{
 			var real = openfl.utils.Assets.getPath(path);

@@ -8,7 +8,6 @@ import openfl.events.Event;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
 
-/** FPS grandes con color segun el objetivo y mini grafica. */
 class FramerateCounter extends Sprite
 {
 	public static inline var GOOD:Int = 0xFF64DDAA;
@@ -20,7 +19,7 @@ class FramerateCounter extends Sprite
 	static inline var BAR_GAP:Int = 1;
 	static inline var GRAPH_H:Int = 18;
 	static inline var GRAPH_X:Int = 88;
-	/** Cada cuanto se calcula el promedio y se agrega una barra (ms). */
+
 	static inline var UPDATE_MS:Int = 66;
 
 	public var fpsNum:TextField;
@@ -85,7 +84,6 @@ class FramerateCounter extends Sprite
 		updateLabelPosition();
 	}
 
-	/** FPS a los que el juego intenta correr. */
 	private function target():Float
 	{
 		return Math.max(1, FlxG.drawFramerate);

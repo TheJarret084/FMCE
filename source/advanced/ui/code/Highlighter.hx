@@ -2,7 +2,6 @@ package advanced.ui.code;
 
 import StringTools;
 
-/** Colorea codigo. */
 class Highlighter
 {
 	static var haxeWords:Map<String, Int> = buildHaxeWords();
@@ -60,13 +59,13 @@ class Highlighter
 		{
 			var c = at(t, i);
 			var next = i + 1 < n ? at(t, i + 1) : 0;
-			if (c == 47 && next == 47) // //
+			if (c == 47 && next == 47)
 			{
 				var s = i;
 				while (i < n && at(t, i) != 10) i++;
 				add(out, s, i, CodeTheme.SYN_COMMENT);
 			}
-			else if (c == 47 && next == 42) // /* */
+			else if (c == 47 && next == 42)
 			{
 				var s = i;
 				i += 2;
@@ -74,7 +73,7 @@ class Highlighter
 				i = i + 2 > n ? n : i + 2;
 				add(out, s, i, CodeTheme.SYN_COMMENT);
 			}
-			else if (c == 34 || c == 39) // " '
+			else if (c == 34 || c == 39)
 			{
 				var s = i;
 				var q = c;
@@ -98,14 +97,14 @@ class Highlighter
 				if (i > n) i = n;
 				add(out, s, i, CodeTheme.SYN_STRING);
 			}
-			else if (c == 35 && next != 0 && isIdentStart(next)) // #if #else #end
+			else if (c == 35 && next != 0 && isIdentStart(next))
 			{
 				var s = i;
 				i++;
 				while (i < n && isIdentPart(at(t, i))) i++;
 				add(out, s, i, CodeTheme.SYN_PREPROC);
 			}
-			else if (c == 64) // @:meta
+			else if (c == 64)
 			{
 				var s = i;
 				i++;

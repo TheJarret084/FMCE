@@ -4,7 +4,6 @@ import openfl.display.BitmapData;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
-/** Donde quedo un recorte: pagina y esquina superior izquierda dentro de ella. */
 typedef PageSlot =
 {
 	var page:Int;
@@ -12,12 +11,11 @@ typedef PageSlot =
 	var y:Int;
 }
 
-/** Acomoda recortes en PAGINAS de a lo mas `maxW` x `maxH` (estantes: se llena una fila y se baja). */
 class AtlasPager
 {
-	/** Paginas empezadas (la que esta abierta cuenta). */
+
 	public var pageCount(get, never):Int;
-	/** Recortes distintos colocados (los repetidos no cuentan). */
+
 	public var placedCount(default, null):Int = 0;
 
 	final maxW:Int;
@@ -45,7 +43,6 @@ class AtlasPager
 
 	function get_pageCount():Int return current + 1;
 
-	/** Copia `rect` de `source` a la pagina y devuelve donde quedo. `w`/`h` son el tamano de `rect`. */
 	public function place(key:String, w:Int, h:Int, source:BitmapData, rect:Rectangle):PageSlot
 	{
 		if (canvas != null)
@@ -60,7 +57,6 @@ class AtlasPager
 		var py = cursorY;
 		var rh = rowH;
 
-		// No cabe en esta fila: siguiente fila.
 		if (px + w + gap > maxW && px > gap)
 		{
 			py = cursorY + rowH + gap;
@@ -68,7 +64,6 @@ class AtlasPager
 			rh = 0;
 		}
 
-		// No cabe en esta pagina (y la pagina ya tiene algo): se cierra y se empieza otra.
 		if (py + h + gap > maxH && !empty)
 		{
 			flush();
@@ -95,13 +90,11 @@ class AtlasPager
 		return slot;
 	}
 
-	/** Cierra la pagina abierta. Llamarlo despues del ultimo `place`. */
 	public function finish():Void
 	{
 		flush();
 	}
 
-	/** Suelta la pagina abierta sin entregarla (cuando la tarea se cancela). */
 	public function dispose():Void
 	{
 		if (canvas != null) canvas.dispose();
@@ -122,7 +115,6 @@ class AtlasPager
 		empty = true;
 	}
 
-	/** Crece el lienzo (al doble, sin pasar de maxW x maxH salvo un recorte que sea mas grande que eso solo). */
 	function ensure(needW:Int, needH:Int):Void
 	{
 		if (needW <= canvas.width && needH <= canvas.height) return;

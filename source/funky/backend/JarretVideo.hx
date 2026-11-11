@@ -9,7 +9,6 @@ import hxvlc.flixel.FlxVideo;
 import funky.core.Log;
 import funky.core.Paths;
 
-/** Substate que reproduce un video a pantalla completa y, cuando termina, avisa. */
 class JarretVideo extends FlxSubState
 {
 	#if FMCE_VIDEO
@@ -23,7 +22,6 @@ class JarretVideo extends FlxSubState
 		super();
 	}
 
-	/** Reproduce `addons/videos/<name>.mp4`. (Se llama `play` y no `create`: `create` es del ciclo de vida del substate.) */
 	public function play(name:String, ?onDone:Void->Void):Void
 	{
 		this.onDone = onDone;
@@ -44,7 +42,7 @@ class JarretVideo extends FlxSubState
 
 			if (video.load(Paths.video(name)))
 			{
-				// un frame de espera para que el video termine de montarse
+
 				new FlxTimer().start(0.05, function(_)
 				{
 					if (!finished && video != null) video.play();
@@ -62,7 +60,7 @@ class JarretVideo extends FlxSubState
 			finish();
 		}
 		#else
-		// este build no trae video: se pasa directo al aviso
+
 		finish();
 		#end
 	}

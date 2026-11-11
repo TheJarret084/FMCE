@@ -41,12 +41,10 @@ private class Item
 	}
 }
 
-/** Logs en pantalla como tarjetas que entran y salen. */
 class LogOverlay extends Sprite
 {
 	public static var instance:LogOverlay;
 
-	/** F2 lo cambia. Apagado: no se dibuja nada y se descarta lo que llegue. */
 	public static var enabled:Bool = true;
 
 	static inline var MAX_VISIBLE:Int = 6;
@@ -82,7 +80,6 @@ class LogOverlay extends Sprite
 		addEventListener(Event.ENTER_FRAME, onFrame);
 	}
 
-	/** Lo llama `Log.log` con cada mensaje. Sin overlay todavia (arranque) se guarda un rato. */
 	public static function push(severity:Severity, text:String):Void
 	{
 		if (!enabled) return;
@@ -144,7 +141,6 @@ class LogOverlay extends Sprite
 	{
 		var text = raw.length > MAX_CHARS ? raw.substr(0, MAX_CHARS - 1) + "…" : raw;
 
-		// Igual a la ultima tarjeta viva: se suma el contador en vez de apilar otra.
 		var newest = items.length > 0 ? items[items.length - 1] : null;
 		if (newest != null && newest.phase != OUT && newest.text == text && newest.severity == severity)
 		{
@@ -177,7 +173,6 @@ class LogOverlay extends Sprite
 		addChild(item.view);
 		items.push(item);
 
-		// Demasiadas: las mas viejas se van ya.
 		var live = [for (i in items) if (i.phase != OUT) i];
 		var extra = live.length - MAX_VISIBLE;
 		for (i in 0...Std.int(Math.max(0, extra)))
@@ -187,7 +182,6 @@ class LogOverlay extends Sprite
 		}
 	}
 
-	/** (Re)dibuja el fondo negro, la barra de color y el texto de una tarjeta. */
 	function render(item:Item):Void
 	{
 		var maxW = Math.max(220, Math.min(560, stage != null ? stage.stageWidth * 0.62 : 560));
@@ -195,7 +189,7 @@ class LogOverlay extends Sprite
 		var body = item.count > 1 ? item.text + "  x" + item.count : item.text;
 
 		item.field.width = maxW - PAD * 2 - BAR_W;
-		item.field.defaultTextFormat = new TextFormat(Framerate.fontName, FONT_SIZE, 0xFFFFFFFF); // me di cuenta que esta fuente tiene cosas que no sirve aqui
+		item.field.defaultTextFormat = new TextFormat(Framerate.fontName, FONT_SIZE, 0xFFFFFFFF);
 		item.field.text = label + body;
 		item.field.setTextFormat(new TextFormat(Framerate.fontName, FONT_SIZE, color(item.severity), true), 0, label.length);
 
@@ -216,7 +210,6 @@ class LogOverlay extends Sprite
 	inline function bottomY():Float
 		return (stage != null ? stage.stageHeight : 720) - MARGIN;
 
-	/** Apila de abajo hacia arriba; la Y se acerca sola a su sitio (las de arriba bajan suave). */
 	function layout(dt:Float):Void
 	{
 		var y = bottomY();

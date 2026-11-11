@@ -23,7 +23,6 @@ private typedef RowSlot =
 	var tail:FlxText;
 }
 
-/** Explorador de archivos (a la derecha, como el Solution Explorer). Carpetas plegables y scroll con la rueda. */
 class FileTree extends FlxSpriteGroup
 {
 	public var onOpen:CodeStudioFile->Void;
@@ -118,7 +117,7 @@ class FileTree extends FlxSpriteGroup
 		activeFile = current;
 		if (reveal && current != null)
 		{
-			// despliega las carpetas del archivo y lo deja a la vista
+
 			var parts = current.name.split("/");
 			var p = "";
 			for (i in 0...parts.length - 1)
@@ -139,7 +138,6 @@ class FileTree extends FlxSpriteGroup
 		layoutRows();
 	}
 
-	/** Vuelve a pintar (marcas de cambios sin guardar). */
 	public function refreshMarks():Void
 		layoutRows();
 

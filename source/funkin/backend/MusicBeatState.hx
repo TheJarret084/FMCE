@@ -6,7 +6,6 @@ import funkin.backend.system.Conductor;
 import funkin.backend.utils.CoolUtil;
 import funkin.backend.system.interfaces.IBeatCancellableReceiver;
 
-/** Base de los states del charter (equivalente al MusicBeatState de Codename, sin scripting). */
 class MusicBeatState extends FlxState implements IBeatCancellableReceiver {
 	public var cancelConductorUpdate:Bool = false;
 
@@ -21,7 +20,6 @@ class MusicBeatState extends FlxState implements IBeatCancellableReceiver {
 		super();
 	}
 
-	/** Lerp independiente del framerate (como `lerp` de Codename). */
 	public inline function lerp(a:Float, b:Float, ratio:Float):Float return CoolUtil.fpsLerp(a, b, ratio);
 
 	public function stepHit(curStep:Int):Void {}
@@ -31,12 +29,11 @@ class MusicBeatState extends FlxState implements IBeatCancellableReceiver {
 	public override function openSubState(subState:FlxSubState) {
 		if (subState is MusicBeatSubstate)
 			cast(subState, MusicBeatSubstate).parent = this;
-		// Miga de pan: si un substate cierra el juego de golpe, la ultima linea del log dice cual fue.
+
 		funky.core.Log.info('[Substate] ' + Type.getClassName(Type.getClass(this)) + ' abre ' + Type.getClassName(Type.getClass(subState)));
 		super.openSubState(subState);
 	}
 
-	/** Cambia de state (sin las cortinas de FMCE: el editor sale directo). */
 	public static function swapState(next:FlxState):Void
 		FlxG.switchState(next);
 }

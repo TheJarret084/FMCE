@@ -22,7 +22,6 @@ typedef SpriteImportResult =
 	var failed:Array<String>;
 }
 
-/** Importa sprites a un nivel desde la carpeta `import-sprites` (junto a `levels/`; en Android `.JarretLabs-FMCE/import-sprites`). */
 class SpriteImporter
 {
 	public static inline var INBOX:String = "import-sprites";
@@ -109,7 +108,6 @@ class SpriteImporter
 
 				result.imported.push(name);
 
-				// ya esta copiado y comprobado: se saca de la carpeta de entrada
 				for (path in used)
 				{
 					try
@@ -130,11 +128,6 @@ class SpriteImporter
 		return result;
 	}
 
-	/**
-	 * Crea `sprites/<name>/` desde bytes ya cargados (ventana de importar, estilo character editor de Codename):
-	 * `sprite.png` + `sprite.xml`/`sprite.json` si trae atlas, o un solo frame `anim0`. Devuelve null si salio bien,
-	 * o el motivo del fallo. Con `overwrite` reemplaza solo `sprite.png/xml/json` y deja el resto (config.json...).
-	 */
 	public static function importBytes(levelDir:String, name:String, image:Bytes, isJpg:Bool, dataKind:Null<String>, dataText:Null<String>, overwrite:Bool = false):Null<String>
 	{
 		#if sys
@@ -169,7 +162,6 @@ class SpriteImporter
 				var destXml = Path.join([dest, "sprite.xml"]);
 				File.saveContent(destXml, dataText);
 
-				// Sparrow -> JSON como siempre, pero con el config de nombres del juego: la idle es `anim0`, el resto `anim1..N`
 				var configPath = Path.join([dest, "config.json"]);
 				if (!FileSystem.exists(configPath))
 					File.saveContent(configPath, Json.stringify(sparrowConfig(dataText), null, "\t"));
@@ -196,10 +188,6 @@ class SpriteImporter
 		#end
 	}
 
-	/**
-	 * `config.json` inicial de un atlas Sparrow: una entrada por animacion (`anim` = prefijo del atlas; el juego la llama anim<posicion en data>).
-	 * La animacion que empieza por "idle" va primero, o sea es `anim0`; el resto sigue el orden del XML.
-	 */
 	static function sparrowConfig(xmlText:String):Dynamic
 	{
 		var list = SparrowToAseprite.prefixes(xmlText);
@@ -215,10 +203,6 @@ class SpriteImporter
 		};
 	}
 
-	/**
-	 * `config.json` minimo de un sprite recien importado (si ya hay uno, no se toca): `type` y una entrada por animacion con su `anim`
-	 * (el tag del atlas), velocidad 1 y loop. La animacion que empieza por "idle" va primera (`anim0`); sin tags es una sola, `anim0`.
-	 */
 	static function ensureConfig(dest:String):Void
 	{
 		#if sys
@@ -253,7 +237,6 @@ class SpriteImporter
 		#end
 	}
 
-	/** Deja solo letras, numeros, `_` y `-` (los acentos y espacios pasan a `_`). */
 	public static function cleanName(base:String):String
 	{
 		var name = ~/[^A-Za-z0-9_\-]+/g.replace(base, "_");
@@ -273,7 +256,6 @@ class SpriteImporter
 		}
 	}
 
-	/** `sprite.json` (estilo Aseprite) de un PNG suelto: un frame que ocupa toda la imagen y la animacion `anim0` (la idle). */
 	static function writeSingleFrame(dest:String):Void
 	{
 		var size = SpriteFolderConverter.pngSize(Path.join([dest, "sprite.png"]));
@@ -306,7 +288,6 @@ class SpriteImporter
 		File.saveContent(Path.join([dest, "sprite.json"]), Json.stringify(out, null, "\t"));
 	}
 
-	/** Borra una carpeta recien creada por el importador (solo archivos sueltos, sin subcarpetas). */
 	static function removeDir(dir:String):Void
 	{
 		try

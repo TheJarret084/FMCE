@@ -72,7 +72,7 @@ class CharterWaveformHandler extends FlxBasic {
 		waveShader.data.waveformSize.value = [waveData.width, waveData.height];
 		var waveformInput:ShaderInput<BitmapData> = cast waveShader.data.waveformTexture;
 		waveformInput.input = waveData;
-		waveformInput.filter = NEAREST; // force it to be nearest, incase someone changed it
+		waveformInput.filter = NEAREST;
 		waveShader.data.textureRes.value = [0, 0];
 		waveShader.data.pixelOffset.value = [0];
 		waveShader.data.lowDetail.value = [Options.charterLowDetailWaveforms];

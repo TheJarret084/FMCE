@@ -42,7 +42,7 @@ class AdvancedEditorState extends FlxState
 		studio = new CodeStudio(loadFiles(), saveFile, prepareRun, openSpritePreview, createScript, levelName);
 		studio.onExit = leave;
 		add(studio);
-		// los TextField de OpenFL siempre dibujan encima de Flixel (tambien de la cortina): se congelan mientras dura la transicion
+
 		studio.setCovered(true);
 
 		DiscordClient.customPresence("Modo Avanzado", "Editando " + levelName, "fmce", "", false);
@@ -127,7 +127,7 @@ class AdvancedEditorState extends FlxState
 	static function isScriptPath(rel:String):Bool
 	{
 		var lower = StringTools.replace(rel, "\\", "/").toLowerCase();
-		// data/scripts es la carpeta de ahora; scripts/ se sigue aceptando (niveles viejos)
+
 		return lower == Scripts.DIR || StringTools.startsWith(lower, Scripts.DIR + "/")
 			|| lower == Scripts.LEGACY_DIR || StringTools.startsWith(lower, Scripts.LEGACY_DIR + "/");
 	}
@@ -246,7 +246,6 @@ class AdvancedEditorState extends FlxState
 
 	var leaveWarned:Bool = false;
 
-	/** Sale al menu del modo avanzado. Si hay cambios sin guardar pide confirmar con una segunda vez. */
 	function leave():Void
 	{
 		if (chosen) return;
@@ -261,7 +260,6 @@ class AdvancedEditorState extends FlxState
 		TransitionHandler.switchState(new AdvancedModeState());
 	}
 
-	/** La cortina de entrada termino: el editor vuelve a ser el de verdad. */
 	override public function closeSubState():Void
 	{
 		super.closeSubState();
@@ -273,7 +271,7 @@ class AdvancedEditorState extends FlxState
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
-		// seguro: si por lo que sea no hubo cortina, no dejar el editor congelado
+
 		if (studio != null && studio.covered && !chosen && TransitionHandler.active == null && ++coveredTicks > 3)
 			studio.setCovered(false);
 		if (chosen) return;

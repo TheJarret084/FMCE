@@ -8,7 +8,6 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Datos de scene.json y sprites/ que usa el charter para sus listas. */
 class SceneInfo
 {
 	static function readJson(path:String):Dynamic
@@ -43,7 +42,6 @@ class SceneInfo
 		return Std.isOfType(list, Array) ? list : [];
 	}
 
-	/** "#0  bg", "#1  player (strumline 0)"... un texto por objeto de `scene.json > objects`. */
 	public static function objectLabels(levelDir:String):Array<String>
 	{
 		var out:Array<String> = [];
@@ -56,7 +54,6 @@ class SceneInfo
 		return out;
 	}
 
-	/** Posiciones (`transform`) del objeto: "#0 (x: 1080, y: 960)". */
 	public static function positionLabels(levelDir:String, object:Int):Array<String>
 	{
 		var list = objectList(levelDir);
@@ -72,7 +69,6 @@ class SceneInfo
 		return out;
 	}
 
-	/** Puntos de camara de `scene.json > cameras`. */
 	public static function cameraLabels(levelDir:String):Array<String>
 	{
 		var scene = readJson(Path.join([levelDir, "scene.json"]));
@@ -87,21 +83,15 @@ class SceneInfo
 		return out;
 	}
 
-	/** Carpetas de `sprites/` del nivel (los iconos primero, como en el resto de los editores). */
 	public static function spriteNames(levelDir:String):Array<String>
 		return SpriteBuilder.listSprites(levelDir);
 
-	/** Sprite que tiene ahora el objeto en `scene.json` ("" si no existe). */
 	public static function spriteOf(levelDir:String, object:Int):String
 	{
 		var list = objectList(levelDir);
 		return object >= 0 && object < list.length ? Std.string(Reflect.field(list[object], "spr")) : "";
 	}
 
-	/**
-	 * Animaciones de un sprite, en el orden que usa `ObjectAnimationSet` (0 = idle): las entradas de su `config.json`,
-	 * o los tags de `sprite.json`. En un video, un numero por video.
-	 */
 	public static function animationLabels(levelDir:String, sprite:String):Array<String>
 	{
 		var out:Array<String> = [];

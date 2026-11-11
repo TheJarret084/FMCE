@@ -4,7 +4,6 @@ import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
 import openfl.utils.Assets;
 
-/** Icono simple para el editor: busca `assets/images/editors/charter/icons-chars/<icono>.png`; si no existe, un cuadro gris. */
 class HealthIcon extends funkin.backend.FunkinSprite {
 	public var curCharacter:String = "";
 

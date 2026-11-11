@@ -4,7 +4,6 @@ import flixel.math.FlxPoint;
 import openfl.display.DisplayObject;
 import funky.backend.system.framerate.Framerate as RealFramerate;
 
-/** Pieza suelta (visible / alpha) del contador real. */
 class FramerateStub
 {
 	var target:Void->DisplayObject;
@@ -45,7 +44,6 @@ class FramerateStub
 	}
 }
 
-/** Puente para el codigo portado de Codename (`funkin.*`): todo lo que toque `Framerate` aqui mueve el contador REAL del juego. */
 class Framerate
 {
 	public static var isLoaded(get, never):Bool;

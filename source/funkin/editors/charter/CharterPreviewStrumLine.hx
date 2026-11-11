@@ -51,7 +51,7 @@ class CharterPreviewStrumLine extends FlxTypedGroup<FlxSprite>
 	var scroll:Float = 1.0;
 
 	public function updatePos(x:Float, y:Float, scale:Float, spacing:Float, keyCount:Int, scrollSpeed:Float){
-		if (members.length-1 != keyCount) //strumline + note
+		if (members.length-1 != keyCount)
 			generateStrums(x, y, scale, spacing, keyCount, scrollSpeed);
 
 		for (i in 0...keyCount){

@@ -6,7 +6,6 @@ import flixel.graphics.frames.FlxAtlasFrames;
 
 using StringTools;
 
-/** Animaciones de una direccion (izq/abajo/arriba/der) dentro del atlas de un skin. */
 typedef NoteSkinLane =
 {
 	var note:String;
@@ -15,11 +14,10 @@ typedef NoteSkinLane =
 	var receptor:String;
 	var press:String;
 	var confirm:String;
-	/** Splash al acertar un SICK. Si el atlas no tiene esa animacion, el splash usa la flecha de la nota (`note`). */
+
 	var splash:String;
 }
 
-/** Colores de una direccion (igual para `rgb` que para `tint`). */
 typedef NoteSkinColor =
 {
 	var idle:Null<Int>;
@@ -27,7 +25,6 @@ typedef NoteSkinColor =
 	var rest:Null<Int>;
 }
 
-/** Formas de colorear las notas de un skin (sparrow, rgb, tint). */
 enum abstract NoteSkinType(String) to String
 {
 	var SPARROW = "sparrow";
@@ -47,27 +44,18 @@ enum abstract NoteSkinType(String) to String
 	}
 }
 
-/** Skin de notas configurable con un `noteSkin.xml` (con DOCTYPE, como los XML de Codename). */
 class NoteSkin
 {
 	public static inline var DEFAULT_ID:String = "default";
 
-	/** Carpeta de los skins dentro de addons/. */
 	static inline var ROOT:String = "noteskins/";
 	static var DIRS:Array<String> = ["left", "down", "up", "right"];
 
-	/** Siempre aparecen en la lista, aunque el escaneo de assets falle. */
 	static var BUILTINS:Array<String> = [DEFAULT_ID, "codename", "fmm"];
 
 	static var cache:Map<String, NoteSkin> = new Map();
 	static var hooked:Bool = false;
 
-	/**
-	 * El Flixel de Codename, en cada cambio de estado, marca TODA la cache de imagenes como destruible (tambien las `persist`)
-	 * y solo salva las que se vuelven a pedir con `FlxG.bitmap.get(key)` durante el estado nuevo. Un skin que se queda con sus
-	 * frames guardados nunca la vuelve a pedir: su atlas se destruye y las notas salen como cuadros negros o invisibles.
-	 * Por eso al cambiar de estado se sueltan los frames: la proxima nota / receptor los vuelve a pedir (y los rescata).
-	 */
 	static function hook():Void
 	{
 		if (hooked) return;
@@ -89,11 +77,10 @@ class NoteSkin
 	public var id(default, null):String;
 	public var name:String;
 	public var author:String;
-	/** Nombre del atlas sin extension, dentro de addons/noteskins/<id>/images/. */
+
 	public var atlas:String;
 	public var type:NoteSkinType = RGB;
 
-	/** true si el atlas es una mascara RGB (se pinta con NoteRGBShader). */
 	public var rgb(get, never):Bool;
 
 	inline function get_rgb():Bool
@@ -101,28 +88,16 @@ class NoteSkin
 	public var holdAlpha:Float = 0.65;
 	public var anims:Array<NoteSkinLane>;
 	public var colors:Array<Null<NoteSkinColor>>;
-	/** Color de reposo de los receptores para todo el skin (`<colors rest="#828282">`), si ninguna lane trae el suyo. */
+
 	public var restColor:Null<Int> = null;
-	/** Paleta multikey (9 colores, mismo orden que noteColors de settings.xml). */
+
 	public var palette:Array<Null<NoteSkinColor>>;
 
-	/**
-	 * Escala (multiplo de la base) que toma el receptor al apretarse / confirmar; al soltar vuelve a la base. 1 = no hace nada.
-	 * `<pressedScale value="1.15"/>`. Si el skin es `tint` y no lo define, usa `DEFAULT_TINT_PRESSED_SCALE` (su confirm reusa la flecha, asi que
-	 * sin esto no se notaria el golpe); con `value="1"` se apaga.
-	 */
 	public var pressedScale:Float = 1;
 	public static inline var DEFAULT_TINT_PRESSED_SCALE:Float = 1.15;
 
-	/**
-	 * Ajustes del splash (`<splash scale="1" alpha="0.8" fps="24"/>`, todo opcional). El splash usa el MISMO sistema que las notas:
-	 * el atlas del skin, la animacion `splash` de cada `<lane>` y el mismo coloreado (rgb / tint / sparrow).
-	 */
 	public var splashScale:Float = 1;
-	/**
-	 * Atlas aparte del splash (nombre sin extension, en images/ del skin): `<splash atlas="NOTE_splash"/>`. Sin declarar busca `splash.png/.xml`
-	 * en el skin; si no hay ninguno, el splash usa el atlas principal del skin.
-	 */
+
 	public var splashAtlas:String = "splash";
 	var splashAtlasDeclared:Bool = false;
 	var splashFramesCache:Null<FlxAtlasFrames>;
@@ -130,11 +105,10 @@ class NoteSkin
 	public var splashAlpha:Float = 0.8;
 	public var splashFps:Int = 24;
 
-	/** Script del skin (`data/noteSkin.hx`), o null si no trae. Ver `NoteSkinScript`. */
 	public var script(default, null):Null<NoteSkinScript> = null;
 
 	var framesCache:Null<FlxAtlasFrames>;
-	/** Ya se intento cargar el atlas (con o sin exito): si fallo no se vuelve a buscar en cada nota. */
+
 	var framesTried:Bool = false;
 
 	function new(id:String)
@@ -150,13 +124,9 @@ class NoteSkin
 		for (_ in 0...9) palette.push(null);
 	}
 
-	// ───────────────────────────── API publica ─────────────────────────────
-
-	/** Skin guardado en las preferencias (o el default si ya no existe). */
 	public static function current():NoteSkin
 		return get(ClientPrefs.getNoteSkin());
 
-	/** Carga (con cache) un skin por id. Si no existe o le falta el atlas, cae al default. */
 	public static function get(id:String):NoteSkin
 	{
 		if (id == null || id.length == 0) id = DEFAULT_ID;
@@ -173,7 +143,7 @@ class NoteSkin
 
 			if (id != DEFAULT_ID)
 			{
-				// Se guarda tambien el resultado "cayo al default": si no, cada nota volveria a leer y parsear el XML.
+
 				var replacement = get(DEFAULT_ID);
 				cache.set(id, replacement);
 				return replacement;
@@ -185,7 +155,6 @@ class NoteSkin
 		return skin;
 	}
 
-	/** Ids de skins: los de fabrica + cualquier addon con `noteskins/<id>/data/noteSkin.xml` (externo o de los que trae el build). */
 	public static function list():Array<String>
 	{
 		var out:Array<String> = [];
@@ -200,16 +169,14 @@ class NoteSkin
 	public static function displayName(id:String):String
 		return get(id).name;
 
-	/** true si el atlas del skin se puede cargar (en su carpeta images/ o, si no, en assets/images/). */
 	public function hasAtlas():Bool
 		return Addons.exists(atlasRel() + ".png") && Addons.exists(atlasRel() + ".xml") || Paths.framesExists(atlas);
 
-	/** Atlas del skin (null si no existe; Note/Strum caen a un cuadro blanco). */
 	public function frames():FlxAtlasFrames
 	{
 		if (framesCache != null)
 		{
-			// Si el atlas se destruyo por debajo (cambio de estado, limpieza de memoria), se vuelve a cargar.
+
 			var graphic = framesCache.parent;
 			if (graphic != null && !graphic.isDestroyed && graphic.bitmap != null) return framesCache;
 			framesCache = null;
@@ -225,7 +192,6 @@ class NoteSkin
 		return framesCache;
 	}
 
-	/** Atlas del splash (imagen aparte) o null si no hay: entonces el splash sale del atlas principal (`frames()`). */
 	public function splashFrames():Null<FlxAtlasFrames>
 	{
 		if (splashFramesCache != null)
@@ -246,18 +212,12 @@ class NoteSkin
 		return splashFramesCache;
 	}
 
-	/** `noteskins/<id>/images/<atlas>` (ruta relativa a addons/, sin extension). */
 	function atlasRel():String
 		return ROOT + id + "/images/" + atlas;
 
-	/** Codigo de un shader propio del skin (`noteskins/<id>/shaders/<nombre>.frag`), o null si no existe. */
 	public function shaderSource(name:String):Null<String>
 		return Addons.getText(ROOT + id + "/shaders/" + name + ".frag");
 
-	/**
-	 * Llama un callback del script del skin. `alias` es el nombre viejo/alternativo (ej. `onNote` para `onNoteCreate`);
-	 * si el script define los dos se llaman los dos, como en los scripts de nivel.
-	 */
 	public function notify(primary:String, ?alias:String, ?args:Array<Dynamic>):Void
 	{
 		if (script == null) return;
@@ -265,7 +225,6 @@ class NoteSkin
 		if (alias != null && alias != primary) script.call(alias, args);
 	}
 
-	/** Nombre de animacion para `note` / `hold` / `holdEnd` / `receptor` / `press` / `confirm` / `splash`. */
 	public function animFor(state:String, lane:Int):String
 	{
 		var a = anims[dirForLane(lane)];
@@ -283,27 +242,23 @@ class NoteSkin
 		}
 	}
 
-	/** Entrada de color del skin para la lane (paleta multikey primero, luego por direccion), o null. */
 	function entryFor(lane:Int, ?laneCount:Int):Null<NoteSkinColor>
 	{
 		var total = laneCount == null ? 4 : Std.int(Math.max(1, Math.min(9, laneCount)));
 		var safeLane = lane < 0 ? 0 : (lane >= total ? total - 1 : lane);
 
-		// Paleta multikey (mismo orden que noteColors de settings.xml).
 		var entry = palette[ClientPrefs.colorIndexForLane(safeLane, total)];
 		return entry != null ? entry : colors[dirForLane(lane)];
 	}
 
-	/** Color del skin para la lane, o null si el skin no define colores (se usan los de settings.xml). */
 	public function colorFor(lane:Int, pressed:Bool = false, ?laneCount:Int):Null<Int>
 	{
 		var entry = entryFor(lane, laneCount);
 		if (entry == null) return null;
-		// `pressed` sin definir = el de `idle`; `idle` sin definir = null (cae a settings.xml).
+
 		return pressed ? (entry.pressed != null ? entry.pressed : entry.idle) : entry.idle;
 	}
 
-	/** Color de reposo del receptor para `tint`: el de la lane, el del skin o `strumDefaultColor`. */
 	public function restTintFor(lane:Int, ?laneCount:Int):Int
 	{
 		var entry = entryFor(lane, laneCount);
@@ -312,9 +267,6 @@ class NoteSkin
 		return ClientPrefs.strumIdleColor();
 	}
 
-	/**
-	 * Los tres colores que NoteRGBShader mezcla por canal. null = no usar shader (atlas ya pintado).
-	 */
 	public function rgbFor(lane:Int, pressed:Bool = false, ?laneCount:Int):Null<Array<Int>>
 	{
 		if (type != RGB) return null;
@@ -325,7 +277,6 @@ class NoteSkin
 			: ClientPrefs.rgbFromBase(color);
 	}
 
-	/** Color (FlxColor) para el tipo `tint`: el del skin o, si no define, el de settings.xml. null en los otros tipos. */
 	public function tintFor(lane:Int, pressed:Bool = false, ?laneCount:Int):Null<Int>
 	{
 		if (type != TINT) return null;
@@ -334,7 +285,6 @@ class NoteSkin
 		return color != null ? (0xFF000000 | color) : (0xFF000000 | ClientPrefs.noteColorForLane(lane, pressed, laneCount));
 	}
 
-	/** Pinta un sprite (nota o receptor) segun el tipo del skin: shader RGB, tinte, o nada (sparrow). */
 	public function applyTo(sprite:FlxSprite, lane:Int, pressed:Bool = false, ?laneCount:Int):Void
 	{
 		switch (type)
@@ -353,13 +303,10 @@ class NoteSkin
 		}
 	}
 
-	/** Se llama al cambiar de nivel/skin para no quedarse con texturas viejas. */
 	public static function clearCache():Void
 	{
 		cache.clear();
 	}
-
-	// ───────────────────────────── Carga del XML ─────────────────────────────
 
 	static function load(id:String):Null<NoteSkin>
 	{
@@ -378,10 +325,9 @@ class NoteSkin
 
 			var atlasNode = firstElement(root, "atlas");
 			if (atlasNode != null) skin.atlas = attr(atlasNode, "path", skin.atlas);
-			// El atlas vive en images/ del propio skin: si el XML trae una ruta vieja (game/notes/...), se queda con el nombre.
+
 			skin.atlas = haxe.io.Path.withoutDirectory(skin.atlas);
 
-			// type="sparrow|rgb|tint". Sin type: <rgb enabled="..."/> (formato viejo); sin nada, rgb.
 			var rgbNode = firstElement(root, "rgb");
 			var legacy:NoteSkinType = rgbNode != null && !parseBool(attr(rgbNode, "enabled", "true"), true) ? SPARROW : RGB;
 			skin.type = NoteSkinType.parse(attr(root, "type", null), legacy);
@@ -413,10 +359,6 @@ class NoteSkin
 		}
 	}
 
-	/**
-	 * Carga el script del skin (`data/noteSkin.hx`), si trae. Un archivo vacio se ignora, asi que no hace falta
-	 * borrarlo para que el skin funcione.
-	 */
 	function loadScript():Void
 	{
 		var source = Addons.getText(ROOT + id + "/data/noteSkin.hx");
@@ -430,7 +372,7 @@ class NoteSkin
 		}
 		catch (e:Dynamic)
 		{
-			// Un script roto no debe dejar sin skin al juego.
+
 			script = null;
 			Log.error('[NoteSkin] script de $id: ' + Std.string(e));
 		}
@@ -479,7 +421,7 @@ class NoteSkin
 
 		for (lane in node.elementsNamed("lane"))
 		{
-			// Todo es opcional: idle (nota), pressed (apretado) y rest (receptor en reposo, solo `tint`).
+
 			var idleAttr = attr(lane, "idle", attr(lane, "color", null));
 			var pressedAttr = attr(lane, "pressed", null);
 			var restAttr = attr(lane, "rest", attr(lane, "strum", null));
@@ -491,7 +433,6 @@ class NoteSkin
 				rest: restAttr == null ? null : parseColorOpt(restAttr)
 			};
 
-			// <lane dir="left"> = color por direccion (4K / skins simples).
 			var dir = attr(lane, "dir", null);
 			if (dir != null)
 			{
@@ -500,7 +441,6 @@ class NoteSkin
 				continue;
 			}
 
-			// <lane index="0"> = indice de la paleta multikey (0..8, como noteColors).
 			var index = attr(lane, "index", null);
 			if (index != null)
 			{
@@ -511,10 +451,6 @@ class NoteSkin
 		}
 	}
 
-	/**
-	 * Como `parseColor`, pero devuelve null si el texto no es un color. No se puede usar `-1` de centinela: un color
-	 * opaco (0xFFRRGGBB) ya es negativo como Int de 32 bits.
-	 */
 	static function parseColorOpt(value:String):Null<Int>
 	{
 		var s = StringTools.trim(value);
@@ -525,8 +461,6 @@ class NoteSkin
 		var n = Std.parseInt("0x" + s);
 		return n == null ? null : (s.length <= 6 ? (0xFF000000 | n) : n);
 	}
-
-	// ───────────────────────────── helpers ─────────────────────────────
 
 	static function defaultAnimations():Array<NoteSkinLane>
 	{
@@ -598,7 +532,6 @@ class NoteSkin
 		var n = Std.parseInt("0x" + s);
 		if (n == null) return fallback;
 
-		// Sin alfa (#RRGGBB) se asume opaco.
 		return s.length <= 6 ? (0xFF000000 | n) : n;
 	}
 

@@ -35,7 +35,7 @@ class CharterStrumline extends UISprite {
 		if (__startingID != -1) return __startingID;
 
 		var index = Charter.instance.strumLines.members.indexOf(this);
-		if (index < 1) return __startingID = 0; //-1 or 0
+		if (index < 1) return __startingID = 0;
 
 		var v:Int = 0;
 		for (i in 0...index) v += Charter.instance.strumLines.members[i].keyCount;
@@ -144,7 +144,7 @@ class CharterStrumline extends UISprite {
 		}
 
 		if (strumLine.vocalsSuffix == null) strumLine.vocalsSuffix = "";
-		// voces propias de la strumline: <nivel>/music/Voices<suffix>.ogg (opcional)
+
 		var vocalsPath = strumLine.vocalsSuffix.length > 0 ? funky.backend.chart.LevelLoader.findVoices(funkin.backend.chart.Chart.levelDir, strumLine.vocalsSuffix) : null;
 		var asset = vocalsPath != null ? funky.backend.chart.LevelLoader.loadSound(vocalsPath) : null;
 
@@ -155,7 +155,7 @@ class CharterStrumline extends UISprite {
 			hasVocals = true;
 		}
 		else {
-			// NO destroy(): con flixel estandar deja _transform = null y el siguiente `group =` / `volume =` revienta.
+
 			vocals.stop();
 			hasVocals = false;
 		}
@@ -164,7 +164,6 @@ class CharterStrumline extends UISprite {
 		highlightColor = 0xFFFFFFFF;
 		if (icons[0] != null) {
 
-			//make darker colors more visible for the highlight
 			highlightColor.brightness = Math.max(highlightColor.brightness, 0.65);
 		}
 	}
@@ -173,14 +172,14 @@ class CharterStrumline extends UISprite {
 class CharterStrumlineOptions extends UITopMenuButton {
 	var strLine:CharterStrumline;
 	public function new(parent:CharterStrumline) {
-		// TODO: better id for this
+
 		super(0, 95, null, TU.translate("charter.strumLine.button-name"), []);
 		strLine = parent;
 	}
 
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
-		alpha = FlxMath.lerp(1/20, 1, alpha); // so that instead of 0% it is 33% visible
+		alpha = FlxMath.lerp(1/20, 1, alpha);
 		bWidth = 40 * strLine.keyCount;
 		this.label.fieldWidth = bWidth;
 	}

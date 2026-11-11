@@ -45,7 +45,6 @@ final class DrawUtil {
 		var angle:Float = Math.atan2(dy, dx);
 		var distance:Float = Math.sqrt(dx * dx + dy * dy);
 
-		// Math.ceil to prevent flickering
 		line.setPosition(point1.x, point1.y);
 		line.angle = angle * FlxAngle.TO_DEG;
 		line.origin.set(0, line.frameHeight / 2);

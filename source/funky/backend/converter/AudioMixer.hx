@@ -8,14 +8,13 @@ import lime.media.AudioBuffer;
 
 typedef MixResult =
 {
-	/** OGG Vorbis con todas las pistas sumadas (null si no se pudo decodificar o codificar). */
+
 	var ogg:Null<Bytes>;
 	var used:Array<String>;
 	var failed:Array<String>;
 	var seconds:Float;
 }
 
-/** Suma varias pistas de audio en una sola (para el .FNMM, que solo tiene un `music`). */
 class AudioMixer
 {
 	static inline var HEADER:Int = 44;
@@ -26,7 +25,6 @@ class AudioMixer
 
 	public function new() {}
 
-	/** Decodifica y mezcla `files` (en orden). `names` solo sirve para informar cual fallo. */
 	public static function mix(names:Array<String>, files:Array<Bytes>, quality:Float = 0.45):MixResult
 	{
 		var result:MixResult = {ogg: null, used: [], failed: [], seconds: 0};
@@ -63,7 +61,6 @@ class AudioMixer
 	public function seconds():Float
 		return rate > 0 ? frames / rate : 0;
 
-	/** Suma una pista de PCM de 16 bits entrelazado. La primera fija la frecuencia; las demas se re-muestrean si hace falta. */
 	public function add(pcm:Bytes, offset:Int, channels:Int, srcRate:Int, srcFrames:Int):Void
 	{
 		if (rate == 0) rate = srcRate;
@@ -103,11 +100,9 @@ class AudioMixer
 		}
 	}
 
-	/** La mezcla ya codificada a OGG Vorbis (estereo, a la frecuencia de la primera pista). */
 	public function finishOgg(quality:Float = 0.45):Bytes
 		return OggVorbisEncoder.encode(out, HEADER, frames, 2, rate, quality);
 
-	/** La mezcla como WAV de 16 bits (con cabecera). */
 	public function finish():Bytes
 	{
 		var data = frames * 4;

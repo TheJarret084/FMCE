@@ -13,7 +13,6 @@ import hxdiscord_rpc.Types;
 import hxdiscord_rpc.Types.ActivityType;
 #end
 
-/** Discord Rich Presence. */
 class DiscordClient
 {
 	#if (DISCORD_SDK || DISCORD_RPC)
@@ -21,17 +20,10 @@ class DiscordClient
 	public static var started:Bool = false;
 	public static var clientID:String = "1509746395962409071";
 
-	/** Nombre fijo de la aplicacion / actividad. */
 	public static inline var APP_NAME:String = "Funky Maker: CNE";
 
-	/** Lo ultimo que se mando, para no repetir la misma presencia (Discord limita las actualizaciones). */
 	static var lastKey:String = "";
 
-	/**
-	 * Claves de imagen que SI existen en Developer Portal > Rich Presence > Art Assets.
-	 * Discord no pinta una clave que no este ahi (la tarjeta sale con un circulo vacio), asi que lo que no
-	 * este en esta lista cae en ASSET_FALLBACK. Cuando subas mas assets, agregalos aqui.
-	 */
 	static var availableAssets:Array<String> = ["fmm"];
 
 	static inline var ASSET_FALLBACK:String = "fmm";
@@ -85,7 +77,7 @@ class DiscordClient
 
 		#if DISCORD_SDK
 		#if android
-		// El SDK necesita la Activity antes de crear el cliente (org/fmce/DiscordInit.java)
+
 		try
 		{
 			var init = lime.system.JNI.createStaticMethod("org/fmce/DiscordInit", "init", "()Z");
@@ -111,7 +103,6 @@ class DiscordClient
 		started = true;
 		startTimestamp = Std.int(Date.now().getTime() / 1000);
 
-		// El SDK entrega sus respuestas cuando se le "da turno": cada frame, en el hilo principal.
 		Application.current.onUpdate.add(function(_:Int) if (started) DiscordSdk.tick());
 		Application.current.onExit.add(function(_:Int) shutdown());
 
@@ -122,13 +113,12 @@ class DiscordClient
 		handlers.ready = cpp.Function.fromStaticFunction(onRpcReady);
 		handlers.disconnected = cpp.Function.fromStaticFunction(onRpcDisconnected);
 		handlers.errored = cpp.Function.fromStaticFunction(onRpcError);
-		// autoRegister es Int en el API de Discord RPC (0 = no registrar el juego automaticamente).
+
 		Discord.Initialize(ConstCharStar.fromString(clientID), cpp.RawPointer.addressOf(handlers), 0, null);
 
 		started = true;
 		startTimestamp = Std.int(Date.now().getTime() / 1000);
 
-		// Discord responde cuando se le "da turno": cada frame, en el hilo principal.
 		Application.current.onUpdate.add(function(_:Int) if (started) Discord.RunCallbacks());
 		Application.current.onExit.add(function(_:Int) shutdown());
 
@@ -206,14 +196,12 @@ class DiscordClient
 			? smallImageTexts.get(smallKey)
 			: smallKey;
 
-		// solo se manda una imagen que exista en el portal; la pequena es opcional (vacia = no se muestra)
 		image = availableAssets.contains(imageKey) ? imageKey : ASSET_FALLBACK;
 		smallImage = availableAssets.contains(smallKey) ? smallKey : "";
 
 		var end = endTimestamp > 0 ? Std.int(endTimestamp / 1000) : 0;
 		var start = withTime ? startTimestamp : 0;
 
-		// no repetir lo mismo: Discord limita las actualizaciones
 		var key = [details, state, image, smallImage, Std.string(start), Std.string(end)].join("|");
 		if (key == lastKey)
 			return;

@@ -106,9 +106,6 @@ class UISprite extends FlxSprite {
 		UIState.state.updateButtonHandler(this, onHovered);
 	}
 
-	/**
-	 * Called whenever the sprite is being hovered by the mouse.
-	 */
 	public function onHovered() {
 		hovered = true;
 		if (FlxG.mouse.pressed)

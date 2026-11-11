@@ -1,7 +1,5 @@
 package funkin.editors.charter;
-// ! FUCK YOU CHUF (your biggest fan -lunar) <3
 
-// import flixel.FlxLayer;
 import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxPoint;
 import flixel.sound.FlxSound;
@@ -28,7 +26,7 @@ import flixel.util.FlxColor;
 class Charter extends UIState {
 	public static var __song:String;
 	static var __reload:Bool;
-	/** true mientras se prueba el nivel: destroy() conserva los estaticos (posicion, hitsounds...). */
+
 	static var __playtesting:Bool = false;
 
 	var chart(get, never):ChartData;
@@ -81,13 +79,12 @@ class Charter extends UIState {
 	public var vocals:FlxSound;
 
 	public var quant:Int = 16;
-	public var quants:Array<Int> = [4, 8, 12, 16, 20, 24, 32, 48, 64, 192]; // different quants
+	public var quants:Array<Int> = [4, 8, 12, 16, 20, 24, 32, 48, 64, 192];
 
 	public var noteType:Int = 0;
 	public var noteTypes:Array<String> = [];
 	public var noteTypeText:UIText;
 
-	/** TEMPORAL: muestra el estado del input del grid (para encontrar por que no se mueven/ponen/borran notas). Ponerlo en false para quitarlo. */
 	static inline var DEBUG_INPUT:Bool = false;
 	public var inputDebugText:UIText;
 
@@ -138,10 +135,7 @@ class Charter extends UIState {
 			{
 				label: translate("topBar.file"),
 				childs: [
-					/*{
-						label: translate("file.new")
-					},
-					null,*/
+
 					{
 						label: translate("file.save"),
 						keybind: [CONTROL, S],
@@ -396,9 +390,7 @@ class Charter extends UIState {
 						onSelect: _playback_metronome,
 						icon: Options.charterMetronomeEnabled ? 1 : 0
 					},
-					/*{
-						label: translate("playback.visualMetronome")
-					},*/
+
 				]
 			}
 		];
@@ -433,9 +425,6 @@ class Charter extends UIState {
 
 		eventsGroup.eventsBackdrop = eventsBackdrop;
 		eventsGroup.eventsRowText = eventRowText;
-
-		// thank you neo for pointing out im stupid -lunar
-		// this is future lunar i completely forgot what neo pointed out but hes awesome go follow him on twitter
 
 		add(gridBackdropDummy = new CameraHoverDummy(gridBackdrops, FlxPoint.weak(1, 0)));
 		selectionBox = new UISliceSprite(0, 0, 2, 2, 'editors/ui/selection');
@@ -516,7 +505,6 @@ class Charter extends UIState {
 		addEventSpr.cameras = [charterCamera];
 		addEventSpr.alpha = 0;
 
-		// adds grid and notes so that they're ALWAYS behind the UI
 		add(gridBackdrops);
 		add(eventsBackdrop);
 		add(addEventSpr);
@@ -532,11 +520,11 @@ class Charter extends UIState {
 		add(strumlineLockButton);
 		add(strumlineAddButton);
 		add(strumLines);
-		// add the top menu last OUT of the ui group so that it stays on top
+
 		add(topMenuSpr);
 		add(noteTypeText);
 		if (DEBUG_INPUT) add(inputDebugText);
-		// add the ui group
+
 		add(uiGroup);
 
 		loadSong();
@@ -550,15 +538,7 @@ class Charter extends UIState {
 		if (Options.editorsResizable)
 			UIState.setResolutionAware();
 
-		updateBookmarks(); //recalling it to fix resolutions
-
-		// ! IF YOU EVER WANNA VIEW IN THE FUTURE, JUST USE A FLXSPRITE :D -lunar
-		/*var dataDisplay:FlxSprite = new FlxSprite().loadGraphic(waveformHandler.waveDatas.get("Voices.ogg"));
-		dataDisplay.scrollFactor.set(1, 0);
-		dataDisplay.scale.set(2, 2);
-		dataDisplay.updateHitbox();
-		dataDisplay.screenCenter(Y);
-		dataDisplay.cameras = [charterCamera]; dataDisplay.x = -dataDisplay.width; add(dataDisplay);*/
+		updateBookmarks();
 
 	}
 
@@ -598,7 +578,7 @@ class Charter extends UIState {
 			FlxG.sound.list.add(music);
 			FlxG.sound.setMusic(music);
 		}
-		// voces separadas opcionales: <nivel>/music/Voices.ogg
+
 		vocals = new FlxSound();
 		if (Chart.voicesPath != null) {
 			var voicesSnd = funky.backend.chart.LevelLoader.loadSound(Chart.voicesPath);
@@ -617,7 +597,6 @@ class Charter extends UIState {
 			noteCount += strL.notes.length;
 		}
 
-		// create notes
 		notesGroup.autoSort = false;
 		notesGroup.preallocate(noteCount);
 
@@ -634,7 +613,6 @@ class Charter extends UIState {
 		notesGroup.sortNotes();
 		notesGroup.autoSort = true;
 
-		// create events
 		eventsGroup.autoSort = false;
 		var lastEvents:CharterEvent = null;
 		var lastTime = Math.NaN;
@@ -651,7 +629,6 @@ class Charter extends UIState {
 		updateBookmarks();
 		refreshBPMSensitive();
 
-		// Just for now until i add event stacking -lunar
 		try {__relinkUndos();}
 		catch (e) {Logs.trace('Failed to relink undos: ${Std.string(e)}', ERROR);}
 
@@ -660,7 +637,7 @@ class Charter extends UIState {
 
 	public var __endStep:Float = 0;
 	public function refreshBPMSensitive() {
-		// refreshes everything dependant on BPM, and BPM changes
+
 		var length = FlxG.sound.music.getDefault(vocals).length;
 		scrollBar.length = __endStep = Conductor.getStepForTime(length);
 
@@ -736,7 +713,7 @@ class Charter extends UIState {
 			grp.sortEvents();
 			for(e in grp.members) {
 				for(event in e.events) {
-					// CameraSet apunta a un punto de camara: 0 = oponente (strumline 1), 1 = jugador (strumline 0)
+
 					var target:Int = event.name == "CameraSet" ? Std.int(event.params[1]) : -1;
 					if (target == 0 || target == 1) {
 						cameraMovementChanges.push({
@@ -752,7 +729,7 @@ class Charter extends UIState {
 		cameraMovementChanges.sort(function(e1, e2) {
 			return FlxSort.byValues(FlxSort.ASCENDING, e1.step, e2.step);
 		});
-		//update previous change
+
 		if (cameraMovementChanges.length > 0) {
 			for (i in 1...cameraMovementChanges.length) {
 				cameraMovementChanges[i-1].endStep = cameraMovementChanges[i].step;
@@ -768,9 +745,6 @@ class Charter extends UIState {
 		}
 	}
 
-	/**
-	 * NOTE AND CHARTER GRID LOGIC HERE
-	 */
 	#if REGION
 	public var gridActionType:CharterGridActionType = NONE;
 	public var dragStartPos:FlxPoint = new FlxPoint();
@@ -779,12 +753,10 @@ class Charter extends UIState {
 	public var isSelecting:Bool = false;
 	public var isAltCopyDrag:Bool = false;
 
-	/** Lo que tiene `selected = true`, para apagarlo sin recorrer todas las notas en cada frame. */
 	var __flagged:Array<ICharterSelectable> = [];
 
 	public function updateSelectionLogic() {
-		// Apretar sobre una nota o evento que todavia no esta seleccionado lo selecciona al instante, asi se puede
-		// agarrar y arrastrar en un solo gesto (sin click previo). Con CTRL/SHIFT se decide al soltar.
+
 		if (gridActionType == NONE && FlxG.mouse.justPressed && !FlxG.keys.pressed.CONTROL && !FlxG.keys.pressed.SHIFT) {
 			var grabbed:ICharterSelectable = null;
 			notesGroup.forEach(function(n:CharterNote) {
@@ -796,7 +768,6 @@ class Charter extends UIState {
 			if (grabbed != null && !selection.contains(grabbed)) selection = [grabbed];
 		}
 
-		// Click (soltar el mouse) sobre una nota o evento: lo selecciona. CTRL suma, SHIFT quita.
 		if (gridActionType == NONE && FlxG.mouse.justReleased) {
 			function select(s:ICharterSelectable) {
 				if (FlxG.keys.pressed.CONTROL) selection.push(s);
@@ -812,7 +783,6 @@ class Charter extends UIState {
 			selection = __fixSelection(selection);
 		}
 
-		// solo se tocan los que cambiaron de estado
 		for (s in __flagged) s.selected = false;
 		__flagged = [];
 		for (s in selection) {
@@ -841,9 +811,6 @@ class Charter extends UIState {
 	public function updateNoteLogic(elapsed:Float) {
 		updateSelectionLogic();
 
-		/**
-		 * NOTE DRAG HANDLING
-		 */
 		FlxG.mouse.getWorldPosition(charterCamera, mousePos);
 		if (!gridBackdropDummy.hoveredByChild && !FlxG.mouse.pressed)
 			gridActionType = NONE;
@@ -888,7 +855,7 @@ class Charter extends UIState {
 					}
 				}
 			case INVALID_DRAG:
-				// do nothing, locked
+
 				if (!FlxG.mouse.pressed)
 					gridActionType = NONE;
 			case NOTE_DRAG:
@@ -922,7 +889,6 @@ class Charter extends UIState {
 
 							var boundedChange:FlxPoint = changePoint.clone();
 
-							// Some maths, so cool bro -lunar (i don't know why i quote my self here)
 							if (s.step + changePoint.x < 0) boundedChange.x += Math.abs(s.step + changePoint.x);
 							if (s.step + changePoint.x > __endStep-1) boundedChange.x -= (s.step + changePoint.x) - (__endStep-1);
 
@@ -971,7 +937,7 @@ class Charter extends UIState {
 				}
 
 				if (gridBackdropDummy.hovered) {
-					// AUTO DETECT
+
 					if (FlxG.mouse.justPressed) isSelecting = true;
 					if (isSelecting && (Math.abs(mousePos.x - dragStartPos.x) > 20 || Math.abs(mousePos.y - dragStartPos.y) > 20)) {
 						gridActionType = BOX_SELECTION;
@@ -1101,7 +1067,6 @@ class Charter extends UIState {
 
 		var inBoundsY:Bool = (mousePos.y > 0 && mousePos.y < (__endStep)*40);
 
-		// Event Spr
 		addEventSpr.incorporeal = true;
 		if (mousePos.x > strumLines.totalKeyCount * 40 && gridActionType == NONE && inBoundsY) {
 			var event = getHoveredEvent(mousePos.y, eventsGroup);
@@ -1160,7 +1125,7 @@ class Charter extends UIState {
 			UIState.playEditorSound(Flags.DEFAULT_CHARTER_NOTEDELETE_SOUND);
 			var note:CharterNote = cast selected;
 			note.strumLineID = strumLines.members.indexOf(note.strumLine);
-			note.strumLine = null; // For static undos :D
+			note.strumLine = null;
 			notesGroup.remove(note);
 			note.kill();
 		} else if (selected is CharterEvent) {
@@ -1225,7 +1190,6 @@ class Charter extends UIState {
 		return [];
 	}
 
-	// STRUMLINE DELETION/CREATION
 	public function createStrumline(strumLineID:Int, strL:ChartStrumLine, addToUndo:Bool = true, ?__createNotes:Bool = true) {
 		var cStr = new CharterStrumline(strL);
 		strumLines.insert(strumLineID, cStr);
@@ -1342,8 +1306,6 @@ class Charter extends UIState {
 				shader.data.time.value = [__timer];
 		}
 
-		// Antes de super.update: UIState recien asigna `hovered` (el sprite ganador) al terminar el frame, y cada UISprite lo
-		// reinicia al actualizarse; despues de super.update `hovered` siempre seria false.
 		updateNoteLogic(elapsed);
 		updateAutoSaving(elapsed);
 
@@ -1409,7 +1371,6 @@ class Charter extends UIState {
 		if (gridBackdrops.strumlinesAmount != strumLines.members.length)
 			updateDisplaySprites();
 
-		// TODO: canTypeText in case an ui input element is focused
 		if (true) {
 			__crochet = ((60 / Conductor.bpm) * 1000);
 
@@ -1443,7 +1404,7 @@ class Charter extends UIState {
 
 		var curChange = Conductor.curChange;
 		songPosInfo.text = [
-			// no need to translate the time text since it has no text only numbers
+
 			'${CoolUtil.timeToStr(Conductor.songPosition)} / ${CoolUtil.timeToStr(songLength)}',
 			SONGPOSINFO_STEP.format([curStep]),
 			SONGPOSINFO_BEAT.format([curBeat]),
@@ -1488,7 +1449,6 @@ class Charter extends UIState {
 		for(id=>str in strumLines.members)
 			if (str != null) str.y = strumlineInfoBG.y;
 
-		//strumlineAddButton.x = 0;
 		strumlineAddButton.y = strumlineInfoBG.y;
 		strumlineLockButton.y = strumlineInfoBG.y;
 
@@ -1518,7 +1478,7 @@ class Charter extends UIState {
 	var zoom(default, set):Float = 0;
 	var __camZoom(default, set):Float = 1;
 	function set_zoom(val:Float) {
-		return zoom = CoolUtil.bound(val, -3.5, 1.75); // makes zooming not lag behind when continuing scrolling
+		return zoom = CoolUtil.bound(val, -3.5, 1.75);
 	}
 	function set___camZoom(val:Float) {
 		return __camZoom = CoolUtil.bound(val, 0.1, 3);
@@ -1529,7 +1489,6 @@ class Charter extends UIState {
 		return sideScroll = FlxMath.bound(val, -(40*strumLines.totalKeyCount) / 2, (40*strumLines.totalKeyCount) / 2);
 	}
 
-	// SAVE FUNCS: chart.json (notas), events.json (eventos globales) y meta.json, siempre en la carpeta del nivel.
 	#if REGION
 	public static function saveEverything(shouldBuild:Bool = true) {
 		#if sys
@@ -1555,21 +1514,15 @@ class Charter extends UIState {
 	}
 	#end
 
-	// TOP MENU OPTIONS
 	#if REGION
 	function _file_exit(_) {
 		if (undos.unsaved) SaveWarning.triggerWarning();
-		else FlxG.switchState(new CharterSelection()); // los estaticos se limpian en destroy()
+		else FlxG.switchState(new CharterSelection());
 	}
 
 	function _file_save_all(_) {saveEverything(); UIState.playEditorSound(Flags.DEFAULT_EDITOR_SAVE_SOUND);}
 	function _file_import_chart(_) FlxG.state.openSubState(new CharterImportScreen());
 
-	/**
-	 * Reemplaza TODAS las notas del chart abierto por `lines` (indice = strumline: 0 jugador, 1 oponente...).
-	 * Se puede deshacer; el archivo no cambia hasta que guardes (se escribe en chart.json como siempre).
-	 * @return cuantas notas quedaron y cuantas se descartaron por no existir esa strumline.
-	 */
 	public function replaceNotes(lines:Array<Array<ChartNote>>):{created:Int, skipped:Int} {
 		var changes:Array<CharterChange> = [];
 		var old:Selection = [for (n in notesGroup.members) if (n != null) n];
@@ -1583,7 +1536,7 @@ class Charter extends UIState {
 		for (i => line in lines) {
 			if (i >= strumLines.members.length) {skipped += line.length; continue;}
 			for (note in line) {
-				var time = note.time + Chart.offsetMs; // igual que al cargar un chart.json
+				var time = note.time + Chart.offsetMs;
 				var n = new CharterNote();
 				var t = Conductor.getStepForTime(time);
 				n.updatePos(t, note.id, Conductor.getStepForTime(time + note.sLen) - t, note.type, strumLines.members[i]);
@@ -1643,7 +1596,7 @@ class Charter extends UIState {
 			}
 		}
 		selection = sObjects;
-		_edit_copy(_, false); // to fix stupid bugs
+		_edit_copy(_, false);
 
 		checkSelectionForBPMUpdates();
 
@@ -1682,14 +1635,14 @@ class Charter extends UIState {
 		}
 		if (toDelete.length != 0) {
 			deleteSelection(toDelete);
-			if (selection.length != 0) for (i in toDelete) selection.remove(i); //crash prevention
+			if (selection.length != 0) for (i in toDelete) selection.remove(i);
 		}
 	}
 
 	function _undo(undo:CharterChange) {
 		UIState.playEditorSound(Flags.DEFAULT_EDITOR_UNDO_SOUND);
 		switch(undo) {
-			case null: // do nothing
+			case null:
 			case CDeleteStrumLine(strumLineID, strumLine):
 				createStrumline(strumLineID, strumLine, false);
 			case CCreateStrumLine(strumLineID, strumLine):
@@ -1754,7 +1707,7 @@ class Charter extends UIState {
 	function _redo(redo:CharterChange) {
 		UIState.playEditorSound(Flags.DEFAULT_EDITOR_REDO_SOUND);
 		switch(redo) {
-			case null: // do nothing
+			case null:
 			case CDeleteStrumLine(strumLineID, strumLine):
 				deleteStrumline(strumLineID, false);
 			case CCreateStrumLine(strumLineID, strumLine):
@@ -1774,7 +1727,7 @@ class Charter extends UIState {
 			case CSelectionDrag(selectionDrags):
 				for (s in selectionDrags)
 					if (s.selectable.draggable) s.selectable.handleDrag(s.change);
-				//this.selection = selection;
+
 				checkSelectionForBPMUpdates();
 			case CEditSustains(changes):
 				for(n in changes)
@@ -1951,7 +1904,7 @@ class Charter extends UIState {
 	}
 
 	function _bookmarks_edit_list(_)
-		FlxG.state.openSubState(new CharterBookmarkList()); //idk why its FlxG.state but it looks so off lmfao
+		FlxG.state.openSubState(new CharterBookmarkList());
 
 	public var __bookmarkObjects:Array<Dynamic> = [];
 	public var __scrollbarBookmarks:Array<Dynamic> = [];
@@ -2270,7 +2223,6 @@ class Charter extends UIState {
 		if(changedNotes.notes.length > 0) undos.addToUndo(CEditSpecNotesType(changedNotes.notes, changedNotes.oldTypes, changedNotes.newTypes));
 	}
 
-	/** Pone `onPress` (press = true) u `onMiss` de las notas seleccionadas al action pack `pack` (-1 = ninguno), con undo. */
 	function setNotePack(press:Bool, pack:Int) {
 		var notes:Array<CharterNote> = [for (s in selection) if (s is CharterNote) cast s];
 		if (notes.length == 0) return;
@@ -2284,9 +2236,8 @@ class Charter extends UIState {
 		undos.addToUndo(CEditNotePacks(notes, oldPress, oldMiss, newPress, newMiss));
 	}
 
-	/** Submenu con los action packs del chart para elegir el onPress / onMiss de las notas seleccionadas. */
 	function notePackOptions(press:Bool):Array<UIContextMenuOption> {
-		// Ojo: buildNoteTypesUI() tambien corre al armar el menu en create(), ANTES de loadSong(): PlayState.SONG aun puede ser null.
+
 		var song = PlayState.SONG;
 		var packs = song != null && song.actionPacks != null ? song.actionPacks : [];
 		var options:Array<UIContextMenuOption> = [{
@@ -2304,7 +2255,6 @@ class Charter extends UIState {
 	function editNoteTypesList(_)
 		FlxG.state.openSubState(new CharterNoteTypesList());
 
-	/** Pausa la musica y las voces (null-safe: en FMCE alguna puede no estar cargada). Lo usan las ventanas del charter. */
 	public static function pauseAudio():Void {
 		if (FlxG.sound.music != null) FlxG.sound.music.pause();
 		if (instance == null) return;
@@ -2356,9 +2306,9 @@ class Charter extends UIState {
 		final noteKeys:Array<Array<Array<FlxKey>>> = [[[ZERO], [NUMPADZERO]], [[ONE], [NUMPADONE]], [[TWO], [NUMPADTWO]], [[THREE], [NUMPADTHREE]], [[FOUR], [NUMPADFOUR]], [[FIVE], [NUMPADFIVE]],
 												[[SIX], [NUMPADSIX]], [[SEVEN], [NUMPADSEVEN]], [[EIGHT], [NUMPADEIGHT]], [[NINE], [NUMPADNINE]]];
 		for (i=>type in noteTypes) {
-			var realNoteID:Int = i+1; // Default Note not stored
+			var realNoteID:Int = i+1;
 			var newChild:UIContextMenuOption = {
-				// TODO: make this translatable?
+
 				label: '(${realNoteID}) ${type}',
 				onSelect: (_) -> {changeNoteType(realNoteID);},
 				icon: this.noteType == realNoteID ? 1 : 0
@@ -2481,8 +2431,6 @@ class Charter extends UIState {
 		return newSelection.filter((s:ICharterSelectable) -> {return s != null;});
 	}
 
-	// UH OH!!! DANGER ZONE APPROACHING !!!! LUNARS SHITTY CODE !!!! -lunar
-
 	@:noCompletion public function __relinkSingleSelection(selectable:ICharterSelectable):ICharterSelectable {
 		if (selectable is CharterNote)
 			return selectable.ID == -1 ? cast(selectable, CharterNote) : notesGroup.members[selectable.ID];
@@ -2553,13 +2501,12 @@ class Charter extends UIState {
 		selection = new Selection();
 		undos = new UndoList<CharterChange>();
 		clipboard = [];
-		// playtestInfo NO se borra aqui: al volver de probar el nivel el Charter se recarga y la restaura.
+
 		if (waveformHandler != null) waveformHandler.destroy();
 		waveformHandler = new CharterWaveformHandler();
 		autoSaveTimer = Options.charterAutoSaveTime;
 	}
 
-	/** Garantiza que los estaticos existan aunque `__reload` sea false o se hayan limpiado. */
 	@:noCompletion public function __ensureStatics() {
 		if (selection == null) selection = new Selection();
 		if (undos == null) undos = new UndoList<CharterChange>();
@@ -2643,7 +2590,6 @@ typedef SelectionDragChange = {
 	public inline function new(?array:Array<ICharterSelectable>)
 		this = array == null ? [] : array;
 
-	// too lazy to put this in every for loop so i made it a abstract
 	public inline function loop(onNote:CharterNote->Void, ?onEvent:CharterEvent->Void, ?draggableOnly:Bool = true) {
 		for (s in this) {
 			if (s is CharterNote && onNote != null && (draggableOnly ? s.draggable: true))

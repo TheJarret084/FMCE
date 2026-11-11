@@ -19,33 +19,29 @@ typedef ConversionResult = {
 	var notes:Int;
 	var sustains:Int;
 	var laneCount:Int;
-	/** Sprites que quedaron en cinta + JSON Hash (ver `StripConverter`). */
+
 	var strips:Int;
-	/** true si despues de convertir el nivel se pudo cargar completo (chart, audio, iconos y sprites de la escena). */
+
 	var playable:Bool;
-	/** true si se retomo una conversion que se habia quedado a medias (ver `ConversionProgress`). */
+
 	var resumed:Bool;
 	var target:String;
 	var warnings:Array<String>;
 	var error:Null<String>;
 }
 
-/** Nota cruda ya en milisegundos. `mustPress == null` = el formato no lo dice (se decide por mitades de lane). */
 typedef RawNote = {
 	var t:Float;
 	var lane:Int;
 	var len:Float;
 	var mustPress:Null<Bool>;
 
-	/** Indice de strumline cuando el formato la trae: 0 jugador, 1 oponente, 2+ extras. */
 	@:optional var line:Null<Int>;
 
-	/** Indice de `action_packs` que corre al acertar / fallar la nota (`onPressEvent` / `onMissEvent` del .fnmm). -1 o null = ninguno. */
 	@:optional var onPress:Null<Int>;
 	@:optional var onMiss:Null<Int>;
 }
 
-/** Un archivo del zip. */
 class ArchiveFile
 {
 	public var path:String;
@@ -57,19 +53,17 @@ class ArchiveFile
 		this.entry = entry;
 	}
 
-	/** Tamano descomprimido, sin descomprimir. */
 	public var size(get, never):Int;
 
 	inline function get_size():Int return entry.fileSize;
 
 	public function bytes():Bytes
 	{
-		// Mensaje claro en vez de "Null Object Reference" dentro de haxe.zip.Reader.
+
 		if (entry.data == null) throw "el archivo '" + path + "' ya se solto de memoria (release) y no se puede volver a leer";
 		return haxe.zip.Reader.unzip(entry);
 	}
 
-	/** Suelta los bytes descomprimidos (el archivo ya no se puede volver a leer). */
 	public function release():Void
 	{
 		entry.data = null;
@@ -81,7 +75,6 @@ typedef FoundChart = {
 	var parsed:Dynamic;
 }
 
-/** Converts Funky Maker: Mobile (.fnmm) archives into FMCE levels. */
 @:allow(funky.backend.converter.ConversionJob)
 class FNMMToFMCEConverter
 {
@@ -92,16 +85,11 @@ class FNMMToFMCEConverter
 	public static final DATA_FILE = "data.json";
 	public static final AUDIO_EXTENSIONS = ["ogg", "mp3", "wav", "m4a"];
 	public static final VERSION = "4";
-	/** Carpeta (dentro de levels/) donde queda una copia del .fnmm original, junto a su version descomprimida. */
+
 	public static final TMP_DIR = ".tmp";
-	/** Unidad de `start`/`duration` en el `data.json` de un .fnmm (comprobado contra el audio). */
+
 	public static final DATA_TIME_UNIT = "seconds";
 
-	/**
-	 * JSON del archivo que nunca son el chart. `data.json` NO esta aqui: en los .fnmm reales
-	 * (Funky Maker: Mobile) el chart se llama `data.json`. Si es otra cosa (como el
-	 * `data.json` que escribe este conversor, `{offsets}`), `looksLikeChart` lo descarta.
-	 */
 	static final RESERVED_JSON = ["meta.json", "events.json", "scene.json", "config.json", "sprite.json"];
 
 	public static function convertAll(inputDir:String, outputDir:String):Array<ConversionResult>
@@ -122,11 +110,6 @@ class FNMMToFMCEConverter
 		#end
 	}
 
-	/**
-	 * Convierte un .fnmm de principio a fin (bloquea hasta terminar). Si una conversion anterior de este
-	 * mismo archivo se quedo a medias, la retoma (ver `ConversionProgress`). Para convertir sin congelar la
-	 * pantalla, usa `ConversionJob` y llama `step()` cada frame.
-	 */
 	public static function convert(archivePath:String, outputDir:String):ConversionResult
 	{
 		#if sys
@@ -138,7 +121,6 @@ class FNMMToFMCEConverter
 		#end
 	}
 
-	/** true si hay una conversion a medias de `archivePath` (el menu muestra "continuar"). */
 	public static function hasProgress(archivePath:String, outputDir:String):Bool
 	{
 		#if sys
@@ -149,11 +131,6 @@ class FNMMToFMCEConverter
 		#end
 	}
 
-	/**
-	 * `chart.json` en formato FMCE (igual que `levels/ferti`): `strumLines[0]` = jugador,
-	 * `strumLines[1]` = oponente, `strumLines[2..]` = extras (cada una separada), `time`/`length` en SEGUNDOS (ms / 1000) y `timeUnit: "seconds"`
-	 * explicito, para que LevelLoader nunca tenga que adivinar la unidad.
-	 */
 	static function buildChart(notes:Array<Dynamic>, bpm:Float):Dynamic
 	{
 		var lines:Array<Array<Dynamic>> = [[], []];
@@ -164,7 +141,6 @@ class FNMMToFMCEConverter
 			if (Reflect.hasField(note, "onPress")) Reflect.setField(entry, "onPress", Reflect.field(note, "onPress"));
 			if (Reflect.hasField(note, "onMiss")) Reflect.setField(entry, "onMiss", Reflect.field(note, "onMiss"));
 
-			// Las extras (2, 3, ...) conservan su indice y NO se mezclan con el oponente.
 			var extra:Int = Reflect.hasField(note, "line") ? Std.int(Reflect.field(note, "line")) : -1;
 			if (extra >= 2)
 			{
@@ -179,10 +155,6 @@ class FNMMToFMCEConverter
 
 	static inline function round6(value:Float):Float return Math.round(value * 1000000) / 1000000;
 
-	/**
-	 * Comprueba que el nivel recien convertido se puede jugar: carga el chart como lo hace el juego,
-	 * hay audio y todos los sprites que nombran los iconos y `scene.json` existen. Devuelve los problemas.
-	 */
 	public static function validate(levelDir:String):Array<String>
 	{
 		var problems:Array<String> = [];
@@ -224,11 +196,9 @@ class FNMMToFMCEConverter
 		return problems;
 	}
 
-	/** Las tiras `sprites/<n>/<i>.png` de un sprite nativo (no son imagenes sueltas). */
 	static function isNativeStrip(path:String):Bool
 		return ~/(^|\/)sprites\/[^\/]+\/[0-9]+\.png$/i.match(StringTools.replace(path, "\\", "/"));
 
-	/** Color de la tarjeta del nivel, fijo para un mismo nombre. */
 	static function colorFor(name:String):String
 	{
 		var palette = ["#31A2F2", "#E5547A", "#6BD968", "#F2B531", "#9C70FF", "#2FC9B8", "#F27A31", "#C24B99"];
@@ -237,10 +207,6 @@ class FNMMToFMCEConverter
 		return palette[sum % palette.length];
 	}
 
-	/**
-	 * Rol de cada sprite segun `scene.json`: los de `icons` son iconos, los objetos ligados a una
-	 * strumLine (>= 0) son personajes y el resto, items (fondos, textos, cortinas).
-	 */
 	static function readSceneRoles(files:Array<ArchiveFile>):Map<String, String>
 	{
 		var roles = new Map<String, String>();
@@ -261,7 +227,6 @@ class FNMMToFMCEConverter
 		return roles;
 	}
 
-	/** `scene.json > icons` es `[oponente, jugador]`; meta.json los quiere como `{P1: jugador, P2: oponente}`. */
 	static function readSceneIcons(files:Array<ArchiveFile>):Dynamic
 	{
 		var sceneFile = findByName(files, SCENE_FILE);
@@ -276,10 +241,7 @@ class FNMMToFMCEConverter
 	}
 
 	#if sys
-	/**
-	 * Guarda el .fnmm original en `<levels>/.tmp/` (junto a la carpeta descomprimida) y lo quita de
-	 * `levels/`, que solo tiene carpetas de niveles. Si el archivo venia de otro sitio, se copia.
-	 */
+
 	static function stashOriginal(archivePath:String, outputDir:String, warnings:Array<String>):Void
 	{
 		try
@@ -332,7 +294,6 @@ class FNMMToFMCEConverter
 			files.push(new ArchiveFile(relative, entry));
 		}
 
-		// Si todo el zip cuelga de una sola carpeta ("Fertility/chart.json"), se le quita.
 		var root = commonRoot(files);
 		if (root != "") for (file in files) file.path = file.path.substr(root.length);
 		return files;
@@ -379,7 +340,6 @@ class FNMMToFMCEConverter
 		return best;
 	}
 
-	/** `chart.json` si existe; si no, cualquier JSON (fuera de sprites/) que tenga pinta de chart. */
 	static function findChart(files:Array<ArchiveFile>):Null<FoundChart>
 	{
 		var candidates:Array<ArchiveFile> = [];
@@ -404,7 +364,6 @@ class FNMMToFMCEConverter
 		return null;
 	}
 
-	/** 0 = chart.json, 1 = data.json (formato FNMM), 2 = cualquier otro. */
 	static function chartRank(name:String):Int
 		return name == CHART_FILE ? 0 : (name == DATA_FILE ? 1 : 2);
 
@@ -459,9 +418,7 @@ class FNMMToFMCEConverter
 				var line = lines[index];
 				if (isLaneList(line))
 				{
-					// Formato FNMM (data.json): strumLines[strumLine][lane] = [{start, duration, props}].
-					// `start`/`duration` van en SEGUNDOS (comprobado contra el audio; el `bpm` del archivo
-					// es solo para el pulso visual). 0 = jugador, 1 = oponente.
+
 					var lanes:Array<Dynamic> = cast line;
 					var factor = msPerUnit(unit == null ? DATA_TIME_UNIT : unit, bpm);
 					for (laneIndex in 0...lanes.length)
@@ -477,7 +434,7 @@ class FNMMToFMCEConverter
 				}
 				else if (Std.isOfType(line, Array))
 				{
-					// Formato del editor FMCE: 0 = jugador, 1 = oponente, 2+ = extras, en beats salvo que diga otra cosa.
+
 					var factor = msPerUnit(unit == null ? DATA_TIME_UNIT : unit, bpm);
 					var first = out.length;
 					for (item in (cast line:Array<Dynamic>)) pushAny(out, item, factor, stepMs, index == 0);
@@ -485,13 +442,12 @@ class FNMMToFMCEConverter
 				}
 				else if (isRecord(line) && Std.isOfType(Reflect.field(line, "notes"), Array))
 				{
-					// Formato Codename: `type` 0 oponente, 1 jugador, 2 extra.
+
 					var type = Reflect.hasField(line, "type") ? Std.int(number(Reflect.field(line, "type"), 0)) : (index == 1 ? 1 : 0);
 					var factor = msPerUnit(unit == null ? "ms" : unit, bpm);
 					var first = out.length;
 					for (item in (cast Reflect.field(line, "notes"):Array<Dynamic>)) pushAny(out, item, factor, stepMs, type == 1);
 
-					// type 2 = extra: va a su propia strumline (2, 3, ...) sin mezclarse con jugador/oponente
 					if (type == 2)
 					{
 						var assigned = nextExtra++;
@@ -507,7 +463,7 @@ class FNMMToFMCEConverter
 		{
 			var factor = msPerUnit(unit == null ? "ms" : unit, bpm);
 			for (item in (cast notes:Array<Dynamic>)) pushAny(out, item, factor, stepMs, null);
-			// Sin unidad declarada, 40+ notas que acaban antes de 1 s solo pueden estar en beats.
+
 			if (unit == null && looksLikeBeats(out))
 			{
 				var rescale = 60000 / bpm;
@@ -528,10 +484,6 @@ class FNMMToFMCEConverter
 		return out;
 	}
 
-	/**
-	 * `true` si la strumline es una lista de lanes (`[[nota, ...], [nota, ...], ...]`, notas como
-	 * objetos o lanes vacios), y no una lista plana de notas (`[t, lane, len]` o `{time, lane}`).
-	 */
 	static function isLaneList(line:Dynamic):Bool
 	{
 		if (!Std.isOfType(line, Array)) return false;
@@ -593,7 +545,6 @@ class FNMMToFMCEConverter
 		return end < 1000;
 	}
 
-	/** Milisegundos que dura una unidad de tiempo del chart. */
 	static function msPerUnit(unit:String, bpm:Float):Float
 	{
 		return switch (unit.toLowerCase())
@@ -612,11 +563,6 @@ class FNMMToFMCEConverter
 		return unit == "" ? null : unit;
 	}
 
-	/**
-	 * Lanes por strumline. Las notas sin `mustPress` vienen en el estilo Psych (jugador en la
-	 * mitad baja), asi que el lane mas alto define cuanto mide cada mitad: 4 teclas llega a 7,
-	 * 6 a 11 y 9 a 17. Las que ya traen `mustPress` usan el lane tal cual.
-	 */
 	static function detectLaneCount(raw:Array<RawNote>, metaLanes:Int):Int
 	{
 		var legacyMax = -1;
@@ -632,10 +578,6 @@ class FNMMToFMCEConverter
 		return Std.int(Math.min(count, 9));
 	}
 
-	/**
-	 * Indice de action pack de una nota. En el .fnmm viven en `note.props` (`{props: {onPressEvent: 0.0, onMissEvent: -1.0}, start, duration}`)
-	 * como float, -1.0 = ninguno; tambien se acepta en la raiz de la nota. -1 si falta o no es valido.
-	 */
 	static function packIndex(note:Dynamic, names:Array<String>):Int
 	{
 		var props = Reflect.field(note, "props");
@@ -712,7 +654,6 @@ class FNMMToFMCEConverter
 		return 120;
 	}
 
-	/** `Reflect.isObject` da true para Strings y Arrays; esto solo acepta objetos reales. */
 	static function isRecord(value:Dynamic):Bool
 		return value != null && Reflect.isObject(value) && !Std.isOfType(value, String) && !Std.isOfType(value, Array);
 
@@ -773,7 +714,6 @@ class FNMMToFMCEConverter
 		File.saveBytes(path, bytes);
 	}
 
-	/** Json de un solo frame para un PNG suelto. El tamano se lee de la cabecera del PNG ya escrito en disco. */
 	static function writeAsepriteStub(target:String, imagePath:String):Void
 	{
 		var pngPath = Path.join([target, imagePath]);

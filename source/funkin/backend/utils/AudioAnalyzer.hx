@@ -2,7 +2,6 @@ package funkin.backend.utils;
 
 import flixel.sound.FlxSound;
 
-/** Amplitud de un FlxSound por rango de tiempo (para la waveform del charter). Lee el buffer de 16 bits ya decodificado. */
 class AudioAnalyzer {
 	static inline var BIN_MS:Float = 5;
 
@@ -46,7 +45,6 @@ class AudioAnalyzer {
 		}
 	}
 
-	/** Amplitud maxima (0 a 1) entre `startMs` y `endMs`. */
 	public function analyze(startMs:Float, endMs:Float):Float {
 		if (peaks.length == 0) return 0;
 		var a = Std.int(Math.max(0, startMs / BIN_MS));

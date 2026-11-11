@@ -1,6 +1,5 @@
 package funkin.backend.scripting;
 
-/** Script de UI de eventos de Codename: FMCE no los usa, asi que todo es un Dummy. */
 class Script {
 	public static function create(path:String):Script return new DummyScript(path);
 	public static function fromString(code:String, path:String):Script return new DummyScript(path);

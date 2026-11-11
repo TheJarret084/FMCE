@@ -28,16 +28,13 @@ private enum Phase
 	ENDING;
 }
 
-/** Game over: el BF muerto de `menus/gameover/bf-dead` sobre fondo negro. */
 class GameOverSubState extends FlxSubState
 {
-	/** Frame de "BF dies" en el que entra la musica, como en el FNF original. */
+
 	static inline var MUSIC_FRAME:Int = 12;
 
-	/** Segundos sin input al morir: evita que los dedos/teclas del juego reinicien sin querer. */
 	static inline var INPUT_DELAY:Float = 0.6;
 
-	/** "BF Dead confirm" tiene el frame 64px mas alto por arriba: se sube el sprite para que BF no salte. */
 	static inline var CONFIRM_SHIFT:Float = 64;
 
 	static var font:Null<String> = null;
@@ -117,7 +114,6 @@ class GameOverSubState extends FlxSubState
 		hint.alpha = 0;
 		add(hint);
 
-		// SALIR = el boton ATRAS de siempre (arriba a la izquierda), con mouse o dedo; aparece junto con el texto.
 		exitButton = BackButton.place();
 		BackButton.fade(exitButton, 0);
 		add(exitButton);
@@ -130,7 +126,6 @@ class GameOverSubState extends FlxSubState
 		super.update(elapsed);
 		age += elapsed;
 
-		// BF dies -> musica a mitad -> BF Dead Loop.
 		if (phase == DYING)
 		{
 			if (hasBf)
@@ -160,7 +155,6 @@ class GameOverSubState extends FlxSubState
 			return;
 		}
 
-		// Tocar la pantalla solo reintenta cuando BF ya termino de caer.
 		if (KeyBinds.justPressed(KeyBinds.ACCEPT) || (phase == LOOP && TouchNav.tapped())) retry();
 	}
 

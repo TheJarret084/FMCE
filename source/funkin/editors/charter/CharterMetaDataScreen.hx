@@ -2,7 +2,6 @@ package funkin.editors.charter;
 
 import funkin.backend.chart.ChartData.ChartMetaData;
 
-/** Datos del nivel guardados en meta.json (nombre, bpm, compas, color e iconos). */
 class CharterMetaDataScreen extends UISubstateWindow {
 	public var metadata:ChartMetaData;
 	public var saveButton:UIButton;
@@ -68,7 +67,6 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		add(colorWheel);
 		addLabelOn(colorWheel, translate("color"));
 
-		// Iconos: un dropdown con los sprites del nivel (los de tipo `icon` primero). "(none)" lo quita del meta.json.
 		var row3:Float = row2 + 130;
 		var sprites = funky.core.Paths.levelSprites(funkin.backend.chart.Chart.levelDir);
 
@@ -99,7 +97,6 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		funky.core.Log.info('[CharterMetaDataScreen] create: listo');
 	}
 
-	/** "(none)" + los sprites del nivel; si el icono guardado ya no existe como sprite se conserva al final para no perderlo. */
 	function iconItems(sprites:Array<String>, current:Null<String>):Array<String> {
 		var items:Array<String> = [translate("noIcon")];
 		for (name in sprites) items.push(name);
@@ -107,12 +104,11 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		return items;
 	}
 
-	/** Abre el administrador de sprites (con los iconos a la vista) y deja lo elegido en el dropdown. */
 	function pickIcon(dropDown:UIDropDown):Void {
 		openSubState(new advanced.editors.SpritePackScreen(funkin.backend.chart.Chart.levelDir, iconValue(dropDown), function(name:String) {
 			var at = name == "" ? 0 : dropDown.options.indexOf(name);
 			if (at < 0) {
-				// un sprite que se importo desde el administrador y todavia no estaba en la lista
+
 				dropDown.options.push(name);
 				dropDown.items.push({label: name, value: dropDown.options.length - 1});
 				at = dropDown.options.length - 1;
@@ -122,7 +118,6 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		}, true, true));
 	}
 
-	/** Lo elegido en un dropdown de iconos: "" si es (none), si no el nombre del sprite. */
 	function iconValue(dropDown:UIDropDown):String
 		return dropDown.index == 0 ? "" : dropDown.options[dropDown.index];
 

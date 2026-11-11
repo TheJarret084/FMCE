@@ -67,10 +67,8 @@ class UICompactColorwheel extends UISliceSprite {
 		curColorString = curColor.toWebString();
 	}
 
-	// For Character Editor
 	public var colorChanged:Bool = false;
 
-	// Make the colorwheel feel better
 	static inline var hitBoxExtenstion:Float = 8;
 
 	var selectedSprite = null;

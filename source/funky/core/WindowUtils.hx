@@ -3,7 +3,6 @@ package funky.core;
 import openfl.Lib;
 import funky.backend.system.Flags;
 
-/** Titulo de la ventana y cierre controlado del juego. */
 final class WindowUtils
 {
 	public static var preventClosing:Bool = false;

@@ -4,7 +4,6 @@ import funkin.editors.ui.*;
 import funkin.editors.ui.UIWarningSubstate.WarningButton;
 import funky.game.SpriteBuilder;
 
-/** Ventana para importar un sprite PNG con su atlas y vista previa (solo escritorio). */
 class SpriteImportScreen extends UISubstateWindow
 {
 	var levelDir:String;
@@ -53,7 +52,6 @@ class SpriteImportScreen extends UISubstateWindow
 		refresh();
 	}
 
-	/** Reacomoda todo segun la altura que tenga el explorador (cambia al cargar la imagen). */
 	function refresh():Void
 	{
 		var loaded = explorer.imageBytes != null;

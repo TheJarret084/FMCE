@@ -22,7 +22,7 @@ class UIUtil {
 	@:noUsing public static function fixKey(key:FlxKey):FlxKey {
 		return switch(key) {
 			#if mac
-			case CONTROL: WINDOWS; // Remap control to the meta key
+			case CONTROL: WINDOWS;
 			#end
 			default: key;
 		}
@@ -32,10 +32,6 @@ class UIUtil {
 		return FlxG.keys.checkStatus(fixKey(key), Status);
 	}
 
-	/**
-	 * Process all options with shortcuts present in a `Array<UIContextMenuOption>`. Also checks children.
-	 * @param topMenuOptions
-	 */
 	public static function processShortcuts(topMenuOptions:Array<UIContextMenuOption>) {
 		var maxKeyLength = 0;
 		var curTopMenuOption = null;
@@ -91,7 +87,7 @@ class UIUtil {
 
 	public static function toUIString(key:FlxKey):String {
 		return switch(key) {
-			case CONTROL: 		#if mac "Cmd" #else "Ctrl" #end; // ⌘
+			case CONTROL: 		#if mac "Cmd" #else "Ctrl" #end;
 			case ALT:			#if mac "Option" #else "Alt" #end;
 			case HOME:			"Home";
 			case ENTER:			"Enter";
@@ -128,14 +124,10 @@ class UIUtil {
 		return [for(s in str.split(" ")) [for(k=>l in s.split("")) k == 0 ? l.toUpperCase() : l.toLowerCase()].join("")].join(" ");
 	}
 
-	/**
-	 * For when the user closes out before confriming all ui selections
-	 * @param ui the thingy you wanna check
-	 */
 	public static function confirmUISelections(ui:Dynamic) {
 		var members:Array<FlxBasic> = [];
 
-		if (Reflect.fields(ui).contains("members")) // hasField doesnt work >:(
+		if (Reflect.fields(ui).contains("members"))
 			members = Reflect.field(ui, "members");
 		else return;
 

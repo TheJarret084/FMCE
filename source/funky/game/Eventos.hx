@@ -8,22 +8,20 @@ import funky.core.Log;
 import funky.game.Stage.StageObject;
 import funky.scripting.Scripts;
 
-/** Un evento de `events.json`: `time` es el tiempo ORIGINAL del archivo (segundos) y `actions` sus acciones. */
 typedef Evento = {
 	var time:Float;
 	var actions:Array<Dynamic>;
-	/** Posicion en el archivo: desempata dos eventos con el mismo `time` (el sort de Haxe no es estable). */
+
 	var orden:Int;
 }
 
-/** Una transicion en curso. Corre con el tiempo de la MUSICA (no con el reloj del juego), asi se pausa y no se desfasa. */
 private class Transicion
 {
 	public var clave:String;
 	public var inicio:Float;
 	public var duracion:Float;
 	public var curva:Float->Float;
-	/** Recibe el avance ya suavizado (0..1). */
+
 	public var aplicar:Float->Void;
 
 	public function new(clave:String, inicio:Float, duracion:Float, curva:Float->Float, aplicar:Float->Void)
@@ -36,37 +34,32 @@ private class Transicion
 	}
 }
 
-/** Eventos del nivel (`events.json`): tipos y props en `docs/eventos.md`. */
 class Eventos
 {
 	static inline var MAX_PACK_DEPTH:Int = 8;
-	/** Curva cuando el evento dice "default"/"Classic" o no dice nada. */
+
 	static final CURVA_BASE:Float->Float = FlxEase.cubeOut;
-	/** Un flash de duracion 0 se ve al menos este rato (ms). */
+
 	static inline var FLASH_MIN_MS:Float = 16;
 
-	/** Todos los eventos, ordenados por `time`. */
 	public var lista(default, null):Array<Evento> = [];
-	/** `action_packs` del archivo: cada uno es una lista de acciones (para `RunActionPack`). */
+
 	public var packs(default, null):Array<Array<Dynamic>>;
-	/** Escenario del nivel; null si no trae `scene.json`. */
+
 	public var stage(default, null):Null<Stage>;
 	public var song(default, null):SongData;
 	public var cargado(default, null):Bool = false;
-	/** HUD del nivel; PlayState lo asigna cuando lo crea (Eventos se crea antes). */
-	/** Vida maxima en la escala de FNMM (la de aqui es PlayHUD.MAX_HEALTH). */
+
 	static inline var FNMM_MAX_HEALTH:Float = 30;
 
 	public var hud:Null<PlayHUD> = null;
 
-	/** Lo asigna PlayState: evento GUI (props.visible) para ocultar/mostrar strums, notas y HUD. */
 	public var onGui:Null<Bool->Void> = null;
 
-	/** Un evento que llega con mas de esto (ms) de retraso se considera "viejo". */
 	static inline var ATRASO_MS:Float = 1000;
 
 	var siguiente:Int = 0;
-	/** true mientras se ejecutan eventos muy atrasados (se entro a mitad de cancion): sus efectos pasajeros se saltan. */
+
 	var atrasado:Bool = false;
 	var transiciones:Array<Transicion> = [];
 	var avisados:Map<String, Bool> = new Map<String, Bool>();
@@ -86,15 +79,13 @@ class Eventos
 		if (cargado) Log.info('[Eventos] ' + lista.length + ' eventos, ' + packs.length + ' packs');
 	}
 
-	/** PlayState lo llama cada frame con el tiempo de la musica (ms). */
 	public function update(songTime:Float):Void
 	{
 		while (siguiente < lista.length && lista[siguiente].time * 1000 <= songTime)
 		{
 			var evento = lista[siguiente];
 			siguiente++;
-			// Entrando a mitad de cancion (probar desde el charter, adelantar / retroceder) los eventos anteriores se ejecutan todos
-			// de golpe: dejan el estado final (camara, objetos, GUI...) pero un flash o un shake de hace 30 segundos no tiene sentido.
+
 			atrasado = songTime - evento.time * 1000 > ATRASO_MS;
 			for (accion in evento.actions) ejecutarAccion(accion, evento.time * 1000, 0);
 		}
@@ -117,10 +108,9 @@ class Eventos
 		ejecutar(texto(campo(accion, "type"), ""), campo(accion, "props"), inicio, profundidad);
 	}
 
-	/** Hace UNA accion. `inicio` = tiempo (ms) en que debia pasar; de ahi cuentan sus transiciones. */
 	public function ejecutar(tipo:String, props:Dynamic, inicio:Float, profundidad:Int = 0):Void
 	{
-		// onEvent(nombre, props, tiempo en ms): Function_Stop deja el evento sin ejecutar.
+
 		if (Scripts.has && Scripts.call("onEvent", [tipo, props, inicio]))
 			return;
 
@@ -144,7 +134,6 @@ class Eventos
 		}
 	}
 
-	/** PlayerHealth: value/minHealth vienen en la escala de FNMM (0..30); aqui se pasan a la del HUD. */
 	function vidaJugador(props:Dynamic):Void
 	{
 		if (hud == null)
@@ -162,13 +151,12 @@ class Eventos
 		{
 			case "set": hud.setHealth(valor);
 			case "add": hud.setHealth(vida + valor);
-			// remove no baja de minHealth; si ya esta por debajo no se toca.
+
 			case "remove", "sub", "subtract": if (vida > minimo) hud.setHealth(Math.max(minimo, vida - valor));
 			default: avisar("health:op", 'PlayerHealth: operacion desconocida "' + texto(campo(props, "operation"), "") + '"');
 		}
 	}
 
-	/** shakes = cuantas sacudidas, delay (+ timeUnit) = tiempo entre ellas, strength = pixeles. */
 	function cameraShake(props:Dynamic):Void
 	{
 		var count = Std.int(numeroDe(props, ["shakes", "count"], 1));
@@ -178,7 +166,6 @@ class Eventos
 		shakeLoop(count, Math.max(0.02, delayMs / 1000), intensity);
 	}
 
-	/** Una sacudida y, si quedan, la siguiente tras `delay` segundos. */
 	function shakeLoop(count:Int, delay:Float, intensity:Float):Void
 	{
 		if (count <= 0) return;
@@ -304,7 +291,7 @@ class Eventos
 		var objeto = buscar(props);
 		if (objeto == null) return;
 		var animacion = Std.int(numero(campo(props, "anim")));
-		// En un objeto de video, "animacion" es el numero de video (0..count-1). Ver Stage.setAnim.
+
 		if (!stage.setAnim(objeto, animacion))
 			avisar("anim:" + campo(props, "object") + ":" + animacion, 'ObjectAnimationSet: el objeto ' + campo(props, "object") + ' no tiene la animacion ' + animacion);
 	}
@@ -354,10 +341,6 @@ class Eventos
 
 	var restaVidaCache:Map<Int, Bool> = new Map();
 
-	/**
-	 * true si el pack `indice` resta vida al jugador (PlayerHealth remove/sub/subtract con value > 0), tambien a traves de
-	 * RunActionPack anidados. Una nota cuyo `onPress` resta vida es una "trampa": no pisarla no es fallar.
-	 */
 	public function restaVida(indice:Int, profundidad:Int = 0):Bool
 	{
 		if (indice < 0 || indice >= packs.length || profundidad >= MAX_PACK_DEPTH) return false;
@@ -381,7 +364,6 @@ class Eventos
 		return resta;
 	}
 
-	/** Corre el action pack `indice` ahora (`onPress` / `onMiss` de una nota). */
 	public function runPack(indice:Int, inicio:Float):Void
 	{
 		if (indice < 0) return;
@@ -404,7 +386,6 @@ class Eventos
 		for (accion in packs[indice]) ejecutarAccion(accion, inicio, profundidad + 1);
 	}
 
-	/** Nueva transicion; si hay otra con la misma `clave` se reemplaza (la propiedad queda donde estaba). */
 	function transicion(clave:String, inicio:Float, duracion:Float, curva:Float->Float, aplicar:Float->Void):Void
 	{
 		var i = transiciones.length;
@@ -441,7 +422,6 @@ class Eventos
 	inline function curvaDe(props:Dynamic):Float->Float
 		return curva(texto(campo(props, "easingType"), ""));
 
-	/** Nombre de curva del archivo -> funcion de `FlxEase`. Ver la tabla en la cabecera de la clase. */
 	static function curva(nombre:String):Float->Float
 	{
 		var n = nombre.toLowerCase();
@@ -476,7 +456,6 @@ class Eventos
 	static inline function elegir(modo:String, entrada:Float->Float, salida:Float->Float, ambas:Float->Float):Float->Float
 		return modo == "in" ? entrada : (modo == "out" ? salida : ambas);
 
-	/** El objeto de `props.object` (indice de `scene.json`), o null (con aviso una sola vez). */
 	function buscar(props:Dynamic):Null<StageObject>
 	{
 		if (stage == null) return null;
@@ -485,7 +464,6 @@ class Eventos
 		return objeto;
 	}
 
-	/** Un aviso por clave: un evento roto se repite muchas veces y no debe llenar el log. */
 	function avisar(clave:String, mensaje:String):Void
 	{
 		if (avisados.exists(clave)) return;
@@ -495,11 +473,9 @@ class Eventos
 
 	static inline function mezcla(a:Float, b:Float, k:Float):Float return a + (b - a) * k;
 
-	/** Nombres de las props que trae un evento (para avisos cuando falta una). */
 	static function claves(props:Dynamic):String
 		return props == null ? "ninguna" : Reflect.fields(props).join(", ");
 
-	/** Primer texto no vacio entre varias claves posibles. */
 	static function primerTexto(props:Dynamic, nombres:Array<String>):String
 	{
 		for (nombre in nombres)
@@ -512,7 +488,6 @@ class Eventos
 		return "";
 	}
 
-	/** Primer numero presente entre varias claves posibles, o null. */
 	static function primerNumero(props:Dynamic, nombres:Array<String>):Null<Float>
 	{
 		for (nombre in nombres)

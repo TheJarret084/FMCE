@@ -10,23 +10,20 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Puente entre el charter (ChartData) y los archivos de un nivel de FMCE. */
 class Chart {
 	public static inline var version:String = "fmce-1";
 
 	public static var levelDir:String = null;
-	/** Nombre de la carpeta del nivel (el que usa `AdvancedToolsState`). */
+
 	public static var levelName(get, never):String;
 	static function get_levelName():String return levelDir == null ? "" : Path.withoutDirectory(Path.removeTrailingSlashes(levelDir));
 	public static var musicPath:String = null;
-	/** `music/Voices.ogg` del nivel (opcional); null si no hay. */
+
 	public static var voicesPath:String = null;
-	/** `meta.offset` en ms (se suma a las notas al cargar y se resta al guardar). */
+
 	public static var offsetMs:Float = 0;
 
 	static var backedUp:Map<String, Bool> = new Map();
-
-	// ───────────────────────── carga ─────────────────────────
 
 	#if sys
 	static function readJson(path:String):Dynamic {
@@ -44,7 +41,7 @@ class Chart {
 		levelDir = dir;
 		Paths.levelDir = dir;
 		funky.core.Paths.currentLevel = dir;
-		// Carpeta de nivel recien hecha (sin chart.json): se crea un chart vacio y el charter abre normal, en vez de crashear.
+
 		var chartFile = Path.join([dir, LevelLoader.CHART_FILE]);
 		if (FileSystem.exists(dir) && FileSystem.isDirectory(dir) && !FileSystem.exists(chartFile)) {
 			funky.core.Log.warn('[Chart] ' + dir + ' no tiene chart.json: se crea uno vacio');
@@ -128,8 +125,6 @@ class Chart {
 		};
 	}
 
-	// ───────────────────────── eventos ─────────────────────────
-
 	static function loadEvents(dir:String):Array<ChartEvent> {
 		var out:Array<ChartEvent> = [];
 		var raw:Dynamic = readJson(Path.join([dir, "events.json"]));
@@ -149,7 +144,6 @@ class Chart {
 		return out;
 	}
 
-	/** Una accion de events.json (`{type, props}`) -> evento del charter. Null si no tiene `type`. */
 	static function actionToEvent(a:Dynamic, time:Float):Null<ChartEvent> {
 		var type:String = Reflect.field(a, "type");
 		if (type == null) return null;
@@ -157,7 +151,7 @@ class Chart {
 		var params:Array<Dynamic> = [];
 		for (info in EventsData.getEventParams(type)) {
 			var v:Dynamic = props != null ? Reflect.field(props, info.key) : null;
-			// Niveles guardados con la clave vieja `chart` (antes el editor la usaba por error y perdia el valor real).
+
 			if (v == null && props != null && type == "ObjectChartChange" && info.key == "strumLine") v = Reflect.field(props, "chart");
 			params.push(v == null ? info.defValue : v);
 		}
@@ -166,7 +160,6 @@ class Chart {
 		return e;
 	}
 
-	/** Evento del charter -> accion de events.json (`{type, props}`). */
 	static function eventToAction(e:ChartEvent):Dynamic {
 		if (!EventsData.isKnown(e.name)) return e.raw;
 		var props:Dynamic = {};
@@ -181,7 +174,6 @@ class Chart {
 		return {type: e.name, props: props};
 	}
 
-	/** `action_packs` de events.json. */
 	static function loadActionPacks(dir:String):Array<ChartActionPack> {
 		var out:Array<ChartActionPack> = [];
 		var raw:Dynamic = readJson(Path.join([dir, "events.json"]));
@@ -203,7 +195,6 @@ class Chart {
 		return out;
 	}
 
-	/** Packs del charter -> `action_packs` de events.json. */
 	public static function actionPacksToJson(packs:Array<ChartActionPack>):Array<Dynamic> {
 		if (packs == null) return [];
 		return [for (p in packs) {
@@ -213,7 +204,6 @@ class Chart {
 		}];
 	}
 
-	/** Eventos del charter -> grupos por tiempo de events.json. Las acciones desconocidas vuelven tal cual por `raw`. */
 	public static function eventsToJson(events:Array<ChartEvent>):Array<Dynamic> {
 		var sorted = [for (e in events) if (e != null) e];
 		sorted.sort((x, y) -> x.time < y.time ? -1 : (x.time > y.time ? 1 : 0));
@@ -234,12 +224,9 @@ class Chart {
 		return groups;
 	}
 
-	// ───────────────────────── guardado ─────────────────────────
-
 	static inline function round6(v:Float):Float
 		return Math.round(v * 1000000) / 1000000;
 
-	/** Copia `.bak` del archivo, una sola vez por sesion (antes de la primera escritura). */
 	static function backup(path:String):Void {
 		if (backedUp.exists(path) || !FileSystem.exists(path)) return;
 		File.copy(path, path + ".bak");
@@ -251,10 +238,6 @@ class Chart {
 		File.saveContent(path, Json.stringify(data, null, pretty ? "\t" : null));
 	}
 
-	/**
-	 * `fresh` encima de lo que ya hay en el archivo. `owned` son los campos que el charter reescribe por completo
-	 * (si `fresh` no los trae, se borran); el resto de campos del archivo se conservan tal cual.
-	 */
 	static function merge(path:String, fresh:Dynamic, owned:Array<String>):Dynamic {
 		var out:Dynamic = {};
 		var original:Dynamic = readJson(path);
@@ -268,7 +251,6 @@ class Chart {
 	static inline function levelFile(name:String):String
 		return Path.join([levelDir, name]);
 
-	/** chart.json: las notas en segundos (sin el `meta.offset`) y los bookmarks. La velocidad ya no vive en el chart (la fija la dificultad). */
 	public static function saveChart(song:ChartData, pretty:Bool = true):Void {
 		var lines:Array<Array<Dynamic>> = [];
 		for (sl in song.strumLines) {
@@ -290,14 +272,12 @@ class Chart {
 		write(path, merge(path, fresh, ["notes", "strumLines", "timeUnit", "scrollSpeed", "bookmarks"]), pretty);
 	}
 
-	/** events.json: los eventos globales y los action_packs. */
 	public static function saveEvents(song:ChartData, pretty:Bool = true):Void {
 		var fresh:Dynamic = {events: eventsToJson(song.events), action_packs: actionPacksToJson(song.actionPacks)};
 		var path = levelFile("events.json");
 		write(path, merge(path, fresh, ["events", "action_packs"]), pretty);
 	}
 
-	/** meta.json: bpm, pasos por beat, nombre, color y escena. */
 	public static function saveMeta(song:ChartData):Void {
 		var fresh:Dynamic = {};
 		var meta = song.meta;
@@ -313,14 +293,13 @@ class Chart {
 		write(path, merge(path, fresh, []), true);
 	}
 
-	/** `icons.P1` / `icons.P2` de meta.json. Se parte del `icons` que ya hay para no perder otras llaves. */
 	static function saveIcons(fresh:Dynamic, meta:ChartMetaData):Void {
 		if (meta.iconPlayer == null && meta.iconOpponent == null) return;
 		var old:Dynamic = Reflect.field(readJson(levelFile("meta.json")), "icons");
 		var icons:Dynamic = {};
 		if (old != null && !Std.isOfType(old, Array))
 			for (f in Reflect.fields(old)) Reflect.setField(icons, f, Reflect.field(old, f));
-		// null = no se toco; "" = el charter lo dejo en (none) y se quita del meta.json
+
 		if (meta.iconPlayer == "") Reflect.deleteField(icons, "P1");
 		else if (meta.iconPlayer != null) Reflect.setField(icons, "P1", meta.iconPlayer);
 		if (meta.iconOpponent == "") Reflect.deleteField(icons, "P2");

@@ -11,7 +11,6 @@ private typedef LogLine =
 	var color:Int;
 }
 
-/** Panel "Salida" de abajo: log con colores, scroll con la rueda, Limpiar y plegar. */
 class OutputPanel extends FlxSpriteGroup
 {
 	static inline var LINE_H:Int = 18;
@@ -78,7 +77,6 @@ class OutputPanel extends FlxSpriteGroup
 		redraw();
 	}
 
-	/** Pliega el panel dejando solo la cabecera pegada abajo. Devuelve el alto actual. */
 	public function setCollapsed(value:Bool):Int
 	{
 		if (collapsed == value) return currentHeight();

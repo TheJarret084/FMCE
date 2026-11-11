@@ -106,27 +106,25 @@ class UISliceSprite extends UISprite {
 		if (visible && !(bWidth == 0 || bHeight == 0)) {
 			var topLeftWidth:Float = getFixedSize(topLeft.frame.width, bWidth);
 			var topLeftHeight:Float = getFixedSize(topLeft.frame.height, bHeight);
-			//var topMiddleWidth:Float = getFixedSize(topMiddle.frame.width, bWidth);
+
 			var topMiddleHeight:Float = getFixedSize(topMiddle.frame.height, bHeight);
 			var topRightWidth:Float = getFixedSize(topRight.frame.width, bWidth);
 			var topRightHeight:Float = getFixedSize(topRight.frame.height, bHeight);
 			var middleLeftWidth:Float = getFixedSize(middleLeft.frame.width, bWidth);
-			//var middleLeftHeight:Float = getFixedSize(middleLeft.frame.height, bHeight);
-			//var middleMiddleWidth:Float = getFixedSize(middle.frame.width, bWidth);
-			//var middleMiddleHeight:Float = getFixedSize(middle.frame.height, bHeight);
+
 			var middleRightWidth:Float = getFixedSize(middleRight.frame.width, bWidth);
-			//var middleRightHeight:Float = getFixedSize(middleRight.frame.height, bHeight);
+
 			var bottomLeftWidth:Float = getFixedSize(bottomLeft.frame.width, bWidth);
 			var bottomLeftHeight:Float = getFixedSize(bottomLeft.frame.height, bHeight);
-			//var bottomMiddleWidth:Float = getFixedSize(bottomMiddle.frame.width, bWidth);
+
 			var bottomMiddleHeight:Float = getFixedSize(bottomMiddle.frame.height, bHeight);
 			var bottomRightWidth:Float = getFixedSize(bottomRight.frame.width, bWidth);
 			var bottomRightHeight:Float = getFixedSize(bottomRight.frame.height, bHeight);
 
 			var oldAlpha = alpha;
-			// TOP
+
 			if (drawTop) {
-				// TOP LEFT
+
 				if(topAlpha != null) alpha = topAlpha;
 				frame = topLeft;
 				setPosition(x, y);
@@ -136,7 +134,6 @@ class UISliceSprite extends UISprite {
 				);
 				super.drawSuper();
 
-				// TOP
 				if (bWidth > topLeft.frame.width + topRight.frame.width) {
 					frame = topMiddle;
 					setPosition(x + topLeft.frame.width, y);
@@ -147,7 +144,6 @@ class UISliceSprite extends UISprite {
 					super.drawSuper();
 				}
 
-				// TOP RIGHT
 				setPosition(x + bWidth - topRightWidth, y);
 				frame = topRight;
 				__setSize(
@@ -157,36 +153,32 @@ class UISliceSprite extends UISprite {
 				super.drawSuper();
 			}
 
-			// MIDDLE
 			if (drawMiddle && bHeight > topMiddle.frame.height + bottomMiddle.frame.height) {
 				if(middleAlpha != null) alpha = middleAlpha;
 				var middleHeight:Float = bHeight - topLeftHeight - bottomLeftHeight;
 
-				// MIDDLE LEFT
 				frame = middleLeft;
 				setPosition(x, y + topMiddle.frame.height);
 				__setSize(middleLeftWidth, middleHeight);
 				super.drawSuper();
 
 				if (bWidth > (middleLeftWidth) + middleRight.frame.width) {
-					// MIDDLE
+
 					frame = middle;
 					setPosition(x + topLeft.frame.width, y + topMiddle.frame.height);
 					__setSize(bWidth - middleLeft.frame.width - middleRight.frame.width, middleHeight);
 					super.drawSuper();
 				}
 
-				// MIDDLE RIGHT
 				frame = middleRight;
 				setPosition(x + bWidth - (topRightWidth), y + topMiddle.frame.height);
 				__setSize(middleRightWidth, middleHeight);
 				super.drawSuper();
 			}
 
-			// BOTTOM
 			if (drawBottom) {
 				if(bottomAlpha != null) alpha = bottomAlpha;
-				// BOTTOM LEFT
+
 				frame = bottomLeft;
 				setPosition(x, y + bHeight - (bottomLeftHeight));
 				__setSize(
@@ -196,14 +188,13 @@ class UISliceSprite extends UISprite {
 				super.drawSuper();
 
 				if (bWidth > bottomLeft.frame.width + bottomRight.frame.width) {
-					// BOTTOM
+
 					frame = bottomMiddle;
 					setPosition(x + bottomLeft.frame.width, y + bHeight - (bottomMiddleHeight));
 					__setSize(bWidth - bottomLeft.frame.width - bottomRight.frame.width, bottomMiddleHeight);
 					super.drawSuper();
 				}
 
-				// BOTTOM RIGHT
 				frame = bottomRight;
 
 				setPosition(

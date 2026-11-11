@@ -9,20 +9,18 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Deja `chart.json` en el formato del engine antes de que lo lea el juego o el charter. */
 class ChartNormalizer
 {
 	public static inline var FLAG:String = "fmceChart";
 	public static inline var BACKUP_FILE:String = "chart.orig.json";
 
-	/** Carriles maximos de un nivel (los mismos que acepta `LevelLoader`). */
 	static inline var MAX_LANES:Int = 9;
 
 	public static function isFmce(chart:Dynamic):Bool
 		return chart != null && !Std.isOfType(chart, Array) && Reflect.field(chart, FLAG) == true;
 
 	#if sys
-	/** Devuelve el chart en formato FMCE (el mismo objeto si ya lo era). `chartPath` es el `chart.json` de `dir`. */
+
 	public static function ensure(dir:String, chartPath:String, chart:Dynamic, meta:Dynamic):Dynamic
 	{
 		if (isFmce(chart)) return chart;
@@ -34,7 +32,6 @@ class ChartNormalizer
 			return chart;
 		}
 
-		// FMCE sin la marca (niveles viejos): la estructura ya es la buena, solo se marca.
 		if (format == "fmce")
 		{
 			Reflect.setField(chart, FLAG, true);
@@ -49,7 +46,6 @@ class ChartNormalizer
 
 		var result = ChartImporter.parse(Json.stringify(chart), lanes);
 
-		// Los campos que el loader sigue leyendo del chart (nombre, bpm, pasos por beat) se conservan.
 		var out:Dynamic = {};
 		Reflect.setField(out, FLAG, true);
 		Reflect.setField(out, "timeUnit", "seconds");
@@ -57,7 +53,6 @@ class ChartNormalizer
 			if (Reflect.field(chart, field) != null) Reflect.setField(out, field, Reflect.field(chart, field));
 		if (Reflect.field(out, "bpm") == null && result.bpm != null && result.bpm > 0) Reflect.setField(out, "bpm", result.bpm);
 
-		// ChartImporter da ms absolutos; el archivo guarda segundos SIN el `meta.offset` (LevelLoader lo vuelve a sumar).
 		var lines:Array<Array<Dynamic>> = [];
 		for (line in result.lines)
 		{

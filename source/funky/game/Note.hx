@@ -12,20 +12,14 @@ class QueueNote
 	public var mustPress:Bool;
 	public var isSustainNote:Bool = false;
 	public var isSustainEnd:Bool = false;
-	/** Piezas del sustain. Ya no se rellena al encolar: `StrumLine.spawnQueued` las arma cuando la nota entra a camara. */
+
 	public var tail:Null<Array<QueueNote>> = null;
-	/** > 0 si la nota tiene sustain; es el largo de un step en ms con el que se arma el tail al salir. */
+
 	public var tailStepMs:Float = 0;
-	/** Action pack (events.json) a correr al acertar / fallar. -1 = ninguno. Solo la cabeza lo trae. */
+
 	public var onPress:Int = -1;
 	public var onMiss:Int = -1;
 
-	/**
-	 * @param strumTime Tiempo de inicio de la nota en ms.
-	 * @param sustainLength Duracion del sustain en ms.
-	 * @param noteData Lane de la nota.
-	 * @param mustPress Indica si la nota pertenece al jugador.
-	 */
 	public function new(
 		strumTime:Float,
 		sustainLength:Float,
@@ -48,13 +42,10 @@ class NoteSharedTailState
 	public var hit:Bool = false;
 	public var missed:Bool = false;
 	public var lastHeld:Float = 0;
-	/** Action packs de la cabeza del sustain: onMiss si se falla la nota o se suelta el sustain; onPress para saber si es trampa. */
+
 	public var onMiss:Int = -1;
 	public var onPress:Int = -1;
 
-	/**
-	 * @param parent Cabeza del sustain.
-	 */
 	public function new(parent:Note)
 	{
 		this.parent = parent;
@@ -64,9 +55,8 @@ class NoteSharedTailState
 class Note extends FlxSprite
 {
 
-	/** Pixeles por ms con scroll speed 1. */
 	public static inline var BASE_PX_PER_MS:Float = 0.45;
-	/** Pixeles por ms actuales: PlayState lo fija segun la dificultad antes de crear notas. */
+
 	public static var PX_PER_MS:Float = BASE_PX_PER_MS;
 	public static inline var HOLD_WIDTH:Float = 0.45;
 
@@ -98,9 +88,6 @@ class Note extends FlxSprite
 		super();
 	}
 
-	/**
-	 * @return Tiempo en ms en que termina de llegar al receptor.
-	 */
 	public inline function endTime():Float
 	{
 		return isSustainNote
@@ -108,14 +95,6 @@ class Note extends FlxSprite
 			: strumTime;
 	}
 
-	/**
-	 * @param q Datos de la nota.
-	 * @param parent Cabeza del sustain al que pertenece.
-	 * @param prevNote Nota anterior de la cadena.
-	 * @param slotWidth Ancho disponible del lane.
-	 * @param laneCount Cantidad total de lanes.
-	 * @return Esta misma nota ya configurada.
-	 */
 	public function preRecycle(
 		q:QueueNote,
 		?parent:Note,
@@ -230,22 +209,13 @@ class Note extends FlxSprite
 		if (isSustainNote)
 			alpha = skin.holdAlpha;
 
-		// Segun el tipo del skin: shader RGB, tinte (color) o nada (atlas ya pintado). Tambien limpia lo del uso anterior.
 		skin.applyTo(this, noteData, false, laneCount);
 
-		// Script del skin (si trae): puede cambiar shader, tinte, escala, animacion...
 		skin.notify("onNoteCreate", "onNote", [this, noteData]);
 
 		return this;
 	}
 
-	/**
-	 * @param receptor Strum receptor usado como referencia.
-	 * @param songTime Tiempo actual de la canción en ms.
-	 * @param scrollDirection Direccion del scroll.
-	 * @param consuming Indica si el sustain se esta consumiendo.
-	 * @return Distancia temporal hasta el receptor.
-	 */
 	public function updatePosition(
 		receptor:Strum,
 		songTime:Float,

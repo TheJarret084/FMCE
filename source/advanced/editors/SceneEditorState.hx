@@ -27,7 +27,6 @@ import haxe.ds.ObjectMap;
 import funky.backend.chart.EventRemap;
 import haxe.io.Path;
 
-/** Editor de escena (solo escritorio), con la interfaz de los editores de Codename. */
 class SceneEditorState extends UIState
 {
 	static inline var TOP:Int = 25;
@@ -37,7 +36,7 @@ class SceneEditorState extends UIState
 	var levelName:String;
 	var levelDir:String;
 	var scenePath:String;
-	/** Los objetos tal como estan en el disco (por referencia): sirven para saber a donde se movio cada uno. */
+
 	var baseline:Array<Dynamic> = [];
 	var scene:Dynamic;
 	var objects:Array<Dynamic> = [];
@@ -54,9 +53,9 @@ class SceneEditorState extends UIState
 	var layer:FlxGroup;
 	var views:Array<FlxSprite> = [];
 	var selBars:Array<FlxSprite> = [];
-	/** Pestana Camaras: el mundo queda fijo y la camara elegida es este marco (relleno, borde y el icono de camara al centro). */
+
 	var camFrame:FlxSprite;
-	/** Pestana Camaras: cuadricula de fondo y la caja negra del mundo. */
+
 	var worldBackdrop:FlxSprite;
 	var worldBox:FlxSprite;
 	var camBars:Array<FlxSprite> = [];
@@ -79,17 +78,17 @@ class SceneEditorState extends UIState
 	var strumStep:FieldStepper;
 	var fixedCheck:UICheckbox;
 	var visibleCheck:UICheckbox;
-	/** Lista de POSICIONES (`transform`) del objeto: anterior / siguiente / agregar / quitar. */
+
 	var posPrev:UIButton;
 	var posNext:UIButton;
 	var posAdd:UIButton;
 	var posDel:UIButton;
 	var posIdxText:UIText;
-	/** Pestanas del panel de objeto (Posicion / Apariencia / Logica) y los widgets de cada una. */
+
 	var objTabs:Array<UIButton> = [];
 	var objPages:Array<Array<FlxBasic>> = [[], [], []];
 	var objTab:Int = 0;
-	/** Cual de las `transform` del objeto elegido se esta editando (la lista de POSICIONES). */
+
 	var tIdx:Int = 0;
 	var colorWheel:ColorField;
 	var objWidgets:Array<UISprite> = [];
@@ -100,7 +99,7 @@ class SceneEditorState extends UIState
 	var camListCount:Int = -1;
 	var tabObjects:UIButton;
 	var tabCams:UIButton;
-	/** 0 = Objetos, 1 = Camaras. */
+
 	var mode:Int = 0;
 	var objPanel:Array<FlxBasic> = [];
 	var camPanel:Array<FlxBasic> = [];
@@ -110,14 +109,14 @@ class SceneEditorState extends UIState
 
 	var infoText:UIText;
 	var sel:Int = -1;
-	/** Seleccion multiple: `sel` es el objeto principal (el de los widgets) y `extra` los demas elegidos (por referencia). */
+
 	var extra:Array<Dynamic> = [];
 	var multiMode:Bool = false;
 	var marqueeBox:FlxSprite;
 	var marqueeOn:Bool = false;
 	var marqueeX:Float = 0;
 	var marqueeY:Float = 0;
-	/** Objeto al que se alterna / al que se colapsa la seleccion si el toque no llega a arrastrar. */
+
 	var tapCandidate:Int = -1;
 	var collapseTo:Int = -1;
 	var pressTravel:Float = 0;
@@ -174,7 +173,6 @@ class SceneEditorState extends UIState
 		objects = scene.objects;
 		baseline = objects.copy();
 
-		// fondo de la pestana Camaras (como FNMM: cuadricula y, encima, el mundo con su esquina (0, 0) arriba a la izquierda)
 		worldBackdrop = FlxGridOverlay.create(32, 32, viewW, viewH, true, 0xFF1C2630, 0xFF18202A);
 		worldBackdrop.cameras = [camScene];
 		worldBackdrop.scrollFactor.set();
@@ -200,7 +198,7 @@ class SceneEditorState extends UIState
 			selBars.push(bar);
 			add(bar);
 		}
-		// marco de la camara (solo se ve en la pestana Camaras)
+
 		camFrame = new FlxSprite().makeGraphic(1, 1, 0x55E03030);
 		camFrame.cameras = [camScene];
 		camFrame.scrollFactor.set();
@@ -228,7 +226,6 @@ class SceneEditorState extends UIState
 		marqueeBox.visible = false;
 		add(marqueeBox);
 
-		// marco de la vista
 		for (r in [[viewX - 1, viewY - 1, viewW + 2, 1], [viewX - 1, viewY + viewH, viewW + 2, 1], [viewX - 1, viewY - 1, 1, viewH + 2], [viewX + viewW, viewY - 1, 1, viewH + 2]])
 			ui(new FlxSprite(r[0], r[1]).makeGraphic(Std.int(r[2]), Std.int(r[3]), 0xFF3A4152));
 
@@ -248,8 +245,6 @@ class SceneEditorState extends UIState
 		rebuild();
 		select(objects.length > 0 ? 0 : -1);
 	}
-
-	// ───────────────────────── interfaz ─────────────────────────
 
 	function buildTopMenu():Void
 	{
@@ -329,7 +324,6 @@ class SceneEditorState extends UIState
 		var objStart = members.length;
 		ui(new UIWindow(x0, y0, RIGHT_W, 440, "Objeto"));
 
-		// pestanas: Posicion / Apariencia / Logica (el mismo estilo de las pestanas Objetos / Camaras)
 		var tabNames = ["Posicion", "Apariencia", "Logica"];
 		var tw = Std.int((RIGHT_W - 40 - 4) / 3);
 		for (i in 0...3)
@@ -340,7 +334,6 @@ class SceneEditorState extends UIState
 		var top = y0 + 68;
 		var half = x0 + 156;
 
-		// ── Posicion ──
 		fixedCheck = ui(new UICheckbox(x0 + 20, top + 2, "Fixed (pegado a la pantalla)", false));
 		fixedCheck.onChecked = function(b:Bool) if (sel >= 0) setFixed(sel, b);
 
@@ -376,7 +369,6 @@ class SceneEditorState extends UIState
 
 		objPages[0] = [fixedCheck, l1, posPrev, posNext, posIdxText, posAdd, posDel, l2, posX, l3, posY, l4, scaleX, l5, scaleY, mirrorBtn, mirrorYBtn, l6, scrollX, l7, scrollY];
 
-		// ── Apariencia ──
 		var a1 = label(x0 + 20, top + 2, "Sprite");
 		spriteDrop = ui(new UIDropDown(x0 + 20, top + 20, RIGHT_W - 40 - 40, 32, [""], 0));
 		spriteDrop.onChange = function(i:Int) if (sel >= 0 && i >= 0 && i < spriteNames.length) setSprite(sel, spriteNames[i]);
@@ -392,13 +384,11 @@ class SceneEditorState extends UIState
 
 		objPages[1] = [a1, spriteDrop, spriteBtn, a2, opacityStep, visibleCheck, a3, colorWheel];
 
-		// ── Logica ──
 		var g1 = label(x0 + 20, top + 2, "Strumline (-1 = ninguna)");
 		strumStep = ui(new FieldStepper(x0 + 20, top + 20, -1, 1, 0, -1, 9, 120));
 		strumStep.onValue = function(v:Float) setTopField("strumLine", Std.int(v));
 		objPages[2] = [g1, strumStep];
 
-		// ── siempre a la vista ──
 		var dup = ui(new UIButton(x0 + 20, y0 + 402, "Duplicar", function() duplicateSelected(), 120, 28));
 		var del = ui(new UIButton(x0 + 156, y0 + 402, "Borrar", function() deleteSelected(), 120, 28));
 		del.color = 0xFFFF8080;
@@ -407,7 +397,6 @@ class SceneEditorState extends UIState
 
 		objPanel = members.slice(objStart);
 
-		// ── pestaña Camaras ──
 		var camStart = members.length;
 		ui(new UIWindow(x0, y0, RIGHT_W, 250, "Camara"));
 		label(x0 + 20, y0 + 38, "Posicion X");
@@ -429,15 +418,12 @@ class SceneEditorState extends UIState
 		setMode(0);
 	}
 
-	// ───────────────────────── datos ─────────────────────────
-
-	/** Entrada de `transform` en uso (se crea si falta, migrando el formato viejo de x/y sueltos). */
 	function tr(o:Dynamic):Dynamic
 	{
 		var list:Dynamic = Reflect.field(o, "transform");
 		if (Std.isOfType(list, Array) && (list : Array<Dynamic>).length > 0)
 		{
-			// el objeto elegido usa la posicion que se esta editando; los demas, la primera
+
 			var all:Array<Dynamic> = list;
 			var at = (sel >= 0 && sel < objects.length && objects[sel] == o) ? tIdx : 0;
 			return all[Std.int(Math.max(0, Math.min(all.length - 1, at)))];
@@ -470,11 +456,10 @@ class SceneEditorState extends UIState
 	function camCount():Int
 		return Std.isOfType(scene.cameras, Array) ? Std.int(Math.max(1, (scene.cameras : Array<Dynamic>).length)) : 1;
 
-	/** La camara `camIdx` como objeto editable (se crea si la escena no tenia camaras). */
 	function camObject():Dynamic
 	{
 		if (!Std.isOfType(scene.cameras, Array) || (scene.cameras : Array<Dynamic>).length == 0)
-			scene.cameras = [{position: {x: WORLD_W / 2, y: WORLD_H / 2}, scale: 1}]; // una camara nueva nace en el centro del mundo
+			scene.cameras = [{position: {x: WORLD_W / 2, y: WORLD_H / 2}, scale: 1}];
 		var c = (scene.cameras : Array<Dynamic>)[Std.int(Math.min(camIdx, (scene.cameras : Array<Dynamic>).length - 1))];
 		if (Reflect.field(c, "position") == null)
 			Reflect.setField(c, "position", {x: JsonFile.num(Reflect.field(c, "x"), 0), y: JsonFile.num(Reflect.field(c, "y"), 0)});
@@ -493,31 +478,20 @@ class SceneEditorState extends UIState
 		refreshCameraWidgets();
 	}
 
-	/**
-	 * Mundo de las camaras, igual que FNMM: el (0, 0) es la ESQUINA de arriba a la izquierda y el mundo mide solo
-	 * `WORLD_W` x `WORLD_H`. Los sprites pueden salirse de ahi, las camaras NO: el marco entero se queda dentro.
-	 */
 	static inline var WORLD_W:Float = 2160;
 	static inline var WORLD_H:Float = 1920;
-	/** Margen (fraccion del mundo, a cada lado) que se deja ver alrededor del mundo para los sprites que se salen. */
+
 	static inline var WORLD_PAD:Float = 0.1;
 
-	/** Px de la vista por unidad del mundo en la pestana Camaras (el mundo y su margen caben en la vista). */
 	function worldPpu():Float
 		return Math.min(viewW / (WORLD_W * (1 + 2 * WORLD_PAD)), viewH / (WORLD_H * (1 + 2 * WORLD_PAD)));
 
-	/** Donde cae la esquina (0, 0) del mundo dentro de la vista. */
 	function worldOffX():Float
 		return (viewW - WORLD_W * worldPpu()) / 2;
 
 	function worldOffY():Float
 		return (viewH - WORLD_H * worldPpu()) / 2;
 
-	/**
-	 * Mantiene la camara dentro del mundo (solo en el editor; en juego la camara va tal cual): el marco entero queda entre
-	 * (0, 0) y (WORLD_W, WORLD_H), asi que el scale tambien tiene un maximo (el marco no puede ser mas grande que el mundo).
-	 * La posicion es el centro del marco. true si la movio.
-	 */
 	function limitCameraPoint(c:Dynamic):Bool
 	{
 		var p = Reflect.field(c, "position");
@@ -525,7 +499,7 @@ class SceneEditorState extends UIState
 		var y = JsonFile.num(Reflect.field(p, "y"), 0);
 		var scale = JsonFile.num(Reflect.field(c, "scale"), 1);
 
-		var baseW = Stage.VIEW_WORLD_WIDTH / Stage.CAM_PRESET; // ancho del marco con scale 1
+		var baseW = Stage.VIEW_WORLD_WIDTH / Stage.CAM_PRESET;
 		var baseH = baseW * viewH / viewW;
 		var limited = Math.max(0.05, Math.min(Math.min(WORLD_W / baseW, WORLD_H / baseH), scale));
 		var halfW = baseW * limited / 2;
@@ -540,7 +514,6 @@ class SceneEditorState extends UIState
 		return true;
 	}
 
-	/** Centra el marco de la camara elegida en (x, y) del mundo. */
 	function setCameraCenter(x:Float, y:Float):Void
 	{
 		var c = camObject();
@@ -552,7 +525,6 @@ class SceneEditorState extends UIState
 		refreshCameraWidgets();
 	}
 
-	/** El marco de la camara elegida sobre el mundo fijo, en px de la vista. */
 	function camFrameRect():{x:Float, y:Float, w:Float, h:Float}
 	{
 		var cam = camPoint(camIdx);
@@ -638,7 +610,6 @@ class SceneEditorState extends UIState
 		refreshCameraWidgets(true);
 	}
 
-	/** Los widgets siguen a la camara elegida; la lista se rearma solo si cambio la cantidad (o se pide). */
 	function refreshCameraWidgets(rebuildList:Bool = false):Void
 	{
 		var c = camPoint(camIdx);
@@ -662,7 +633,6 @@ class SceneEditorState extends UIState
 			if (b != null) b.mark(b.item == camIdx);
 	}
 
-	/** Pestaña de arriba a la izquierda: Objetos o Camaras (lista, panel y herramientas del lienzo cambian juntos). */
 	function setMode(m:Int):Void
 	{
 		mode = m;
@@ -684,8 +654,6 @@ class SceneEditorState extends UIState
 		}
 	}
 
-	// ───────────────────────── vista ─────────────────────────
-
 	function makeView(i:Int):FlxSprite
 	{
 		var name = Std.string(Reflect.field(objects[i], "spr"));
@@ -698,19 +666,18 @@ class SceneEditorState extends UIState
 			var s = SpriteBuilder.build(levelDir, name);
 			if (s.loaded) view = s;
 		}
-		// sprite que falta: una caja gris para poder moverlo igual
+
 		if (view == null) view = new FlxSprite().makeGraphic(80, 80, 0xFF556070);
 		view.cameras = [camScene];
 		view.scrollFactor.set();
 		return view;
 	}
 
-	/** Un video se dibuja como un bloque con el ANCHO Y ALTO REALES del .mp4 (leidos de su cabecera), para colocarlo bien. */
 	function makeVideoBlock(i:Int, name:String, count:Int):FlxSprite
 	{
 		var index = Std.int(Math.max(0, Math.min(count - 1, JsonFile.num(Reflect.field(objects[i], "video"), 0))));
 		var size = FunkinVideoSprite.sizeOf(SpriteBuilder.spriteDir(levelDir, name), index);
-		// sin poder leer el tamano (archivo raro) queda una caja chica; el tope evita bitmaps enormes
+
 		var w = size != null ? Std.int(Math.min(4096, size.w)) : 160;
 		var h = size != null ? Std.int(Math.min(4096, size.h)) : 90;
 
@@ -772,7 +739,6 @@ class SceneEditorState extends UIState
 			if (b != null) b.mark(isSel(b.item), multiMode);
 	}
 
-	/** Si se arrastro un boton de la lista, el orden de capas (objetos y vistas) lo sigue. */
 	function syncOrder():Void
 	{
 		var order:Array<Dynamic> = [for (b in objectList.buttons.members) if (b != null) b.item];
@@ -792,20 +758,16 @@ class SceneEditorState extends UIState
 		touch();
 	}
 
-	/** Estado en pantalla de un objeto (lo mismo que calcula `Stage`, sobre esta vista). */
 	function compute(i:Int):{px:Float, py:Float, tx:Float, ty:Float, anim:Float, ppu:Float}
 	{
 		var c = computeView(i);
 		if (mode != 1) return c;
 
-		// Pestana Camaras: los sprites son EXACTAMENTE los de la pestana Objetos (parallax incluido, visto desde la camara elegida),
-		// pero encogidos dentro del marco de esa camara sobre el mundo fijo.
 		var f = camFrameRect();
 		var k = f.w / viewW;
 		return {px: f.x + c.px * k, py: f.y + c.py * k, tx: c.tx * k, ty: c.ty * k, anim: c.anim, ppu: c.ppu * k};
 	}
 
-	/** Lo que se ve de un objeto desde la camara elegida, a todo el tamano de la vista (pestana Objetos). */
 	function computeView(i:Int):{px:Float, py:Float, tx:Float, ty:Float, anim:Float, ppu:Float}
 	{
 		var o = objects[i];
@@ -834,7 +796,7 @@ class SceneEditorState extends UIState
 		var ppu = Stage.CAM_PRESET * viewW / (Stage.VIEW_WORLD_WIDTH * Math.max(0.001, cam.scale));
 		var fx = JsonFile.num(Reflect.field(sf, "x"), 1);
 		var fy = JsonFile.num(Reflect.field(sf, "y"), 1);
-		// MISMA formula que `Stage.placementFor`: el scrollFactor multiplica la ESQUINA de la camara (centro - mitad de la vista).
+
 		var halfX = viewW / 2 / ppu;
 		var halfY = viewH / 2 / ppu;
 		return {
@@ -857,7 +819,6 @@ class SceneEditorState extends UIState
 		if (Std.isOfType(v, LevelSprite)) (cast v : LevelSprite).placePivot(st.px, st.py);
 		else v.setPosition(st.px - v.width / 2, st.py - v.height / 2);
 
-		// en el editor lo oculto o transparente se ve tenue para poder encontrarlo (Ver > Ver como en el juego lo desactiva)
 		var opacity = JsonFile.num(Reflect.field(o, "opacity"), 1);
 		var shown = Reflect.field(o, "visible") != false;
 		var floor = gameView ? 0 : 0.12;
@@ -875,7 +836,6 @@ class SceneEditorState extends UIState
 		if (primary) outline(selBars, 0, views[sel]);
 	}
 
-	/** Dibuja el borde de `v` con 4 barras de `bars` a partir de `first`. */
 	function outline(bars:Array<FlxSprite>, first:Int, v:FlxSprite):Void
 	{
 		var rects = [[v.x, v.y, v.width, 2.0], [v.x, v.y + v.height - 2, v.width, 2.0], [v.x, v.y, 2.0, v.height], [v.x + v.width - 2, v.y, 2.0, v.height]];
@@ -887,8 +847,6 @@ class SceneEditorState extends UIState
 		}
 	}
 
-	// ───────────────────────── seleccion y widgets ─────────────────────────
-
 	function select(index:Int):Void
 	{
 		var before = sel;
@@ -899,18 +857,15 @@ class SceneEditorState extends UIState
 		syncObjectWidgets();
 	}
 
-	// ───────────────────────── seleccion multiple ─────────────────────────
-
 	function setMulti(on:Bool):Void
 	{
 		multiMode = on;
-		markList(); // en multi los bloques de la lista se ven azules y los elegidos en morado
+		markList();
 	}
 
 	function isSel(o:Dynamic):Bool
 		return (sel >= 0 && sel < objects.length && objects[sel] == o) || extra.indexOf(o) >= 0;
 
-	/** Indices de todo lo elegido (el principal primero). */
 	function selectedList():Array<Int>
 	{
 		var list:Array<Int> = [];
@@ -923,7 +878,6 @@ class SceneEditorState extends UIState
 		return list;
 	}
 
-	/** Clic en la lista: con multi (F2) alterna, si no elige solo ese. */
 	function clickObject(index:Int):Void
 	{
 		if (multiMode) toggleSelect(index);
@@ -949,7 +903,7 @@ class SceneEditorState extends UIState
 		var o = objects[index];
 		if (sel == index)
 		{
-			// se saca el principal: el siguiente elegido pasa a serlo
+
 			if (extra.length > 0)
 			{
 				sel = objects.indexOf(extra.shift());
@@ -972,7 +926,6 @@ class SceneEditorState extends UIState
 		syncObjectWidgets();
 	}
 
-	/** Suma a la seleccion lo que toque el rectangulo (coordenadas de la vista). */
 	function selectInRect(x1:Float, y1:Float, x2:Float, y2:Float):Void
 	{
 		var l = Math.min(x1, x2);
@@ -1015,7 +968,6 @@ class SceneEditorState extends UIState
 		colorWheel.setValue(FlxColor.fromInt(0xFF000000 | lastWheelColor));
 	}
 
-	/** Lo que depende de la posicion (`transform`) en uso: indice, x / y y escala. */
 	function syncPositionWidgets():Void
 	{
 		if (sel < 0 || sel >= objects.length) return;
@@ -1031,7 +983,6 @@ class SceneEditorState extends UIState
 		posDel.selectable = tCount() > 1;
 	}
 
-	/** Cambia de pestana del panel de objeto: solo se ven los widgets de esa pestana. */
 	function setObjTab(index:Int):Void
 	{
 		objTab = index;
@@ -1042,7 +993,6 @@ class SceneEditorState extends UIState
 		}
 	}
 
-	/** Cuantas posiciones (`transform`) tiene el objeto elegido. */
 	function tCount():Int
 	{
 		if (sel < 0 || sel >= objects.length) return 0;
@@ -1058,7 +1008,6 @@ class SceneEditorState extends UIState
 		syncPositionWidgets();
 	}
 
-	/** Agrega una posicion nueva (copia de la que se esta editando) y se pasa a ella. */
 	function addTransform():Void
 	{
 		if (sel < 0) return;
@@ -1081,7 +1030,6 @@ class SceneEditorState extends UIState
 		syncPositionWidgets();
 	}
 
-	/** Abre el administrador de sprites para cambiar el sprite del objeto elegido. */
 	function openSpritePack():Void
 	{
 		if (sel < 0 || sel >= objects.length) return;
@@ -1091,7 +1039,7 @@ class SceneEditorState extends UIState
 			if (index < objects.length && name != "") setSprite(index, name);
 		}, false, false, function(_:String)
 		{
-			// se importo un sprite desde el administrador: la lista del dropdown tambien lo tiene
+
 			spriteNames = SpriteBuilder.listSprites(levelDir);
 			spriteDrop.items = [for (i => name in spriteNames) {label: name, value: i}];
 			spriteDrop.options = spriteNames.copy();
@@ -1130,8 +1078,6 @@ class SceneEditorState extends UIState
 		syncPositionWidgets();
 	}
 
-	// ───────────────────────── edicion ─────────────────────────
-
 	function pick(lx:Float, ly:Float):Int
 	{
 		var i = views.length - 1;
@@ -1153,7 +1099,6 @@ class SceneEditorState extends UIState
 		syncPositionWidgets();
 	}
 
-	/** Cambia el tamano conservando el signo (espejo) de cada eje. */
 	function rescale(i:Int, delta:Float):Void
 	{
 		var sc = scl(objects[i]);
@@ -1165,7 +1110,6 @@ class SceneEditorState extends UIState
 		syncPositionWidgets();
 	}
 
-	/** Pasa un objeto a (o de) `fixed` sin que se mueva ni cambie de tamano en pantalla. */
 	function setFixed(i:Int, fixed:Bool):Void
 	{
 		var o = objects[i];
@@ -1229,7 +1173,6 @@ class SceneEditorState extends UIState
 		touch();
 	}
 
-	/** Copia del objeto `i`, un poco corrida. */
 	function cloneObject(i:Int):Dynamic
 	{
 		var copy:Dynamic = Json.parse(Json.stringify(objects[i]));
@@ -1248,7 +1191,6 @@ class SceneEditorState extends UIState
 		touch();
 	}
 
-	/** Duplica todo lo elegido; las copias quedan elegidas. */
 	function duplicateSelected():Void
 	{
 		var list = selectedList();
@@ -1258,7 +1200,7 @@ class SceneEditorState extends UIState
 			duplicate(list[0]);
 			return;
 		}
-		list.sort((a, b) -> b - a); // de atras para adelante: los indices que faltan por tratar no se mueven
+		list.sort((a, b) -> b - a);
 		var copies:Array<Dynamic> = [];
 		for (i in list)
 		{
@@ -1306,11 +1248,9 @@ class SceneEditorState extends UIState
 		touch();
 	}
 
-	// ───────────────────────── guardar / salir ─────────────────────────
-
 	function save():Void
 	{
-		// donde quedo cada objeto que ya estaba guardado (-1 = se borro): los eventos apuntan a ellos por su numero
+
 		var moved = [for (o in baseline) objects.indexOf(o)];
 		if (JsonFile.write(scenePath, scene))
 		{
@@ -1377,8 +1317,6 @@ class SceneEditorState extends UIState
 		], false));
 	}
 
-	// ───────────────────────── frame ─────────────────────────
-
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
@@ -1390,11 +1328,11 @@ class SceneEditorState extends UIState
 		var keys = FlxG.keys;
 		var shift = keys.pressed.SHIFT;
 		var ctrl = keys.pressed.CONTROL;
-		// Mismo origen de coordenadas que usa el hover de todos los botones (camara de la UI).
+
 		FlxG.mouse.getScreenPosition(uiCamera, mouseP);
 		var mx = mouseP.x;
 		var my = mouseP.y;
-		// Un toque rapido puede traer press y release en el mismo frame: se detecta el borde a mano.
+
 		var pressedNow = FlxG.mouse.pressed;
 		var pressEdge = FlxG.mouse.justPressed || (pressedNow && !wasPressed);
 		var tapEdge = FlxG.mouse.justReleased && !wasPressed && !pressEdge;
@@ -1404,9 +1342,6 @@ class SceneEditorState extends UIState
 		var ly = my - viewY;
 		var inView = lx >= 0 && lx <= viewW && ly >= 0 && ly <= viewH && !topMenuSpr.anyMenuOpened && curContextMenu == null;
 
-		// la vista: elegir, arrastrar y escalar con la rueda.
-		// Con multi (solo se activa con F2) el clic suma o quita; arrastrar un objeto elegido mueve todo el grupo; arrastrar en
-		// vacio dibuja un rectangulo que suma lo que toca.
 		var additive = multiMode;
 		if (mode == 0 && (pressEdge || tapEdge) && inView)
 		{
@@ -1426,11 +1361,11 @@ class SceneEditorState extends UIState
 						syncObjectWidgets();
 					}
 					else if (tapEdge) toggleSelect(hit);
-					else tapCandidate = hit; // si suelta sin arrastrar, se quita
+					else tapCandidate = hit;
 				}
 				else if (was && selectedList().length > 1)
 				{
-					// sobre uno de varios elegidos: se arrastra el grupo; si no llega a moverse, queda solo ese
+
 					if (tapEdge) select(hit);
 					else collapseTo = hit;
 				}
@@ -1483,7 +1418,7 @@ class SceneEditorState extends UIState
 		}
 		if (releaseEdge)
 		{
-			// un toque que no llego a mover nada: quita ese del grupo / deja solo ese
+
 			if (pressTravel < 4)
 			{
 				if (tapCandidate >= 0) toggleSelect(tapCandidate);
@@ -1492,7 +1427,7 @@ class SceneEditorState extends UIState
 			tapCandidate = -1;
 			collapseTo = -1;
 		}
-		// pestaña Camaras: el mundo esta fijo; arrastra el marco (o toca el mundo para llevarlo ahi), rueda: zoom, flechas: mover
+
 		if (mode == 1)
 		{
 			var wp = worldPpu();
@@ -1520,7 +1455,6 @@ class SceneEditorState extends UIState
 		if (mode == 0 && inView && FlxG.mouse.wheel != 0 && sel >= 0)
 			for (i in selectedList()) rescale(i, FlxG.mouse.wheel * (shift ? 0.25 : ctrl ? 0.01 : 0.05));
 
-		// flechas: mover el objeto elegido (SHIFT x10, CTRL fino)
 		if (mode == 0 && !typing && !topMenuSpr.anyMenuOpened && sel >= 0 && sel < objects.length)
 		{
 			var ax = (keys.justPressed.RIGHT ? 1 : 0) - (keys.justPressed.LEFT ? 1 : 0);
@@ -1536,7 +1470,6 @@ class SceneEditorState extends UIState
 			}
 		}
 
-		// el color se elige en el widget: se aplica cuando cambia
 		if (mode == 0 && sel >= 0 && sel < objects.length && colorWheel.curColor != null)
 		{
 			var c:Int = colorWheel.curColor & 0xFFFFFF;

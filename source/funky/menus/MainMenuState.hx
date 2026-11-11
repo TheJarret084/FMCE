@@ -20,7 +20,6 @@ import funky.core.TransitionHandler;
 import funky.menus.options.BackButton;
 import funkin.backend.utils.TranslationUtil as TU;
 
-/** Menu principal estilo Codename con fondo y botones de atlas. */
 class MainMenuState extends FlxState
 {
 	static final ITEMS:Array<String> = ["freeplay", "options", "credits"];
@@ -80,7 +79,7 @@ class MainMenuState extends FlxState
 			}
 			else
 			{
-				// Sin atlas: texto plano, no rompe el menu.
+
 				var label = new FlxText(0, 60 + i * 160, 0, TU.translate("mainMenu." + option, null, option.toUpperCase()), 64);
 				item = label;
 			}
@@ -102,7 +101,6 @@ class MainMenuState extends FlxState
 		versionText.scrollFactor.set();
 		add(versionText);
 
-		// ATRAS arriba a la izquierda (igual que en los demas menus): vuelve a la pantalla de titulo.
 		backButton = BackButton.place();
 		add(backButton);
 
@@ -117,7 +115,7 @@ class MainMenuState extends FlxState
 
 		if (!selectedSomething)
 		{
-			// Atajo al modo avanzado. antiGay = true lo bloquea.
+
 			if (!AdvancedModeState.antiGay && FlxG.keys.justPressed.SEVEN)
 			{
 				leave(new AdvancedModeState());
@@ -153,7 +151,6 @@ class MainMenuState extends FlxState
 		menuItems.forEach(spr -> spr.screenCenter(X));
 	}
 
-	/** Indice del boton que un dedo o el mouse acaba de tocar, o -1. Los botones tienen scrollFactor 0: se prueban en coordenadas de pantalla. */
 	function tappedItem():Int
 	{
 		var tap = TouchNav.pressPoint();
@@ -162,7 +159,7 @@ class MainMenuState extends FlxState
 		var found = -1;
 		for (spr in menuItems)
 		{
-			// Margen generoso (dedo gordo).
+
 			if (TouchNav.contains(spr, tap.x, tap.y, 20))
 			{
 				found = spr.ID;
@@ -173,7 +170,6 @@ class MainMenuState extends FlxState
 		return found;
 	}
 
-	/** Mouse en PC: el boton bajo el cursor se selecciona al moverlo (un clic despues lo abre). */
 	function hoverItem():Void
 	{
 		#if (FLX_MOUSE && !(android || ios))

@@ -29,7 +29,7 @@ class CharterBookmarkList extends UISubstateWindow {
 		add(bookmarkList);
 		bookmarkList.frames = Paths.getFrames('editors/ui/inputbox');
 
-		bookmarkList.content.remove(bookmarkList.addButton); //i dont need it
+		bookmarkList.content.remove(bookmarkList.addButton);
 
 		saveButton = new UIButton(windowSpr.x + windowSpr.bWidth - 20 - 125, windowSpr.y + windowSpr.bHeight - 16 - 32, TU.translate("editor.saveClose"), function() {
 			saveList();

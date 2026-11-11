@@ -4,7 +4,6 @@ import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
 
-/** Barra azul de abajo: estado a la izquierda; linea, columna y tipo de archivo a la derecha. */
 class StatusBar extends FlxSpriteGroup
 {
 	var bg:FlxSprite;
@@ -34,7 +33,6 @@ class StatusBar extends FlxSpriteGroup
 		}
 	}
 
-	/** Mensaje de la izquierda. `error` pone la barra naranja como VS cuando hay problemas. */
 	public function setMessage(value:String, error:Bool = false):Void
 	{
 		left.text = CodeDraw.fit(value, Std.int((barW - 420) / 7.5));

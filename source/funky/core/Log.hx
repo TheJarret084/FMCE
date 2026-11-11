@@ -8,7 +8,6 @@ import sys.io.File;
 import sys.io.FileOutput;
 #end
 
-/** Severidad de un log, la misma del legacy (`funkin.backend.Logger`): decide la etiqueta y el color ANSI. */
 enum abstract Severity(Int) to Int
 {
 	var PRINT;
@@ -60,13 +59,12 @@ class Log
 		info("Logger listo");
 	}
 
-	/** Carpeta del log: junto al ejecutable (no al cwd, que bajo Wine/Winlator casi nunca es esa) o, en Android, la carpeta del juego. */
 	#if sys
 	static function logBase():String
 	{
 		var base = Storage.logDirectory();
 		#if android
-		// Los logs van en `<carpeta del juego>/logs`; los crashes en `<carpeta del juego>/crashes` (CrashHandler).
+
 		base += "/logs";
 		try
 		{
@@ -89,13 +87,11 @@ class Log
 	}
 	#end
 
-	/** Funcion principal, como `Logger.log` del legacy. */
 	public static function log(data:Dynamic, severity:Severity = PRINT, ?pos:PosInfos):Void
 	{
 		var message:String = haxe.Log.formatOutput(data, pos);
 		var text:String = severity.toString() + message;
 
-		// Tarjeta en pantalla (F2 la apaga). LogOverlay no llama a Log, asi que no se cicla.
 		funky.backend.system.LogOverlay.push(severity, message);
 
 		#if sys
@@ -111,7 +107,7 @@ class Log
 		#end
 
 		var output = Ansi.reset(Ansi.fg(text, ansiColor(severity)));
-		// Algunos depuradores (el de VSCode) anulan el color de la terminal: ahi se define FORCED_ANSI.
+
 		#if !FORCED_ANSI
 		output = Ansi.stripColor(output);
 		#end
@@ -135,7 +131,6 @@ class Log
 	public static function trace(message:String, ?infos:PosInfos):Void
 		log(message, PRINT, infos);
 
-	/** Un aviso destacado para depurar a mano (antes `alert`). */
 	public static function notice(message:String, ?infos:PosInfos):Void
 		log(message, NOTICE, infos);
 
@@ -153,7 +148,6 @@ class Log
 		}
 	}
 
-	/** Un volcado de texto (no es un log): `<folder>/<fileName>_<fecha>.txt`. */
 	public static function writeDump(content:String, folder:String, fileName:String):Void
 	{
 		#if sys
@@ -167,8 +161,6 @@ class Log
 		#end
 	}
 }
-
-// Copiado del legacy (a su vez de hscript-iris: crowplexus/iris/utils/Ansi.hx), solo lo que usa Log.
 
 enum abstract AnsiColor(Int) to Int
 {
@@ -185,20 +177,17 @@ enum abstract AnsiColor(Int) to Int
 
 class Ansi
 {
-	/** Cabecera de las secuencias de escape ANSI. */
+
 	public static inline final ESC = "\x1B[";
 
-	/** Quita todos los atributos y colores. */
 	public static inline function reset(str:String):String
 		return str + ESC + "0m";
 
-	/** Color de primer plano (paleta de 256). */
 	public static inline function fg(str:String, color:AnsiColor):String
 		return ESC + "38;5;" + (color : Int) + "m" + str;
 
 	static var colorSupported:Null<Bool> = null;
 
-	/** Deja el texto tal cual si la terminal soporta color; si no, le quita las secuencias de escape. */
 	public static function stripColor(output:String):String
 	{
 		#if sys

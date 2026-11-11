@@ -4,7 +4,6 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxSubState;
 
-/** Las mismas opciones, pero encima de la pausa: no se pierde la cancion. */
 class ConfigSubState extends FlxSubState
 {
 	var menu:ConfigMenu;

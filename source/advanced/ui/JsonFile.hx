@@ -7,7 +7,6 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Lee y escribe los JSON que tocan los editores. Antes de la primera escritura de la sesion deja una copia `.bak`. */
 class JsonFile
 {
 	static var backedUp:Map<String, Bool> = new Map();
@@ -25,7 +24,6 @@ class JsonFile
 		#end
 	}
 
-	/** false si no se pudo escribir. */
 	public static function write(path:String, data:Dynamic):Bool
 	{
 		#if sys
@@ -56,11 +54,9 @@ class JsonFile
 		return Math.isNaN(parsed) ? fallback : parsed;
 	}
 
-	/** Redondea a 4 decimales (evita 1.9900000000000027 en el archivo). */
 	public static inline function round(value:Float):Float
 		return Math.round(value * 10000) / 10000;
 
-	/** `object[name]` como objeto; lo crea si no existe. */
 	public static function obj(object:Dynamic, name:String):Dynamic
 	{
 		var value:Dynamic = Reflect.field(object, name);

@@ -3,11 +3,6 @@ package funky.backend.converter;
 #if android
 import lime.system.JNI;
 
-/**
- * Frames de un video en Android (en escritorio los saca ffmpeg). Es solo el puente JNI a `org.fmce.VideoFrames`
- * (source/java/org/fmce/VideoFrames.java): la extraccion corre en un hilo de Java y aqui solo se consulta.
- * Llamar siempre desde el hilo principal.
- */
 class AndroidFrames
 {
 	public static inline var IDLE:Int = 0;
@@ -25,9 +20,11 @@ class AndroidFrames
 	static var errorMethod:Dynamic;
 	static var cancelMethod:Dynamic;
 
-	/** Tamano (con la rotacion aplicada), fps y duracion; null si el telefono no pudo leer el video. */
+	public static var lastError:String = "";
+
 	public static function probe(path:String):Null<VideoStrip.VideoInfo>
 	{
+		lastError = "";
 		try
 		{
 			if (probeMethod == null) probeMethod = JNI.createStaticMethod(CLASS, "probe", "(Ljava/lang/String;)Ljava/lang/String;");
@@ -35,13 +32,22 @@ class AndroidFrames
 			if (text == null || StringTools.startsWith(text, "error:"))
 			{
 				funky.core.Log.warn('[AndroidFrames] $path: ' + text);
+				lastError = text == null ? "Java no respondio" : StringTools.trim(text.substr(6));
 				return null;
 			}
 			var parts = text.split(",");
-			if (parts.length < 4) return null;
+			if (parts.length < 4)
+			{
+				lastError = "respuesta rara de Java: " + text;
+				return null;
+			}
 			var w = Std.parseInt(parts[0]);
 			var h = Std.parseInt(parts[1]);
-			if (w == null || h == null || w <= 0 || h <= 0) return null;
+			if (w == null || h == null || w <= 0 || h <= 0)
+			{
+				lastError = "tamano invalido: " + text;
+				return null;
+			}
 			var fps = Std.parseFloat(parts[2]);
 			var seconds = Std.parseFloat(parts[3]);
 			return {w: w, h: h, fps: Math.isNaN(fps) || fps <= 0 ? 30 : fps, seconds: Math.isNaN(seconds) ? 0 : seconds};
@@ -49,11 +55,11 @@ class AndroidFrames
 		catch (e:Dynamic)
 		{
 			funky.core.Log.warn('[AndroidFrames] probe fallo: $e');
+			lastError = "no se pudo hablar con VideoFrames.java: " + Std.string(e);
 		}
 		return null;
 	}
 
-	/** Empieza a sacar `count` frames a `f000001.png`... en `outDir`, ya de `width` x `height`. */
 	public static function start(path:String, outDir:String, fps:Float, width:Int, height:Int, count:Int):Bool
 	{
 		try
@@ -79,7 +85,6 @@ class AndroidFrames
 		return FAILED;
 	}
 
-	/** Frames ya escritos. */
 	public static function progress():Int
 	{
 		try

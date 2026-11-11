@@ -13,7 +13,6 @@ import openfl.Assets as OpenFlAssets;
 import flixel.util.FlxColor;
 import funky.core.Log;
 
-/** Creditos desde el menu principal (estilo CreditsMain de Codename). La lista esta hardcodeada en ConfigScreens.CREDITS. */
 class CreditsState extends FlxState
 {
 	var menu:ConfigMenu;
@@ -21,7 +20,6 @@ class CreditsState extends FlxState
 
 	public var bg:FlxSprite;
 
-	/** Fondo por defecto (dentro de assets/images/). */
 	var fallback:String = "menus/menuDesat";
 
 	override public function create():Void
@@ -43,7 +41,6 @@ class CreditsState extends FlxState
 		TransitionHandler.playIn(this);
 	}
 
-	/** `image` va relativa a assets/images/ y sin .png (ej. "credits_1" o "menus/menuDesat"); null = el por defecto. */
 	public function changeBG(?image:String):Void
 	{
 		if (image == null || image == "") image = fallback;

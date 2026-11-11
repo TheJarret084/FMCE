@@ -6,9 +6,8 @@ var pathShader:String = 'noteskins/' + skin.id + '/shaders';
 function onLoad()
 {
 	_arrowShadow = new CustomShader('dropShadow', pathShader);
-	_arrowShadow.hset('_alpha', 0.6); // transparencia de la sombra
-	_arrowShadow.hset('_disx', 4.0);  // desplazamiento x
-	_arrowShadow.hset('_disy', 10.0); // desplazamiento y
+	_arrowShadow.hset('_alpha', 0.6);
+	_arrowShadow.hset('_disy', 10.0);
 }
 
 function onNote(note, lane)
@@ -19,11 +18,13 @@ function onNote(note, lane)
 function onReceptor(strum, lane)
 {
 	strum.shader = _arrowShadow;
+  strum.alpha = 0.95;
 }
 
 function onReceptorColor(strum, lane, pressed)
 {
 	strum.shader = _arrowShadow;
+  strum.alpha = 0.95;
 }
 
 function onConfirm(sprite, lane)

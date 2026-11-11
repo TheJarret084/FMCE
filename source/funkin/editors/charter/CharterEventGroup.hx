@@ -4,7 +4,6 @@ import flixel.util.FlxSort;
 import funkin.backend.system.Conductor;
 import funkin.editors.charter.CharterBackdropGroup.EventBackdrop;
 
-/** Grupo de eventos del charter. */
 class CharterEventGroup extends FlxTypedGroup<CharterEvent> {
 	public static var stopThisFuckingShitDudeIstg = false;
 	public var eventsBackdrop:EventBackdrop;
@@ -13,11 +12,9 @@ class CharterEventGroup extends FlxTypedGroup<CharterEvent> {
 	public var autoSort:Bool = true;
 	var __lastSort:Int = 0;
 
-	/** Cada cuantos frames se barre la lista completa buscando eventos vacios (la ventana visible se filtra siempre). */
 	static inline var FULL_FILTER_EVERY:Int = 60;
 	var __framesSinceFullFilter:Int = 0;
 
-	/** Ventana [__begin, __end) de `members` que esta a la vista. */
 	var __begin:Int = 0;
 	var __end:Int = 0;
 
@@ -34,7 +31,6 @@ class CharterEventGroup extends FlxTypedGroup<CharterEvent> {
 		if (__end < members.length) __end++;
 	}
 
-	/** Recorre solo los eventos visibles y los seleccionados que quedaron fuera de la ventana (arrastrados, p. ej.). */
 	function forEachVisible(func:CharterEvent->Void) {
 		updateRange();
 
@@ -99,7 +95,6 @@ class CharterEventGroup extends FlxTypedGroup<CharterEvent> {
 		for (event in members)
 			event.eventsBackdrop = eventsBackdrop;
 
-	/** Quita los eventos sin contenido de TODA la lista (de atras hacia adelante, para poder borrar mientras se recorre). */
 	public function filterEvents() {
 		var i = members.length - 1;
 		while (i >= 0) {
@@ -112,7 +107,6 @@ class CharterEventGroup extends FlxTypedGroup<CharterEvent> {
 		}
 	}
 
-	/** Igual que `filterEvents` pero solo sobre la ventana visible. */
 	function filterVisible() {
 		updateRange();
 		var i = __end - 1;

@@ -57,7 +57,6 @@ class NoteSkinScript
 		interp.variables.set("debugPrint", print);
 		interp.variables.set("trace", print);
 
-		// Como en los scripts de nivel.
 		interp.variables.set("__script__", this);
 		interp.variables.set("disableScript", function():Void active = false);
 
@@ -75,7 +74,6 @@ class NoteSkinScript
 		}
 	}
 
-	/** Ejecuta el script (una sola vez) y llama a `onLoad` / `create` / `new`. */
 	public function load():Void
 	{
 		if (loaded) return;
@@ -98,11 +96,9 @@ class NoteSkinScript
 		else call("new");
 	}
 
-	/** true si el script define una funcion `func`. */
 	public function exists(func:String):Bool
 		return Reflect.isFunction(interp.variables.get(func));
 
-	/** Llama a `func` si existe; devuelve lo que retorne (null si no existe, esta desactivado o falla). */
 	public function call(func:String, ?args:Array<Dynamic>):Dynamic
 	{
 		if (!active) return null;
@@ -122,9 +118,6 @@ class NoteSkinScript
 		return result;
 	}
 
-	// ───────────────────────────── ayudas para el script ─────────────────────────────
-
-	/** `shader("sombra")`: primero `noteskins/<id>/shaders/sombra.frag`, despues `assets/shaders/sombra.frag`. */
 	public function makeShader(name:String):Dynamic
 	{
 		#if (!nme && !flash)
@@ -154,7 +147,6 @@ class NoteSkinScript
 		globals.set("Function_Continue", CONTINUE);
 		globals.set("Function_Stop", STOP);
 
-		// Haxe
 		globals.set("Std", Std);
 		globals.set("Math", Math);
 		globals.set("Reflect", Reflect);
@@ -165,11 +157,9 @@ class NoteSkinScript
 		globals.set("Date", Date);
 		globals.set("Lambda", Lambda);
 
-		// OpenFL / Lime
 		globals.set("Assets", openfl.utils.Assets);
 		globals.set("Application", lime.app.Application);
 
-		// Flixel
 		globals.set("FlxG", FlxG);
 		globals.set("FlxSprite", FlxSprite);
 		globals.set("FlxTween", FlxTween);
@@ -177,7 +167,6 @@ class NoteSkinScript
 		globals.set("FlxTimer", FlxTimer);
 		globals.set("FlxColor", colors());
 
-		// Motor
 		globals.set("PlayState", funky.game.PlayState);
 		globals.set("Note", funky.game.Note);
 		globals.set("Strum", funky.game.Strum);
@@ -187,7 +176,6 @@ class NoteSkinScript
 		globals.set("Conductor", Conductor);
 		globals.set("Log", Log);
 
-		// Ayudas propias
 		globals.set("shader", function(name:String):Dynamic
 		{
 			return makeShader(name);
@@ -210,7 +198,6 @@ class NoteSkinScript
 		return globals;
 	}
 
-	/** `FlxColor` es un abstract: en runtime no existe, asi que se expone lo basico como objeto. */
 	static function colors():Dynamic
 	{
 		return {
@@ -235,7 +222,6 @@ class NoteSkinScript
 		};
 	}
 
-	/** `#if android ... #end` dentro de los scripts del skin. */
 	static function preprocessors():Map<String, Dynamic>
 	{
 		var values = new Map<String, Dynamic>();
@@ -249,7 +235,6 @@ class NoteSkinScript
 		return values;
 	}
 
-	/** `import a.b.C;` busca `addons/noteskins/<id>/source/a/b/C.hx` (y sin `source/`). */
 	function onImportFailed(cl:Array<String>, ?asName:String):Bool
 	{
 		var relative = cl.join("/");
@@ -288,7 +273,6 @@ class NoteSkinScript
 	function onWarn(error:Error):Void
 		Log.warn('[NoteSkin ' + skin.id + '] ' + error.toString());
 
-	/** Un mismo error sale una sola vez en el log. */
 	function report(message:String):Void
 	{
 		if (reported.exists(message)) return;

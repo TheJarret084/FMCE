@@ -2,7 +2,6 @@ package funkin.menus.ui;
 
 import flixel.group.FlxSpriteGroup;
 
-/** Stub: el charter portado no usa texto Alphabet. */
 class Alphabet extends FlxSpriteGroup
 {
 	public var text:String = "";

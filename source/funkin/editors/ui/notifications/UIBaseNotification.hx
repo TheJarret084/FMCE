@@ -28,7 +28,7 @@ class UIBaseNotification extends UISliceSprite {
 		closeButton.hoverCallback = () -> {
 			closeButton.color = 0xFFAC3D3D;
 			closeButton.field.color = 0xFFffffff;
-			//closeButton.field.color = closeButton.hovered ? 0xFFffffff : 0xFF7f7f7f;
+
 		}
 		closeButton.autoAlpha = false;
 		closeButton.alpha = 0.0;
@@ -107,7 +107,7 @@ class UIBaseNotification extends UISliceSprite {
 		textField.follow(this, 5, bHeight / 2 - textField.height / 2);
 		closeButton.follow(this, bWidth-closeButton.bWidth - 7, bHeight / 2 - closeButton.bHeight / 2);
 		closeButton.field.alpha = alpha * .7;
-		//closeButton.alpha = alpha;
+
 		textField.alpha = alpha;
 	}
 
@@ -127,7 +127,6 @@ class UIBaseNotification extends UISliceSprite {
 		if (isClosing) return;
 		isClosing = true;
 
-		// TODO: make it so you can click through the notification
 		closeButton.active = false;
 		closeButton.selectable = false;
 		closeButton.canBeHovered = false;

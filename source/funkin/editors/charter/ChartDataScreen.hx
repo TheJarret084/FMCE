@@ -23,7 +23,7 @@ class ChartDataScreen extends UISubstateWindow {
 		Charter.pauseAudio();
 
 		winTitle = TU.translate("chartDataScreen.title");
-		winWidth = 420; winHeight = 230; // guys look, the funny numbers!
+		winWidth = 420; winHeight = 230;
 
 		super.create();
 

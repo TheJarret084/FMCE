@@ -2,10 +2,9 @@ package advanced.ui.code;
 
 import funky.core.Paths;
 
-/** Medidas y colores de CodeStudio (tema oscuro tipo Visual Studio). Todo en coordenadas del juego. */
 class CodeTheme
 {
-	// ---- medidas ----
+
 	public static inline var MENU_H:Int = 28;
 	public static inline var TOOL_H:Int = 34;
 	public static inline var TAB_H:Int = 32;
@@ -20,7 +19,6 @@ class CodeTheme
 	public static inline var FONT_SMALL:Int = 12;
 	public static inline var EDITOR_FONT:Int = 16;
 
-	// ---- colores de la interfaz ----
 	public static inline var BG:Int = 0xFF0B1020;
 	public static inline var MENU:Int = 0xFF111833;
 	public static inline var TOOLBAR:Int = 0xFF0F1630;
@@ -43,7 +41,6 @@ class CodeTheme
 	public static inline var WARN:Int = 0xFFFFC857;
 	public static inline var OK:Int = 0xFF6BD968;
 
-	// ---- colores de sintaxis ----
 	public static inline var SYN_DEFAULT:Int = 0xFFD4D4D4;
 	public static inline var SYN_KEYWORD:Int = 0xFF569CD6;
 	public static inline var SYN_CONTROL:Int = 0xFFC586C0;
@@ -60,21 +57,18 @@ class CodeTheme
 	static var cachedPath:Null<String> = null;
 	static var cachedName:String = "_typewriter";
 
-	/** Ruta de Consola.ttf para los FlxText (null = fuente por defecto). */
 	public static function fontPath():Null<String>
 	{
 		load();
 		return cachedPath;
 	}
 
-	/** Nombre de la fuente para los TextField de OpenFL. */
 	public static function fontName():String
 	{
 		load();
 		return cachedName;
 	}
 
-	/** true si Consola.ttf cargo (hace falta embedFonts en los TextField). */
 	public static function fontEmbedded():Bool
 	{
 		load();
@@ -99,7 +93,6 @@ class CodeTheme
 		}
 	}
 
-	/** Los TextFormat quieren RGB sin alpha. */
 	public static inline function rgb(color:Int):Int
 		return color & 0xFFFFFF;
 }

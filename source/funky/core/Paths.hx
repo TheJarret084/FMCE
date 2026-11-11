@@ -10,7 +10,6 @@ import animate.FlxAnimateAssets;
 import animate.FlxAnimateFrames;
 import openfl.utils.Assets as OpenFlAssets;
 
-/** Resuelve rutas de assets del motor y de niveles FNMM. */
 class Paths
 {
 	public static final ASSETS = "assets/";
@@ -21,14 +20,13 @@ class Paths
 	public static final MUSIC  = ASSETS + "music/";
 	public static final DATA   = ASSETS + "data/";
 	public static final FONTS  = ASSETS + "fonts/";
-	/** Los videos NO van en el assets.pack (hxvlc necesita un archivo real): viven en addons/videos/ (ver Addons). */
+
 	public static final VIDEOS = Addons.ID_ROOT + "videos/";
 
 	public static final GAME_UI = IMAGES + "game/";
 
 	public static final SHADERS = ASSETS + "shaders/";
 
-	// motor
 	public static inline function image(name:String):String return IMAGES + name + ".png";
 	public static inline function fragShader(name:String):String return SHADERS + name + ".frag";
 	public static inline function vertShader(name:String):String return SHADERS + name + ".vert";
@@ -38,18 +36,15 @@ class Paths
 	public static inline function sound(name:String):String   return SOUNDS + name + ".ogg";
 	public static inline function music(name:String):String   return MUSIC + name + ".ogg";
 	public static inline function font(name:String):String return FONTS + name;
-	/** Ruta REAL en disco de `addons/videos/<name>.mp4` (la carpeta externa gana sobre la que trae el build). Si no existe, el id sin resolver. */
+
 	public static function video(name:String):String
 	{
 		var real = Addons.file("videos/" + name + ".mp4");
 		return real != null ? real : VIDEOS + name + ".mp4";
 	}
 
-	// Soporta atlas de Adobe Animate (carpeta con Animation.json + spritemap) via flixel-animate,
-	// ademas de Sparrow / Packer / Aseprite / imagen suelta.
 	public static var tempFramesCache:Map<String, FlxFramesCollection> = [];
 
-	/** Enganchar en Main una sola vez: limpia la caché de frames sueltos en cada cambio de state. */
 	public static function init():Void
 	{
 		FlxG.signals.preStateSwitch.add(function() {
@@ -58,11 +53,6 @@ class Paths
 		initAnimateAssets();
 	}
 
-	/**
-	 * flixel-animate solo lee del disco en desktop (`#if sys && desktop`). En Android los spritemaps sueltos
-	 * (carpeta de un nivel, `.JarretLabs-FMCE/...`) viven en el almacenamiento, asi que se le agrega ese
-	 * respaldo: primero lo de siempre (assets empaquetados) y, si no esta, el disco.
-	 */
 	static function initAnimateAssets():Void
 	{
 		#if (sys && !desktop)
@@ -119,7 +109,6 @@ class Paths
 		#end
 	}
 
-	/** Atlas Sparrow (`$name.png` + `$name.xml` en assets/images/). `name` sin extensión. */
 	public static function getSparrowAtlas(name:String):FlxAtlasFrames
 	{
 		var png = image(name);
@@ -130,17 +119,12 @@ class Paths
 			return null;
 		}
 		var atlas = FlxAtlasFrames.fromSparrow(png, xml);
-		// Marcamos el FlxGraphic como persistente: si nadie más lo usa como
-		// frame de un FlxSprite en el state actual (ej. CursorManager, que lo
-		// usa manualmente vía Bitmap), el cache de Flixel puede tirarlo en un
-		// cambio de state o una limpieza de memoria, dejando el BitmapData
-		// interno inválido y reventando el próximo .paint().
+
 		if (atlas != null && atlas.parent != null)
 			atlas.parent.persist = true;
 		return atlas;
 	}
 
-	/** Atlas estilo TexturePacker/SpriteSheetPacker (`$name.png` + `$name.txt`). */
 	public static function getPackerAtlas(name:String):FlxAtlasFrames
 	{
 		var png = image(name);
@@ -153,7 +137,6 @@ class Paths
 		return FlxAtlasFrames.fromSpriteSheetPacker(png, txt);
 	}
 
-	/** Atlas Aseprite (`$name.png` + `$name.json`). */
 	public static function getAsepriteAtlas(name:String):FlxAtlasFrames
 	{
 		var png = image(name);
@@ -166,14 +149,9 @@ class Paths
 		return FlxAtlasFrames.fromAseprite(png, json);
 	}
 
-	/**
-	 * Devuelve frames para `name`, detectando automáticamente si es un atlas
-	 * (Sparrow > Packer > Aseprite, en ese orden) o una imagen suelta.
-	 * Cachea el resultado hasta el próximo cambio de state (ver `init()`).
-	 */
 	public static function getFrames(name:String):FlxFramesCollection
 	{
-		// Atlas de Adobe Animate: flixel-animate ya tiene su propia cache, asi que no pasa por la nuestra.
+
 		if (animateExists(name))
 			return getAnimateAtlas(name);
 
@@ -202,11 +180,9 @@ class Paths
 		return frames;
 	}
 
-	/** True si `images/<name>/Animation.json` existe: es un spritemap de Adobe Animate. */
 	public static inline function animateExists(name:String):Bool
 		return OpenFlAssets.exists(IMAGES + name + "/Animation.json");
 
-	/** Frames de un atlas de Adobe Animate (`images/<name>/`), o null si no se puede leer. */
 	public static function getAnimateAtlas(name:String):FlxFramesCollection
 	{
 		try
@@ -220,7 +196,6 @@ class Paths
 		}
 	}
 
-	/** True si existe cualquier variante cargable (Animate/Sparrow/Packer/Aseprite/imagen suelta) para `name`. */
 	public static function framesExists(name:String):Bool
 	{
 		return animateExists(name)
@@ -230,15 +205,10 @@ class Paths
 			|| OpenFlAssets.exists(image(name));
 	}
 
-	/**
-	 * Frames de un sprite de nivel: `<levelDir>/sprites/<name>/sprite.png` + `sprite.json`
-	 * (Aseprite). Se lee del disco, no de OpenFL Assets, porque los niveles son archivos
-	 * sueltos. Si falta el JSON pero hay `sprite.xml`, se convierte en el momento.
-	 */
 	public static function getLevelSprite(levelDir:String, name:String):FlxAtlasFrames
 	{
 		#if sys
-		// Con el nivel precargado (SpriteCache) el atlas se arma una sola vez: sin releer ni reparsear el JSON.
+
 		if (!funky.game.SpriteCache.active) return loadLevelSprite(levelDir, name);
 
 		var cacheKey = Path.join([levelDir, "sprites", name, "sprite.png"]);
@@ -267,7 +237,6 @@ class Paths
 				funky.backend.converter.SpriteFolderConverter.convertFile(xml);
 			if (!sys.FileSystem.exists(json)) { Log.warn('[Paths] falta $json'); return null; }
 
-			// Atlas con paginas (o tan grande que hay que partirlo): lo arma SpritePages.
 			var paged = funky.backend.SpritePages.load(levelDir, name);
 			if (paged != null) return paged;
 
@@ -279,9 +248,7 @@ class Paths
 			graphic.persist = true;
 			var content = sys.io.File.getContent(json);
 			var atlas = FlxAtlasFrames.fromAseprite(graphic, content);
-			// JSON Hash: el orden de los campos de un objeto no esta garantizado en todos los
-			// targets, asi que se ordena por nombre (anim00000, anim00001, ..., idle0000). Los
-			// frameTags de `make_strips.py` apuntan a ese orden. El JSON en lista no se toca.
+
 			if (atlas != null && !Std.isOfType(haxe.Json.parse(content).frames, Array))
 				atlas.frames.sort(function(a, b) return Reflect.compare(a.name, b.name));
 			return atlas;
@@ -296,15 +263,12 @@ class Paths
 		#end
 	}
 
-	// levels
 	public static inline function levelsRoot():String
 		return ensureTrailingSlash(userDataDir() + "/levels");
 
-	/** Backups de levels/editor: mismo root físico que levels/. */
 	public static inline function backupsRoot():String
 		return ensureTrailingSlash(userDataDir() + "/backups");
 
-	/** Exports manuales del usuario (botón "Exportar" en EditorMenuState). */
 	public static inline function exportsRoot():String
 		return ensureTrailingSlash(userDataDir() + "/exports");
 
@@ -320,12 +284,8 @@ class Paths
 		return sys.FileSystem.exists(p) ? sys.io.File.getContent(p) : null;
 	}
 
-	// ───────────────────────── archivos de un nivel (para scripts y editores) ─────────────────────────
-
-	/** Nivel activo: lo fija PlayState al cargar y el charter al abrir un nivel. `File` lo usa si no le pasas otro. */
 	public static var currentLevel:Null<String> = null;
 
-	/** tipo -> [carpeta dentro del nivel, extension por defecto]. Un tipo que no esta aqui se usa como nombre de carpeta. */
 	static final FILE_TYPES:Map<String, Array<String>> = [
 		"sprite" => ["sprites", ""],
 		"image"  => ["images", ".png"],
@@ -342,23 +302,6 @@ class Paths
 		"font"   => ["fonts", ""]
 	];
 
-	/**
-	 * Ruta de un archivo DENTRO de un nivel.
-	 *
-	 * @param name  Que es: el nombre, con subcarpetas si hace falta (`"boss"`, `"boss/sprite"`, `"efectos/golpe"`).
-	 * @param type  De que tipo es: `sprite`, `image`, `sound`, `music`, `video`, `script`, `source`, `shader`, `json`,
-	 *              `xml`, `txt`, `data` o `font`. Con otra palabra se usa como carpeta (`File("a", "mapas")` = `<nivel>/mapas/a`).
-	 *              Vacio = `name` tal cual desde la raiz del nivel.
-	 * @param level Carpeta del nivel. Por defecto el nivel activo (`currentLevel`).
-	 *
-	 * Si `name` ya trae extension no se le agrega otra. Un `name` con `..` se rechaza (devuelve la raiz del nivel).
-	 *
-	 *     Paths.File("boss", "sprite")        // <nivel>/sprites/boss
-	 *     Paths.File("golpe", "sound")        // <nivel>/sounds/golpe.ogg
-	 *     Paths.File("intro/corte", "video")  // <nivel>/videos/intro/corte.mp4
-	 *     Paths.File("blur", "shader")        // <nivel>/shaders/blur.frag
-	 *     Paths.File("config", "json")        // <nivel>/data/config.json
-	 */
 	public static function File(name:String, ?type:String, ?level:String):String
 	{
 		var root = level != null ? level : currentLevel;
@@ -405,7 +348,6 @@ class Paths
 		return root + "/" + (folder == "" ? "" : folder + "/") + name + ext;
 	}
 
-	/** true si `File(name, type, level)` existe en disco (archivo o carpeta). */
 	public static function FileExists(name:String, ?type:String, ?level:String):Bool
 	{
 		#if sys
@@ -415,10 +357,6 @@ class Paths
 		#end
 	}
 
-	/**
-	 * Nombres de lo que hay en la carpeta de un tipo del nivel, sin extension y ordenados (no entra a subcarpetas;
-	 * para `sprite` salen las carpetas). `sub` = subcarpeta dentro del tipo.
-	 */
 	public static function FileList(type:String, ?sub:String, ?level:String):Array<String>
 	{
 		var out:Array<String> = [];
@@ -440,10 +378,6 @@ class Paths
 		return out;
 	}
 
-	/**
-	 * Sprites de un nivel (`<nivel>/sprites/<n>/`), con los de `config.json` > `type: "icon"` primero.
-	 * Es lo que muestran los dropdowns de iconos del charter.
-	 */
 	public static function levelSprites(?level:String):Array<String>
 	{
 		var icons:Array<String> = [];
@@ -458,7 +392,6 @@ class Paths
 		return icons.concat(others);
 	}
 
-	/** `type` del `config.json` de un sprite del nivel ("icon", "character"...), o "" si no lo dice. */
 	public static function spriteKind(name:String, ?level:String):String
 	{
 		#if sys
@@ -476,7 +409,6 @@ class Paths
 		return "";
 	}
 
-	// Lista carpetas de levels (cada una = un nivel)
 	public static function listLevels():Array<String>
 	{
 		var root = levelsRoot();
@@ -493,8 +425,6 @@ class Paths
 	{
 		if (!sys.FileSystem.exists(absDir) || !sys.FileSystem.isDirectory(absDir)) return;
 
-		// FMCE actual: meta.json lives at the level root. The data/ check is kept
-		// for compatibility with older level layouts.
 		var hasMeta = sys.FileSystem.exists(Path.join([absDir, "meta.json"]))
 			|| sys.FileSystem.exists(Path.join([absDir, "data", "meta.json"]))
 			|| sys.FileSystem.exists(Path.join([absDir, "chart.json"]));
@@ -517,11 +447,6 @@ class Paths
 		}
 	}
 
-	/**
-	 * Creates `levels/` if it is missing. Returns false instead of throwing when the
-	 * folder cannot be created or is not readable, so menus can show an empty list
-	 * rather than crash (the folder does not exist on a fresh install).
-	 */
 	public static function ensureLevelsRoot():Bool
 	{
 		#if sys
@@ -541,7 +466,6 @@ class Paths
 		#end
 	}
 
-	/** Writable user-data root: app-scoped storage on Android, beside the executable elsewhere. */
 	static function userDataDir():String
 	{
 		#if android
@@ -580,10 +504,6 @@ class Paths
 	static function ensureTrailingSlash(path:String):String
 		return StringTools.endsWith(path, "/") ? path : path + "/";
 
-	/**
-	 * Ruta de una fuente de `assets/fonts` si OpenFL la tiene registrada, o null (y avisa en el log) si no.
-	 * Asi, si una fuente no carga, el motivo sale en el log (F2) en vez de caer en silencio a la fuente por defecto.
-	 */
 	public static function fontPath(file:String):Null<String>
 	{
 		var path = font(file);
@@ -596,7 +516,6 @@ class Paths
 		return null;
 	}
 
-	/** `assets/fonts/$font$extension` (por defecto `.ttf`). */
 	public static inline function Font(font:String, ?extension:String = ".ttf")
 		return FONTS + font + extension;
 }

@@ -4,37 +4,36 @@ import funkin.backend.chart.ChartData;
 import haxe.Json;
 
 typedef ImportResult = {
-	/** "fnmm" (data.json de un .fnmm), "codename", "legacy" (Psych/Legacy `song.notes[]`), "fnf" (FNF base, `notes` por dificultad) o "fmce". */
+
 	var format:String;
-	/** Indice 0 = jugador, 1 = oponente, 2+ = extras (el orden de FMCE). */
+
 	var lines:Array<Array<ChartNote>>;
-	/** BPM que declara el archivo (solo Legacy). Las notas ya estan en ms, asi que solo sirve para avisar. */
+
 	var bpm:Null<Float>;
 	var notes:Int;
 	var sustains:Int;
-	/** Notas que caen en carriles >= `lanes` (los carriles del nivel abierto). */
+
 	var droppedLanes:Int;
-	/** Eventos del archivo: viven en events.json y usan otros nombres, no se importan. */
+
 	var droppedEvents:Int;
-	/** Notas repetidas (mismo tiempo y carril en la misma strumline) que se descartaron. */
+
 	var duplicates:Int;
-	/** Carriles del nivel abierto. */
+
 	var lanes:Int;
-	/** Solo "fnf": dificultades que trae el chart y la que se leyo. */
+
 	var ?difficulties:Array<String>;
 	var ?difficulty:String;
-	/** Solo "fnf": notas con tipo especial (`k`), que se importan como notas normales. */
+
 	var ?droppedKinds:Int;
 }
 
-/** Lee charts de otros motores y los deja como notas de FMCE (strumlines con `ChartNote`). */
 class ChartImporter {
 	public static function detect(raw:Dynamic):Null<String> {
 		if (raw == null || Std.isOfType(raw, Array)) return null;
 		var sl:Dynamic = Reflect.field(raw, "strumLines");
 		if (Std.isOfType(sl, Array)) {
 			var arr:Array<Dynamic> = sl;
-			// FNMM: strumLines[strumline][lane] = [{start, duration}]. FMCE: strumLines[strumline] = [{time, lane, length}].
+
 			for (l in arr) {
 				if (!Std.isOfType(l, Array)) continue;
 				var items:Array<Dynamic> = l;
@@ -43,7 +42,7 @@ class ChartImporter {
 			if (arr.length > 0 && Std.isOfType(arr[0], Array)) return "fmce";
 			if (arr.length > 0 && Reflect.hasField(arr[0], "notes")) return "codename";
 		}
-		// FNF base (0.3+ / .fnfc): `notes` es un objeto con una lista por dificultad (en Legacy `notes` es una lista de secciones)
+
 		var fnfNotes:Dynamic = Reflect.field(raw, "notes");
 		if (fnfNotes != null && !Std.isOfType(fnfNotes, Array) && Reflect.isObject(fnfNotes) && Reflect.fields(fnfNotes).length > 0) return "fnf";
 		var song:Dynamic = Reflect.hasField(raw, "song") && !Std.isOfType(Reflect.field(raw, "song"), String) ? Reflect.field(raw, "song") : raw;
@@ -51,7 +50,6 @@ class ChartImporter {
 		return null;
 	}
 
-	/** Lanza un String con el motivo si el archivo no es un chart reconocible. */
 	public static function parse(text:String, lanes:Int = 4, ?difficulty:String):ImportResult {
 		var raw:Dynamic = try Json.parse(text) catch (e:Dynamic) throw "No es un JSON valido.";
 		var format = detect(raw);
@@ -65,7 +63,7 @@ class ChartImporter {
 			default: fromFMCE(raw, res);
 		}
 		for (l in res.lines) {
-			// sin repetidas: mismo tiempo (al ms) y carril
+
 			var seen:Map<String, Bool> = new Map();
 			var kept:Array<ChartNote> = [];
 			for (n in l) {
@@ -100,10 +98,9 @@ class ChartImporter {
 		return Math.isNaN(n) ? def : n;
 	}
 
-	// ───────────── Codename: strumLines[{type, position, keyCount, notes[{id,time,sLen,type}]}] ─────────────
 	static function fromCodename(raw:Dynamic, res:ImportResult):Void {
 		var strums:Array<Dynamic> = Reflect.field(raw, "strumLines");
-		// 0 = oponente, 1 = jugador, 2 = adicional en Codename. FMCE: 0 jugador, 1 oponente, 2+ extras.
+
 		function isPlayer(s:Dynamic) return Reflect.field(s, "type") == 1;
 		function isOpponent(s:Dynamic) return Reflect.field(s, "type") == 0;
 		var player = Lambda.find(strums, isPlayer);
@@ -123,7 +120,6 @@ class ChartImporter {
 		res.droppedEvents = ev == null ? 0 : ev.length;
 	}
 
-	// ───────────── Legacy / Psych: song.notes[{sectionNotes:[[t,lane,sus,...]], mustHitSection}] ─────────────
 	static function fromLegacy(raw:Dynamic, res:ImportResult):Void {
 		var song:Dynamic = Reflect.hasField(raw, "song") && !Std.isOfType(Reflect.field(raw, "song"), String) ? Reflect.field(raw, "song") : raw;
 		var keys = Std.int(f(Reflect.field(song, "keys"), 4));
@@ -152,7 +148,6 @@ class ChartImporter {
 		}
 	}
 
-	// ───────────── FNF base (.fnfc): notes{dificultad:[{t, d, l?, k?}]}, t y l en ms ─────────────
 	static function fromFNF(raw:Dynamic, res:ImportResult, difficulty:Null<String>):Void {
 		var all:Dynamic = Reflect.field(raw, "notes");
 		var names:Array<String> = Reflect.fields(all);
@@ -160,7 +155,7 @@ class ChartImporter {
 		var pick = difficulty != null && names.indexOf(difficulty) >= 0 ? difficulty : (names.indexOf("hard") >= 0 ? "hard" : names[names.length - 1]);
 		res.difficulty = pick;
 		res.droppedKinds = 0;
-		// en FNF base d = 0..3 es el jugador y 4..7 el oponente (FMCE: linea 0 jugador, 1 oponente, 2+ extras)
+
 		line(res, 0); line(res, 1);
 		var list:Array<Dynamic> = Reflect.field(all, pick);
 		if (list != null) for (n in list) {
@@ -173,7 +168,6 @@ class ChartImporter {
 		res.droppedEvents = ev == null ? 0 : ev.length;
 	}
 
-	// ───────────── FNMM: data.json de un .fnmm, tiempos en segundos ─────────────
 	static function fromFNMM(raw:Dynamic, res:ImportResult):Void {
 		var unit:String = Reflect.field(raw, "timeUnit");
 		var mul = unit == "milliseconds" || unit == "ms" ? 1.0 : 1000.0;
@@ -189,7 +183,6 @@ class ChartImporter {
 		}
 	}
 
-	// ───────────── FMCE (por si se vuelve a importar un chart propio) ─────────────
 	static function fromFMCE(raw:Dynamic, res:ImportResult):Void {
 		var unit:String = Reflect.field(raw, "timeUnit");
 		var mul = unit == "milliseconds" || unit == "ms" ? 1.0 : 1000.0;

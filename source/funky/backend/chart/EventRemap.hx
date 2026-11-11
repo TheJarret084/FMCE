@@ -6,10 +6,9 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Reindexa los eventos cuando cambia el orden de los objetos de scene.json. */
 class EventRemap
 {
-	/** `map[viejo]` = numero nuevo del objeto, o -1 si se borro. */
+
 	public static function isIdentity(map:Array<Int>):Bool
 	{
 		for (i in 0...map.length)
@@ -17,10 +16,6 @@ class EventRemap
 		return true;
 	}
 
-	/**
-	 * Reescribe `props.object` de las acciones `Object*` de `events` y `action_packs`. Devuelve cuantas cambio y cuantas
-	 * apuntan a un objeto borrado (esas se dejan como estan para no perder el resto del evento).
-	 */
 	public static function apply(root:Dynamic, map:Array<Int>):{changed:Int, orphaned:Int}
 	{
 		var result = {changed: 0, orphaned: 0};
@@ -63,7 +58,7 @@ class EventRemap
 	}
 
 	#if sys
-	/** Lee `events.json`, aplica `map` y lo vuelve a escribir. null = no habia nada que cambiar o no existe. */
+
 	public static function applyToFile(path:String, map:Array<Int>):Null<{changed:Int, orphaned:Int}>
 	{
 		if (isIdentity(map) || !FileSystem.exists(path)) return null;

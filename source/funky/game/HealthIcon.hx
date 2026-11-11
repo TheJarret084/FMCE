@@ -1,9 +1,8 @@
 package funky.game;
 
-/** Icono de la barra de vida de un jugador. */
 class HealthIcon extends LevelSprite
 {
-	/** Lado (px de pantalla) al que se ajusta el icono antes de aplicar la escala del config. */
+
 	public static inline var FIT:Float = 96;
 	public static inline var LOSE_BELOW:Float = 0.2;
 	public static inline var WIN_ABOVE:Float = 0.8;
@@ -13,7 +12,7 @@ class HealthIcon extends LevelSprite
 	static final WINNING_NAMES = ["anim2"];
 
 	public var isPlayer(default, null):Bool;
-	/** "anim0" (normal), "anim1" (perdiendo) o "anim2" (ganando). */
+
 	public var state(default, null):String = "";
 
 	var baseScale:Float = 1;
@@ -41,13 +40,13 @@ class HealthIcon extends LevelSprite
 		}
 		else
 		{
-			// Sin sprite: cuadrado de reemplazo del tamano final, color distinto por lado.
+
 			makeGraphic(Std.int(FIT), Std.int(FIT), isPlayer ? 0xFF64DDAA : 0xFFE0505A);
 			baseScale = 1;
 		}
-		// Se achican de 150 a 96 px: sin suavizado salen dentados.
+
 		antialiasing = true;
-		// flipX = false; alert
+
 		setState("anim0");
 	}
 
@@ -57,7 +56,6 @@ class HealthIcon extends LevelSprite
 		return null;
 	}
 
-	/** @param playerHealth vida del jugador, 0..1. El icono del oponente usa la vida inversa. */
 	public function updateHealth(playerHealth:Float):Void
 	{
 		var mine = isPlayer ? playerHealth : 1 - playerHealth;
@@ -79,7 +77,6 @@ class HealthIcon extends LevelSprite
 		if (anim != null) playAnim(anim, true);
 	}
 
-	/** Pulso en el beat; `update` lo devuelve a su tamano. */
 	public function bop(amount:Float = 1.2):Void
 	{
 		scale.set(baseScale * amount, baseScale * amount);
@@ -120,6 +117,6 @@ class HealthIcon extends LevelSprite
 		setState("anim0");
 
 		antialiasing = true;
-		// flipX = false;
+
 	}
 }

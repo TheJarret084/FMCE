@@ -17,7 +17,7 @@ typedef MenuItem =
 typedef MenuDef =
 {
 	var title:String;
-	/** Se llama al abrir el menu, asi los items siempre reflejan el estado actual. */
+
 	var items:Void->Array<MenuItem>;
 }
 
@@ -28,7 +28,6 @@ private typedef DropRow =
 	var item:MenuItem;
 }
 
-/** Barra de menus de arriba con menus desplegables. Debe agregarse la ultima para quedar encima de todo. */
 class MenuBar extends FlxSpriteGroup
 {
 	static inline var ITEM_H:Int = 24;

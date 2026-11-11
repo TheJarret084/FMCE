@@ -6,20 +6,14 @@ import haxe.io.Bytes;
 import haxe.io.BytesOutput;
 import haxe.zip.Compress;
 
-/** Codificador de PNG en Haxe puro, al estilo de UPNG.js: elige solo el mejor formato y comprime fuerte. */
 class PngHandler
 {
-	/**
-	 * @param argb 4 bytes por pixel en orden A, R, G, B (como `BitmapData.getPixels`), alfa sin premultiplicar.
-	 * @param colors 0 = sin perdida; de 2 a 256 = si la imagen tiene mas colores, se reduce a esa cantidad.
-	 * @param level nivel de zlib (1 a 9).
-	 */
+
 	public static function encodeArgb(argb:Bytes, width:Int, height:Int, colors:Int = 0, level:Int = 9):Bytes
 	{
 		var count = width * height;
 		if (argb.length < count * 4) throw "faltan pixeles: " + argb.length + " bytes para " + width + "x" + height;
 
-		// 1) colores unicos (se corta al pasar de 256)
 		var palette:Array<Int> = [];
 		var lookup = new Map<Int, Int>();
 		var tooMany = false;
@@ -83,7 +77,7 @@ class PngHandler
 			{
 				var p = i * 4;
 				var a = argb.get(p);
-				if (a == 0) continue; // transparente: RGBA = 0
+				if (a == 0) continue;
 				rgba.set(p, argb.get(p + 1));
 				rgba.set(p + 1, argb.get(p + 2));
 				rgba.set(p + 2, argb.get(p + 3));
@@ -94,8 +88,6 @@ class PngHandler
 		chunk(out, "IEND", Bytes.alloc(0));
 		return out.getBytes();
 	}
-
-	// ------------------------------------------------------------------ PNG
 
 	static function header(w:Int, h:Int, depth:Int, colorType:Int):Bytes
 	{
@@ -122,11 +114,6 @@ class PngHandler
 		out.writeInt32(Crc32.make(body));
 	}
 
-	/**
-	 * Filtros PNG por fila (none, sub, up, average, paeth): se queda con el de menor suma de valores absolutos.
-	 * Los indices de una paleta no son numeros con sentido (el 7 no es "casi" el 8), asi que ahi el mejor filtro es siempre "none":
-	 * pesa ~13% menos que el adaptativo y se codifica mucho mas rapido.
-	 */
 	static function filterRows(raw:Bytes, width:Int, height:Int, bpp:Int):Bytes
 	{
 		var stride = width * bpp;
@@ -188,8 +175,6 @@ class PngHandler
 		return (pa <= pb && pa <= pc) ? a : (pb <= pc ? b : c);
 	}
 
-	// ------------------------------------------------------------------ paleta
-
 	static function indexWith(argb:Bytes, count:Int, lookup:Map<Int, Int>):Bytes
 	{
 		var out = Bytes.alloc(count);
@@ -203,7 +188,6 @@ class PngHandler
 		return out;
 	}
 
-	/** Peso de cada canal en la distancia entre colores (el ojo ve mas el verde) y del alfa. */
 	static inline function dist(r1:Float, g1:Float, b1:Float, a1:Float, r2:Float, g2:Float, b2:Float, a2:Float):Float
 	{
 		var dr = r1 - r2;
@@ -213,11 +197,6 @@ class PngHandler
 		return 2 * dr * dr + 4 * dg * dg + 3 * db * db + 6 * da * da;
 	}
 
-	/**
-	 * Reduce a `target` colores: median cut sobre un histograma de 5-5-5-4 bits (rojo, verde, azul, alfa), refinado con
-	 * pasadas de k-means (cada color de la paleta se mueve al centro de los pixeles que le tocan) y cada casilla se asigna
-	 * a la entrada mas cercana a su color REAL. El transparente es siempre el indice 0 y nunca se mezcla con otro color.
-	 */
 	static function quantize(argb:Bytes, count:Int, target:Int):{palette:Array<Int>, indices:Bytes}
 	{
 		var size = 1 << 19;
@@ -252,7 +231,7 @@ class PngHandler
 				var g = argb.get(p + 2);
 				var b = argb.get(p + 3);
 				k = ((a >> 4) << 15) | ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
-				if (k == 0) k = 1; // el 0 es solo para "transparente"
+				if (k == 0) k = 1;
 				n[k]++;
 				sumA[k] += a;
 				sumR[k] += r;
@@ -268,11 +247,10 @@ class PngHandler
 		for (k in 1...size)
 			if (n[k] > 0) used.push(k);
 
-		var reserved = transparentPixels > 0 ? 1 : 0; // el indice 0 es del transparente
+		var reserved = transparentPixels > 0 ? 1 : 0;
 		var want = target - reserved;
 		if (want < 1) want = 1;
 
-		// 1) median cut: se parte siempre la caja con mas pixeles, por el canal de mayor rango
 		var boxes:Array<Array<Int>> = [used];
 		while (boxes.length < want)
 		{
@@ -302,7 +280,7 @@ class PngHandler
 					if (comps[c] > maxC[c]) maxC[c] = comps[c];
 				}
 			}
-			// el alfa tiene 4 bits: se normaliza para compararlo con los canales de 5 bits
+
 			var ranges = [(maxC[0] - minC[0]) * 2, maxC[1] - minC[1], maxC[2] - minC[2], maxC[3] - minC[3]];
 			var axis = 0;
 			for (c in 1...4)
@@ -327,7 +305,6 @@ class PngHandler
 			boxes.push(box.slice(cut));
 		}
 
-		// paleta inicial: promedio de los colores reales de cada caja
 		var m = boxes.length;
 		var pr = new Vector<Float>(m);
 		var pg = new Vector<Float>(m);
@@ -355,7 +332,6 @@ class PngHandler
 			pb[i] = b / total;
 		}
 
-		// 2) k-means sobre las casillas usadas (cada una pesa por sus pixeles y vale su color real promedio)
 		var cells = used.length;
 		var cr = new Vector<Float>(cells);
 		var cg = new Vector<Float>(cells);
@@ -411,7 +387,6 @@ class PngHandler
 				}
 		}
 
-		// 3) paleta final y casilla -> indice (el 0 queda para el transparente)
 		var palette:Array<Int> = [];
 		if (reserved == 1) palette.push(0);
 		for (j in 0...m) palette.push((clamp(pa[j]) << 24) | (clamp(pr[j]) << 16) | (clamp(pg[j]) << 8) | clamp(pb[j]));

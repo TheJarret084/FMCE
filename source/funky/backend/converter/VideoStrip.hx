@@ -23,38 +23,26 @@ import sys.thread.Thread;
 #end
 #end
 
-/** Un video de `sprites/<nombre>/` en el orden en que el motor lo reproduce (`FunkinVideoSprite.videoFile`). */
 typedef VideoClip =
 {
-	/** Ruta del .mp4, o null si el config.json lo menciona pero el archivo no existe. */
+
 	var path:Null<String>;
-	/** Entrada de `config.json` (`data[i]`); `{}` si no tiene. */
+
 	var cfg:Dynamic;
 }
 
 typedef VideoInfo =
 {
-	/** Tamano con el que ffmpeg entrega los frames (ya con la rotacion aplicada). */
+
 	var w:Int;
 	var h:Int;
 	var fps:Float;
 	var seconds:Float;
 }
 
-/**
- * Video (.mp4) -> UNA tira horizontal de PNG indexado (frames pegados, sin huecos ni recortes) con FunkFMPEG.
- * El fps queda dentro de VIDEO_MIN_FPS..VIDEO_MAX_FPS (12..24).
- * Es lo que el .FNMM entiende: el FNMM no tiene video, pero una tira con `num` frames y `spd` = fps / 24 se ve igual.
- *
- * Los frames los saca ffmpeg en escritorio y `MediaMetadataRetriever` (source/java/org/fmce/VideoFrames.java, via `AndroidFrames`) en Android;
- * FunkFMPEG (Haxe puro) arma la tira igual en los dos.
- *
- * Cada frame se saca a su fps real si esta en el rango (nada de saltar frames) y al mayor tamano que entre en los limites de la tira
- * (`FMCEToFNMMExporter.VIDEO_MAX_*`), sin agrandar jamas el video.
- */
 class VideoStrip
 {
-	/** ffmpeg usable: junto al .exe, o el que haya en el PATH. null si no hay (o en Android, donde no existe). */
+
 	public static function findFfmpeg():Null<String>
 	{
 		#if (sys && !android)
@@ -75,11 +63,6 @@ class VideoStrip
 		return null;
 	}
 
-	/**
-	 * Los videos de una carpeta de sprite, en el orden del motor: la entrada `i` de `config.json` es el video `i`
-	 * (`anim` -> `<anim>.mp4`, o `video<i>.mp4`, o el `i`-esimo .mp4). Un .mp4 que el config no menciona NO se deja: va al final
-	 * como una animacion mas.
-	 */
 	public static function clips(dir:String, warnings:Array<String>):Array<VideoClip>
 	{
 		var out:Array<VideoClip> = [];
@@ -124,7 +107,7 @@ class VideoStrip
 	#end
 
 	#if sys
-	/** Opciones de FunkFMPEG para un video: el frame mas grande que quepa en los limites, paleta global de 256 colores. */
+
 	public static function tapeOptions():TapeOptions
 	{
 		var o = new TapeOptions();
@@ -132,7 +115,7 @@ class VideoStrip
 		o.maxWidth = FMCEToFNMMExporter.VIDEO_MAX_WIDTH;
 		o.maxHeight = FMCEToFNMMExporter.VIDEO_MAX_HEIGHT;
 		#if android
-		// la tira se arma en memoria (un buffer del tamano de la tira): en el telefono no pasa del tope de las tiras de atlas
+
 		o.maxPixels = Math.min(FMCEToFNMMExporter.VIDEO_MAX_PIXELS, FMCEToFNMMExporter.MAX_PIXELS);
 		#else
 		o.maxPixels = FMCEToFNMMExporter.VIDEO_MAX_PIXELS;
@@ -146,7 +129,7 @@ class VideoStrip
 	}
 
 	#if !android
-	/** Tamano, fps y duracion del video, leidos con ffmpeg (copia de flujo: no decodifica nada, es instantaneo). */
+
 	public static function probe(ffmpeg:String, path:String):Null<VideoInfo>
 	{
 		var text = "";
@@ -165,7 +148,6 @@ class VideoStrip
 		return parseProbe(text, path);
 	}
 
-	/** Separado de `probe` para poder probarlo con texto de ffmpeg ya capturado. */
 	public static function parseProbe(text:String, path:String):Null<VideoInfo>
 	{
 		var w = 0;
@@ -174,7 +156,7 @@ class VideoStrip
 		for (line in text.split("\n"))
 		{
 			if (line.indexOf("Video:") < 0) continue;
-			// ", 1920x1080 [SAR 1:1 DAR 16:9], 30 fps": el tamano va despues de una coma y antes de un espacio, coma o corchete
+
 			var size = ~/, (\d{2,5})x(\d{2,5})[ ,\[]/;
 			if (size.match(line + " "))
 			{
@@ -193,7 +175,6 @@ class VideoStrip
 			h = size.h;
 		}
 
-		// un video grabado de lado trae una rotacion: ffmpeg la aplica al decodificar y los frames salen girados
 		var turn = ~/(?:rotation of|rotate\s*:)\s*(-?[\d.]+)/;
 		if (turn.match(text))
 		{
@@ -216,7 +197,6 @@ class VideoStrip
 
 	#end
 
-	/** Carpeta de trabajo (frames temporales) de un video. */
 	public static function workDir(spriteDir:String, index:Int):String
 		return Path.join([Storage.cacheDirectory(), "video-export", Path.withoutDirectory(Path.removeTrailingSlashes(Path.directory(Path.removeTrailingSlashes(spriteDir)))) + "__" + Path.withoutDirectory(Path.removeTrailingSlashes(spriteDir)) + "__" + index]);
 
@@ -235,10 +215,7 @@ class VideoStrip
 }
 
 #if sys
-/**
- * Un video -> una tira. Todo el trabajo pesado (ffmpeg y FunkFMPEG) corre en OTRO hilo; `step()` solo mira si ya termino, asi
- * la pantalla sigue viva (y se puede cancelar) mientras se procesa un video de cientos de frames.
- */
+
 class VideoStripTask
 {
 	public var done(default, null):Bool = false;
@@ -248,21 +225,19 @@ class VideoStripTask
 	public var fraction(get, never):Float;
 	public var warnings(default, null):Array<String> = [];
 
-	/** PNG indexado de la tira. */
 	public var bytes(default, null):Null<Bytes> = null;
-	/** Tamano del video original y de un frame de la tira. */
+
 	public var sourceWidth(default, null):Int = 0;
 	public var sourceHeight(default, null):Int = 0;
 	public var frameWidth(default, null):Int = 0;
 	public var frameHeight(default, null):Int = 0;
 	public var frames(default, null):Int = 0;
-	/** fps con los que se exporta (el del video, dentro de VIDEO_MIN_FPS..VIDEO_MAX_FPS). */
+
 	public var fps(default, null):Float = 24;
-	/** true si hubo que cambiar el fps del video para entrar en el rango. */
+
 	public var resampled(default, null):Bool = false;
 	public var paletteSize(default, null):Int = 0;
 
-	/** null en Android (ahi los frames salen de `AndroidFrames`). */
 	var ffmpeg:Null<String>;
 	var path:String;
 	var work:String;
@@ -288,7 +263,6 @@ class VideoStripTask
 	function get_fraction():Float
 		return done ? 1.0 : percent / 100;
 
-	/** true mientras siga trabajando. */
 	public function step():Bool
 	{
 		if (done) return false;
@@ -333,15 +307,14 @@ class VideoStripTask
 		return !done;
 	}
 
-	/** Cancela: el hilo termina el paso en curso y se borran los temporales. */
 	public function dispose():Void
 	{
 		cancelled = true;
 		#if android
 		if (stage == 1) AndroidFrames.cancel();
-		if (stage == 2 && !done) return; // el hilo de FunkFMPEG borra al terminar
+		if (stage == 2 && !done) return;
 		#else
-		if (started && !done) return; // el hilo borra al terminar
+		if (started && !done) return;
 		#end
 		try VideoStrip.wipe(work) catch (_:Dynamic) {}
 	}
@@ -351,7 +324,6 @@ class VideoStripTask
 	var total:Int = 0;
 	var target:Array<Int> = [0, 0];
 
-	/** Android: Java saca los frames (se consulta desde aqui) y despues FunkFMPEG arma la tira en un hilo de Haxe. */
 	function stepAndroid():Bool
 	{
 		try
@@ -362,7 +334,7 @@ class VideoStripTask
 					started = true;
 					label = "leyendo " + Path.withoutDirectory(path);
 					var info = AndroidFrames.probe(path);
-					if (info == null) throw "no se pudo leer el video (MediaMetadataRetriever)";
+					if (info == null) throw "no se pudo leer el video (MediaMetadataRetriever): " + (AndroidFrames.lastError == "" ? "sin detalle" : AndroidFrames.lastError);
 					if (info.seconds <= 0) throw "no se pudo leer la duracion del video";
 					sourceWidth = info.w;
 					sourceHeight = info.h;
@@ -430,8 +402,6 @@ class VideoStripTask
 		done = true;
 	}
 
-	// ------------------------------------------------------------------ trabajo (en el hilo)
-
 	#if !android
 	function run():Void
 	{
@@ -443,12 +413,10 @@ class VideoStripTask
 		resampled = Math.abs(fps - info.fps) > 0.01;
 		percent = 2;
 
-		// frames que van a salir: duracion x fps (+1 de margen: si sobra, FunkFMPEG ajusta con el numero real)
 		var count = 600;
 		if (info.seconds > 0) count = Std.int(Math.ceil(info.seconds * fps)) + 1;
 		else warnings.push("no se pudo leer la duracion de " + Path.withoutDirectory(path) + ": el tamano de los frames puede salir mas chico de lo posible");
 
-		// el frame mas grande que deje la tira dentro de los limites
 		var target = FrameScale.fit(info.w, info.h, count, options);
 		label = "sacando frames " + target[0] + "x" + target[1];
 		extract(info, target);
@@ -458,7 +426,6 @@ class VideoStripTask
 	}
 	#end
 
-	/** FunkFMPEG: los f000001.png de `work` -> una tira. Igual en escritorio y Android. */
 	function buildTape():Void
 	{
 		var names = [for (f in FileSystem.readDirectory(work)) if (~/^f\d+\.png$/i.match(f)) f];
@@ -477,16 +444,15 @@ class VideoStripTask
 	}
 
 	#if !android
-	/** ffmpeg: todos los frames del video (a `fps` si hay que ajustarlo) ya al tamano final, PNG RGB sin perdida. */
+
 	function extract(info:VideoInfo, target:Array<Int>):Void
 	{
 		VideoStrip.wipe(work);
 		FileSystem.createDirectory(work);
 		var filters:Array<String> = [];
-		if (resampled) filters.push("fps=" + fps); // antes de escalar: se escalan menos frames
+		if (resampled) filters.push("fps=" + fps);
 		if (target[0] != info.w || target[1] != info.h) filters.push("scale=" + target[0] + ":" + target[1] + ":flags=area");
 
-		// -fps_mode es de ffmpeg 5.1+; uno mas viejo usa -vsync 0 (ambos: "no toques los tiempos")
 		for (variant in 0...2)
 		{
 			var args = ["-y", "-hide_banner", "-v", "error", "-nostdin", "-i", path, "-map", "0:v:0", "-an", "-sn", "-dn"];

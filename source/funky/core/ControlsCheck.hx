@@ -4,7 +4,6 @@ import flixel.FlxG;
 import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.input.keyboard.FlxKey;
 
-/** Raw gameplay-lane input, for the strumline. */
 class ControlsCheck
 {
 	public static function justPressed(lane:Int):Bool
@@ -52,13 +51,11 @@ class ControlsCheck
 		return id != FlxGamepadInputID.NONE && FlxG.gamepads.anyJustReleased(id);
 	}
 
-	/** `FlxKey`s bound to `lane`, skipping unknown names. */
 	static function resolveKeys(lane:Int):Array<FlxKey>
 	{
 		var names = ClientPrefs.getLaneKeys(lane);
 		var out = new Array<FlxKey>();
 
-		// getLaneKeys never returns null: an out-of-range lane yields [].
 		for (n in names)
 		{
 			if (n == "") continue;
@@ -70,7 +67,6 @@ class ControlsCheck
 		return out;
 	}
 
-	/** Gamepad button bound to `lane`, or NONE. */
 	static function resolveButton(lane:Int):FlxGamepadInputID
 	{
 		if (lane < 0) return FlxGamepadInputID.NONE;
@@ -78,8 +74,6 @@ class ControlsCheck
 		var buttons = ClientPrefs.getGamepadLaneButtons();
 		if (lane >= buttons.length) return FlxGamepadInputID.NONE;
 
-		// Padded with "" by normalizeGamepadButtons, so a short name is the
-		// only "unbound" case we can see here.
 		var name = buttons[lane];
 		if (name.length == 0) return FlxGamepadInputID.NONE;
 

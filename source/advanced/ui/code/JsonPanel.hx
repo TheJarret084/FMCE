@@ -12,14 +12,14 @@ private typedef JNode =
 	var depth:Int;
 	var kind:Int;
 	var preview:String;
-	/** Posicion en el texto: inicio de la clave (o del valor si es un elemento de array). */
+
 	var offset:Int;
-	/** Largo de la clave con comillas (0 si no tiene). */
+
 	var klen:Int;
-	/** Posicion justo despues del valor. */
+
 	var last:Int;
 	var parent:Int;
-	/** Indice del primer nodo que ya no es hijo de este. */
+
 	var end:Int;
 }
 
@@ -30,7 +30,6 @@ private typedef Slot =
 	var value:FlxText;
 }
 
-/** Recorre el texto JSON sin parsearlo a objetos: guarda el orden original y la posicion de cada valor. Nunca lanza errores. */
 private class JsonScan
 {
 	public static inline var K_OBJ:Int = 0;
@@ -75,7 +74,6 @@ private class JsonScan
 		}
 	}
 
-	/** Empieza en la comilla de apertura y deja `i` despues de la de cierre. Devuelve el texto sin comillas. */
 	function readString():String
 	{
 		i++;
@@ -124,7 +122,7 @@ private class JsonScan
 		};
 		nodes.push(node);
 
-		if (c == 123) // {
+		if (c == 123)
 		{
 			node.kind = K_OBJ;
 			i++;
@@ -160,7 +158,7 @@ private class JsonScan
 			}
 			node.preview = "{" + count + "}";
 		}
-		else if (c == 91) // [
+		else if (c == 91)
 		{
 			node.kind = K_ARR;
 			i++;
@@ -185,7 +183,7 @@ private class JsonScan
 			}
 			node.preview = "[" + count + "]";
 		}
-		else if (c == 34) // "
+		else if (c == 34)
 		{
 			node.kind = K_STR;
 			var s = readString();
@@ -200,7 +198,7 @@ private class JsonScan
 				if (d == 44 || d == 125 || d == 93 || d == 32 || d == 9 || d == 10 || d == 13) break;
 				i++;
 			}
-			if (i == s) i++; // nunca quedarse quieto
+			if (i == s) i++;
 			var w = t.substring(s, i > n ? n : i);
 			node.kind = (w == "true" || w == "false") ? K_BOOL : (w == "null" ? K_NULL : K_NUM);
 			node.preview = w.length > 40 ? w.substr(0, 40) + "…" : w;
@@ -211,12 +209,11 @@ private class JsonScan
 	}
 }
 
-/** Inspector JSON (panel de la derecha, reemplaza al explorador mientras hay un .json abierto). */
 class JsonPanel extends FlxSpriteGroup
 {
-	/** Pide al editor ir a una posicion: (inicio, largo). */
+
 	public var onJump:Int->Int->Void;
-	/** Boton "Archivos": volver al explorador. */
+
 	public var onClose:Void->Void;
 
 	static inline var INDENT:Int = 14;
@@ -305,9 +302,6 @@ class JsonPanel extends FlxSpriteGroup
 		add(pathText);
 	}
 
-	// ------------------------------------------------------------------ datos
-
-	/** Lee el texto del editor y reconstruye el arbol. Se llama al abrir el archivo y despues de editar. */
 	public function setSource(f:CodeStudioFile, text:String):Void
 	{
 		if (f.name != sourceName)
@@ -359,7 +353,6 @@ class JsonPanel extends FlxSpriteGroup
 	function clampScroll():Void
 		scroll = vis.length > capacity ? Std.int(Math.max(0, Math.min(scroll, vis.length - capacity))) : 0;
 
-	/** Fila visible de un nodo (busqueda binaria: `vis` esta ordenado). -1 si esta oculto. */
 	function visRow(k:Int):Int
 	{
 		var lo = 0;
@@ -374,7 +367,6 @@ class JsonPanel extends FlxSpriteGroup
 		return -1;
 	}
 
-	/** Nodo mas profundo que contiene esa posicion del texto. */
 	function nodeAt(pos:Int):Int
 	{
 		var lo = 0;
@@ -403,9 +395,6 @@ class JsonPanel extends FlxSpriteGroup
 		return parts.length == 0 ? "raíz" : parts.join(" > ");
 	}
 
-	// ------------------------------------------------------------------ acciones
-
-	/** Marca la fila del texto donde esta el cursor, despliega sus padres y muestra su ruta. */
 	public function follow(caret:Int):Void
 	{
 		if (nodes.length == 0 || caret == followCaret) return;
@@ -479,8 +468,6 @@ class JsonPanel extends FlxSpriteGroup
 		clampScroll();
 		layoutRows();
 	}
-
-	// ------------------------------------------------------------------ dibujo
 
 	function kindColor(kind:Int):Int
 	{

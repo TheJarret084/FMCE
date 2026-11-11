@@ -1,18 +1,17 @@
 package advanced.ui.code;
 
-/** Un archivo abierto en CodeStudio. `content` es el texto tal cual va a disco; el editor trabaja con `editorText()`. */
 class CodeStudioFile
 {
 	public var name:String;
 	public var path:String;
 	public var content:String;
 	public var editable:Bool;
-	/** "haxe", "json" o "text". */
+
 	public var kind:String;
 	public var readOnlyReason:String;
-	/** Contenido que hay en disco. null = archivo nuevo que todavia no se guardo. */
+
 	public var saved:Null<String>;
-	/** Cerrar una pestana con cambios pide un segundo intento: true despues del primero. */
+
 	public var closeArmed:Bool = false;
 	public var crlf(default, null):Bool;
 
@@ -41,11 +40,9 @@ class CodeStudioFile
 		return i < 0 ? name : name.substr(i + 1);
 	}
 
-	/** Texto para el editor (siempre con \n). */
 	public function editorText():String
 		return StringTools.replace(content, "\r\n", "\n");
 
-	/** Guarda lo que escribio el editor devolviendole su tipo de salto de linea original. */
 	public function setFromEditor(text:String):Void
 		content = crlf ? StringTools.replace(text, "\n", "\r\n") : text;
 

@@ -18,34 +18,32 @@ import sys.io.File;
 #end
 
 typedef ImportResult = {
-	/** Carpeta del sprite (`<nivel>/sprites/<n>`). */
+
 	var dir:String;
 	var ok:Bool;
 	var type:String;
-	/** Frames del original y cuantos distintos quedaron en el atlas. */
+
 	var frames:Int;
 	var unique:Int;
-	/** Tamano de la primera pagina. */
+
 	var width:Int;
 	var height:Int;
-	/** Paginas del atlas (1 si cabe en una). */
+
 	@:optional var pages:Int;
 	var warnings:Array<String>;
 	var error:Null<String>;
 }
 
-/** Sprites NATIVOS de un .fnmm -> atlas FMCE (`sprite.png` + `sprite.json` + `config.json`). */
 class FNMMSpriteImporter
 {
 	public static inline var GAP:Int = 2;
 	public static inline var MAX_WIDTH:Int = 4096;
 	public static inline var FRAME_DURATION:Int = 42;
-	/** Alto maximo de una pagina (el ancho maximo es MAX_WIDTH). */
+
 	public static inline var MAX_PAGE_HEIGHT:Int = 4096;
-	/** PNG con compresion rapida: pesa un poco mas pero se escribe mucho mas rapido (en un celular se nota). */
+
 	public static inline var FAST_PNG:Bool = true;
 
-	/** Archivo de la pagina `index`: `sprite.png`, `sprite_p1.png`, ... */
 	public static inline function pageFile(index:Int):String
 		return index == 0 ? "sprite.png" : "sprite_p" + index + ".png";
 
@@ -53,20 +51,14 @@ class FNMMSpriteImporter
 	public static final ROLE_ICON = "icon";
 	public static final ROLE_ITEM = "item";
 
-	/** Nombre de la animacion `index` de un sprite de rol `role`. */
 	public static function animName(role:String, index:Int):String
 	{
-		// Todos los sprites van con anim#: anim0 = idle (en un icono, normal), anim1.. = el resto (icono: perdiendo, ganando).
+
 		return "anim" + index;
 	}
 
-	/** Respaldo del sprite.json nativo mientras se cambia por el atlas; si existe, el cambio quedo a medias. */
 	public static inline var NATIVE_BACKUP:String = "sprite.native.json";
 
-	/**
-	 * Deshace un cambio que se quedo a medias (el juego se cayo): devuelve el sprite.json nativo y borra lo
-	 * que ya se habia escrito del atlas. Las tiras `0.png...` solo se borran al final, asi que se puede reconvertir.
-	 */
 	public static function recover(dir:String):Bool
 	{
 		#if sys
@@ -93,11 +85,9 @@ class FNMMSpriteImporter
 		#end
 	}
 
-	/** `sprite_p1.png`, `sprite_p2.png`... (las paginas despues de la primera). */
 	public static function isExtraPage(entry:String):Bool
 		return StringTools.startsWith(entry, "sprite_p") && StringTools.endsWith(entry, ".png");
 
-	/** `recover` en todos los sprites del nivel. Hay que llamarlo ANTES de `nativeDirs`/`convertLevel`. */
 	public static function recoverLevel(levelDir:String):Void
 	{
 		#if sys
@@ -112,7 +102,7 @@ class FNMMSpriteImporter
 	}
 
 	#if sys
-	/** Renombra pisando el destino (en Windows `rename` falla si ya existe). */
+
 	public static function replaceFile(from:String, to:String):Void
 	{
 		if (FileSystem.exists(to)) FileSystem.deleteFile(to);
@@ -120,7 +110,6 @@ class FNMMSpriteImporter
 	}
 	#end
 
-	/** Carpetas de sprites de `levelDir` que todavia estan en formato nativo (tiras sin `sprite.png`). */
 	public static function nativeDirs(levelDir:String):Array<String>
 	{
 		var out:Array<String> = [];
@@ -157,10 +146,6 @@ class FNMMSpriteImporter
 		#end
 	}
 
-	/**
-	 * Convierte todos los sprites nativos de un nivel.
-	 * @param roles nombre de sprite -> "character" | "icon" | "item" (los que no aparezcan son "item").
-	 */
 	public static function convertLevel(levelDir:String, roles:Map<String, String>):Array<ImportResult>
 	{
 		var results:Array<ImportResult> = [];
@@ -172,11 +157,9 @@ class FNMMSpriteImporter
 		return results;
 	}
 
-	/** Empieza a convertir un sprite sin hacer nada todavia: llama a `step()` hasta que devuelva false. */
 	public static function begin(dir:String, role:String):SpriteImportTask
 		return new SpriteImportTask(dir, role);
 
-	/** Convierte un sprite de una vez (bloquea hasta terminar). Para no congelar la pantalla usa `begin` + `step`. */
 	public static function convertSprite(dir:String, role:String):ImportResult
 	{
 		var task = begin(dir, role);
@@ -192,11 +175,10 @@ class FNMMSpriteImporter
 	}
 }
 
-/** Conversion de un sprite paso a paso, reanudable. */
 class SpriteImportTask
 {
 	public var result(default, null):ImportResult;
-	/** Que esta haciendo ahora ("tira 3/9"). */
+
 	public var label(default, null):String = "";
 	public var done(default, null):Bool = false;
 
@@ -226,7 +208,6 @@ class SpriteImportTask
 		#end
 	}
 
-	/** Un pedazo de trabajo. true = quedan mas pasos. */
 	public function step():Bool
 	{
 		#if sys
@@ -275,7 +256,6 @@ class SpriteImportTask
 		label = "abriendo";
 	}
 
-	/** Una tira: se recorta cada frame, se quitan los repetidos y se acomoda directo en la pagina actual. */
 	function readStrip():Void
 	{
 		if (index >= data.length)
@@ -308,7 +288,6 @@ class SpriteImportTask
 		var atlasName = "anim" + i;
 		var from = frames.length;
 
-		// Un solo lienzo por tira: cada copyPixels lo pisa entero, no hace falta limpiarlo ni crear otro por frame.
 		var canvas = new BitmapData(frameW, frameH, true, 0x00000000);
 		for (k in 0...count)
 		{
@@ -321,7 +300,6 @@ class SpriteImportTask
 			var bw = Std.int(box.width);
 			var bh = Std.int(box.height);
 
-			// Dos frames con los mismos pixeles visibles comparten lugar en la pagina (el desplazamiento va en el json de cada frame).
 			var raw:Bytes = canvas.getPixels(box);
 			var slot = pager.place(hash(raw) + ":" + bw + "x" + bh, bw, bh, canvas, box);
 
@@ -341,13 +319,11 @@ class SpriteImportTask
 
 		tags.push({name: atlasName, from: from, to: frames.length - 1, direction: "forward"});
 
-		// `anim` = tag dentro del atlas. El nombre en el juego (anim0 = idle, anim<N>...) es la posicion en `data`:
-		// las tiras se agregan en orden, asi que ya coincide.
 		var offset:Dynamic = Reflect.field(entry, "offset");
 		configData.push({
 			anim: atlasName,
 			num: count,
-			// FNMM guarda un multiplicador de 24 fps; aca queda como FPS crudos (`spd_fps: true`).
+
 			spd: Math.round(24 * FNMMSpriteImporter.number(Reflect.field(entry, "spd"), 1) * 100) / 100,
 			spd_fps: true,
 			indices: ([] : Array<Int>),
@@ -370,7 +346,6 @@ class SpriteImportTask
 		label = "guardando";
 	}
 
-	/** Escribe una pagina ya cerrada a `<pagina>.tmp` y libera su bitmap. */
 	function writePage(item:{index:Int, bitmap:BitmapData}):Void
 	{
 		label = "pagina " + (item.index + 1);
@@ -380,7 +355,6 @@ class SpriteImportTask
 		item.bitmap.dispose();
 	}
 
-	/** sprite.json (lista de frames + frameTags) y config.json, y el cambio de archivos. */
 	function commit():Void
 	{
 		var pageCount = pageSizes.length;
@@ -405,7 +379,7 @@ class SpriteImportTask
 			scale: "1",
 			frameTags: tags
 		};
-		// Un solo `sprite.png` se queda como siempre; con varias, `meta.pages` las lista (ver SpritePages).
+
 		if (pageCount > 1)
 		{
 			var info:Array<Dynamic> = [];
@@ -414,8 +388,6 @@ class SpriteImportTask
 		}
 		var atlasJson = {frames: frames, meta: meta};
 
-		// Todo se escribe primero a `.tmp` y luego se cambia en un orden fijo, guardando el sprite.json nativo
-		// como `sprite.native.json`: si el juego se cae a mitad, `recover` deshace el cambio y las tiras siguen ahi.
 		var jsonPath = Path.join([dir, "sprite.json"]);
 		var configPath = Path.join([dir, "config.json"]);
 		var nativePath = Path.join([dir, FNMMSpriteImporter.NATIVE_BACKUP]);
@@ -430,13 +402,12 @@ class SpriteImportTask
 		{
 			var page = Path.join([dir, FNMMSpriteImporter.pageFile(k)]);
 			FNMMSpriteImporter.replaceFile(page + ".tmp", page);
-			// Si este nivel ya se habia cargado en la sesion, que no quede el atlas viejo en cache.
+
 			FlxG.bitmap.removeByKey("level:" + page);
 		}
-		// Primero el respaldo (ya esta todo en su sitio) y despues las tiras.
+
 		FileSystem.deleteFile(nativePath);
 
-		// Paginas de una conversion anterior que ahora sobran.
 		for (entry in FileSystem.readDirectory(dir))
 			if (FNMMSpriteImporter.isExtraPage(entry) && entry != "sprite.png")
 			{
@@ -445,7 +416,6 @@ class SpriteImportTask
 				if (!found) FileSystem.deleteFile(Path.join([dir, entry]));
 			}
 
-		// Las tiras y los stubs de un solo frame que dejaba el conversor viejo ya no sirven.
 		for (i in 0...data.length)
 			for (leftover in [Path.join([dir, i + ".png"]), Path.join([dir, i + ".json"])])
 				if (FileSystem.exists(leftover)) FileSystem.deleteFile(leftover);
@@ -462,7 +432,7 @@ class SpriteImportTask
 		if (pager != null) pager.dispose();
 		for (item in queue) item.bitmap.dispose();
 		queue = [];
-		// Si se cayo a medias del cambio de archivos, esto devuelve el sprite nativo; si no, solo borra los .tmp.
+
 		try
 		{
 			FNMMSpriteImporter.recover(dir);
@@ -471,7 +441,6 @@ class SpriteImportTask
 		done = true;
 	}
 
-	/** Huella rapida de los pixeles (dos hashes de 32 bits sobre palabras de 4 bytes): mucho mas barata que un MD5 por frame. */
 	static function hash(bytes:Bytes):String
 	{
 		var a:Int32 = 0x811C9DC5;

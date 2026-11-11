@@ -19,14 +19,9 @@ class FlxFastTypedGroup<T:FlxBasic> extends FlxTypedGroup<T> {
 			return null;
 		}
 
-		// removed the check for multiple
-		// removed the check for null reuse
-
-		// If the group is full, return the Object
 		if (maxSize > 0 && length >= maxSize)
 			return Object;
 
-		// If we made it this far, we need to add the object to the group.
 		members.push(Object);
 		length++;
 
@@ -44,7 +39,6 @@ class CharterBackdropGroup extends FlxTypedGroup<CharterBackdrop> {
 	public var conductorSprY:Float = 0;
 	public var bottomLimitY:Float = 0;
 
-	// Just here so you can update display sprites all dat and above
 	public var strumlinesAmount:Int = 0;
 
 	public function new(strumLineGroup:CharterStrumLineGroup) {
@@ -124,7 +118,6 @@ class CharterBackdropGroup extends FlxTypedGroup<CharterBackdrop> {
 	}
 }
 
-// Batches note draws (neos idea) >:D -lunar
 class NotesDrawGroup extends FlxFastTypedGroup<CharterNote> {
 	public override function draw() @:privateAccess {
 		var oldDefaultCameras = FlxCamera._defaultCameras;
@@ -224,7 +217,6 @@ class CharterBackdrop extends FlxTypedGroup<FlxBasic> {
 		topSeparator.updateHitbox();
 		add(topSeparator);
 
-		// Limits
 		topLimit = new FlxSprite();
 		topLimit.makeSolid(1, 1, -1);
 		topLimit.color = 0xFF888888;
@@ -237,7 +229,6 @@ class CharterBackdrop extends FlxTypedGroup<FlxBasic> {
 		bottomLimit.blend = MULTIPLY;
 		add(bottomLimit);
 
-		// Follower
 		conductorFollowerSpr = new FlxSprite(0, 0).makeSolid(1, 1, -1);
 		conductorFollowerSpr.scale.set(4 * 40, 4);
 		conductorFollowerSpr.updateHitbox();
@@ -245,7 +236,7 @@ class CharterBackdrop extends FlxTypedGroup<FlxBasic> {
 	}
 
 	public function updateSprites() {
-		var x:Float = 0; // fuck you
+		var x:Float = 0;
 		var alpha:Float = 0.9;
 		var keyCount:Int = 4;
 
@@ -331,7 +322,7 @@ class CharterGridSeperatorBase extends FlxSprite {
 		@:privateAccess
 		var currentZoom = Charter.instance.__camZoom;
 		var conductorSprY = Charter.instance.gridBackdrops.conductorSprY;
-		if (conductorSprY == lastConductorSprY && currentZoom == lastCameraZoom) return; //only update if song pos or camera zoom has changed
+		if (conductorSprY == lastConductorSprY && currentZoom == lastCameraZoom) return;
 
 		var zoomOffset = ((FlxG.height * (1/currentZoom)) * 0.5);
 
@@ -350,7 +341,6 @@ class CharterGridSeperatorBase extends FlxSprite {
 		minMeasure = minBpmChange.measureTime + (minBeat - minBpmChange.beatTime) / minBpmChange.beatsPerMeasure;
 		maxMeasure = maxBpmChange.measureTime + (maxBeat - maxBpmChange.beatTime) / maxBpmChange.beatsPerMeasure;
 
-		//cap out the beats/measures at the end of the song
 		var endTime = Conductor.getStepsInTime(Charter.instance.__endStep);
 		var endBeat = Conductor.getTimeInBeats(endTime);
 		var endBpmChange = Conductor.bpmChangeMap[Conductor.getTimeInChangeIndex(endTime)];
@@ -361,7 +351,6 @@ class CharterGridSeperatorBase extends FlxSprite {
 		if (minMeasure < 0) minMeasure = 0;
 		if (minBeat < 0) minBeat = 0;
 
-		//only calculate if needed
 		if ((minBeat != lastMinBeat) || (maxBeat != lastMaxBeat) || (minMeasure != lastMinMeasure) || (maxMeasure != lastMaxMeasure) || lastConductorSprY == Math.NEGATIVE_INFINITY) {
 			calculateTimeSignatureGaps();
 			calculateStepTimes();
@@ -376,15 +365,15 @@ class CharterGridSeperatorBase extends FlxSprite {
 	}
 
 	private inline function calculateTimeSignatureGaps() {
-		//for time signatures that start mid step
+
 		timeSignatureChangeGaps.splice(0, timeSignatureChangeGaps.length);
 		for (i => change in Conductor.bpmChangeMap) {
 			if (change.stepTime >= minStep && change.stepTime <= maxStep) {
-				//get step while ignoring the current change
+
 				var index:Int = CoolUtil.boundInt(i-1, 0, Conductor.bpmChangeMap.length - 1);
 				var step:Float = Conductor.getTimeWithBPMInSteps(change.songTime, index, Conductor.getTimeWithIndexInBPM(change.songTime, index));
 
-				if (Math.ceil(step) - step > 0 && (step - Math.floor(step)) > FlxMath.EPSILON) { //mid step change
+				if (Math.ceil(step) - step > 0 && (step - Math.floor(step)) > FlxMath.EPSILON) {
 					timeSignatureChangeGaps.push(step);
 				}
 			}
@@ -404,7 +393,6 @@ class CharterGridSeperatorBase extends FlxSprite {
 
 	override public function draw() {
 
-		//should only need to recalculate once per frame and will be shared across each instance
 		recalculateBeats();
 
 		drawTimeSignatureChangeGaps();
@@ -479,7 +467,6 @@ class CameraHighlight extends FlxSprite {
 		@:privateAccess
 		var strumLineID = Charter.instance.strumLines.isDragging ? Charter.instance.strumLines.__pastStrumlines.indexOf(grid.strumLine) : Charter.instance.gridBackdrops.members.indexOf(grid);
 
-		//first default camera change
 		if ((Charter.instance.cameraMovementChanges[0] == null || Charter.instance.cameraMovementChanges[0].step != 0) && strumLineID == 0) {
 			var endStep = Charter.instance.cameraMovementChanges[0] != null ? Charter.instance.cameraMovementChanges[0].step : Charter.instance.__endStep;
 
@@ -489,7 +476,6 @@ class CameraHighlight extends FlxSprite {
 			}
 		}
 
-		//update index if gone backwards
 		while(_currentCameraMovementIndex > 0) {
 			if (Charter.instance.cameraMovementChanges[_currentCameraMovementIndex] == null || Charter.instance.cameraMovementChanges[_currentCameraMovementIndex].endStep >= minStep) {
 				_currentCameraMovementIndex--;
@@ -503,7 +489,7 @@ class CameraHighlight extends FlxSprite {
 			var change = Charter.instance.cameraMovementChanges[i];
 			if (change.endStep >= minStep) {
 				if (!seenFirstVisible) {
-					_currentCameraMovementIndex = i; //remember the index for the next frame, so we dont need to loop through everything every time
+					_currentCameraMovementIndex = i;
 					seenFirstVisible = true;
 				}
 				if (change.strumLineID == strumLineID) {
@@ -542,7 +528,6 @@ class EventBackdrop extends FlxBackdrop {
 		flipX = flipY = true;
 		alpha = 0.9;
 
-		// Separators
 		eventBeatSeparator = new CharterEventGridSeperator();
 		eventBeatSeparator.makeSolid(1, 1, -1);
 		eventBeatSeparator.alpha = 0.5;

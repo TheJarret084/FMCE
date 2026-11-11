@@ -28,7 +28,7 @@ class UIDropDown extends UISliceSprite {
 	}
 
 	public function new(x:Float, y:Float, width:Int = 320, height:Int = 32, _options:Array<OneOfTwo<DropDownItem, String>>, index:Int = 0) {
-		super(x, y, width - height, height, 'editors/ui/inputbox'); // using same sprite cause fuck you
+		super(x, y, width - height, height, 'editors/ui/inputbox');
 
 		var _items:Array<DropDownItem> = [];
 
@@ -40,11 +40,10 @@ class UIDropDown extends UISliceSprite {
 			}
 		}
 
-		// sin opciones o con un indice fuera de rango el label de abajo (items[index]) reventaba con null
 		if (_items.length == 0) _items = [{label: "-", value: 0}];
 		index = Std.int(Math.max(0, Math.min(index, _items.length - 1)));
 		this.items = _items;
-		this.options = [for(o in _items) o.label]; // backwards compatibility
+		this.options = [for(o in _items) o.label];
 		this.index = index;
 
 		cursor = CLICK;

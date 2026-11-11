@@ -1,6 +1,5 @@
 package funkin.backend.chart;
 
-/** Tipos de parametro que entiende la pantalla de eventos del charter. */
 enum EventParamType {
 	TString;
 	TBool;
@@ -11,17 +10,17 @@ enum EventParamType {
 	TDropDown(options:Array<String>);
 	TCharacter;
 	TStage;
-	/** Indice dentro de `action_packs` (se elige en una lista). */
+
 	TActionPack;
-	/** Objeto de `scene.json > objects` (dropdown con su numero y su sprite; se guarda el numero). */
+
 	TObject;
-	/** Posicion (`transform`) del objeto elegido en el parametro TObject del mismo evento (se guarda el numero). */
+
 	TObjectTransform;
-	/** Animacion del sprite que tiene el objeto elegido (se guarda su posicion; 0 = idle). */
+
 	TObjectAnim;
-	/** Carpeta de `sprites/` del nivel (se guarda el nombre). */
+
 	TSpriteName;
-	/** Punto de `scene.json > cameras` (se guarda el numero). */
+
 	TCameraPoint;
 }
 
@@ -29,12 +28,11 @@ typedef EventParamInfo = {
 	var name:String;
 	var type:EventParamType;
 	var defValue:Dynamic;
-	/** Nombre de la propiedad dentro de `props` en events.json. */
+
 	var key:String;
 	var ?saveIfDefault:Bool;
 }
 
-/** Eventos del charter: acciones de events.json y sus props. */
 class EventsData {
 	static final UNITS:Array<String> = ["seconds", "beats", "steps"];
 
@@ -48,10 +46,6 @@ class EventsData {
 			p("easingType", "Curva (default, quad, cubeOut...)", TString, "default")
 		];
 
-	/**
-	 * Nombre que se VE en el charter para cada evento. Lo que se guarda en events.json sigue siendo el id del motor
-	 * (`ObjectOpacitySet`), esto es solo visual. Un evento sin entrada aqui se muestra con su id.
-	 */
 	static final DISPLAY_NAMES:Map<String, String> = [
 		"CameraSet" => "Definir cámara",
 		"CameraZoom" => "Definir zoom de cámara",
@@ -69,10 +63,6 @@ class EventsData {
 		"GUI" => "Mostrar / ocultar GUI"
 	];
 
-	/**
-	 * Nombre visual de un evento a partir de su id: primero la traduccion del idioma (`charter.events.<id en minusculas>`
-	 * en languages/<idioma>/Editors.xml), luego la tabla de arriba y, si no hay ninguna, el mismo id.
-	 */
 	public static function displayName(id:String):String {
 		var tuId = "charter.events." + TU.raw2Id(id);
 		if (TU.exists(tuId)) return TU.translate(tuId);
@@ -138,7 +128,7 @@ class EventsData {
 			p("timeUnit", "Unidad", TDropDown(UNITS), "seconds")
 		]);
 		add("RunActionPack", [p("actionPack", "Action pack", TActionPack, 0)]);
-		// Los dos que faltaban: el juego ya los ejecuta (Eventos.hx) y vienen en los niveles .fnmm (sobre todo dentro de action packs).
+
 		add("PlayerHealth", [
 			p("operation", "Operacion (set, add, remove)", TDropDown(["set", "add", "remove"]), "set"),
 			p("value", "Valor", TFloat(0, 9999, 0.5, 3), 0.0),

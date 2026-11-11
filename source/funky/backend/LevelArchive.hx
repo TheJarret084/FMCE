@@ -13,7 +13,6 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Resultado de exportar / importar. `path` = el .FMCE creado (exportar) o la carpeta del nivel creada (importar). */
 typedef ArchiveResult =
 {
 	var ok:Bool;
@@ -23,21 +22,17 @@ typedef ArchiveResult =
 	var error:String;
 }
 
-/** Niveles .FMCE: zip con el contenido de la carpeta del nivel. */
 class LevelArchive
 {
 	public static inline var EXT:String = ".FMCE";
 
-	/** Extensiones que nunca entran al .FMCE (ni se sacan al importar): las copias de seguridad de los editores. */
 	static final SKIP:Array<String> = [".bak", ".bck"];
 
-	/** Ya vienen comprimidos: se guardan tal cual (mas rapido, mismo tamano). */
 	static final STORED:Array<String> = [".ogg", ".mp3", ".wav", ".png", ".jpg", ".jpeg", ".mp4", ".webm", ".zip", ".fnmm", ".fmce"];
 
 	public static function isArchive(path:String):Bool
 		return path != null && StringTools.endsWith(path.toLowerCase(), ".fmce");
 
-	/** true si el archivo es una copia de seguridad que no se exporta. */
 	public static function isBackup(name:String):Bool
 	{
 		var lower = name.toLowerCase();
@@ -46,7 +41,6 @@ class LevelArchive
 		return false;
 	}
 
-	/** `.FMCE` sueltos en `levels/` (asi se pasan niveles a un celular: se copian ahi). */
 	public static function listArchives():Array<String>
 	{
 		var out:Array<String> = [];
@@ -62,9 +56,6 @@ class LevelArchive
 		return out;
 	}
 
-	// ───────────────────────── exportar ─────────────────────────
-
-	/** Comprime `levels/<levelName>/` en `<destDir>/<Nivel>.FMCE` (por defecto `exports/`). */
 	public static function exportLevel(levelName:String, ?destDir:String):ArchiveResult
 	{
 		#if sys
@@ -85,7 +76,6 @@ class LevelArchive
 			var out = File.write(dest, true);
 			var writer = new Writer(out);
 
-			// una entrada a la vez: no se junta todo el nivel en memoria
 			for (rel in files)
 			{
 				var bytes = File.getBytes(src + "/" + rel);
@@ -144,12 +134,6 @@ class LevelArchive
 	}
 	#end
 
-	// ───────────────────────── importar ─────────────────────────
-
-	/**
-	 * Descomprime un `.FMCE` en `levels/<nombre del archivo>/`. Si ese nivel ya existe NO lo pisa (devuelve error):
-	 * borra o renombra el de la carpeta y vuelve a importar.
-	 */
 	public static function importArchive(archivePath:String):ArchiveResult
 	{
 		#if sys
@@ -171,7 +155,6 @@ class LevelArchive
 			return fail('No es un zip legible: ' + Std.string(e));
 		}
 
-		// nombres seguros; si todo cuelga de UNA carpeta (Nivel/chart.json) se le quita
 		var items:Array<{name:String, entry:haxe.zip.Entry}> = [];
 		for (entry in entries)
 		{
@@ -220,7 +203,6 @@ class LevelArchive
 		#end
 	}
 
-	/** Despues de importar un .FMCE de `levels/`, se mueve a `exports/` para que no estorbe ni se vuelva a importar. */
 	public static function archiveDone(archivePath:String):Void
 	{
 		#if sys
@@ -236,7 +218,7 @@ class LevelArchive
 	}
 
 	#if sys
-	/** Sin `..`, sin ruta absoluta ni unidad (`C:`). */
+
 	static function isUnsafe(name:String):Bool
 	{
 		if (StringTools.startsWith(name, "/") || name.indexOf(":") >= 0) return true;
@@ -245,7 +227,6 @@ class LevelArchive
 		return false;
 	}
 
-	/** "Nivel/" si TODOS los archivos cuelgan de esa unica carpeta y no hay meta/chart en la raiz; si no, "". */
 	static function commonFolder(names:Array<String>):String
 	{
 		if (names.length == 0) return "";

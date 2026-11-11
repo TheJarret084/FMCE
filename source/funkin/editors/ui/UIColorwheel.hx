@@ -8,7 +8,7 @@ using flixel.util.FlxSpriteUtil;
 
 class UIColorwheel extends UISliceSprite {
 	var colorPicker:FlxSprite;
-	/** null en Android o si el shader no compila: entonces el cuadro de color se dibuja por CPU (ver redrawPicker). */
+
 	var colorPickerShader:Null<CustomShader>;
 	var pickerMask:Array<Bool>;
 	var __pickerHue:Float = -1;
@@ -18,7 +18,7 @@ class UIColorwheel extends UISliceSprite {
 	var colorSliderSelector:UIColorWheelSelector;
 
 	var colorHexTextBox:UITextBox;
-	var rgbNumSteppers:Array<UINumericStepper> = []; // r,g,b
+	var rgbNumSteppers:Array<UINumericStepper> = [];
 
 	public var curColor:Null<FlxColor>;
 	public var curColorString:String = "#FFFFFF";
@@ -45,7 +45,6 @@ class UIColorwheel extends UISliceSprite {
 		colorSlider = new FlxSprite(colorPicker.x + 100 + 12.5, colorPicker.y).makeGraphic(16, 100, FlxColor.TRANSPARENT);
 		colorSlider.drawRoundRect(0, 0, 16, 100, 10, 10, FlxColor.WHITE);
 
-		// Im too lazy to use a shader for this if its not even gonna change
 		colorSlider.pixels.lock();
 		for (pixelY in 0...Std.int(colorSlider.height)) {
 			var color:Int = FlxColor.fromHSB(pixelY / (colorSlider.height-1) * 360, 1, 1);
@@ -96,7 +95,7 @@ class UIColorwheel extends UISliceSprite {
 
 	static function makePickerShader():Null<CustomShader> {
 		#if android
-		return null; // los shaders del selector no se usan en Android (igual que el blur de UISubstateWindow)
+		return null;
 		#else
 		try {
 			return new CustomShader("engine/colorPicker");
@@ -107,7 +106,6 @@ class UIColorwheel extends UISliceSprite {
 		#end
 	}
 
-	/** Guarda que pixeles del cuadro (redondeado) estan dibujados, para recolorearlos sin shader. */
 	function initPickerMask() {
 		pickerMask = [];
 		var bmp = colorPicker.pixels;
@@ -116,7 +114,6 @@ class UIColorwheel extends UISliceSprite {
 				pickerMask.push(((bmp.getPixel32(px, py) >> 24) & 0xFF) > 0);
 	}
 
-	/** Sin shader: pinta el cuadro (saturacion en X, brillo en Y) para el tono actual. Solo repinta si el tono cambio. */
 	function redrawPicker() {
 		if (pickerMask == null || (__pickerHue >= 0 && Math.abs(hue - __pickerHue) < 0.5)) return;
 		__pickerHue = hue;
@@ -165,13 +162,10 @@ class UIColorwheel extends UISliceSprite {
 		}
 	}
 
-	// For Character Editor
 	public var colorChanged:Bool = false;
 
-	// Make the colorwheel feel better
 	static inline var hitBoxExtension:Float = 8;
 
-	// Skibidi
 	var selectedSprite = null;
 	public override function update(elapsed:Float) {
 		var mousePos = FlxG.mouse.getScreenPosition(__lastDrawCameras[0], FlxPoint.get());

@@ -11,7 +11,6 @@ private typedef TabSlot =
 	var w:Float;
 }
 
-/** Pestanas de los archivos abiertos. Rueda del mouse sobre la barra = desplazar; clic central = cerrar. */
 class TabBar extends FlxSpriteGroup
 {
 	static inline var MAX_W:Int = 230;
@@ -77,7 +76,7 @@ class TabBar extends FlxSpriteGroup
 			if (ai >= 0)
 			{
 				if (ai < first) first = ai;
-				// avanza `first` hasta que la activa entre completa
+
 				while (first < ai)
 				{
 					var used:Float = 0;
@@ -100,7 +99,6 @@ class TabBar extends FlxSpriteGroup
 			x += w + 1;
 		}
 
-		// flechas si hay pestanas fuera de la vista
 		if (first > 0) content.add(CodeDraw.label(2, barY + 7, "‹", 16, CodeTheme.ACCENT));
 		if (first + slots.length < tabs.length) content.add(CodeDraw.label(barW - 14, barY + 7, "›", 16, CodeTheme.ACCENT));
 	}

@@ -1,10 +1,9 @@
 package funky.core;
 
-/** Dificultad = velocidad de scroll. */
 class Difficulty
 {
 	public static final NAMES:Array<String> = ["EASY", "NORMAL", "HARD", "VERY HARD"];
-	/** Clave estable de cada dificultad (para guardar puntajes): no cambia aunque se renombren los NAMES. */
+
 	public static final KEYS:Array<String> = ["easy", "normal", "hard", "veryhard"];
 	public static final SPEEDS:Array<Float> = [2.0, 2.6, 3.2, 4.0];
 

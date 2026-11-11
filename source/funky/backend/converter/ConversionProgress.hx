@@ -8,23 +8,22 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Donde quedo una conversion, en un JSON (`levels/<id>/.convert.json`), para retomarla si el juego se cae. */
 class ConversionProgress
 {
 	public static inline var VERSION:Int = 1;
-	/** Veces que una unidad puede empezar sin terminar (= crashes) antes de saltarla. */
+
 	public static inline var MAX_ATTEMPTS:Int = 2;
 	public static inline var FILE_NAME:String = ".convert.json";
 
 	public var path(default, null):String;
 	public var archive(default, null):String;
-	/** true si se cargo un JSON de una conversion anterior (se esta retomando). */
+
 	public var resumed(default, null):Bool = false;
 
 	public var stage:String = "open";
-	/** Unidad que estaba en curso al guardar (`stage:assets`, `sprite:me`...). null si no hay ninguna. */
+
 	public var current(default, null):Null<String> = null;
-	/** Archivos del zip ya escritos (informativo). */
+
 	public var assetsDone:Int = 0;
 
 	var archiveSize:Float = 0;
@@ -47,7 +46,6 @@ class ConversionProgress
 		#end
 	}
 
-	/** Abre el JSON de `path` si es de este mismo .fnmm; si no hay (o es de otro archivo / version), uno nuevo. */
 	public static function open(path:String, archive:String):ConversionProgress
 	{
 		var progress = new ConversionProgress(path, archive);
@@ -98,15 +96,12 @@ class ConversionProgress
 	}
 	#end
 
-	/** Veces que `unit` empezo y no termino (crashes). */
 	public function attemptsOf(unit:String):Int
 		return attempts.exists(unit) ? attempts.get(unit) : 0;
 
-	/** true si `unit` ya tumbo la conversion `MAX_ATTEMPTS` veces: hay que saltarla. */
 	public function crashedTooMuch(unit:String):Bool
 		return attemptsOf(unit) >= MAX_ATTEMPTS;
 
-	/** Marca `unit` como en curso y lo guarda YA, antes de hacerla: si la conversion se cae, el JSON lo dice. */
 	public function begin(unit:String):Void
 	{
 		attempts.set(unit, attemptsOf(unit) + 1);
@@ -114,7 +109,6 @@ class ConversionProgress
 		save();
 	}
 
-	/** `unit` termino (bien o con un error controlado): ya no cuenta como crash. No escribe a disco; `save()` lo hace. */
 	public function finish(unit:String):Void
 	{
 		attempts.remove(unit);
@@ -163,7 +157,6 @@ class ConversionProgress
 		#end
 	}
 
-	/** Borra el JSON (la conversion termino). */
 	public function discard():Void
 	{
 		#if sys

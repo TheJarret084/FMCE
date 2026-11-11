@@ -6,7 +6,6 @@ import flixel.FlxState;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 
-/** Pantalla de error dentro del juego (la muestra CrashHandler ante un error de Haxe recuperable). */
 class CrashState extends FlxState
 {
 	var report:String;
@@ -116,7 +115,6 @@ class CrashState extends FlxState
 		#end
 	}
 
-	/** Solo el tramo de "Stack Trace:" del reporte (lo anterior ya esta arriba en pantalla). */
 	static function stackOf(report:String):String
 	{
 		var i = report.indexOf("Stack Trace:");

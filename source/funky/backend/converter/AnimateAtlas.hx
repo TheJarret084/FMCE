@@ -13,7 +13,6 @@ typedef AtlasSprite =
 	var page:Int;
 }
 
-/** Efecto de color de una instancia: canal * multiplicador + desplazamiento (0..255). */
 typedef ColorFx =
 {
 	var rm:Float;
@@ -26,7 +25,6 @@ typedef ColorFx =
 	var ao:Float;
 }
 
-/** Un sprite del atlas ya colocado: `x' = a*x + c*y + tx`, `y' = b*x + d*y + ty`. */
 typedef DrawOp =
 {
 	var sprite:String;
@@ -41,7 +39,7 @@ typedef DrawOp =
 
 private typedef Element =
 {
-	/** true = sprite del atlas (ASI), false = instancia de simbolo (SI). */
+
 	var atlas:Bool;
 	var name:String;
 	var m:Array<Float>;
@@ -73,7 +71,6 @@ class AnimateTimeline
 	public function new() {}
 }
 
-/** Lee un spritemap de Adobe Animate y arma sus animaciones. */
 class AnimateAtlas
 {
 	static inline var MAX_DEPTH:Int = 24;
@@ -88,7 +85,6 @@ class AnimateAtlas
 
 	public function new() {}
 
-	/** @param animation texto de Animation.json. @param spritemaps (nombre del json, texto) de cada spritemapN.json. */
 	public static function parse(animation:String, spritemaps:Array<{file:String, text:String}>):AnimateAtlas
 	{
 		var atlas = new AnimateAtlas();
@@ -134,9 +130,6 @@ class AnimateAtlas
 		return atlas;
 	}
 
-	// ------------------------------------------------------------------ lectura
-
-	/** Quita el BOM que deja Animate al principio de los json. */
 	static function clean(text:String):String
 		return text.length > 0 && text.charCodeAt(0) == 0xFEFF ? text.substr(1) : text;
 
@@ -202,7 +195,6 @@ class AnimateAtlas
 		};
 	}
 
-	/** [a, b, c, d, tx, ty] desde `MX` (6 valores), `M3D` (16, por columnas) o `Matrix3D` {m00...}. */
 	static function matrix(o:Dynamic):Array<Float>
 	{
 		var mx:Dynamic = Reflect.field(o, "MX");
@@ -219,7 +211,6 @@ class AnimateAtlas
 		return [1, 0, 0, 1, 0, 0];
 	}
 
-	/** Efectos de color de Animate: alfa, avanzado, tinte y brillo. */
 	static function colorOf(c:Dynamic):Null<ColorFx>
 	{
 		if (c == null) return null;
@@ -257,13 +248,9 @@ class AnimateAtlas
 		return fx;
 	}
 
-	// ------------------------------------------------------------------ consulta
-
-	/** Timeline de un simbolo del diccionario (null si no existe). */
 	public function symbol(name:String):Null<AnimateTimeline>
 		return symbols.get(name);
 
-	/** Rango [desde, hasta) de frames del label `label` en la linea de tiempo principal (hasta el siguiente label). */
 	public function labelRange(label:String):Null<{from:Int, to:Int}>
 	{
 		var starts:Array<{at:Int, name:String}> = [];
@@ -286,7 +273,6 @@ class AnimateAtlas
 		return null;
 	}
 
-	/** Labels de la linea de tiempo principal, en orden. */
 	public function labels():Array<String>
 	{
 		var starts:Array<{at:Int, name:String}> = [];
@@ -300,10 +286,6 @@ class AnimateAtlas
 		return out;
 	}
 
-	/**
-	 * Sprites del atlas que se ven en el frame `frame` de `tl`, de abajo hacia arriba. `root` = [a, b, c, d, tx, ty] de la
-	 * linea de tiempo. Las capas de Animate vienen de arriba hacia abajo, por eso se recorren al reves.
-	 */
 	public function ops(tl:AnimateTimeline, frame:Int, root:Array<Float>):Array<DrawOp>
 	{
 		var out:Array<DrawOp> = [];
@@ -356,7 +338,6 @@ class AnimateAtlas
 		}
 	}
 
-	/** parent * child: se aplica primero `child`. */
 	static function compose(p:Array<Float>, c:Array<Float>):Array<Float>
 	{
 		return [
@@ -379,10 +360,6 @@ class AnimateAtlas
 		};
 	}
 
-	/**
-	 * Escala (1 o menos) para que una tira de `frames` celdas de w x h entre en `maxSide` por lado y en `maxPixels` en total.
-	 * Los atlas de Animate suelen tener frames enormes: la tira se reduce y el exportador compensa con `scale` y el pivote.
-	 */
 	public static function fitScale(w:Int, h:Int, frames:Int, maxSide:Int, maxPixels:Float):Float
 	{
 		var k = 1.0;
@@ -393,7 +370,6 @@ class AnimateAtlas
 		return Math.max(0.05, Math.floor(k * 100) / 100);
 	}
 
-	/** Caja (x0, y0, x1, y1) que ocupan los sprites de `list`, o null si no hay ninguno con tamano. */
 	public function bounds(list:Array<DrawOp>):Null<{x0:Float, y0:Float, x1:Float, y1:Float}>
 	{
 		var box:Null<{x0:Float, y0:Float, x1:Float, y1:Float}> = null;

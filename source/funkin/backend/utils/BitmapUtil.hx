@@ -6,13 +6,9 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 
 final class BitmapUtil {
-	/**
-	 * Returns the most present color in a Bitmap.
-	 * @param bmap Bitmap
-	 * @return FlxColor Color that is the most present.
-	 */
+
 	public static function getMostPresentColor(bmap:BitmapData):FlxColor {
-		// map containing all the colors and the number of times they've been assigned.
+
 		var colorMap:Map<FlxColor, Float> = [];
 		var color:FlxColor = 0;
 		var fixedColor:FlxColor = 0;
@@ -37,13 +33,9 @@ final class BitmapUtil {
 		}
 		return mostPresentColor;
 	}
-	/**
-	 * Returns the most present saturated color in a Bitmap.
-	 * @param bmap Bitmap
-	 * @return FlxColor Color that is the most present.
-	 */
+
 	public static function getMostPresentSaturatedColor(bmap:BitmapData):FlxColor {
-		// map containing all the colors and the number of times they've been assigned.
+
 		var colorMap:Map<FlxColor, Float> = [];
 		var color:FlxColor = 0;
 		var fixedColor:FlxColor = 0;
@@ -69,10 +61,6 @@ final class BitmapUtil {
 		return mostPresentColor;
 	}
 
-	/**
-	 * Returns a new bitmap without any empty transperent space on the edges
-	 * @param bitmap The bitmap to be cropped
-	 */
 	public static function crop(bitmap:BitmapData) {
 		var bitmapBounds:Rectangle = BitmapUtil.bounds(bitmap);
 
@@ -81,20 +69,14 @@ final class BitmapUtil {
 		return croppedBitmap;
 	}
 
-	/**
-	 * Get bounds of non empty pixels in the bitmap
-	 * @param bitmap
-	 * @return
-	 */
 	public static function bounds(bitmap:BitmapData, ?limit:Rectangle = null):Rectangle {
 		var hasLimit:Bool = limit != null;
-		// Searching bounds
+
 		var startX:Int = hasLimit ? Std.int(limit.x) : 0;
 		var startY:Int = hasLimit ? Std.int(limit.y) : 0;
 		var endX:Int = hasLimit ? Std.int(limit.width) : bitmap.width;
 		var endY:Int = hasLimit ? Std.int(limit.height) : bitmap.height;
 
-		// Detected bounds
 		var minX:Int = endX;
 		var minY:Int = endY;
 		var maxX:Int = startX;

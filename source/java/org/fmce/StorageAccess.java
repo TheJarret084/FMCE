@@ -8,10 +8,9 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
 
-/** Acceso a /storage/emulated/0/.JarretLabs-FMCE en Android. */
 public class StorageAccess
 {
-	/** true si ya se puede escribir en la carpeta publica. */
+
 	public static boolean hasAccess()
 	{
 		if (Build.VERSION.SDK_INT >= 30) return Environment.isExternalStorageManager();
@@ -23,7 +22,6 @@ public class StorageAccess
 		return true;
 	}
 
-	/** Abre la pantalla de Ajustes (11+) o el dialogo de permisos (10-). No espera respuesta. */
 	public static void requestAccess()
 	{
 		try

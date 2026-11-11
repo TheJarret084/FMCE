@@ -6,7 +6,6 @@ import funkin.backend.chart.FnfcPackage;
 import haxe.io.Bytes;
 import haxe.io.Path;
 
-/** Importa las notas de un chart de FNMM (data.json), Codename, Legacy/Psych (o FMCE) y reemplaza las del chart abierto. */
 class CharterImportScreen extends UISubstateWindow {
 	public var explorer:UIFileExplorer;
 	public var info:UIText;
@@ -38,7 +37,6 @@ class CharterImportScreen extends UISubstateWindow {
 		info = new UIText(title.x, explorer.y + explorer.bHeight + 20, windowSpr.bWidth - 40, TU.translate("charterImport.pickFile"), 14);
 		add(info);
 
-		// solo para .fnfc: dificultad y audio
 		diffLabel = new UIText(title.x, windowSpr.y + 318, 0, "Dificultad (.fnfc)", 14);
 		diffDrop = new UIDropDown(title.x, diffLabel.y + 22, 200, 32, ["-"], 0);
 		diffDrop.onChange = function(i:Int) {
@@ -93,7 +91,6 @@ class CharterImportScreen extends UISubstateWindow {
 		}
 	}
 
-	/** Lee `rawText` (con la dificultad elegida, si es un FNF) y muestra el resumen. */
 	function parseNow(difficulty:Null<String>):Void {
 		var lanes = 4;
 		for (sl in PlayState.SONG.strumLines) if (sl.keyCount != null && sl.keyCount > lanes) lanes = sl.keyCount;
@@ -115,7 +112,6 @@ class CharterImportScreen extends UISubstateWindow {
 		info.text = lines.join("\n");
 	}
 
-	/** Copia Inst/Voices del .fnfc a `<nivel>/music/`. Devuelve cuantos archivos copio. */
 	function copyAudio():Int {
 		var copied = 0;
 		#if sys
@@ -143,7 +139,7 @@ class CharterImportScreen extends UISubstateWindow {
 		UIUtil.confirmUISelections(this);
 		var bpmMsg = "";
 		if (pack != null && result.bpm != null && PlayState.SONG.meta.bpm != null && Math.abs(result.bpm - PlayState.SONG.meta.bpm) > 0.01) {
-			// las notas vienen en ms: con el BPM del paquete caen justo en la rejilla
+
 			PlayState.SONG.meta.bpm = result.bpm;
 			Charter.instance.updateBPMEvents();
 			bpmMsg = "\nBPM del nivel: " + result.bpm;
@@ -156,7 +152,7 @@ class CharterImportScreen extends UISubstateWindow {
 		}
 		if (r.skipped > 0) msg += "\n" + TU.translate("charterImport.skippedLines", ["" + r.skipped]);
 		info.text = msg;
-		result = null; // ya aplicado: evita importar dos veces sin querer
+		result = null;
 	}
 
 	public override function update(elapsed:Float) {

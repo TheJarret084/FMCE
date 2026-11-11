@@ -12,26 +12,22 @@ import haxe.io.Path;
 import funky.core.Log;
 import openfl.utils.Assets as OpenFlAssets;
 
-/** Contador de FPS con panel propio, grafica y memoria. */
 class Framerate extends Sprite
 {
 	public static var instance:Framerate;
 	public static var isLoaded:Bool = false;
 	public static var debugMode:Int = 1;
-	/** Posicion base del contador (px). Cambiala con `setPosition`, `move` o `resetPosition`. */
+
 	public static var offsetX:Float = DEFAULT_X;
 	public static var offsetY:Float = DEFAULT_Y;
-	/**
-	 * Desplazamiento extra encima de la posicion base. Los editores lo usan para bajar el contador y que no tape el menu de
-	 * arriba (UIState pone `offset.y = 30`). Se limpia solo al cambiar de state, asi que no se queda corrido en el juego.
-	 */
+
 	public static var offset:FlxPoint = FlxPoint.get(0, 0);
-	/** Opacidad de TODO el contador (0..1). `setAlpha` la cambia; se restablece sola al cambiar de state. */
+
 	public static var panelAlpha:Float = 1;
 	public static var textFormat:TextFormat;
 	public static var fontName:String = "_typewriter";
 	public static var otherNewFont:String = "Daydream";
-	/** Nombre real de la fuente ya cargada (lo que usan todos los TextField del contador). */
+
 	public static var textFont:String = "_typewriter";
 
 	public var otherColor:Bool = true;
@@ -42,7 +38,7 @@ class Framerate extends Sprite
 	static inline var PAD_Y:Float = 7;
 	static inline var GAP:Float = 2;
 	static inline var REFRESH_MS:Int = 500;
-	/** Alto de pantalla (px) para el que esta pensado el tamano del panel: en pantallas mas altas se agranda. */
+
 	static inline var BASE_HEIGHT:Float = 720;
 
 	public var panel:Sprite;
@@ -60,7 +56,7 @@ class Framerate extends Sprite
 		if (instance != null) throw "Cannot create another Framerate instance";
 		instance = this;
 		isLoaded = true;
-																																			// valor     si es true   si es false
+
 		textFont = resolveFont();
 		textFormat = new TextFormat(textFont, 10, otherColor ? 0xFFA5D6D1 : 0xFFFFFFFF);
 
@@ -81,29 +77,23 @@ class Framerate extends Sprite
 		updateLayout();
 		addEventListener(Event.ENTER_FRAME, onEnterFrame);
 
-		// Cada state arranca con el contador en su lugar: lo que muevan los editores no se arrastra al juego.
 		FlxG.signals.preStateSwitch.add(onPreStateSwitch);
 		FlxG.signals.postStateSwitch.add(onPostStateSwitch);
 		onPostStateSwitch();
 	}
 
-	// ------------------------------------------------------------------ mover el contador
-
-	/** Pone el contador en (x, y) de pantalla (px, antes del escalado). `Framerate.setPosition(6, 40)`. */
 	public static function setPosition(x:Float, y:Float):Void
 	{
 		offsetX = x;
 		offsetY = y;
 	}
 
-	/** Mueve el contador `dx`, `dy` px desde donde esta ahora. `Framerate.move(0, 30)` lo baja 30 px. */
 	public static function move(dx:Float, dy:Float):Void
 	{
 		offsetX += dx;
 		offsetY += dy;
 	}
 
-	/** Lo regresa a su lugar de siempre (arriba a la izquierda) y quita el desplazamiento extra y la transparencia. */
 	public static function resetPosition():Void
 	{
 		offsetX = DEFAULT_X;
@@ -112,15 +102,12 @@ class Framerate extends Sprite
 		panelAlpha = 1;
 	}
 
-	/** Opacidad de todo el contador (0 = invisible, 1 = normal). */
 	public static function setAlpha(value:Float):Void
 		panelAlpha = value < 0 ? 0 : (value > 1 ? 1 : value);
 
-	/** Muestra u oculta el contador (mismo efecto que `debugMode`: 0 oculto, 1 visible). */
 	public static function setVisible(value:Bool):Void
 		debugMode = value ? 1 : 0;
 
-	/** Opacidad del contador dentro de los editores: ahi estorba, asi que baja solo al 10%. */
 	public static inline var EDITOR_ALPHA:Float = 0.1;
 
 	static var inEditor:Bool = false;
@@ -135,12 +122,11 @@ class Framerate extends Sprite
 
 	static function onPreStateSwitch():Void
 	{
-		// La posicion base se respeta (por si un script la movio a proposito); solo se limpia lo temporal.
+
 		offset.set(0, 0);
 		panelAlpha = 1;
 	}
 
-	/** Busca assets/fonts/<otherNewFont>.otf o .ttf y devuelve su fontName; si no existe, usa la fuente por defecto. */
 	public static function resolveFont():String
 	{
 		for (ext in [".otf", ".ttf"])
@@ -162,7 +148,6 @@ class Framerate extends Sprite
 		alpha = visible ? (inEditor ? EDITOR_ALPHA : panelAlpha) : 0;
 		if (!visible) return;
 
-		// en pantallas altas (celulares) el panel se agranda para seguir siendo legible
 		if (stage != null)
 		{
 			var fit = Math.max(1, stage.stageHeight / BASE_HEIGHT);

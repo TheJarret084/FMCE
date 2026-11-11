@@ -53,7 +53,6 @@ class CharterNote extends UISprite implements ICharterSelectable {
 		moves = false;
 	}
 
-	// 4 frames de color, por si falta editors/charter/note.png
 	static function getFallbackGraphic():flixel.graphics.FlxGraphic {
 		var key = "__charter_note_fallback";
 		var cached = FlxG.bitmap.get(key);
@@ -72,7 +71,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 	public var step:Float;
 	public var id:Int;
 	public var susLength:Float;
-	/** Action pack (events.json) a correr al acertar / fallar la nota. -1 = ninguno. Se editan en el menu Nota. */
+
 	public var onPress:Int = -1;
 	public var onMiss:Int = -1;
 
@@ -86,7 +85,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 			if(noteTypeTexts[v] == null || noteTypeTexts[v].graphic.isDestroyed) {
 				noteTypeTexts[v] = new UIText(x, y, 0, Std.string(v));
 				noteTypeTexts[v].exists = v != 0;
-				//noteTypeTexts[v].layer = (Charter.instance != null) ? Charter.instance.textLayer : null;
+
 			}
 
 			typeText = noteTypeTexts[v];
@@ -101,7 +100,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 
 	public var snappedToGrid:Bool = true;
 
-	public var fullID(get, never):Int; // instead of %4 get fullID (for mousepos stuff)
+	public var fullID(get, never):Int;
 	public function get_fullID():Int
 		return strumLine.startingID + id;
 
@@ -123,7 +122,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 			case 1: 180;
 			case 2: 0;
 			case 3: 90;
-			default: 0; // how is that even possible
+			default: 0;
 		};
 
 		sustainSpr.color = colors[animation.curAnim.curFrame];
@@ -154,7 +153,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 				case 1: 180;
 				case 2: 0;
 				case 3: 90;
-				default: 0; // how is that even possible
+				default: 0;
 			};
 			__doAnim = false;
 		}
@@ -224,7 +223,6 @@ class CharterNote extends UISprite implements ICharterSelectable {
 		drawPackBadge();
 	}
 
-	/** Puntito en la esquina de la nota: naranja = tiene onPress, azul = solo onMiss. */
 	function drawPackBadge() {
 		if (onPress < 0 && onMiss < 0) return;
 		if (packBadge == null || packBadge.graphic == null || packBadge.graphic.isDestroyed)

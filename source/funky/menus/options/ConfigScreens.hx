@@ -14,28 +14,26 @@ import flixel.util.FlxColor;
 import funky.core.Log;
 import funkin.backend.utils.TranslationUtil as TU;
 
-/** Un nodo del arbol de creditos (como los nodos <credit> y <menu> del credits.xml de Codename). */
 typedef CreditEntry =
 {
 	var name:String;
-	/** Texto que sale arriba al seleccionarla. */
+
 	@:optional var desc:String;
-	/** Se abre en el navegador al aceptar. */
+
 	@:optional var url:String;
-	/** URL del avatar a descargar; si falla se usa assets/images/credits/<name>.png y luego el icono de FMCE. */
+
 	@:optional var avatar:String;
-	/** Color del nombre (0xAARRGGBB). */
+
 	@:optional var color:Int;
-	/** Entradas de la seccion (si existe, esta entrada es una seccion). */
+
 	@:optional var menu:Array<CreditEntry>;
-	/** BG DEL MENU, TOTALMENTE CAMBIABLE*/
+
 	@:optional var background:String;
 }
 
-/** Contenido de cada pantalla de opciones y de creditos. Aqui se decide QUE hay; ConfigMenu decide COMO se ve. */
 class ConfigScreens
 {
-	/** Raiz de Opciones. `inGame` = abierto desde la pausa: sin entradas que saquen de la cancion. */
+
 	public static function root(menu:ConfigMenu, inGame:Bool):ConfigScreen
 	{
 		var items:Array<ConfigItem> = [];
@@ -57,7 +55,6 @@ class ConfigScreens
 			TU.translate("options.desc", null, "Ajusta FMCE a tu gusto"), items);
 	}
 
-	/** Pantalla que lista los idiomas encontrados en assets/languages/. */
 	static function language(menu:ConfigMenu):ConfigScreen
 	{
 		var items:Array<ConfigItem> = [];
@@ -244,7 +241,6 @@ class ConfigScreens
 		return keys.length == 0 ? "-" : keys.join(" / ");
 	}
 
-	/** Cambia la tecla principal del carril. Si otro carril ya la usaba, intercambian para no duplicar. */
 	static function rebind(lane:Int, key:String):Void
 	{
 		var mine = ClientPrefs.getLaneKeys(lane).copy();
@@ -259,7 +255,7 @@ class ConfigScreens
 
 			if (old != null && keys.indexOf(old) < 0) keys[idx] = old;
 			else keys.splice(idx, 1);
-			// Un carril nunca se queda sin teclas.
+
 			if (keys.length > 0) ClientPrefs.setLaneKeys(other, keys);
 		}
 
@@ -276,11 +272,6 @@ class ConfigScreens
 		ClientPrefs.setLaneKeys(lane, mine);
 	}
 
-	/**
-	 * Arbol de creditos. Cada entrada con `menu` es una seccion aparte (se entra con ENTER y se vuelve con ESC),
-	 * igual que los <menu> del credits.xml de Codename; las demas son personas o enlaces.
-	 * Para agregar gente basta con meter otra linea en la seccion que toque.
-	 */
 	static final CREDITS:Array<CreditEntry> = [
 		{
 			name: "ENGINE",
@@ -326,8 +317,8 @@ class ConfigScreens
 					name: "Funky Maker!: Mobile (de KingGC)",
 					desc: "Literalmente usamos su nombre, base principal de todo (nota de creador: espero algun dia ser revisor, es mi unico sueño en ese juego)",
 					url: "https://play.google.com/store/apps/details?id=com.kingamescreator.fnmm",
-					color: FlxColor.fromRGB(242,255,119)  // DORADO rgb(242,255,119)
-					// no ponemos avatar porque en fallback es el icon de el GGs
+					color: FlxColor.fromRGB(242,255,119)
+
 				},
 				{
 					name: "Codename Engine",
@@ -370,76 +361,13 @@ class ConfigScreens
 					color: FlxColor.WHITE
 				}
 			]
-		}/*,
-		// ---- PLACEHOLDERS: cambia name / desc / url / avatar / color por los datos reales (sin avatar sale el icono de FMCE) ----
-		{
-			name: "Colaboradores",
-			desc: "PLACEHOLDER: gente que ayudo con codigo, charts y mas",
-			background: "othersEngines",
-			menu: [
-				{
-					name: "Programador (placeholder)",
-					desc: "PLACEHOLDER: que hizo esta persona en FMCE",
-					color: FlxColor.fromRGB(100, 221, 170)
-				},
-				{
-					name: "Artista (placeholder)",
-					desc: "PLACEHOLDER: sprites, menus, iconos...",
-					color: FlxColor.fromRGB(255, 209, 102)
-				},
-				{
-					name: "Musico (placeholder)",
-					desc: "PLACEHOLDER: musica y efectos de sonido",
-					color: FlxColor.fromRGB(255, 107, 107)
-				},
-				{
-					name: "Charter (placeholder)",
-					desc: "PLACEHOLDER: charts de los niveles de ejemplo",
-					color: FlxColor.fromRGB(120, 170, 255)
-				}
-			]
-		},
-		{
-			name: "Testers",
-			desc: "PLACEHOLDER: quienes probaron el engine y reportaron bugs",
-			background: "othersEngines",
-			menu: [
-				{
-					name: "Tester 1 (placeholder)",
-					desc: "PLACEHOLDER: probo en Android",
-					color: FlxColor.WHITE
-				},
-				{
-					name: "Tester 2 (placeholder)",
-					desc: "PLACEHOLDER: probo el convertidor de .fnmm",
-					color: FlxColor.WHITE
-				}
-			]
-		},
-		{
-			name: "Agradecimientos especiales",
-			desc: "PLACEHOLDER: comunidad, amigos y quien merezca un gracias",
-			background: "othersEngines",
-			menu: [
-				{
-					name: "Comunidad (placeholder)",
-					desc: "PLACEHOLDER: gracias por el apoyo",
-					color: FlxColor.fromRGB(100, 221, 170)
-				},
-				{
-					name: "Tu nombre aqui (placeholder)",
-					desc: "PLACEHOLDER: agrega mas lineas como esta",
-					color: FlxColor.fromRGB(255, 209, 102)
-				}
-			]
-		}*/
+		}
 	];
 
 	public static function credits(menu:ConfigMenu):ConfigScreen
 		return creditScreen(menu, TU.translate("credits.title", null, "CREDITOS"),
 			TU.translate("credits.desc", null, "Gracias a todos los que hicieron esto posible"), CREDITS);
 
-	/** Construye una pantalla de creditos; las secciones se llaman a si mismas para abrir su propia pantalla. */
 	static function creditScreen(menu:ConfigMenu, title:String, desc:String, entries:Array<CreditEntry>):ConfigScreen
 	{
 		var items:Array<ConfigItem> = [];
@@ -455,7 +383,7 @@ class ConfigScreens
 				item = ConfigItem.submenu(name, text, () ->
 				{
 					var screen = creditScreen(menu, name.toUpperCase(), text, children);
-					screen.background = background; // ConfigMenu avisa a onBackgroundChange al entrar y al volver
+					screen.background = background;
 					menu.push(screen);
 				});
 			}

@@ -2,7 +2,6 @@ package funkin.game;
 
 import flixel.FlxCamera;
 
-/** Camara del HUD: aqui solo es una FlxCamera normal. */
 class HudCamera extends FlxCamera {
 	public var downscroll:Bool = false;
 	public var zoomFactor:Float = 1;

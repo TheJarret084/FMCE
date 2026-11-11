@@ -6,10 +6,9 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Lee ancho y alto de un .mp4 sin reproducirlo. */
 class Mp4Info
 {
-	/** Una caja `moov` mas grande que esto se considera corrupta (los .mp4 normales miden unos KB). */
+
 	static inline var MAX_MOOV:Int = 64 * 1024 * 1024;
 
 	static var cache:Map<String, Null<{w:Int, h:Int}>> = new Map();
@@ -81,7 +80,6 @@ class Mp4Info
 		return null;
 	}
 
-	/** Recorre las cajas de `bytes[start...end]`: entra a `trak` / `mdia`-less hijos y lee el primer `tkhd` con tamano. */
 	static function find(bytes:Bytes, start:Int, end:Int, depth:Int):Null<{w:Int, h:Int}>
 	{
 		if (depth > 6) return null;
@@ -102,7 +100,7 @@ class Mp4Info
 			{
 				var content = p + 8;
 				var version = bytes.get(content);
-				var offset = version == 1 ? 88 : 76; // despues de la matriz de transformacion
+				var offset = version == 1 ? 88 : 76;
 				if (content + offset + 8 <= p + boxSize)
 				{
 					var w = Std.int(u32(bytes, content + offset) / 65536);
@@ -115,7 +113,6 @@ class Mp4Info
 		return null;
 	}
 
-	/** Entero de 32 bits sin signo, big endian (el orden de las cajas mp4). */
 	static function u32(bytes:Bytes, pos:Int):Float
 		return bytes.get(pos) * 16777216.0 + (bytes.get(pos + 1) << 16 | bytes.get(pos + 2) << 8 | bytes.get(pos + 3));
 	#end

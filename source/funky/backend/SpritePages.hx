@@ -18,31 +18,19 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Atlas de un sprite repartidos en PAGINAS. */
 class SpritePages
 {
-	/** Sube este numero si cambia el formato de la cache, para que se rehaga sola. */
+
 	public static inline var CACHE_VERSION:Int = 1;
 	public static inline var GAP:Int = 2;
 
-	/** Lado maximo (px) de una pagina. 4096 es lo que cargan todos los celulares. */
 	public static var maxPage:Int = 4096;
 
-	/**
-	 * DEBUG. true = las paginas que se generan al reempacar un atlas gigante se escriben en
-	 * `<levels>/.tmp/cache/<nivel>/<sprite>/` y SE QUEDAN ahi para que las revises (y se reusan al volver
-	 * a cargar). false = se hacen en memoria cada vez y no se escribe nada.
-	 */
 	public static var keepCacheInTmp:Bool = true;
 
-	/** Carpeta de la cache de un sprite (la haya o no). */
 	public static function cacheDir(levelDir:String, name:String):String
 		return Path.join([Paths.levelsRoot(), ".tmp", "cache", levelKey(levelDir), name]);
 
-	/**
-	 * Frames del sprite si necesita paginas (ya las trae o es demasiado grande); null si el sprite es
-	 * normal y lo carga `Paths.getLevelSprite` como siempre.
-	 */
 	public static function load(levelDir:String, name:String):Null<FlxAtlasFrames>
 	{
 		#if sys
@@ -80,7 +68,6 @@ class SpritePages
 		var stamp = 'v' + CACHE_VERSION + '|' + stat.size + '|' + Std.string(stat.mtime.getTime()) + '|' + maxPage;
 		var cachedJson = Path.join([cache, "sprite.json"]);
 
-		// Cache de una corrida anterior.
 		if (keepCacheInTmp && FileSystem.exists(cachedJson))
 		{
 			try
@@ -181,7 +168,7 @@ class SpritePages
 				clearCache(cache);
 				for (k in 0...bitmaps.length)
 					File.saveBytes(Path.join([cache, pageFile(k)]), bitmaps[k].encode(bitmaps[k].rect, new PNGEncoderOptions(true)));
-				// El json va al final: sin el, la cache no cuenta (un corte a medias no deja nada valido).
+
 				File.saveContent(cachedJson, Json.stringify(master, null, "\t"));
 				where = 'cache en ' + cache;
 			}
@@ -198,15 +185,10 @@ class SpritePages
 		return atlas;
 	}
 
-	/**
-	 * Junta las paginas en un solo atlas. `bitmaps` (opcional) son las paginas ya en memoria; si no, se leen
-	 * de `baseDir/<image>`.
-	 */
 	static function fromPages(baseDir:String, data:Dynamic, pages:Array<Dynamic>, bitmaps:Null<Array<BitmapData>>):Null<FlxAtlasFrames>
 	{
 		var frames:Array<Dynamic> = field(data, "frames");
 
-		// Las paginas se juntan en orden: los frames tienen que venir agrupados por pagina, o los indices se desordenan.
 		var last = 0;
 		for (frame in frames)
 		{
@@ -232,7 +214,7 @@ class SpritePages
 
 			if (atlas == null) atlas = part;
 			else
-				for (frame in part.frames) atlas.pushFrame(frame); // (flixel 5.3 del fork de Codename no trae addAtlas)
+				for (frame in part.frames) atlas.pushFrame(frame);
 		}
 		return atlas;
 	}
@@ -281,7 +263,6 @@ class SpritePages
 	static function levelKey(levelDir:String):String
 		return Path.withoutDirectory(Path.removeTrailingSlashes(levelDir));
 
-	/** Ancho y alto de un PNG leyendo solo su cabecera (sin decodificarlo). */
 	static function pngSize(path:String):Null<{w:Int, h:Int}>
 	{
 		var input = File.read(path, true);
@@ -302,7 +283,6 @@ class SpritePages
 		FileSystem.createDirectory(path);
 	}
 
-	/** Borra el `sprite.json` y las paginas viejas de una cache. */
 	static function clearCache(dir:String):Void
 	{
 		if (!FileSystem.exists(dir)) return;

@@ -12,7 +12,6 @@ import funky.core.Paths;
 import haxe.Json;
 import openfl.utils.Assets as OpenFlAssets;
 
-/** Para que `beatHit` no pise una animacion que alguien bloqueo (cantar, fallar, etc.). */
 enum abstract PlayAnimContext(Int)
 {
 	var NONE = 0;
@@ -22,7 +21,6 @@ enum abstract PlayAnimContext(Int)
 	var LOCK = 4;
 }
 
-/** Como se anima un sprite por si solo: nada, en cada beat, o en bucle. */
 enum abstract XMLAnimType(Int)
 {
 	var NONE = 0;
@@ -47,7 +45,6 @@ typedef BeatAnim =
 	var forced:Bool;
 }
 
-/** FunkinSprite, portado de Codename Engine (`funkin.backend.FunkinSprite`). */
 class FunkinSprite extends FlxAnimate
 {
 	public var extra:Map<String, Dynamic> = [];
@@ -56,19 +53,15 @@ class FunkinSprite extends FlxAnimate
 	public var spriteAnimType:XMLAnimType = NONE;
 	public var beatAnims:Array<BeatAnim> = [];
 
-	/** Si es false, `beatHit` y la animacion no avanzan solas. */
 	public var animEnabled:Bool = true;
 
-	/** `config.json` cargado (formato FNMM) o null. Ver `loadConfig`. */
 	public var config:Null<Dynamic>;
 
-	/** Par -> alineado a los beats, impar -> desalineado (como en Codename). */
 	public var beatInterval(default, set):Int = 2;
 
 	public var beatOffset:Int = 0;
 	public var lastAnimContext:PlayAnimContext = DANCE;
 
-	/** Offsets por animacion, en pixeles (se aplican a `offset` en `playAnim`; `updateHitbox()` lo reinicia). */
 	public var animOffsets:Map<String, FlxPoint> = new Map();
 
 	var countedBeat:Int = 0;
@@ -88,11 +81,6 @@ class FunkinSprite extends FlxAnimate
 		moves = false;
 	}
 
-	/**
-	 * Acepta un nombre de imagen (`menus/menuDesat`) o la ruta que devuelve `Paths.image(...)`
-	 * (`assets/images/menus/menuDesat.png`, como en Codename). Con ruta: usa el atlas si existe y, si no,
-	 * carga la imagen sola en vez de dejar el sprite sin frames.
-	 */
 	function loadFromPathOrName(path:String):Void
 	{
 		var name = path;
@@ -108,10 +96,6 @@ class FunkinSprite extends FlxAnimate
 		else Log.warn('[FunkinSprite] no existe la imagen "$path"');
 	}
 
-	/**
-	 * Carga frames desde `assets/images/<path>`: detecta Animate / Sparrow / Packer / Aseprite / imagen sola.
-	 * @return este sprite (null en `frames` si no encontro nada; queda un aviso en el log).
-	 */
 	public function loadSprite(path:String):FunkinSprite
 	{
 		var loaded = Paths.getFrames(path);
@@ -120,17 +104,11 @@ class FunkinSprite extends FlxAnimate
 		else
 			frames = loaded;
 
-		// Si hay config.json junto al atlas, las animaciones salen de ahi.
 		if (loaded != null && loadConfig(path))
 			addAnimsFromConfig();
 		return this;
 	}
 
-	/**
-	 * Carga un spritemap de Adobe Animate desde CUALQUIER carpeta (la del nivel, el almacenamiento...), no solo
-	 * desde `assets/images/`. La carpeta lleva `Animation.json` + `spritemap1.json` + `spritemap1.png`.
-	 * Despues registra animaciones con `addAnim(nombre, simboloOLabel, fps, loop)` y toca con `playAnim`.
-	 */
 	public function loadAnimate(folder:String):FunkinSprite
 	{
 		var loaded:FlxFramesCollection = null;
@@ -150,7 +128,6 @@ class FunkinSprite extends FlxAnimate
 		return this;
 	}
 
-	/** Lee `config.json` (formato FNMM) de `images/<path>/` (atlas Animate) o de la carpeta del atlas: */
 	public function loadConfig(path:String):Bool
 	{
 		var candidates = [Paths.IMAGES + path + "/config.json"];
@@ -174,7 +151,6 @@ class FunkinSprite extends FlxAnimate
 		return false;
 	}
 
-	/** Crea las animaciones de `config.data`. @return cuantas quedaron registradas. */
 	public function addAnimsFromConfig():Int
 	{
 		if (config == null || !(config.data is Array)) return 0;
@@ -185,16 +161,15 @@ class FunkinSprite extends FlxAnimate
 			var inAtlas:String = entry.anim != null ? entry.anim : entry.name;
 			if (inAtlas == null) continue;
 			var gameName:String = entry.name != null ? entry.name : inAtlas;
-			// `spd_fps` true = `spd` FPS crudos; false = frames por beat (BPM actual); sin `spd_fps` (viejo) = multiplicador de 24.
+
 			var spdValue:Float = entry.spd != null && entry.spd > 0 ? entry.spd : 1;
-			// Modo beats (`spd_fps` false): el fps real depende de cuantos frames tiene la anim, asi que se ajusta abajo, ya registrada.
+
 			var beatMode:Bool = entry.spd_fps != null && entry.spd_fps != true;
 			var fps:Float = entry.spd_fps == null ? 24 * spdValue : (beatMode ? 24 : spdValue);
 			var loop:Bool = entry.loop == null ? true : entry.loop == true;
 
 			addAnim(gameName, inAtlas, fps, loop);
 
-			// Atlas Animate: `name` puede ser simbolo o label; si como simbolo no existe, prueba label.
 			if (isAnimate && !hasAnim(gameName)) addAnim(gameName, inAtlas, fps, loop, null, 0, 0, true);
 
 			if (!hasAnim(gameName))
@@ -203,8 +178,6 @@ class FunkinSprite extends FlxAnimate
 				continue;
 			}
 
-			// `spd` = beats que dura la animacion COMPLETA: fps = frames * bpm / (60 * spd). Es la misma cuenta que SpriteBuilder
-			// (gameplay) y SpriteEditorState; antes aca faltaba multiplicar por los frames y en los editores quedaba lentisimo / "duro".
 			if (beatMode)
 			{
 				var registered = animation.getByName(gameName);
@@ -220,7 +193,6 @@ class FunkinSprite extends FlxAnimate
 		return added;
 	}
 
-	/** Copia grafico y propiedades basicas de otro sprite (FlxSprite o FunkinSprite). */
 	public static function copyFrom(source:FlxSprite):FunkinSprite
 	{
 		var spr = new FunkinSprite();
@@ -247,7 +219,6 @@ class FunkinSprite extends FlxAnimate
 	{
 		super.update(elapsed);
 
-		// "anim" termina -> si existe "anim-loop", sigue con esa (patron de Codename).
 		if (isAnimFinished())
 		{
 			var loopName = getAnimName() + "-loop";
@@ -287,10 +258,6 @@ class FunkinSprite extends FlxAnimate
 	public inline function getAnimOffset(name:String):FlxPoint
 		return animOffsets.exists(name) ? animOffsets[name] : FlxPoint.weak(0, 0);
 
-	/**
-	 * Agrega una animacion. `prefix` es el prefijo Sparrow, o el simbolo / label si es un atlas Animate.
-	 * @param animateAtlasLabel en atlas Animate: true = `prefix` es un label del timeline, false = un simbolo.
-	 */
 	public function addAnim(name:String, prefix:String, frameRate:Float = 24, ?looped:Bool, ?indices:Array<Int>, x:Float = 0, y:Float = 0,
 			animateAtlasLabel:Bool = false):Void
 	{
@@ -325,8 +292,6 @@ class FunkinSprite extends FlxAnimate
 
 		animation.play(AnimName, Force == true, Reversed, Frame);
 
-		// Convencion FNF: `offset` positivo mueve el sprite hacia arriba/izquierda.
-		// Solo si la animacion registro uno: si no, se respeta el `offset` que dejo `updateHitbox()` al escalar.
 		if (animOffsets.exists(AnimName))
 		{
 			var animOffset = animOffsets[AnimName];

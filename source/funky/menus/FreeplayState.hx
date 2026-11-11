@@ -31,34 +31,31 @@ import openfl.utils.Assets as OpenFlAssets;
 
 using StringTools;
 
-/** Lista de niveles con fondo animado y nombres en fuente bold. */
 class FreeplayState extends FlxState
 {
 	private static final ACTIVE:Int = 0xFFFFFFFF;
 	private static final IDLE:Int = 0xFFB8B8C6;
 	private static final ARCHIVE_COLOR:Int = 0xFFFFC14D;
-	/** Colores del fondo, por nivel (el primero es el morado de Codename). */
+
 	private static final PALETTE:Array<Int> = [0xFF9271FD, 0xFFFD719B, 0xFF71FDB3, 0xFFFDC571, 0xFF71C5FD, 0xFFB871FD];
 
-	/** Alto de la barra de arriba (nivel, dificultad y mejor puntaje). */
 	private static inline var BAR_H:Float = 104;
-	/** Alto de la tira de atajos de teclado que se ve abajo en PC. */
+
 	private static inline var STRIP_H:Float = 34;
-	/** Separacion vertical entre filas y x de la lista (recta: ya no se inclina). */
+
 	private static inline var ROW_GAP:Float = 92;
 	private static inline var LIST_X:Float = 60;
-	/** Cuanto se corre a la derecha la fila seleccionada. */
+
 	private static inline var SELECTED_SHIFT:Float = 34;
-	/** Margen del banner (imagen fija a la derecha: `assets/images/menus/freeplay/banner.png`). */
+
 	private static inline var BANNER_MARGIN:Float = 36;
 
-	/** Sparrow de la Jazmin que avisa que no hay niveles (`assets/images/menus/freeplay/void.png` + `.xml`, anim `idle`). */
 	private static inline var VOID_IMAGE:String = "menus/freeplay/void";
 	private static inline var VOID_ANIM:String = "idle";
 
 	private var entries:Array<{label:String, path:String}> = [];
 	private var archiveFlags:Array<Bool> = [];
-	/** Icono del oponente de cada nivel (null si no trae); se crean al acercarse a la fila para no cargar todos de golpe. */
+
 	private var icons:Array<Null<HealthIcon>> = [];
 	private var iconTried:Array<Bool> = [];
 	private var selected:Int = 0;
@@ -68,7 +65,7 @@ class FreeplayState extends FlxState
 	private var banner:Null<FlxSprite>;
 	private var bannerFrame:Null<FlxSprite>;
 	private var bannerBaseY:Float = 0;
-	/** Jazmin "no hay niveles": solo existe mientras la lista esta vacia (el sparrow pesa mucho, no se deja en memoria). */
+
 	private var voidSprite:Null<FlxSprite>;
 	private var bannerTime:Float = 0;
 	private var scoreText:FlxText;
@@ -80,7 +77,7 @@ class FreeplayState extends FlxState
 	private var refreshButton:MenuButton;
 	private var difficultyText:FlxText;
 	private var navPad:Null<NavPad>;
-	/** Donde termina la lista por abajo (arriba de la fila de botones). */
+
 	private var listBottom:Float = 600;
 
 	override public function create():Void
@@ -104,10 +101,8 @@ class FreeplayState extends FlxState
 		statusText.setBorderStyle(OUTLINE, 0xFF000000, 2);
 		add(statusText);
 
-		// Banner fijo a la derecha (en el Freeplay viejo era el oponente del nivel; aca es una imagen fija).
 		createBanner();
 
-		// Barra de arriba: nivel y dificultad a la izquierda, mejor puntaje a la derecha.
 		scoreBG = new FlxSprite(0, 0).makeGraphic(1, 1, 0xFF000000);
 		scoreBG.scale.set(FlxG.width, BAR_H);
 		scoreBG.updateHitbox();
@@ -115,7 +110,6 @@ class FreeplayState extends FlxState
 		scoreBG.scrollFactor.set();
 		add(scoreBG);
 
-		// El boton ATRAS ocupa la esquina de arriba a la izquierda (igual que en todos los menus): los textos arrancan despues de el.
 		var textX:Float = BackButton.WIDTH;
 		countText = new FlxText(textX, 10, 420, "", 30);
 		difficultyText = new FlxText(textX, 52, 420, "", 22);
@@ -136,14 +130,12 @@ class FreeplayState extends FlxState
 			add(text);
 		}
 
-		// Botones (mouse o dedo): ATRAS arriba a la izquierda y las acciones en una fila abajo, igual que en los demas menus.
 		backButton = BackButton.place();
 		add(backButton);
 
 		convertButton = new MenuButton(TU.translate("freeplay.converter", null, "CONVERTIDOR"), 0, 0, 230);
 		refreshButton = new MenuButton(TU.translate("freeplay.refresh", null, "REFRESCAR"), 0, 0, 200);
 
-		// En PC abajo hay una tira con los atajos de teclado: la fila de botones queda justo encima.
 		var bottomInset:Float = TouchNav.MOBILE ? 0 : STRIP_H;
 		MenuButton.bottomRow([convertButton, refreshButton], bottomInset);
 		listBottom = convertButton.y - 8;
@@ -174,7 +166,6 @@ class FreeplayState extends FlxState
 		TransitionHandler.playIn(this);
 	}
 
-	/** Lista vacia: la Jazmin `void` con un texto de ayuda abajo; sin el sparrow, solo el texto de siempre. */
 	private function showEmpty():Void
 	{
 		var hint = TouchNav.MOBILE
@@ -184,7 +175,7 @@ class FreeplayState extends FlxState
 		if (OpenFlAssets.exists(Paths.image(VOID_IMAGE)) && OpenFlAssets.exists(Paths.imageXml(VOID_IMAGE)))
 		{
 			statusText.size = 20;
-			statusText.y = listBottom - 62; // arriba de la fila de botones
+			statusText.y = listBottom - 62;
 			hasVoid = createVoid();
 		}
 
@@ -200,7 +191,6 @@ class FreeplayState extends FlxState
 			"No hay niveles en {0}\n{1}");
 	}
 
-	/** Crea la Jazmin animada (`idle`, en bucle) centrada entre la barra de arriba y el texto de ayuda. */
 	private function createVoid():Bool
 	{
 		try
@@ -213,7 +203,7 @@ class FreeplayState extends FlxState
 			sprite.animation.addByPrefix(VOID_ANIM, VOID_ANIM, 24, true);
 			if (sprite.animation.getByName(VOID_ANIM) == null)
 			{
-				// Sparrow sin frames "idle0000": mientras no lo termines, reproduce todos los frames en orden.
+
 				Log.warn('[FreeplayState] ' + VOID_IMAGE + ' no trae frames "' + VOID_ANIM + '", uso todos');
 				sprite.animation.add(VOID_ANIM, [for (i in 0...frames.frames.length) i], 24, true);
 			}
@@ -221,7 +211,6 @@ class FreeplayState extends FlxState
 			sprite.antialiasing = true;
 			sprite.scrollFactor.set();
 
-			// Escala uniforme (nunca se agranda): cabe en el area libre sin deformarse.
 			var areaTop = BAR_H + 10;
 			var areaH = statusText.y - 10 - areaTop;
 			var fit = Math.min(1, Math.min(FlxG.width * 0.8 / Math.max(1, sprite.frameWidth), areaH / Math.max(1, sprite.frameHeight)));
@@ -242,7 +231,6 @@ class FreeplayState extends FlxState
 		}
 	}
 
-	/** Quita la Jazmin y libera su textura (Paths marca los atlas como persistentes, aca se suelta para que no se quede en RAM). */
 	private function clearVoid():Void
 	{
 		if (voidSprite == null) return;
@@ -258,7 +246,6 @@ class FreeplayState extends FlxState
 		if (bannerFrame != null) bannerFrame.visible = value;
 	}
 
-	/** Color de fondo de un nivel: fijo por nombre, asi no cambia entre sesiones. */
 	private function colorFor(label:String):Int
 	{
 		var hash = 0;
@@ -303,7 +290,7 @@ class FreeplayState extends FlxState
 		for (index in 0...entries.length)
 		{
 			var row = new BoldText(0, 0, entries[index].label, 0.9);
-			// Nombres largos: se achican para no pisar el banner.
+
 			if (row.width > maxRowWidth())
 			{
 				var fit = Math.max(0.35, 0.9 * maxRowWidth() / row.width);
@@ -311,7 +298,7 @@ class FreeplayState extends FlxState
 				row = new BoldText(0, 0, entries[index].label, fit);
 			}
 			row.scrollFactor.set();
-			// Tracked separately: refreshSelection recolors rows constantly.
+
 			archiveFlags.push(LevelLoader.isArchive(entries[index].path));
 			icons.push(null);
 			iconTried.push(false);
@@ -319,15 +306,11 @@ class FreeplayState extends FlxState
 			rows.push(row);
 		}
 		refreshSelection();
-		// La primera vez las filas aparecen ya en su lugar, no deslizandose desde (0,0).
+
 		for (index in 0...rows.length) placeRow(index, 1);
 		bg.color = colorFor(entries[selected].label);
 	}
 
-	/**
-	 * Posicion de una fila segun su distancia al seleccionado: lista recta (misma x para todas, la seleccionada un poco
-	 * corrida), centrada en el area bajo la barra. Las filas que quedan fuera del area se ocultan.
-	 */
 	private function placeRow(index:Int, lerp:Float):Void
 	{
 		var row = rows[index];
@@ -340,11 +323,9 @@ class FreeplayState extends FlxState
 		row.x = FlxMath.lerp(row.x, wantX, lerp);
 		row.y = FlxMath.lerp(row.y, wantY, lerp);
 
-		// Fuera del area (bajo la barra o contra los botones) no se dibuja.
 		var inside = wantY >= areaTop - 10 && wantY + row.height <= areaBottom + 10;
 		row.visible = inside;
 
-		// Icono del oponente a la derecha del nombre, con el mismo brillo que la fila.
 		var icon = iconFor(index);
 		if (icon != null)
 		{
@@ -354,7 +335,6 @@ class FreeplayState extends FlxState
 		}
 	}
 
-	/** Icono del oponente del nivel `index`; se carga la primera vez que la fila queda cerca del seleccionado. */
 	private function iconFor(index:Int):Null<HealthIcon>
 	{
 		if (icons[index] != null) return icons[index];
@@ -381,7 +361,6 @@ class FreeplayState extends FlxState
 		#end
 	}
 
-	/** Banner fijo: marco oscuro + imagen, a la derecha, bajo la barra de arriba. Si la imagen falta, no se muestra. */
 	private function createBanner():Void
 	{
 		try
@@ -413,7 +392,6 @@ class FreeplayState extends FlxState
 		}
 	}
 
-	/** Ancho maximo de una fila: hasta donde empieza el banner (menos el icono del oponente). */
 	private function maxRowWidth():Float
 	{
 		var bannerX = banner != null ? banner.x : FlxG.width;
@@ -423,8 +401,7 @@ class FreeplayState extends FlxState
 	private function collect():Array<{label:String, path:String}>
 	{
 		var found:Array<{label:String, path:String}> = [];
-		// levels/ solo tiene carpetas de niveles ya descomprimidas. Los .fnmm originales
-		// quedan en levels/.tmp/ (los guarda el convertidor) y no se listan.
+
 		#if sys
 		for (id in Paths.listLevels())
 		{
@@ -460,7 +437,6 @@ class FreeplayState extends FlxState
 		refreshSelection();
 	}
 
-	/** Fila que un dedo o el mouse acaba de tocar, o -1. */
 	private function tappedRow():Int
 	{
 		var tap = TouchNav.pressPoint();
@@ -490,7 +466,6 @@ class FreeplayState extends FlxState
 
 		for (index in 0...rows.length) placeRow(index, Math.min(1, elapsed * 18));
 
-		// El banner flota apenas (4 px) para que no quede una imagen muerta.
 		if (banner != null)
 		{
 			bannerTime += elapsed;
@@ -507,9 +482,8 @@ class FreeplayState extends FlxState
 		}
 		if (KeyBinds.justPressed(KeyBinds.ACCEPT) && rows.length > 0) play(entries[selected].path);
 
-		// Literal shortcuts: see the hint text in create().
 		if (FlxG.keys.justPressed.C) leave(new ConverterMenuState());
-		// 7 = modo avanzado con el nivel seleccionado ya elegido (antiGay = true lo bloquea, igual que en el menu principal).
+
 		if (!advanced.AdvancedModeState.antiGay && FlxG.keys.justPressed.SEVEN && entries.length > 0)
 		{
 			leave(new advanced.AdvancedModeState(entries[selected].label));
@@ -521,7 +495,6 @@ class FreeplayState extends FlxState
 			return;
 		}
 
-		// Touch: buttons first, then the level rows.
 		if (TouchNav.hit(difficultyText)) { Difficulty.next(); showDifficulty(); return; }
 		if (BackButton.clicked(backButton)) { CoolUtil.playMenuSound("cancel", 0.7); leave(new MainMenuState()); return; }
 		if (convertButton.clicked()) { leave(new ConverterMenuState()); return; }
@@ -530,7 +503,7 @@ class FreeplayState extends FlxState
 			refresh();
 			return;
 		}
-		// Tocar otra fila la selecciona; tocar la seleccionada la juega.
+
 		var tapped = tappedRow();
 		if (tapped >= 0)
 		{
@@ -539,7 +512,6 @@ class FreeplayState extends FlxState
 			return;
 		}
 
-		// Izquierda/derecha cambia la dificultad (velocidad de scroll).
 		if (FlxG.keys.justPressed.LEFT) { Difficulty.next(-1); showDifficulty(); }
 		if (FlxG.keys.justPressed.RIGHT) { Difficulty.next(1); showDifficulty(); }
 
@@ -558,7 +530,6 @@ class FreeplayState extends FlxState
 		showScore();
 	}
 
-	/** Mejor puntaje guardado del nivel seleccionado en la dificultad actual. */
 	private function showScore():Void
 	{
 		if (entries.length == 0 || selected >= entries.length)
@@ -584,10 +555,10 @@ class FreeplayState extends FlxState
 	{
 		leaving = true;
 		PlayState.archivePath = path;
-		PlayState.resetLaunch(); // entrada normal: nada de arrastrar el punto de un salto anterior (launchStartMs = 0)
+		PlayState.resetLaunch();
 		PlayState.returnToEditor = null;
 		Log.info('[FreeplayState] launching ' + path);
-		FlxG.switchState(new LoadingLevelState()); // sin cortina: solo el loading -> juego la lleva
+		FlxG.switchState(new LoadingLevelState());
 	}
 
 	override public function destroy():Void

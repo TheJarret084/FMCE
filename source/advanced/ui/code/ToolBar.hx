@@ -3,7 +3,6 @@ package advanced.ui.code;
 import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
 
-/** Barra de herramientas: guardar, script nuevo, ejecutar, sprites. */
 class ToolBar extends FlxSpriteGroup
 {
 	var buttons:Array<CodeButton> = [];
@@ -42,7 +41,6 @@ class ToolBar extends FlxSpriteGroup
 		cursorX += 8;
 	}
 
-	/** Texto a la derecha (nombre del nivel). */
 	public function setTitle(value:String):Void
 	{
 		titleText.text = value;

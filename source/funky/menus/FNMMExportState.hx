@@ -12,7 +12,6 @@ import funky.backend.converter.FNMMExportJob;
 import funky.backend.converter.FMCEToFNMMExporter.FNMMExportPlan;
 import funky.core.KeyBinds;
 
-/** Exportar un nivel a `.FNMM`. Avisa (estilo Codename) de lo que se queda fuera, como `data/`. */
 class FNMMExportState extends UIState
 {
 	static inline var WIN_W:Int = 640;
@@ -34,7 +33,7 @@ class FNMMExportState extends UIState
 	var barW:Int = 0;
 
 	var job:Null<FNMMExportJob> = null;
-	/** Frames a esperar antes del primer `step()`, para que se dibuje "Exportando...". */
+
 	var warmup:Int = 0;
 
 	public function new(levelName:String, ?back:Void->FlxState)

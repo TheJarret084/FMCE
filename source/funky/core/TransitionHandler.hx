@@ -10,21 +10,17 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import openfl.Assets;
 
-/** The single transition system for FMCE. */
 class TransitionHandler
 {
-	/** Seconds for one half of a full out+in pair. */
+
 	public static var duration:Float = 2.0 / 3.0;
 
-	/** The transition currently on screen, or null. */
 	public static var active:Null<TransitionSubState> = null;
 
-	/** Curtain out of `FlxG.state` and into `next`. */
 	public static function switchState(next:FlxState):Void
 	{
 		if (next == null) return;
 
-		// No state yet (very early boot) or a transition already running.
 		if (FlxG.state == null || active != null)
 		{
 			FlxG.switchState(next);
@@ -34,7 +30,6 @@ class TransitionHandler
 		FlxG.state.openSubState(new TransitionSubState(next, true));
 	}
 
-	/** Curtain into `state`, revealing what `state` just built. */
 	public static function playIn(state:FlxState):Void
 	{
 		if (state == null || active != null) return;
@@ -42,7 +37,6 @@ class TransitionHandler
 	}
 }
 
-/** The curtain itself. Instantiated only by TransitionHandler. */
 class TransitionSubState extends FlxSubState
 {
 	var nextState:FlxState;
@@ -74,15 +68,12 @@ class TransitionSubState extends FlxSubState
 
 		var height = FlxG.height;
 
-		// Solid body, 1px taller on each side so the soft edges never leave a seam.
 		body = new FlxSprite(0, -1);
 		body.makeGraphic(1, 1, FlxColor.BLACK);
 		body.scale.set(FlxG.width, height + 2);
 		body.updateHitbox();
 		add(body);
 
-		// The soft edges are decoration. If the asset is missing the black body
-		// still covers and slides, so fail soft instead of leaving a half-built curtain.
 		var path = Paths.image("menus/transitionSpr");
 		if (Assets.exists(path))
 		{
@@ -93,22 +84,20 @@ class TransitionSubState extends FlxSubState
 		var travel = height * 2;
 		if (transOut)
 		{
-			// Comes in from above and STAYS covering: the state change happens hidden.
+
 			transitionCamera.scroll.y = travel;
 			tween = FlxTween.tween(transitionCamera.scroll, {y: 0}, TransitionHandler.duration,
 				{ease: FlxEase.sineOut, onComplete: function(_) finish()});
 		}
 		else
 		{
-			// Starts already covering (where the out curtain stopped) and keeps
-			// going down, uncovering the new state.
+
 			transitionCamera.scroll.y = 0;
 			tween = FlxTween.tween(transitionCamera.scroll, {y: -travel}, TransitionHandler.duration,
 				{ease: FlxEase.sineIn, onComplete: function(_) finish()});
 		}
 	}
 
-	/** One soft edge: opaque side toward the body, fading away from it. */
 	function makeEdge(path:String, y:Float, flip:Bool):FlxSprite
 	{
 		var edge = new FlxSprite(0, y);
@@ -151,8 +140,6 @@ class TransitionSubState extends FlxSubState
 		body = null;
 		edgeBottom = null;
 
-		// Must happen before super.destroy() so a state opening another
-		// transition from its own destroy() is not rejected as re-entrant.
 		if (TransitionHandler.active == this) TransitionHandler.active = null;
 
 		super.destroy();

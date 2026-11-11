@@ -22,7 +22,6 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Un sprite de `sprites/<nombre>/` -> tiras `<i>.png` + `sprite.json` nativo de FNMM. */
 class FNMMSpriteExport
 {
 	public var name(default, null):String;
@@ -32,7 +31,7 @@ class FNMMSpriteExport
 	public var error(default, null):Null<String> = null;
 	public var warnings(default, null):Array<String> = [];
 	public var fraction(get, never):Float;
-	/** Archivos listos para el zip; el job los escribe y vacia la lista. */
+
 	public var pending:Array<{path:String, bytes:Bytes}> = [];
 
 	#if sys
@@ -46,14 +45,14 @@ class FNMMSpriteExport
 	var pages:Map<Int, BitmapData> = new Map<Int, BitmapData>();
 	var anims:Array<{frames:Array<Dynamic>, cfg:Dynamic}> = [];
 	var outData:Array<Dynamic> = [];
-	/** Pagina del atlas -> ultima tira que la usa (despues de esa se libera su bitmap). */
+
 	var lastUse:Map<Int, Int> = new Map<Int, Int>();
-	/** Atlas de Adobe Animate (`sprites/<n>/sprite/Animation.json`): se desarma en frames y se arman las tiras. */
+
 	var animate:Null<AnimateAtlas>;
 	var animateDir:String;
 	var jobs:Array<{name:String, cfg:Dynamic, tl:AnimateTimeline, frames:Array<Int>}> = [];
 	var cutouts:Map<String, Null<BitmapData>> = new Map<String, Null<BitmapData>>();
-	/** Sprite de video (`config.json` type video): cada video sale como una tira. */
+
 	var videoClips:Array<VideoClip> = [];
 	var ffmpeg:Null<String> = null;
 	var videoTask:Null<VideoStripTask> = null;
@@ -127,8 +126,7 @@ class FNMMSpriteExport
 	function open():Void
 	{
 		label = "abriendo";
-		// El .FNMM no tiene video: cada video del sprite sale como una tira (ffmpeg + FunkFMPEG). Es video si el motor lo
-		// consideraria video (config.json type "video", o carpeta con .mp4 y sin sprite.png).
+
 		if (FunkinVideoSprite.readInfo(dir) != null)
 		{
 			openVideo();
@@ -141,7 +139,6 @@ class FNMMSpriteExport
 				warnings.push("el video " + entry + " no se usa en el juego (el sprite no es de tipo video) y no entra al .FNMM");
 		}
 
-		// ya viene en formato FNMM (tiras + sprite.json con `data`): se copia tal cual
 		if (FNMMSpriteImporter.isNative(dir))
 		{
 			var native:Dynamic = JsonLoose.parse(File.getContent(Path.join([dir, "sprite.json"])));
@@ -191,9 +188,6 @@ class FNMMSpriteExport
 		phase = 1;
 	}
 
-	// ------------------------------------------------------------------ atlas de Animate
-
-	/** Lee Animation.json + spritemaps y arma la lista de animaciones a exportar (solo las del config.json: lo demas no se toca). */
 	function openAnimate():Void
 	{
 		label = "atlas de Animate";
@@ -230,7 +224,7 @@ class FNMMSpriteExport
 		}
 		else
 		{
-			// sin config.json: un label del escenario = una animacion; sin labels, el escenario entero
+
 			var labels = atlas.labels();
 			if (labels.length > 0) entries = [for (l in labels) {name: l}];
 			else entries = [{name: ""}];
@@ -265,14 +259,13 @@ class FNMMSpriteExport
 			}
 			if (tl == null || to <= from)
 			{
-				// se deja vacia (no se borra) para que las animaciones de abajo conserven su numero
+
 				warnings.push("'" + wanted + "' no es un simbolo ni un label del atlas: sale una animacion vacia");
 				tl = new AnimateTimeline();
 				from = 0;
 				to = 1;
 			}
 
-			// `indices` (si hay) elige y ordena frames de la animacion; sin ellos van todos
 			var frames:Array<Int> = [];
 			var indices = FMCEToFNMMExporter.field(entry, "indices");
 			if (Std.isOfType(indices, Array) && (cast indices:Array<Dynamic>).length > 0)
@@ -283,7 +276,6 @@ class FNMMSpriteExport
 				}
 			if (frames.length == 0) for (f in from...to) frames.push(f);
 
-			// sin velocidad en el config.json se usa la del atlas
 			var cfg:Dynamic = {};
 			for (k in Reflect.fields(entry)) Reflect.setField(cfg, k, Reflect.field(entry, k));
 			if (FMCEToFNMMExporter.field(cfg, "spd") == null)
@@ -297,7 +289,6 @@ class FNMMSpriteExport
 		phase = 4;
 	}
 
-	/** Recorte del atlas de un sprite (se corta una vez y se reutiliza). */
 	function cutout(sprite:String):Null<BitmapData>
 	{
 		if (cutouts.exists(sprite)) return cutouts.get(sprite);
@@ -318,7 +309,6 @@ class FNMMSpriteExport
 		return result;
 	}
 
-	/** Una animacion del atlas de Animate -> una tira (solo se dibujan los simbolos de esa animacion, y se recorta lo vacio). */
 	function stepAnimate():Void
 	{
 		if (index >= jobs.length)
@@ -348,7 +338,7 @@ class FNMMSpriteExport
 		}
 		if (x1 < x0)
 		{
-			// no dibuja nada: sale una tira transparente de 1 px para no correr los numeros de las demas animaciones
+
 			warnings.push("la animacion '" + job.name + "' no dibuja nada");
 			x0 = y0 = 0;
 			x1 = y1 = 1;
@@ -358,8 +348,6 @@ class FNMMSpriteExport
 		var bw = Std.int(Math.max(1, Math.ceil(x1) - bx));
 		var bh = Std.int(Math.max(1, Math.ceil(y1) - by));
 
-		// un frame de Animate puede medir cientos de px: si la tira no cabe (o pesa demasiado) se dibuja mas chica y el
-		// `scale` y el pivote del config se corrigen, asi el sprite se ve igual de grande en el juego
 		var shrink = shrinkFor(bw, bh, job.frames.length);
 		if (shrink < 1) warnings.push("'" + job.name + "' se exporta al " + Math.round(shrink * 100) + "% de su tamano para que entre en la tira");
 		var cw = Std.int(Math.max(1, Math.ceil(bw * shrink)));
@@ -367,7 +355,6 @@ class FNMMSpriteExport
 		var originX = bx * shrink;
 		var originY = by * shrink;
 
-		// 1) cada frame en un lienzo; los frames iguales se dibujan una sola vez
 		var unique = new Map<String, BitmapData>();
 		var canvases:Array<BitmapData> = [];
 		for (ops in frameOps)
@@ -389,7 +376,6 @@ class FNMMSpriteExport
 			canvases.push(canvas);
 		}
 
-		// 2) recorte: la union de lo que de verdad se pinto en todos los frames
 		var area:Null<Rectangle> = null;
 		for (canvas in unique)
 		{
@@ -401,24 +387,20 @@ class FNMMSpriteExport
 		var cellW = Std.int(area.width);
 		var cellH = Std.int(area.height);
 
-		// 3) la tira
 		var strip = new BitmapData(cellW * canvases.length, cellH, true, 0x00000000);
 		for (k in 0...canvases.length) strip.copyPixels(canvases[k], area, new Point(k * cellW, 0));
 		var bytes:Bytes = FMCEToFNMMExporter.encodePng(strip);
 		strip.dispose();
 		for (canvas in unique) canvas.dispose();
 
-		// la tira lleva el numero de su lugar en `data` (asi no se descuadran si falta alguna)
 		pending.push({path: base + outData.length + ".png", bytes: bytes});
-		// el pivote se mide desde el origen del simbolo; la esquina de la celda esta en (origen + area) y todo va a la escala `shrink`
+
 		outData.push(animEntry(scaledCfg(job.cfg, shrink), canvases.length, originX + area.x, originY + area.y));
 	}
 
-	/** Cuanto se reduce una tira para que entre en FNMM_MAX_SIDE / MAX_PIXELS (nunca agranda: 1 = a su tamano real). */
 	function shrinkFor(cellW:Int, cellH:Int, frames:Int):Float
 		return AnimateAtlas.fitScale(cellW, cellH, frames, FMCEToFNMMExporter.FNMM_MAX_SIDE, FMCEToFNMMExporter.MAX_PIXELS);
 
-	/** El config de la animacion para una tira dibujada a `shrink`: pivote mas chico y `scale` mas grande, asi se ve igual. */
 	function scaledCfg(cfg:Dynamic, shrink:Float):Dynamic
 	{
 		if (shrink >= 1) return cfg;
@@ -430,7 +412,6 @@ class FNMMSpriteExport
 		return copy;
 	}
 
-	/** Identifica un frame por lo que dibuja (para no dibujar dos veces frames iguales). */
 	static function signature(ops:Array<DrawOp>):String
 	{
 		var b = new StringBuf();
@@ -444,7 +425,6 @@ class FNMMSpriteExport
 		return b.toString();
 	}
 
-	/** Cada entrada del config.json es una tira; van en el orden de `index`, que es la posicion que usan los eventos. */
 	function fromConfig(list:Array<Dynamic>, tags:Array<Dynamic>):Void
 	{
 		var order = [for (i in 0...list.length) i];
@@ -463,7 +443,7 @@ class FNMMSpriteExport
 			var indices = Reflect.field(cfg, "indices");
 			if (Std.isOfType(indices, Array) && (cast indices:Array<Dynamic>).length > 0)
 			{
-				// `indices` = frames del atlas tal cual (igual que en el juego): no necesita tag y pueden repetirse.
+
 				for (value in (cast indices:Array<Dynamic>))
 				{
 					var at = Std.int(FMCEToFNMMExporter.num(value, -1));
@@ -515,7 +495,6 @@ class FNMMSpriteExport
 		return null;
 	}
 
-	/** Aseprite puede traer `frames` como lista o como objeto {nombre: frame}. */
 	static function framesOf(atlas:Dynamic):Array<Dynamic>
 	{
 		var raw:Dynamic = Reflect.field(atlas, "frames");
@@ -526,7 +505,6 @@ class FNMMSpriteExport
 		return out;
 	}
 
-	/** Una tira por llamada: los frames recortados del atlas vuelven a su lugar dentro de su celda original. */
 	function stepAnim():Void
 	{
 		if (index >= anims.length)
@@ -540,7 +518,6 @@ class FNMMSpriteExport
 
 		var list = anims[i].frames;
 
-		// Zona visible de cada frame dentro de su celda original (`spriteSourceSize`). La celda de la tira es la union de todas.
 		var minX = 1 << 30;
 		var minY = 1 << 30;
 		var maxX = 0;
@@ -566,7 +543,7 @@ class FNMMSpriteExport
 		}
 		if (maxX <= minX || maxY <= minY)
 		{
-			// todos los frames vacios: una celda de 1x1
+
 			minX = 0;
 			minY = 0;
 			maxX = 1;
@@ -584,7 +561,7 @@ class FNMMSpriteExport
 			cellW = maxX - minX;
 			cellH = maxY - minY;
 		}
-		// resolucion de la tira: la que pide su uso en la escena, y siempre una que entre en un celular
+
 		var shrink = shrinkFor(cellW, cellH, list.length);
 		var sw = Std.int(Math.max(1, Math.ceil(cellW * shrink)));
 		var sh = Std.int(Math.max(1, Math.ceil(cellH * shrink)));
@@ -609,7 +586,7 @@ class FNMMSpriteExport
 				strip.copyPixels(page, source, new Point(k * sw + dx, dy));
 			else
 			{
-				// el recorte del frame se dibuja mas chico dentro de la tira
+
 				var piece = new BitmapData(w, h, true, 0x00000000);
 				piece.copyPixels(page, source, new Point(0, 0));
 				strip.draw(piece, new Matrix(shrink, 0, 0, shrink, k * sw + dx * shrink, dy * shrink), null, null, null, true);
@@ -621,7 +598,6 @@ class FNMMSpriteExport
 		pending.push({path: base + i + ".png", bytes: bytes});
 		outData.push(animEntry(scaledCfg(anims[i].cfg, shrink), list.length, cropX * shrink, cropY * shrink));
 
-		// una pagina del atlas que ya no usa ninguna tira de las que faltan se libera (ahorra memoria en celulares)
 		for (page in lastUse.keys())
 			if (lastUse.get(page) == i && pages.exists(page))
 			{
@@ -630,7 +606,6 @@ class FNMMSpriteExport
 			}
 	}
 
-	/** Pagina del atlas de un frame (si apunta a una que no existe, la 0, igual que `pageBitmap`). */
 	function pageKey(frame:Dynamic):Int
 	{
 		var page = Std.int(FMCEToFNMMExporter.num(Reflect.field(frame, "page"), 0));
@@ -649,13 +624,12 @@ class FNMMSpriteExport
 		return bitmap;
 	}
 
-	/** `spd` y `spd_fps` salen tal cual vienen en el config (velocidad base, sin convertir a multiplicador de 24 fps). */
 	function animEntry(cfg:Dynamic, count:Int, cropX:Float, cropY:Float):Dynamic
 	{
 		var offset = FMCEToFNMMExporter.field(cfg, "offset");
 		var spd = FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(cfg, "spd"), 1);
 		return {
-			// el pivote se mide desde la esquina de la celda: si la celda se recorto, se corre lo mismo
+
 			offset: {x: FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(offset, "x"), 0) - cropX, y: FMCEToFNMMExporter.num(FMCEToFNMMExporter.field(offset, "y"), 0) - cropY},
 			num: count,
 			spd: spd,
@@ -666,13 +640,11 @@ class FNMMSpriteExport
 		};
 	}
 
-	// ------------------------------------------------------------------ video
-
 	function openVideo():Void
 	{
 		label = "video";
 		#if !android
-		// en Android no hace falta ffmpeg: los frames los saca MediaMetadataRetriever (AndroidFrames)
+
 		ffmpeg = VideoStrip.findFfmpeg();
 		if (ffmpeg == null) throw "los videos necesitan ffmpeg: ponlo junto al .exe o en el PATH";
 		#end
@@ -682,7 +654,6 @@ class FNMMSpriteExport
 		phase = 5;
 	}
 
-	/** Un video por vez: ffmpeg saca los frames, FunkFMPEG arma la tira (en otro hilo) y aqui solo se espera. Un video que falla no tira a los demas. */
 	function stepVideo():Void
 	{
 		if (videoTask == null)
@@ -721,7 +692,7 @@ class FNMMSpriteExport
 		var cfg:Dynamic = {};
 		var original = videoClips[index].cfg;
 		if (original != null) for (k in Reflect.fields(original)) Reflect.setField(cfg, k, Reflect.field(original, k));
-		// la tira puede ser mas chica que el video: pivote y `scale` se corrigen para que se vea del mismo tamano
+
 		var shrink = Math.min(1, task.frameWidth / task.sourceWidth);
 		Reflect.setField(cfg, "spd", task.fps);
 		Reflect.setField(cfg, "spd_fps", true);
@@ -733,7 +704,6 @@ class FNMMSpriteExport
 		index++;
 	}
 
-	/** La animacion queda como un pixel transparente para que las de abajo conserven su numero (en vez de dejar el hueco sin avisar). */
 	function placeholder(reason:String):Void
 	{
 		warnings.push(reason + " (queda vacia la animacion " + index + ")");

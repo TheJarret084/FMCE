@@ -3,7 +3,6 @@ package funkin.backend.assets;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.frames.FlxFramesCollection;
 
-/** Subconjunto de la API de Paths de Codename sobre la carpeta `assets/` de FMCE. */
 class Paths
 {
 	public static inline function getPath(file:String, ?library:String):String return 'assets/$file';
@@ -21,12 +20,10 @@ class Paths
 	public static inline function script(key:String, ?library:String):String return getPath('$key.hx');
 	public static inline function getFontName(path:String):String return path;
 
-	/** Carpeta del nivel abierto en el charter (la fija Chart.load). */
 	public static var levelDir:String = null;
 
-	/** La musica del nivel (`music.ogg` o la que diga `meta.song`). */
 	public static function inst(song:String, ?diff:String, ?suffix:String):String return funkin.backend.chart.Chart.musicPath;
-	/** Voces del nivel: `music/Voices<suffix>.ogg`. Si no existen devuelve una ruta inexistente (nunca null). */
+
 	public static function voices(song:String, ?diff:String, ?suffix:String):String {
 		var found = suffix == null || suffix == "" ? funkin.backend.chart.Chart.voicesPath : funky.backend.chart.LevelLoader.findVoices(levelDir, suffix);
 		return found != null ? found : levelDir + '/__sin_voces__.ogg';

@@ -10,11 +10,10 @@ import flixel.text.FlxText.FlxTextBorderStyle;
 import flixel.util.FlxColor;
 import flixel.util.FlxSpriteUtil;
 
-/** Boton de menu unico para TODOS los menus (mismo tamano, mismo estilo, mismo lugar): pastilla oscura con borde y texto. */
 class MenuButton extends FlxSpriteGroup
 {
 	public static inline var HEIGHT:Int = 52;
-	/** Margen a los bordes de la pantalla y separacion entre botones de una fila. */
+
 	public static inline var MARGIN:Float = 20;
 	public static inline var GAP:Float = 14;
 
@@ -28,10 +27,8 @@ class MenuButton extends FlxSpriteGroup
 
 	public var text(get, set):String;
 
-	/** Multiplicador de opacidad (0..1) para que el menu lo desvanezca sin pelear con el brillo del hover. */
 	public var fade:Float = 1;
 
-	/** @param width 0 = se ajusta al texto (minimo 140 px). */
 	public function new(text:String, x:Float = 0, y:Float = 0, width:Float = 0)
 	{
 		super(x, y);
@@ -59,7 +56,6 @@ class MenuButton extends FlxSpriteGroup
 	static var fontPath:Null<String>;
 	static var fontChecked:Bool = false;
 
-	/** La fuente se busca una sola vez (Paths.fontPath escribe al log en cada llamada). */
 	static function font():Null<String>
 	{
 		if (!fontChecked)
@@ -80,7 +76,6 @@ class MenuButton extends FlxSpriteGroup
 		return value;
 	}
 
-	/** true en el frame en que un dedo o el mouse lo toca. Ya hace el "pop" de feedback. */
 	public function clicked():Bool
 	{
 		if (!exists || !visible || fade < 0.2 || !TouchNav.hit(this)) return false;
@@ -88,7 +83,6 @@ class MenuButton extends FlxSpriteGroup
 		return true;
 	}
 
-	/** Pop corto (se encoge y vuelve). */
 	public function press():Void
 		pop = 1;
 
@@ -99,7 +93,6 @@ class MenuButton extends FlxSpriteGroup
 		hot = TouchNav.over(this);
 		pop = Math.max(0, pop - elapsed * 7);
 
-		// Hover: se ve mas fuerte. Pop: se encoge un poco y regresa.
 		var targetAlpha = (hot ? 1 : BASE_ALPHA) * fade;
 		alpha = FlxMath.lerp(alpha, targetAlpha, Math.min(1, elapsed * 14));
 		var s = 1 - 0.08 * pop;
@@ -107,10 +100,6 @@ class MenuButton extends FlxSpriteGroup
 		label.scale.set(s, s);
 	}
 
-	/**
-	 * Acomoda botones en UNA fila abajo a la izquierda (de izquierda a derecha), todos a la misma altura.
-	 * `bottomInset` = px que se deja libres abajo (por ejemplo la tira de atajos que hay en PC).
-	 */
 	public static function bottomRow(buttons:Array<MenuButton>, bottomInset:Float = 0):Void
 	{
 		var cursor = MARGIN;

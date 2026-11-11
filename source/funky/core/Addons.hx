@@ -8,13 +8,11 @@ import openfl.utils.Assets as OpenFlAssets;
 
 using StringTools;
 
-/** Addons: extensiones que el juego carga siempre (noteskins, videos...), separadas de `assets/` (que va en el `assets.pack`). */
 class Addons
 {
-	/** Prefijo de los ids de OpenFL de lo que trae el build. */
+
 	public static inline var ID_ROOT:String = "addons/";
 
-	/** Carpeta externa de addons (sin `/` al final). */
 	public static function externalRoot():String
 	{
 		#if sys
@@ -24,11 +22,9 @@ class Addons
 		#end
 	}
 
-	/** Ruta en disco de un archivo de addon externo (exista o no). */
 	public static inline function externalPath(rel:String):String
 		return externalRoot() + "/" + clean(rel);
 
-	/** true si el archivo existe afuera (disco) o en lo que trae el build. */
 	public static function exists(rel:String):Bool
 	{
 		rel = clean(rel);
@@ -38,7 +34,6 @@ class Addons
 		return OpenFlAssets.exists(ID_ROOT + rel);
 	}
 
-	/** Ruta REAL en disco del archivo (para hxvlc y similares), o null si no existe. */
 	public static function file(rel:String):Null<String>
 	{
 		rel = clean(rel);
@@ -47,8 +42,6 @@ class Addons
 		if (sys.FileSystem.exists(external) && !sys.FileSystem.isDirectory(external)) return external;
 		#end
 
-		// Android: lo que trae el build vive en el APK; Lime sabe donde queda en disco.
-		// OpenFlAssets.getPath lanza una excepcion si el id no existe, por eso se comprueba antes.
 		try
 		{
 			if (OpenFlAssets.exists(ID_ROOT + rel)) return OpenFlAssets.getPath(ID_ROOT + rel);
@@ -84,7 +77,7 @@ class Addons
 			var external = externalRoot() + "/" + rel;
 			if (sys.FileSystem.exists(external) && !sys.FileSystem.isDirectory(external)) return BitmapData.fromFile(external);
 			#end
-			// Sin la cache de OpenFL: Flixel hace dispose() del BitmapData al destruir el grafico y la cache lo seguiria entregando muerto.
+
 			if (OpenFlAssets.exists(ID_ROOT + rel)) return OpenFlAssets.getBitmapData(ID_ROOT + rel, false);
 		}
 		catch (e:Dynamic)
@@ -94,10 +87,6 @@ class Addons
 		return null;
 	}
 
-	/**
-	 * Nombres de las subcarpetas directas de `addons/<sub>/` (externas + las que trae el build), sin repetidos y ordenados.
-	 * `list("noteskins")` -> [codename, default, fmm, ...].
-	 */
 	public static function folders(sub:String):Array<String>
 	{
 		sub = clean(sub);
@@ -134,19 +123,12 @@ class Addons
 		return out;
 	}
 
-	/**
-	 * Atlas Sparrow de un addon: `<rel>.png` + `<rel>.xml` (rel sin extension, ej. `noteskins/default/images/NOTE_assets`).
-	 * null si falta alguno de los dos.
-	 */
 	public static function getSparrowAtlas(rel:String):Null<FlxAtlasFrames>
 	{
 		rel = clean(rel);
 		var xml = getText(rel + ".xml");
 		if (xml == null) return null;
 
-		// Mismo grafico para todos los que piden este atlas, y persistente: si ningun sprite lo usa en el state actual,
-		// el cache de Flixel no lo tira ni deja el BitmapData invalido (igual que Paths.getSparrowAtlas).
-		// `FlxG.bitmap.get` tambien rescata la imagen de la limpieza del cambio de estado (ver NoteSkin.hook).
 		var key = "addon:" + rel;
 		var graphic = FlxG.bitmap.get(key);
 		if (graphic != null && (graphic.isDestroyed || graphic.bitmap == null))
@@ -166,7 +148,6 @@ class Addons
 		return FlxAtlasFrames.fromSparrow(graphic, xml);
 	}
 
-	/** Sin `/` al inicio, barras normales, y sin `..` (no se sale de addons/). */
 	static function clean(rel:String):String
 	{
 		var p = (rel == null ? "" : rel).replace("\\", "/");

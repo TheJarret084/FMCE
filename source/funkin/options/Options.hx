@@ -1,6 +1,5 @@
 package funkin.options;
 
-/** Opciones del editor con los valores por defecto de Codename. */
 class Options
 {
 	public static var bypassEditorsResize:Bool = false;

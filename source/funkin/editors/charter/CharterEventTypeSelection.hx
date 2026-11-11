@@ -40,7 +40,7 @@ class CharterEventTypeSelection extends UISubstateWindow {
 		var disableOnlyContinuousChanges:Bool = false;
 		for (change in Conductor.bpmChangeMap) {
 			if (change.continuous && MathUtil.greaterThanEqual(eventStepTime, change.stepTime) && MathUtil.lessThan(eventStepTime, change.endStepTime)) {
-				disableOnlyContinuousChanges = MathUtil.equal(eventStepTime, change.stepTime); //allow time sig and instant bpm changes on the same event
+				disableOnlyContinuousChanges = MathUtil.equal(eventStepTime, change.stepTime);
 				disableConductorEvents = !disableOnlyContinuousChanges;
 			}
 		}
@@ -63,7 +63,7 @@ class CharterEventTypeSelection extends UISubstateWindow {
 				time: 0,
 				params: []
 			});
-			// icon.setGraphicSize(20, 20); // Std.int(button.bHeight - 12)
+
 			icon.updateHitbox();
 			icon.cameras = [buttonCameras];
 			icon.x = button.x + 8;

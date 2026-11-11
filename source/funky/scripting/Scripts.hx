@@ -28,13 +28,11 @@ import haxe.io.Path;
 import sys.FileSystem;
 #end
 
-/** Scripts de un nivel: todo `.hx` de `<nivel>/data/scripts/` (en orden alfabetico). */
 class Scripts
 {
-	/** Carpeta de los scripts dentro del nivel. */
+
 	public static inline var DIR:String = "data/scripts";
 
-	/** Carpeta de antes (`<nivel>/scripts/`): se sigue leyendo para no romper niveles viejos, pero lo nuevo va en `DIR`. */
 	public static inline var LEGACY_DIR:String = "scripts";
 
 	public static inline var CONTINUE:Int = 0;
@@ -42,30 +40,20 @@ class Scripts
 
 	static var EXTENSIONS:Array<String> = ["hx", "hscript", "hsc", "hxs"];
 
-	/** true si hay al menos un script cargado (para no armar argumentos en vano). */
 	public static var has(default, null):Bool = false;
 
-	/** Variables publicas compartidas entre scripts (`public var`, `public function`, `setVar` / `getVar`). */
 	public static var shared(default, null):Map<String, Dynamic> = new Map<String, Dynamic>();
 
-	/** Variables `static` de las clases de los scripts (compartidas entre todos). */
 	public static var statics(default, null):Map<String, Dynamic> = new Map<String, Dynamic>();
 
-	/** Todos los scripts cargados, en orden de carga. */
 	public static var scripts(default, null):Array<LevelScript> = [];
 
-	/** Objeto padre de los scripts (el PlayState). */
 	public static var parent(default, null):Dynamic = null;
 
-	/** Variables globales de todos los scripts: las base + las de `load` + las que se agregan con `set`. */
 	static var globals:Map<String, Dynamic> = new Map<String, Dynamic>();
 
 	static var levelDir:String = "";
 
-	/**
-	 * Carga los scripts de `levelDir`. `extra` son variables globales para ellos (`game`, `song`...).
-	 * Si `extra` trae `game`, ese objeto es el padre de los scripts.
-	 */
 	public static function load(levelDir:String, extra:Map<String, Dynamic>):Void
 	{
 		clear();
@@ -76,7 +64,7 @@ class Scripts
 		if (extra.exists("game")) parent = extra.get("game");
 
 		#if sys
-		// (carpeta, archivo): primero data/scripts y despues la carpeta vieja, cada una en orden alfabetico
+
 		var found:Array<{dir:String, file:String}> = [];
 		for (sub in [DIR, LEGACY_DIR])
 		{
@@ -89,7 +77,6 @@ class Scripts
 		}
 		if (found.length == 0) return;
 
-		// Primero se crean todos (asi un script puede usar `scripts.getByName("otro.hx")` desde su codigo de arriba)...
 		for (item in found)
 		{
 			try
@@ -102,7 +89,6 @@ class Scripts
 			}
 		}
 
-		// ...y luego se ejecutan en orden.
 		var i = 0;
 		while (i < scripts.length) scripts[i++].load();
 
@@ -119,10 +105,6 @@ class Scripts
 		has = true;
 	}
 
-	/**
-	 * Carga y ejecuta otro `.hx` del nivel (`importScript("data/utils")`) y lo devuelve; si ya estaba cargado devuelve el mismo.
-	 * Busca la ruta tal cual, y despues dentro de `data/scripts/`, `source/` y `data/` del nivel; la extension es opcional.
-	 */
 	public static function importScript(path:String):LevelScript
 	{
 		var file = resolve(path);
@@ -155,7 +137,6 @@ class Scripts
 		return null;
 	}
 
-	/** El script cargado desde `path` (la ruta con que se creo), o null. */
 	public static function getByPath(path:String):Null<LevelScript>
 	{
 		var wanted = Path.normalize(path);
@@ -164,7 +145,6 @@ class Scripts
 		return null;
 	}
 
-	/** El script por nombre de archivo (`"vida.hx"`; sin extension tambien vale), o null. */
 	public static function getByName(name:String):Null<LevelScript>
 	{
 		for (script in scripts)
@@ -172,17 +152,12 @@ class Scripts
 		return null;
 	}
 
-	/** Pone el objeto padre de todos los scripts (los ya cargados y los que lleguen despues). */
 	public static function setParent(object:Dynamic):Void
 	{
 		parent = object;
 		for (script in scripts) script.setParent(object);
 	}
 
-	/**
-	 * Valor de una variable: la del primer script que la tenga y, si ninguno, la publica.
-	 * (Con `getVar` pasa lo mismo: son lo mismo.)
-	 */
 	public static function get(key:String):Dynamic
 	{
 		for (script in scripts)
@@ -193,18 +168,12 @@ class Scripts
 		return shared.get(key);
 	}
 
-	/** Define una variable global en todos los scripts (por ejemplo `hud` cuando ya existe), tambien en los que se importen despues. */
 	public static function set(key:String, value:Dynamic):Void
 	{
 		globals.set(key, value);
 		for (script in scripts) script.set(key, value);
 	}
 
-	/**
-	 * Nombres de Codename para los eventos que el motor lanza con nombre Psych: cada uno con los argumentos que
-	 * recibe en Codename. Un script puede definir el nombre Psych, el de Codename o los dos: se llama a los que existan.
-	 * (Los eventos de Codename con objeto `event` -- onPlayerHit, onNoteCreation... -- no tienen equivalente aqui.)
-	 */
 	static final ALIASES:Map<String, Array<{name:String, args:Void->Null<Array<Dynamic>>}>> = [
 		"onLoad" => [{name: "onCreate", args: null}, {name: "create", args: null}],
 		"onCreatePost" => [{name: "postCreate", args: null}],
@@ -216,7 +185,6 @@ class Scripts
 		"onDestroy" => [{name: "destroy", args: null}]
 	];
 
-	/** Llama `func` en todos los scripts activos. true = alguno devolvio `Function_Stop`. */
 	public static function call(func:String, ?args:Array<Dynamic>):Bool
 	{
 		if (!has) return false;
@@ -229,7 +197,7 @@ class Scripts
 		{
 			for (alias in aliases)
 			{
-				// `update` / `postUpdate` reciben `elapsed` igual que el original; beat/step/measure llevan su numero.
+
 				var aliasArgs = alias.args != null ? alias.args() : (func == "onUpdate" || func == "onUpdatePost" ? args : []);
 				if (callOne(alias.name, aliasArgs)) stopped = true;
 			}
@@ -240,7 +208,7 @@ class Scripts
 	static function callOne(func:String, args:Array<Dynamic>):Bool
 	{
 		var stopped = false;
-		// por indice: un script puede hacer `importScript` durante la llamada y agrandar la lista
+
 		var i = 0;
 		while (i < scripts.length)
 		{
@@ -268,7 +236,6 @@ class Scripts
 		globals.set("Function_Continue", CONTINUE);
 		globals.set("Function_Stop", STOP);
 
-		// Haxe
 		globals.set("Std", Std);
 		globals.set("Math", Math);
 		globals.set("Reflect", Reflect);
@@ -280,11 +247,9 @@ class Scripts
 		globals.set("Lambda", Lambda);
 		#if sys globals.set("Sys", Sys); #end
 
-		// OpenFL / Lime
 		globals.set("Assets", openfl.utils.Assets);
 		globals.set("Application", lime.app.Application);
 
-		// Flixel
 		globals.set("FlxG", FlxG);
 		globals.set("FlxBasic", flixel.FlxBasic);
 		globals.set("FlxSprite", FlxSprite);
@@ -304,7 +269,6 @@ class Scripts
 		globals.set("FlxPoint", abstractClass("flixel.math.FlxPoint", null));
 		globals.set("FlxAxes", abstractClass("flixel.util.FlxAxes", null));
 
-		// Motor
 		globals.set("PlayState", funky.game.PlayState);
 		globals.set("PlayHUD", funky.game.PlayHUD);
 		globals.set("HealthBar", funky.game.HealthBar);
@@ -325,32 +289,25 @@ class Scripts
 		globals.set("KeyBinds", funky.core.KeyBinds);
 		globals.set("CoolUtil", funky.core.CoolUtil);
 		globals.set("Log", Log);
-		// Framerate.setPosition(x, y) / .move(dx, dy) / .resetPosition() / .setAlpha(a): mueve el contador de FPS.
+
 		globals.set("Framerate", Framerate);
 
-		// Scripts: `scripts.getByName("a.hx").call("f", [x])`, `importScript("data/utils")`, `Scripts.shared`...
 		globals.set("Scripts", Scripts);
 		globals.set("scripts", Scripts);
 		globals.set("importScript", importScript);
 
-		// Siguen funcionando, pero `public var x` / `x` hacen lo mismo y se ven directo en todos los scripts.
 		globals.set("setVar", function(name:String, value:Dynamic):Void shared.set(name, value));
 		globals.set("getVar", function(name:String):Dynamic return shared.get(name));
 
 		return globals;
 	}
 
-	/**
-	 * `FlxColor`, `FlxPoint`... son abstracts: no existen como valor en tiempo de ejecucion. hscript-improved genera una clase
-	 * `<nombre>_HSC` (ver `hscript.Config.ALLOWED_ABSTRACT_AND_ENUM`) que los scripts si pueden usar; si no esta, `fallback`.
-	 */
 	static function abstractClass(name:String, fallback:Dynamic):Dynamic
 	{
 		var cls = Type.resolveClass(name + "_HSC");
 		return cls != null ? cls : fallback;
 	}
 
-	/** Respaldo de `FlxColor` si no existe `FlxColor_HSC`: lo basico. */
 	static function colors():Dynamic
 	{
 		return {

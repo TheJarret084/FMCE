@@ -2,7 +2,6 @@ package advanced.ui;
 
 import funkin.editors.ui.UINumericStepper;
 
-/** `UINumericStepper` que avisa (`onValue`) al confirmar un valor escrito (ENTER o al salir del campo). */
 class FieldStepper extends UINumericStepper
 {
 	public var onValue:Float->Void = null;
@@ -17,7 +16,6 @@ class FieldStepper extends UINumericStepper
 		};
 	}
 
-	/** Un campo numerico solo recibe digitos, signo y punto (la coma cuenta como punto); lo demas se descarta. */
 	override public function onTextInput(text:String):Void
 	{
 		var clean = "";
@@ -30,6 +28,5 @@ class FieldStepper extends UINumericStepper
 		if (clean != "") super.onTextInput(clean);
 	}
 
-	/** El texto en composicion (teclados predictivos / IME) no es un valor: se ignora, solo cuenta lo confirmado. */
 	override public function onTextEdit(text:String, start:Int, end:Int):Void {}
 }

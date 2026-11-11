@@ -8,10 +8,10 @@ import hl.Gc;
 import neko.vm.Gc;
 #end
 import openfl.system.System;
-/** FunkyMaker2 - MemoryUtil Adaptado de `MemoryUtil` (CodenameEngine), recortado a garbage collection. */
+
 final class MemoryUtil
 {
-	/** Corre una recolección de basura menor (rápida). */
+
 	public static function clearMinor():Void
 	{
 		#if (cpp || neko)
@@ -19,7 +19,6 @@ final class MemoryUtil
 		#end
 	}
 
-	/** Corre una recolección de basura completa (más pesada, útil entre states). */
 	public static function clearMajor():Void
 	{
 		#if cpp
@@ -39,7 +38,6 @@ final class MemoryUtil
 		#end
 	}
 
-	/** Desactiva el GC automático (no lo desactiva del todo, solo evita que corra tan seguido). */
 	public static function disable():Void
 	{
 		#if (cpp || hl)
@@ -47,13 +45,8 @@ final class MemoryUtil
 		#end
 	}
 
-	/** null = aun no se sabe si /proc se puede leer; false = no se puede (Windows, etc.), no se vuelve a intentar. */
 	static var procReadable:Null<Bool> = null;
 
-	/**
-	 * RAM real que usa el proceso del juego (RSS de /proc/self/status), en bytes. Es lo que ve el sistema,
-	 * no solo lo que tiene el GC de Haxe. Si /proc no existe cae a `currentMemUsage()`.
-	 */
 	public static function processMemUsage():Float
 	{
 		var text = readProc("/proc/self/status");
@@ -65,10 +58,6 @@ final class MemoryUtil
 		return currentMemUsage();
 	}
 
-	/**
-	 * RAM de todo el dispositivo en bytes (`used` = total - disponible), de /proc/meminfo.
-	 * null si no se puede leer (por ejemplo en Windows).
-	 */
 	public static function deviceMem():Null<{used:Float, total:Float}>
 	{
 		var text = readProc("/proc/meminfo");
@@ -76,7 +65,7 @@ final class MemoryUtil
 		var total = procKb(text, "MemTotal:");
 		if (total <= 0) return null;
 		var free = procKb(text, "MemAvailable:");
-		if (free < 0) // kernels viejos sin MemAvailable
+		if (free < 0)
 		{
 			var memFree = procKb(text, "MemFree:");
 			var buffers = procKb(text, "Buffers:");
@@ -87,7 +76,6 @@ final class MemoryUtil
 		return {used: Math.max(0, total - free) * 1024, total: total * 1024};
 	}
 
-	/** Lee un archivo de /proc (tamano 0 segun stat, por eso readAll y no getContent). null si no se puede. */
 	static function readProc(path:String):Null<String>
 	{
 		#if sys
@@ -108,7 +96,6 @@ final class MemoryUtil
 		return null;
 	}
 
-	/** Valor en kB de una linea `Clave:   1234 kB`; -1 si no esta. */
 	static function procKb(text:String, key:String):Float
 	{
 		for (line in text.split("\n"))
@@ -120,7 +107,6 @@ final class MemoryUtil
 		return -1;
 	}
 
-	/** Memoria actualmente usada por Haxe (no la memoria total del proceso). */
 	public static inline function currentMemUsage():Float
 	{
 		#if cpp

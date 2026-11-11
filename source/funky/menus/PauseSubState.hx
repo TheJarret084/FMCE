@@ -38,16 +38,13 @@ private typedef Row =
 	var action:String;
 }
 
-/** Pausa estilo Impostor Legacy con opciones deslizantes. */
 class PauseSubState extends FlxSubState
 {
-	/** Acciones que piden confirmacion. */
+
 	static final CONFIRMED = ["convert", "freeplay", "quit"];
 
-	/** Escala del Among Us bailarin (el frame original mide 17x15). */
 	static inline var DANCER_SCALE:Int = 4;
 
-	/** Franja de la derecha y espacio del banner dentro de ella (entre el titulo de arriba y el bailarin de abajo). */
 	static inline var STRIP_W:Int = 420;
 	static inline var BANNER_TOP:Float = 112;
 	static inline var BANNER_BOTTOM:Float = 628;
@@ -78,9 +75,9 @@ class PauseSubState extends FlxSubState
 	var chosen:Bool = false;
 	var pending:String = null;
 	var grace:Int = 0;
-	/** Las opciones cambiaron algo que solo se aplica al reiniciar (scroll, middlescroll, botplay, velocidad): se reinicia al volver. */
+
 	var pendingRestart:Bool = false;
-	/** Punto de la cancion (ms) al que se salta al dar continuar. Empieza en el tiempo actual; ADELANTAR / RETROCEDER lo mueven. */
+
 	var seekTarget:Float = 0;
 	var timeInfo:FlxText;
 
@@ -108,14 +105,12 @@ class PauseSubState extends FlxSubState
 		bg.alpha = 0;
 		add(bg);
 
-		// Franja lateral a la derecha, donde Legacy pone el retrato del rival.
 		strip = new FlxSprite(FlxG.width, 0).makeGraphic(420, FlxG.height, 0xFFFFFFFF);
 		strip.scrollFactor.set();
 		strip.alpha = 0;
 		add(strip);
 		FlxTween.tween(strip, {x: FlxG.width - 420}, 0.3, {ease: FlxEase.circOut});
 
-		// Banner en la franja (imagen fija `menus/pause/banner`, el mismo molde que el de Freeplay pero con su propio sprite).
 		createBanner();
 
 		var pad = 15;
@@ -128,13 +123,11 @@ class PauseSubState extends FlxSubState
 		infoSub.setFormat(font, 22, 0xFFD8D8E0, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(infoSub);
 
-		// Timer de referencia: tiempo actual / duracion; con un salto pendiente muestra a donde se va a saltar.
 		timeInfo = new FlxText(0, pad + 44 + 30, FlxG.width - pad, "", 22);
 		timeInfo.setFormat(font, 22, 0xFF8CC4FF, FlxTextAlign.RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(timeInfo);
 		refreshTimeInfo();
 
-		// Boton VER JUEGO: en la fila de acciones de abajo (el mismo lugar y estilo que en los demas menus).
 		peekButton = new MenuButton(TouchNav.MOBILE
 			? TU.translate("pause.peek.mobile", null, "VER JUEGO")
 			: TU.translate("pause.peek.desktop", null, "TAB: VER JUEGO"));
@@ -144,7 +137,6 @@ class PauseSubState extends FlxSubState
 		dancer = makeDancer();
 		if (dancer != null) add(dancer);
 
-		// ATRAS arriba a la izquierda (mouse o dedo): hace lo mismo que la tecla BACK (reanudar / volver desde la confirmacion).
 		backIcon = BackButton.place();
 		add(backIcon);
 
@@ -155,7 +147,6 @@ class PauseSubState extends FlxSubState
 		openPage(MAIN);
 	}
 
-	/** Banner fijo: marco oscuro + imagen, centrado en la franja de la derecha. Si la imagen falta, no se muestra. */
 	function createBanner():Void
 	{
 		try
@@ -188,7 +179,6 @@ class PauseSubState extends FlxSubState
 			banner = sprite;
 			bannerFrame = frame;
 
-			// entra junto con la franja
 			FlxTween.tween(sprite, {x: finalX}, 0.3, {ease: FlxEase.circOut});
 			FlxTween.tween(frame, {x: finalX - 8}, 0.3, {ease: FlxEase.circOut});
 		}
@@ -200,7 +190,6 @@ class PauseSubState extends FlxSubState
 		}
 	}
 
-	/** El mini Among Us de `menus/pause/texture` (animacion "dance", en bucle), abajo a la derecha. */
 	function makeDancer():Null<FlxSprite>
 	{
 		var atlas = Paths.getFrames("menus/pause/texture");
@@ -221,7 +210,7 @@ class PauseSubState extends FlxSubState
 		}
 
 		sprite.animation.play("dance");
-		sprite.antialiasing = false; // pixel art
+		sprite.antialiasing = false;
 		sprite.scale.set(DANCER_SCALE, DANCER_SCALE);
 		sprite.updateHitbox();
 		sprite.scrollFactor.set();
@@ -306,7 +295,6 @@ class PauseSubState extends FlxSubState
 			label.alpha = alphas[i] * uiAlpha;
 		}
 
-		// Volvio de Opciones con algo que pide reiniciar: se reinicia aqui (ya sin el substate de opciones encima).
 		if (pendingRestart && !chosen && subState == null)
 		{
 			pendingRestart = false;
@@ -315,7 +303,6 @@ class PauseSubState extends FlxSubState
 			return;
 		}
 
-		// Ignorar input una vez elegida una salida (la cortina va a tomar el control) o justo al volver de Opciones.
 		if (chosen) return;
 		if (grace > 0)
 		{
@@ -323,7 +310,6 @@ class PauseSubState extends FlxSubState
 			return;
 		}
 
-		// El mismo clic/toque que abre la vista no debe cerrarla en ese mismo frame.
 		var peekToggled = false;
 		#if desktop
 		if (FlxG.keys.justPressed.TAB)
@@ -340,7 +326,7 @@ class PauseSubState extends FlxSubState
 
 		if (viewing)
 		{
-			// Cualquier toque o clic, ENTER o BACK vuelve al menu.
+
 			if (!peekToggled && (KeyBinds.justPressed(KeyBinds.BACK) || KeyBinds.justPressed(KeyBinds.ACCEPT) || TouchNav.tapped())) setViewing(false);
 			return;
 		}
@@ -375,7 +361,6 @@ class PauseSubState extends FlxSubState
 		}
 	}
 
-	/** Botones arriba/abajo del movil (mismas reglas que el teclado: no mientras se mira el juego o se sale). */
 	function navigate(by:Int):Void
 	{
 		if (chosen || grace > 0 || viewing) return;
@@ -401,7 +386,7 @@ class PauseSubState extends FlxSubState
 		{
 			case "resume":
 				chosen = true;
-				// Con un salto pendiente (ADELANTAR / RETROCEDER) continuar lo aplica: recarga el nivel en ese punto y entra sin countdown.
+
 				if (!(hasPendingSeek() && playState.seekTo(seekTarget)))
 				{
 					playState.resumeSong();
@@ -409,8 +394,7 @@ class PauseSubState extends FlxSubState
 				}
 			case "restart":
 				chosen = true;
-				// The substate is torn down by the state switch, so go through
-				// the parent's transition rather than opening a second curtain.
+
 				playState.restartSong();
 			case "forward" | "backward":
 				moveSeek(action == "forward" ? PlayState.SEEK_STEP_MS : -PlayState.SEEK_STEP_MS);
@@ -430,7 +414,6 @@ class PauseSubState extends FlxSubState
 	function hasPendingSeek():Bool
 		return Math.abs(seekTarget - playState.songTime) >= 1;
 
-	/** Mueve el punto de salto (sin saltar todavia): lo muestra el timer y se aplica al dar continuar. */
 	function moveSeek(deltaMs:Float):Void
 	{
 		var next = playState.clampSeek(seekTarget + deltaMs);
@@ -462,7 +445,7 @@ class PauseSubState extends FlxSubState
 
 	function openOptions():Void
 	{
-		// Las opciones traen su propio fondo: esconder el nuestro mientras estan abiertas.
+
 		setPauseVisible(false);
 		var before = restartSignature();
 		var options = new ConfigSubState();
@@ -470,14 +453,13 @@ class PauseSubState extends FlxSubState
 		{
 			setPauseVisible(true);
 			grace = 2;
-			// Si cambio algo que "se aplica al reiniciar", se reinicia al volver (en el siguiente update, sin el substate encima).
+
 			if (restartSignature() != before) pendingRestart = true;
 		};
 		options.cameras = cameras;
 		openSubState(options);
 	}
 
-	/** Las opciones que solo se aplican al crear el nivel: si cambian, hace falta reiniciar. */
 	static function restartSignature():String
 		return ClientPrefs.isDownScroll() + "|" + ClientPrefs.isMiddleScroll() + "|" + ClientPrefs.isBotplay() + "|" + ClientPrefs.getNoteSkin();
 
@@ -497,11 +479,10 @@ class PauseSubState extends FlxSubState
 		for (label in labels) label.visible = value;
 	}
 
-	/** Salida definitiva ya confirmada. */
 	function leave(action:String):Void
 	{
 		chosen = true;
-		// Salir tras un adelantar / retroceder: que el siguiente nivel no herede ese punto de partida (desde el charter si se queda).
+
 		if (PlayState.returnToEditor == null) PlayState.startFromMs = 0;
 		switch (action)
 		{
@@ -518,8 +499,7 @@ class PauseSubState extends FlxSubState
 				ClientPrefs.save();
 				lime.system.System.exit(0);
 				#else
-				// There is no exit on this platform. Keep the menu usable
-				// rather than leaving the game paused with input locked out.
+
 				chosen = false;
 				openPage(MAIN);
 				#end
@@ -543,6 +523,6 @@ class PauseSubState extends FlxSubState
 	{
 		super.destroy();
 		labels = [];
-		// Log.info('[PauseSubState] closed');
+
 	}
 }

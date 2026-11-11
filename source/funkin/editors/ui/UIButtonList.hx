@@ -126,13 +126,13 @@ class UIButtonList<T:UIButton> extends UIWindow {
 			button.cameras = [buttonCameras];
 			if (button.ID != i) {
 				if (dragCallback != null) dragCallback(cast button, button.ID, i);
-				button.ID = i; // Ok back to normal :D
+				button.ID = i;
 			}
 		}
 		addButton.selectable = (hovered && !dragging);
 
 		if (__lastDrawCameras[0] != null) {
-			// -1 on each vertical sides for the little gap at the bottom of the window
+
 			buttonCameras.height = bHeight - cameraSpacing - 2;
 			buttonCameras.x = __lastDrawCameras[0].x + x - __lastDrawCameras[0].scroll.x;
 			buttonCameras.y = __lastDrawCameras[0].y + y + cameraSpacing - __lastDrawCameras[0].scroll.y+1;

@@ -16,7 +16,6 @@ import funky.core.TouchNav;
 import funky.core.TransitionHandler;
 import funkin.backend.utils.TranslationUtil as TU;
 
-/** Pantalla de titulo basica: degradado, logo, GF bailando y el aviso de "Press Enter", todo al ritmo de la musica del menu. */
 class TitleState extends FlxState
 {
 	public static final TITLE:String = "FMCE";
@@ -51,12 +50,10 @@ class TitleState extends FlxState
 		COMPILATION = TU.translate("title.mobile", null, "MOBILE");
 		#end
 
-		background = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);// FlxGradient.createGradientFlxSprite(FlxG.width, FlxG.height, [0xFF0B0B16, 0xFF1B1030, 0xFF2D1646], 24);
+		background = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, FlxColor.BLACK);
 		background.scrollFactor.set();
 		add(background);
 
-		// Logo y GF salen de assets/images/menus/titlescreen. Siempre con escala UNIFORME (misma en x e y):
-		// asi nada se aplasta, solo se reduce para que quepa.
 		var logoFrames = Paths.getSparrowAtlas("menus/titlescreen/logo");
 		if (logoFrames != null)
 		{
@@ -86,7 +83,6 @@ class TitleState extends FlxState
 			add(gf);
 		}
 
-		// Sin los atlas (build sin assets) queda un titulo de texto normal, sin deformar.
 		if (logo == null)
 		{
 			fallbackTitle = new FlxText(0, FlxG.height * 0.3, FlxG.width * 0.55, TITLE, 110);
@@ -104,7 +100,6 @@ class TitleState extends FlxState
 		fitText(tagText, FlxG.width * 0.52 - 8);
 		add(tagText);
 
-		// "Press Enter" solo en escritorio: el atlas dice exactamente eso. En el celular, texto normal.
 		var enterFrames = TouchNav.MOBILE ? null : Paths.getSparrowAtlas("menus/titlescreen/titleEnter");
 		if (enterFrames != null)
 		{
@@ -142,11 +137,9 @@ class TitleState extends FlxState
 		TransitionHandler.playIn(this);
 	}
 
-	/** Escala UNIFORME para que quepa en maxW x maxH sin deformar (nunca agranda mas de 1.5x). */
 	private function fit(sprite:FlxSprite, maxW:Float, maxH:Float):Void
 	{
-		// El frame MAS GRANDE de todas las animaciones, no el primero: si no, "bump" o
-		// "ENTER PRESSED" (mas grandes que el frame 0) se salen de su caja.
+
 		var w:Float = Math.max(1, sprite.frameWidth);
 		var h:Float = Math.max(1, sprite.frameHeight);
 		if (sprite.frames != null)
@@ -160,10 +153,6 @@ class TitleState extends FlxState
 		sprite.updateHitbox();
 	}
 
-	/**
-	 * Achica la letra hasta que el texto quepa en `maxWidth` en UNA linea. Asi nada se parte en dos
-	 * renglones ni se sale de su caja en pantallas angostas (el ancho del campo es fijo, la letra no).
-	 */
 	private function fitText(text:FlxText, maxWidth:Float, minSize:Int = 10):Void
 	{
 		text.wordWrap = false;
@@ -177,7 +166,6 @@ class TitleState extends FlxState
 
 		clock += elapsed;
 
-		// Latido: una vez por beat el logo rebota y GF cambia de lado.
 		var beatInt = Math.floor(clock * BPM / 60);
 		if (beatInt != lastBeat)
 		{

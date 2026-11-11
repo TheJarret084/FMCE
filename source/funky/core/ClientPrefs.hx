@@ -5,7 +5,6 @@ import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
 
-/** Config global del juego. Se guarda como XML en assets/data/config/settings.xml. */
 class ClientPrefs
 {
 	public static final PATH:String = "assets/data/config/settings.xml";
@@ -65,32 +64,29 @@ class ClientPrefs
 	static function defaultData():Dynamic
 	{
 		return {
-			// Nombre del archivo multikey (sin extensión ni ruta):
-			// el formato original usa "multikeysettings": "multikeyData"
+
 			multikeysettings: "multikeyData",
 
-			// El JSON real usa "downscrool" (typo del autor, se respeta)
 			downscrool: false,
 			botplay: false,
 			middlescroll: false,
 			ghostTapping: true,
 			missSound: true,
 			noteSplashes: true,
-			// Estilo de la barra de tiempo: "pinklime" | "mono" | "multi" (ver PlayHUD.TimeBarStyle)
+
 			timeBarStyle: "pinklime",
-			// true = el splash inicial se salta y va directo al TITLE
+
 			skipIntro: false,
-			// Idioma de la interfaz (carpeta en assets/languages/<codigo>/)
+
 			language: "es",
-			// Skin de notas (assets/images/game/notes/skins/<id>/noteSkin.xml)
+
 			noteSkin: "default",
 			masterVolume: 1.0,
 			musicVolume: 1.0,
 			sfxVolume: 1.0,
 
 			laneCount: 4,
-			// laneCount por strumLine: [playerLaneCount, enemyLaneCount]
-			// Si está vacío o null, se usa laneCount global para todos.
+
 			laneCountPerStrumLine: [4, 4],
 
 			multikey: true,
@@ -108,12 +104,7 @@ class ClientPrefs
 			strumAlpha: 0.95,
 			editorSFX: true,
 			bypassEditorsResize: false,
-            
 
-			/**
-			 * noteColors: [ 0xCA4E9D, 0x00FFFE, 0x10FA05, 0xFC3844, 0x35B162, 0xFF0001, 0xEF05FA, 0x03C7BB,
-			 * 0xF5F0E8 ],
-			 */
 			noteColors: [
 				0xCA4E9D, 0x00FFFE, 0x10FA05, 0xFC3844,
 				0x35B162, 0xFF0001, 0xEF05FA, 0x03C7BB,
@@ -127,7 +118,6 @@ class ClientPrefs
 		};
 	}
 
-	/** Archivo de configuracion: `<carpeta de datos>/.JarretLabs-FMCE/FMCE.sol` (en Android la carpeta de datos ya es .JarretLabs-FMCE). */
 	public static function solPath():String
 	{
 		#if android
@@ -137,7 +127,6 @@ class ClientPrefs
 		#end
 	}
 
-	/** Devuelve el XML guardado en el .sol, o null si no existe o esta corrupto. */
 	static function readSol():Null<String>
 	{
 		try
@@ -160,7 +149,7 @@ class ClientPrefs
 		var path = solPath();
 		var dir = haxe.io.Path.directory(path);
 		if (dir != "" && !FileSystem.exists(dir)) FileSystem.createDirectory(dir);
-		// Se escribe a un temporal y se renombra: un corte a mitad no deja el .sol roto.
+
 		var tmp = path + ".tmp";
 		File.saveContent(tmp, haxe.Serializer.run({version: 2, xml: xml}));
 		if (FileSystem.exists(path)) FileSystem.deleteFile(path);
@@ -178,7 +167,7 @@ class ClientPrefs
 				loadXml(fromSol);
 			else
 			{
-				// Primer arranque / migracion: settings.xml viejo (dentro de assets, ahora en assets.pack) -> FMCE.sol
+
 				var legacyXml = assetText(PATH);
 				var legacyJson = legacyXml == null ? assetText(LEGACY_PATH) : null;
 				if (legacyXml != null) loadXml(legacyXml);
@@ -195,7 +184,6 @@ class ClientPrefs
 		}
 	}
 
-	/** Texto de un archivo de assets/ (viven en assets.pack, no en disco): null si no existe. Cae al disco si el build trae assets sueltos. */
 	static function assetText(path:String):Null<String>
 	{
 		try
@@ -484,7 +472,6 @@ class ClientPrefs
 		return (s == "true" || s == "1" || s == "yes" || s == "on");
 	}
 
-	/** Sincroniza el keygroup activo (player laneCount) al array legacy laneKeys. */
 	public static function syncActiveGroupToLaneKeys():Void
 	{
 		var kc = getLaneCountForStrumLine(0);
@@ -629,13 +616,11 @@ class ClientPrefs
 			}
 			root.addChild(keygroups);
 
-			// Pantalla: contador de FPS (visible + opacidad) y logs en pantalla. Se leen de donde viven (los toggles del menu y F2 los cambian directo).
 			var display = Xml.createElement("display");
 			display.set("fps", Std.string(funky.backend.system.framerate.Framerate.debugMode > 0));
 			display.set("logs", Std.string(funky.backend.system.LogOverlay.enabled));
 			root.addChild(display);
 
-			// Opciones de los editores (las de Codename: funkin.options.Options).
 			var editor = Xml.createElement("editor");
 			editor.set("sfx", Std.string(funkin.options.Options.editorSFX));
 			editor.set("intensiveBlur", Std.string(funkin.options.Options.intensiveBlur));
@@ -668,10 +653,6 @@ class ClientPrefs
 		return section;
 	}
 
-	/**
-	 * ¿Scroll hacia abajo?
-	 * Lee "downscrool" del JSON (typo original del autor, se respeta).
-	 */
 	public static function isDownScroll():Bool
 		return getBool(data, "downscrool", false);
 
@@ -708,10 +689,8 @@ class ClientPrefs
 	public static function setNoteSplashes(v:Bool):Void
 		Reflect.setField(data, "noteSplashes", v);
 
-	/** Estilos de la barra de tiempo, en el orden en que los recorre el menu. */
 	public static final TIME_BAR_STYLES:Array<String> = ["pinklime", "mono", "multi"];
 
-	/** Estilo de la barra de tiempo: "pinklime" (rosa y lima), "mono" (blanco y negro) o "multi" (colores de las notas). */
 	public static function getTimeBarStyle():String
 	{
 		var v = Reflect.hasField(data, "timeBarStyle") ? Std.string(Reflect.field(data, "timeBarStyle")) : "pinklime";
@@ -722,21 +701,18 @@ class ClientPrefs
 	public static function setTimeBarStyle(v:String):Void
 		Reflect.setField(data, "timeBarStyle", v == null ? "pinklime" : StringTools.trim(v).toLowerCase());
 
-	/** Pasa al siguiente estilo (para el item del menu). */
 	public static function cycleTimeBarStyle():Void
 	{
 		var next = (TIME_BAR_STYLES.indexOf(getTimeBarStyle()) + 1) % TIME_BAR_STYLES.length;
 		setTimeBarStyle(TIME_BAR_STYLES[next]);
 	}
 
-	/** Saltar el splash inicial e ir directo al TITLE. */
 	public static function isSkipIntro():Bool
 		return getBool(data, "skipIntro", false);
 
 	public static function setSkipIntro(v:Bool):Void
 		Reflect.setField(data, "skipIntro", v);
 
-	/** Codigo del idioma guardado (carpeta en assets/languages/). */
 	public static function getLanguage():String
 	{
 		var v = Reflect.hasField(data, "language") ? Std.string(Reflect.field(data, "language")) : "es";
@@ -747,7 +723,6 @@ class ClientPrefs
 	public static function setLanguage(v:String):Void
 		Reflect.setField(data, "language", v == null ? "es" : StringTools.trim(v));
 
-	/** Id del skin de notas (assets/images/game/notes/skins/<id>/noteSkin.xml). */
 	public static function getNoteSkin():String
 	{
 		var v = Reflect.hasField(data, "noteSkin") ? Std.string(Reflect.field(data, "noteSkin")) : "default";
@@ -792,10 +767,6 @@ class ClientPrefs
 		catch (e:Dynamic) {}
 	}
 
-	/**
-	 * Nombre del archivo multikey (sin extensión ni ruta).
-	 * Lee "multikeysettings" del JSON.
-	 */
 	public static function getMultikeyFile():String
 	{
 		var v = Reflect.hasField(data, "multikeysettings")
@@ -809,10 +780,6 @@ class ClientPrefs
 	public static function setLaneCount(v:Int):Void
 		data.laneCount = clampInt(v, MIN_LANES, MAX_LANES);
 
-	/**
-	 * Devuelve cuántas lanes tiene la strumLine indicada.
-	 * strumLineIdx 0 = player, 1 = enemy (según isPlayerStrumLine en PlayState).
-	 */
 	public static function getLaneCountForStrumLine(strumLineIdx:Int):Int
 	{
 		var arr:Array<Dynamic> = Std.isOfType(data.laneCountPerStrumLine, Array)
@@ -1058,7 +1025,6 @@ class ClientPrefs
 		return out;
 	}
 
-	/** Opacidad de los receptores, leída de colors/@strumAlpha en settings.xml. */
 	public static function getStrumAlpha():Float
 		return clamp01(getFloat(data, "strumAlpha", 0.95));
 
@@ -1083,13 +1049,11 @@ class ClientPrefs
 		return withAlpha(colors[idx]);
 	}
 
-	/** Los tres colores que `NoteRGBShader` le suma a cada canal. */
 	public static function noteRgbForLane(lane:Int, pressed:Bool = false, ?laneCount:Int):Array<Int>
 	{
 		return rgbFromBase(noteColorForLane(lane, pressed, laneCount));
 	}
 
-	/** Igual que `noteRgbForLane` pero desde un color ya resuelto (lo usan los note skins). */
 	public static function rgbFromBase(base:Int):Array<Int>
 	{
 		var r = (base >> 16) & 0xFF;
@@ -1102,11 +1066,6 @@ class ClientPrefs
 		];
 	}
 
-	/**
-	 * Paleta del receptor en reposo: gris parejo para todas las lanes (`strumDefaultColor`, 0x828282
-	 * de base).
-	 */
-	/** Color base de los receptores en reposo (strumDefaultColor), como FlxColor. Lo usa el tipo `tint` de los note skins. */
 	public static function strumIdleColor():Int
 		return 0xFF000000 | getInt(data, "strumDefaultColor", 0x828282);
 
@@ -1123,9 +1082,8 @@ class ClientPrefs
 		];
 	}
 
-	/** Cuanto se atenua el canal azul de la sombra. */
 	static final RGB_SHADOW:Float = 0.35;
-	/** Y el empuje extra de azul que mantiene las flechas frias en vez de apagadas. */
+
 	static final RGB_SHADOW_BLUE_LIFT:Float = 0.12;
 
 	static inline function scale(channel:Int, factor:Float):Int
@@ -1143,11 +1101,6 @@ class ClientPrefs
 		return colorIndexForLane(lane, total);
 	}
 
-	/**
-	 * Indice en la paleta `noteColors` para cada lane (izq -> der).
-	 * 4K: [0 morado, 1 celeste, 2 verde, 3 rojo] = LEFT, DOWN, UP, RIGHT.
-	 * Multikey: mitad izquierda usa 4..7, mitad derecha 0..3 (de afuera hacia el centro), centro impar = 8.
-	 */
 	public static function colorIndexForLane(lane:Int, total:Int):Int
 	{
 		if (total <= 4) return clampInt(lane, 0, 3);
@@ -1180,9 +1133,7 @@ class ClientPrefs
 
 	static function syncLegacyLaneFields():Void
 	{
-		// laneKeys es la fuente de verdad del gameplay.
-		// Los campos leftKeys/downKeys/upKeys/rightKeys son solamente
-		// compatibilidad legacy y deben reflejar laneKeys, no pisarlo.
+
 		if (!Std.isOfType(data.laneKeys, Array))
 			data.laneKeys = defaultLaneKeys();
 

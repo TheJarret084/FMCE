@@ -6,7 +6,6 @@ import funkin.game.Character;
 import funkin.game.HealthIcon;
 import haxe.io.Path;
 
-/** Ventana de strumline del charter de FMCE. */
 class CharterStrumlineScreen extends UISubstateWindow {
 	public var strumLineID:Int = -1;
 	public var strumLine:ChartStrumLine;
@@ -41,7 +40,6 @@ class CharterStrumlineScreen extends UISubstateWindow {
 		winTitle = TU.translate("charterStrumlineScreen.win-title" + (creatingStrumLine ? "-creating" : "-editing"), ["#" + strumLineID]);
 		winWidth = 420; winHeight = 240;
 
-		// sin musica/voces (nivel sin audio) no hay nada que pausar
 		if (FlxG.sound.music != null) FlxG.sound.music.pause();
 		if (Charter.instance.vocals != null) Charter.instance.vocals.pause();
 		for (strumLine in Charter.instance.strumLines.members) if (strumLine.vocals != null) strumLine.vocals.pause();
@@ -51,7 +49,6 @@ class CharterStrumlineScreen extends UISubstateWindow {
 		var title:UIText;
 		add(title = new UIText(windowSpr.x + 20, windowSpr.y + 30 + 16, 0, TU.translate("charterStrumlineScreen.title" + (creatingStrumLine ? "-creating" : "-editing")), 28));
 
-		// Voices<sufijo>.ogg en <nivel>/music (o en la raiz del nivel)
 		var suffixList = ["NONE"];
 		#if sys
 		for (dir in [Path.join([Chart.levelDir, "music"]), Chart.levelDir]) {
@@ -90,7 +87,6 @@ class CharterStrumlineScreen extends UISubstateWindow {
 	function saveStrumline() {
 		UIUtil.confirmUISelections(this);
 
-		// se conserva todo lo que ya traia la strumline; solo cambia el sufijo de voces
 		var picked = vocalsSuffixDropDown.options[vocalsSuffixDropDown.index];
 		var newStrumLine:ChartStrumLine = Reflect.copy(strumLine);
 		newStrumLine.vocalsSuffix = picked != "NONE" ? picked : "";

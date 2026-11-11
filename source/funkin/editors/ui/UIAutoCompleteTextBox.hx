@@ -27,8 +27,7 @@ class UIAutoCompleteTextBox extends UITextBox {
 	public override function onKeyDown(e:KeyCode, modifier:KeyModifier) {
 		super.onKeyDown(e, modifier);
 		switch(e) {
-			//case RETURN:
-			//	focused = false;
+
 			case TAB:
 				if(_suggestions.length > 0) {
 					label.text = suggestionText.text;
@@ -44,7 +43,7 @@ class UIAutoCompleteTextBox extends UITextBox {
 				suggestIndex++;
 				updateSuggestion(false);
 			default:
-				// nothing
+
 		}
 	}
 
@@ -55,10 +54,9 @@ class UIAutoCompleteTextBox extends UITextBox {
 			var text = label.text;
 			_suggestions = [];
 			if(text.length > 0) {
-				// for(i in suggestItems) if(i.startsWith(text)) _suggestions.pushOnce(i);
+
 				for(i in suggestItems) if(!_suggestions.contains(i) && i.startsWith(text)) _suggestions.push(i);
 
-				// Clean up suggestions
 				if(suggestItems.contains(text)) {_suggestions = [];}
 				if (_suggestions.length > 0) _suggestions.sort(function(a, b) return a.length - b.length);
 			}

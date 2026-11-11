@@ -11,7 +11,6 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Mejor puntaje de un nivel en una dificultad. */
 typedef BestScore =
 {
 	var score:Int;
@@ -19,17 +18,15 @@ typedef BestScore =
 	var misses:Int;
 }
 
-/** Puntajes guardados por nivel y por dificultad. */
 class Scores
 {
 	static inline var MAGIC:String = "FMSC";
 	static inline var VERSION:Int = 1;
 	static inline var FILE_NAME:String = "scores.fmsc";
 	static inline var MAC_SIZE:Int = 32;
-	/** version (1) + largo (4). */
+
 	static inline var HEAD_TAIL:Int = 5;
 
-	/** "<nivel>|<indice de dificultad>" -> mejor puntaje. */
 	static var entries:Null<Map<String, BestScore>> = null;
 
 	static function file():String
@@ -41,7 +38,6 @@ class Scores
 		#end
 	}
 
-	/** Id de un nivel a partir de su carpeta o archivo (`levels/N3RU/` -> `N3RU`). */
 	public static function levelId(path:String):String
 	{
 		return Path.withoutExtension(Path.withoutDirectory(Path.removeTrailingSlashes(path)));
@@ -50,9 +46,6 @@ class Scores
 	static inline function keyOf(level:String, difficulty:Int):String
 		return level + "|" + difficulty;
 
-	// ───────────────────────────── clave y firma ─────────────────────────────
-
-	/** La clave no esta escrita como un string: se arma al vuelo con dos mitades. */
 	static function secret():Bytes
 	{
 		var a = [0x4A, 0x61, 0x72, 0x72, 0x65, 0x74, 0x4C, 0x61, 0x62, 0x73, 0x2D, 0x46, 0x4D, 0x43, 0x45, 0x21];
@@ -69,7 +62,6 @@ class Scores
 	static function mac(message:Bytes):Bytes
 		return new Hmac(SHA256).make(secret(), message);
 
-	/** Ofusca con un flujo de bytes: HMAC(clave, contador) encadenado. XOR es su propio inverso. */
 	static function xorStream(data:Bytes):Bytes
 	{
 		var out = Bytes.alloc(data.length);
@@ -96,8 +88,6 @@ class Scores
 		for (i in 0...a.length) diff |= a.get(i) ^ b.get(i);
 		return diff == 0;
 	}
-
-	// ───────────────────────────── (de)serializar ─────────────────────────────
 
 	static function encode(map:Map<String, BestScore>):Bytes
 	{
@@ -137,7 +127,6 @@ class Scores
 		return out.getBytes();
 	}
 
-	/** null si el archivo esta alterado, truncado o no es un scores.fmsc. */
 	static function decode(raw:Bytes):Null<Map<String, BestScore>>
 	{
 		try
@@ -180,8 +169,6 @@ class Scores
 		}
 	}
 
-	// ───────────────────────────── disco ─────────────────────────────
-
 	static function load():Void
 	{
 		if (entries != null) return;
@@ -197,7 +184,7 @@ class Scores
 				if (decoded != null) entries = decoded;
 				else
 				{
-					// Alterado o corrupto: se aparta (por si fue un error) y se empieza de cero.
+
 					Log.warn('[Scores] $FILE_NAME no paso la verificacion: se descarta');
 					var bad = f + ".invalid";
 					if (FileSystem.exists(bad)) FileSystem.deleteFile(bad);
@@ -215,10 +202,7 @@ class Scores
 	}
 
 	#if sys
-	/**
-	 * Migracion de una sola vez desde el viejo `scores.json`: solo si NO existe ya un scores.fmsc (si no, bastaria
-	 * recrear el JSON para meter puntajes falsos). Despues el JSON se borra.
-	 */
+
 	static function importLegacyJson():Void
 	{
 		var candidates = [Path.join([Storage.dataDirectory(), "scores.json"]), Path.join([Storage.dataDirectory(), Storage.path, "scores.json"])];
@@ -280,9 +264,6 @@ class Scores
 		#end
 	}
 
-	// ───────────────────────────── API ─────────────────────────────
-
-	/** Mejor puntaje del nivel en esa dificultad (indice de `Difficulty`), o null si nunca se jugo. */
 	public static function get(level:String, difficulty:Int):Null<BestScore>
 	{
 		load();
@@ -290,7 +271,6 @@ class Scores
 		return best == null ? null : {score: best.score, accuracy: best.accuracy, misses: best.misses};
 	}
 
-	/** Guarda el resultado si supera al anterior. @return true si es un nuevo record. */
 	public static function submit(level:String, difficulty:Int, score:Int, accuracy:Float, misses:Int):Bool
 	{
 		load();

@@ -13,7 +13,6 @@ import openfl.text.TextFieldType;
 import openfl.text.TextFormat;
 import openfl.ui.Keyboard;
 
-/** Inspector visual de JSON. Los objetos/arrays se navegan y los valores se editan en un dialogo. */
 class JsonInspector extends FlxSpriteGroup
 {
 	static inline var HEADER_H:Int = 48;

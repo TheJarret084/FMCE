@@ -3,7 +3,7 @@ package funky.backend.converter;
 import haxe.Json;
 
 typedef AsepriteConversion = {
-	/** JSON ya serializado, listo para guardar como `sprite.json`. */
+
 	var json:String;
 	var frames:Int;
 	var tags:Int;
@@ -15,12 +15,12 @@ private typedef RawFrame = {
 	var prefix:String;
 	var index:Int;
 	var order:Int;
-	// rect dentro del atlas, tal cual viene en el XML
+
 	var x:Int;
 	var y:Int;
 	var w:Int;
 	var h:Int;
-	// recorte (Sparrow: frameX/frameY/frameWidth/frameHeight)
+
 	var trimmed:Bool;
 	var fx:Int;
 	var fy:Int;
@@ -29,21 +29,13 @@ private typedef RawFrame = {
 	var rotated:Bool;
 }
 
-/** Sparrow (TextureAtlas XML) -> JSON estilo Aseprite. */
 class SparrowToAseprite
 {
-	/** FPS base de FNMM: `spd` en config.json es un multiplicador de esto. */
+
 	public static inline var DEFAULT_FPS:Float = 24;
 
 	static final TRAILING_INDEX:EReg = ~/^(.*?)(\d+)$/;
 
-	/**
-	 * @param xmlText       Contenido del `.xml` Sparrow.
-	 * @param imageName     Nombre del PNG, va a `meta.image`.
-	 * @param config        `config.json` ya parseado (`{type, scale, bilinear, data:[{name, num, spd, loop, offset, scale, bilinear}]}`) o null.
-	 * @param imageWidth    Ancho real del PNG si se conoce (0 = deducirlo del XML).
-	 * @param imageHeight   Alto real del PNG si se conoce.
-	 */
 	public static function convert(xmlText:String, imageName:String, ?config:Dynamic, imageWidth:Int = 0, imageHeight:Int = 0):AsepriteConversion
 	{
 		var warnings:Array<String> = [];
@@ -77,8 +69,7 @@ class SparrowToAseprite
 
 			if (w <= 0 || h <= 0)
 			{
-				// Flixel mete un frame vacio; Aseprite no puede, asi que queda un
-				// 1x1 para no romper el rango del tag.
+
 				warnings.push('$name: frame de tamano 0, se guarda como 1x1');
 				w = 1;
 				h = 1;
@@ -123,7 +114,7 @@ class SparrowToAseprite
 		{
 			for (entry in (cast Reflect.field(config, "data"):Array<Dynamic>))
 			{
-				// `anim` = prefijo dentro del atlas; sin `anim` (FNMM viejo) el prefijo es `name`.
+
 				var entryName = Reflect.hasField(entry, "anim") ? Reflect.field(entry, "anim") : Reflect.field(entry, "name");
 				if (entryName != null) animConfig.set(Std.string(entryName), entry);
 			}
@@ -156,9 +147,7 @@ class SparrowToAseprite
 			var from = frames.length;
 			for (frame in group)
 			{
-				// En Sparrow width/height son el rect tal cual esta en el atlas. En el
-				// JSON de TexturePacker/Aseprite un frame rotado guarda w/h ya
-				// "desrotados", y Flixel los vuelve a intercambiar al leerlos.
+
 				var jw = frame.rotated ? frame.h : frame.w;
 				var jh = frame.rotated ? frame.w : frame.h;
 
@@ -184,8 +173,7 @@ class SparrowToAseprite
 			}
 
 			var tag:Dynamic = {name: prefix, from: from, to: frames.length - 1, direction: "forward"};
-			// Aseprite: sin "repeat" = loop infinito; "1" = se reproduce una vez.
-			// Es lo que lee AseAtlasTagRepeat.loops en Flixel.
+
 			if (!loop) Reflect.setField(tag, "repeat", "1");
 			tags.push(tag);
 
@@ -230,8 +218,6 @@ class SparrowToAseprite
 		return {json: Json.stringify(out, null, "\t"), frames: frames.length, tags: tags.length, warnings: warnings};
 	}
 
-	/** Nombre del PNG que declara el XML (`imagePath`), o null. */
-	/** Prefijos (nombres de animacion) del atlas, en orden de aparicion: los mismos tags que genera `convert`. */
 	public static function prefixes(xmlText:String):Array<String>
 	{
 		var out:Array<String> = [];
@@ -254,7 +240,6 @@ class SparrowToAseprite
 		return root == null ? null : root.get("imagePath");
 	}
 
-	/** True si el texto es un TextureAtlas Sparrow (para no tocar otros .xml). */
 	public static function isSparrow(xmlText:String):Bool
 	{
 		try return findAtlasRoot(xmlText) != null catch (_:Dynamic) return false;

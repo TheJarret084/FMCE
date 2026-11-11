@@ -5,7 +5,6 @@ import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
 
-/** Boton plano con hover. El grupo esta en (x, y) y mide (bw, bh). */
 class CodeButton extends FlxSpriteGroup
 {
 	public var onClick:Void->Void;

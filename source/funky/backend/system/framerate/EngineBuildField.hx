@@ -8,7 +8,6 @@ import openfl.display.Sprite;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
 
-/** Linea de abajo del contador: version de FMCE y donde estas (el nivel si estas jugando, si no la pantalla). */
 class EngineBuildField extends Sprite
 {
 	public var textField:TextField;

@@ -16,13 +16,13 @@ import sys.io.File;
 #end
 
 typedef StripResult = {
-	/** Carpeta del sprite (`levels/<nivel>/sprites/<n>`). */
+
 	var dir:String;
 	var ok:Bool;
-	/** true si no hacia falta convertirlo (ya es cinta + JSON Hash, o es de otro tipo). */
+
 	var skipped:Bool;
 	var frames:Int;
-	/** Frames distintos que quedaron en la cinta. */
+
 	var unique:Int;
 	var width:Int;
 	var height:Int;
@@ -40,17 +40,15 @@ private typedef Piece = {
 	var srcH:Int;
 }
 
-/** Sprite de nivel -> CINTA + JSON HASH. */
 class StripConverter
 {
-	/** Tipos de sprite que se convierten por defecto. Los iconos tambien: idle/singLEFT/singRIGHT -> anim0/anim1/anim2. */
+
 	public static final DEFAULT_TYPES:Array<String> = ["character", "icon"];
 
 	static inline var GAP:Int = 2;
-	/** Mas ancho que esto y algunos celulares no cargan la textura. */
+
 	static inline var MAX_SAFE_WIDTH:Int = 4096;
 
-	/** Carpetas de sprites de un nivel (`sprites/<n>`) con `sprite.png` + `sprite.json`. */
 	public static function spriteDirs(levelDir:String):Array<String>
 	{
 		var out:Array<String> = [];
@@ -68,7 +66,6 @@ class StripConverter
 		return out;
 	}
 
-	/** true si el sprite es de un tipo a convertir y todavia no es cinta + JSON Hash `animN`. */
 	public static function needsConversion(dir:String, ?types:Array<String>):Bool
 	{
 		#if sys
@@ -87,7 +84,6 @@ class StripConverter
 		return false;
 	}
 
-	/** Cuantos sprites de `levelDir` falta convertir. */
 	public static function pending(levelDir:String, ?types:Array<String>):Int
 	{
 		var count = 0;
@@ -95,7 +91,6 @@ class StripConverter
 		return count;
 	}
 
-	/** Convierte todo lo pendiente de un nivel. */
 	public static function convertLevel(levelDir:String, ?types:Array<String>):Array<StripResult>
 	{
 		var results:Array<StripResult> = [];
@@ -124,7 +119,6 @@ class StripConverter
 			var tags:Array<Dynamic> = data.meta != null && Std.isOfType(data.meta.frameTags, Array) ? data.meta.frameTags : [];
 			if (tags.length == 0) throw "sprite.json no tiene frameTags";
 
-			// 1) nombre nuevo de cada frame: <anim><indice dentro del tag, 4 digitos>
 			var names:Array<String> = [];
 			var picked = new Map<String, Dynamic>();
 			for (tag in tags)
@@ -144,7 +138,6 @@ class StripConverter
 			names.sort(Reflect.compare);
 			result.frames = names.length;
 
-			// 2) cada frame completo -> recorte a lo visible -> dedupe por contenido
 			var uniqueIndex = new Map<String, Int>();
 			var unique:Array<Piece> = [];
 			var plan = new Map<String, Int>();
@@ -178,7 +171,6 @@ class StripConverter
 			}
 			result.unique = unique.length;
 
-			// 3) la cinta: una sola fila
 			var width = GAP;
 			var height = 1;
 			for (piece in unique)
@@ -201,7 +193,6 @@ class StripConverter
 			if (width > MAX_SAFE_WIDTH)
 				result.warnings.push('cinta de ${width}px de ancho: algunos celulares no cargan texturas de mas de $MAX_SAFE_WIDTH');
 
-			// 4) JSON Hash (frames ordenados por nombre)
 			var indexOf = new Map<String, Int>();
 			for (i in 0...names.length) indexOf.set(names[i], i);
 
@@ -221,8 +212,6 @@ class StripConverter
 				});
 			}
 
-			// frameTags: mismo orden que el original (el primero es la animacion inicial),
-			// con el nombre nuevo y los indices del orden por nombre.
 			var rename = new Map<String, String>();
 			var newTags:Array<Dynamic> = [];
 			for (tag in tags)
@@ -256,7 +245,6 @@ class StripConverter
 				meta.fmce = fmce;
 			}
 
-			// 5) config.json: mismos nombres
 			var config:Null<Dynamic> = null;
 			if (FileSystem.exists(configPath))
 			{
@@ -264,7 +252,7 @@ class StripConverter
 				if (Std.isOfType(config.data, Array))
 					for (entry in (config.data : Array<Dynamic>))
 					{
-						// `anim` = nombre en el atlas (el tag), `name` = el que aplica el juego. Sin `anim` (FNMM viejo) `name` hace de ambos.
+
 						var key = entry.anim != null ? entry.anim : entry.name;
 						if (key != null && rename.exists(Std.string(key)))
 						{
@@ -274,7 +262,6 @@ class StripConverter
 					}
 			}
 
-			// 6) escribir (con copia .orig de lo que habia)
 			for (path in [jsonPath, pngPath, configPath])
 				if (FileSystem.exists(path) && !FileSystem.exists(path + ".orig")) File.copy(path, path + ".orig");
 
@@ -297,10 +284,6 @@ class StripConverter
 		return result;
 	}
 
-	/**
-	 * singLEFT/DOWN/UP/RIGHT (o sing0, sing1...) -> anim0..N. Cualquier otro nombre queda igual.
-	 * En un icono (`type == "icon"`): idle -> anim0, singLEFT -> anim1, singRIGHT -> anim2.
-	 */
 	public static function newAnimName(name:String, ?type:String):String
 	{
 		var lower = name.toLowerCase();
@@ -328,11 +311,11 @@ class StripConverter
 	}
 
 	#if sys
-	/** Frames del sprite.json como lista, en el orden del indice (lista) o del objeto (Hash). */
+
 	static function readFrames(data:Dynamic):Array<Dynamic>
 	{
 		if (Std.isOfType(data.frames, Array)) return data.frames;
-		// Hash: mismo orden que usa el motor al leerlo (por nombre).
+
 		var keys = Reflect.fields(data.frames);
 		keys.sort(Reflect.compare);
 		return [for (key in keys) Reflect.field(data.frames, key)];

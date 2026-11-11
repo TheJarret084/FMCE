@@ -4,10 +4,8 @@ set -eu
 
 REPO="TheJarret084/FMCE"
 
-echo "FMCE - limpiador termo nuclear"
-
 echo "================================"
-echo " FMCE - NUCLEAR CLEANUP"
+echo " FMCE - NUCLEAR CLEANUP ⚠️⚠️⚠️"
 echo "================================"
 
 # --- comprobar entorno ---
@@ -26,7 +24,8 @@ case "$REMOTE" in
 esac
 
 echo "Repositorio: $REPO"
-echo "Se eliminaran TODOS los artifacts y tags."
+echo "Se eliminaran TODOS los artifacts, tags y Draft Releases."
+echo "Los releases publicados se conservaran."
 
 read -r -p "Escribe BORRAR para continuar: " CONFIRM
 
@@ -34,7 +33,7 @@ read -r -p "Escribe BORRAR para continuar: " CONFIRM
 
 # --- eliminar artifacts ---
 echo ""
-echo "[1/3] Eliminando artifacts..."
+echo "[1/4] Eliminando artifacts..."
 
 COUNT=0
 
@@ -45,13 +44,36 @@ while IFS= read -r ID; do
         echo "Eliminado artifact: $ID"
         COUNT=$((COUNT + 1))
     fi
-done < <(gh api --paginate "repos/$REPO/actions/artifacts" --jq '.artifacts[].id')
+done < <(
+    gh api --paginate "repos/$REPO/actions/artifacts" \
+        --jq '.artifacts[].id'
+)
 
 echo "Artifacts eliminados: $COUNT"
 
+# --- eliminar draft releases ---
+echo ""
+echo "[2/4] Eliminando Draft Releases..."
+
+COUNT=0
+
+while IFS= read -r ID; do
+    [ -n "$ID" ] || continue
+
+    if gh api -X DELETE "repos/$REPO/releases/$ID"; then
+        echo "Eliminado Draft Release: $ID"
+        COUNT=$((COUNT + 1))
+    fi
+done < <(
+    gh api --paginate "repos/$REPO/releases" \
+        --jq '.[] | select(.draft == true) | .id'
+)
+
+echo "Draft Releases eliminados: $COUNT"
+
 # --- eliminar tags remotas ---
 echo ""
-echo "[2/3] Eliminando tags remotas..."
+echo "[3/4] Eliminando tags remotas..."
 
 COUNT=0
 
@@ -64,21 +86,24 @@ while IFS= read -r REF; do
         echo "Eliminada tag remota: $TAG"
         COUNT=$((COUNT + 1))
     fi
-done < <(git ls-remote --tags --refs origin | awk '{print $2}')
+done < <(
+    git ls-remote --tags --refs origin | awk '{print $2}'
+)
 
 echo "Tags remotas eliminadas: $COUNT"
 
 # --- eliminar tags locales ---
 echo ""
-echo "[3/3] Eliminando tags locales..."
+echo "[4/4] Eliminando tags locales..."
 
 COUNT=0
 
 while IFS= read -r TAG; do
     [ -n "$TAG" ] || continue
 
-    git tag -d "$TAG"
-    COUNT=$((COUNT + 1))
+    if git tag -d "$TAG"; then
+        COUNT=$((COUNT + 1))
+    fi
 done < <(git tag -l)
 
 echo "Tags locales eliminadas: $COUNT"

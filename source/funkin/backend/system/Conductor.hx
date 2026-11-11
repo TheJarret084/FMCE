@@ -42,18 +42,12 @@ final class Conductor
 		else return Math.floor((beat - offset) / interval) * interval;
 	}
 
-	/**
-	 * FlxSignals
-	 */
 	public static var onMeasureHit:FlxTypedSignal<Int->Void> = new FlxTypedSignal();
 	public static var onBeatHit:FlxTypedSignal<Int->Void> = new FlxTypedSignal();
 	public static var onStepHit:FlxTypedSignal<Int->Void> = new FlxTypedSignal();
 	public static var onBPMChange:FlxTypedSignal<(Float,Float)->Void> = new FlxTypedSignal();
 	public static var onTimeSignatureChange:FlxTypedSignal<(Float,Float)->Void> = new FlxTypedSignal();
 
-	/**
-	 * Current position of the song, in milliseconds.
-	 */
 	public static var songPosition(get, default):Float;
 	private static function get_songPosition() {
 		if (!Options.songOffsetAffectEditors && Charter.instance != null) {
@@ -64,133 +58,66 @@ final class Conductor
 			return songPosition - (songOffset = Options.songOffset);
 	}
 
-	/**
-	 * Offset of the song
-	 */
 	public static var songOffset:Float = 0;
 
-	/**
-	 * Current bpmChangeMap index
-	 */
 	public static var curChangeIndex:Int = 0;
 
-	/**
-	 * Current bpmChangeMap
-	 */
 	public static var curChange(get, never):BPMChangeEvent;
 	private static var dummyChange:BPMChangeEvent = {bpm: 100, beatsPerMeasure: 4, stepsPerBeat: 4, songTime: 0, stepTime: 0, beatTime: 0, measureTime: 0};
 	private static function get_curChange()
 		return bpmChangeMap.length == 0 ? dummyChange : bpmChangeMap[curChangeIndex];
 
-	/**
-	 * Current BPM
-	 */
 	public static var bpm(get, never):Float;
 	private static function get_bpm()
 		return (curChangeIndex == 0 || bpmChangeMap.length == 0) ? startingBPM : getTimeWithIndexInBPM(songPosition, curChangeIndex);
 
-	/**
-	 * Starting BPM
-	 */
 	public static var startingBPM(get, never):Float;
 	private static function get_startingBPM()
 		return (bpmChangeMap.length == 0 ? dummyChange : bpmChangeMap[0]).bpm;
 
-	/**
-	 * Current Crochet (time per beat), in milliseconds.
-	 * It should be crotchet but ehhh, now it's there for backward compatibility.
-	 */
 	public static var crochet(get, never):Float;
 	private static function get_crochet() return 15000 * stepsPerBeat / bpm;
 
-	/**
-	 * Current StepCrochet (time per step), in milliseconds.
-	 */
 	public static var stepCrochet(get, never):Float;
 	private static function get_stepCrochet() return 15000 / bpm;
 
-	/**
-	 * Number of beats per mesure (top number in time signature). Defaults to 4.
-	 */
 	public static var beatsPerMeasure(get, never):Float;
 	private static function get_beatsPerMeasure()
 		return (bpmChangeMap.length == 0 ? dummyChange : bpmChangeMap[curChangeIndex]).beatsPerMeasure;
 
-	/**
-	 * Number of steps per beat. Defaults to 4.
-	 * Not a divisor number for time signature, it does the complete opposite.
-	 * It's because CNE Conductor is based in sixteenth note instead of beat.
-	 */
 	public static var stepsPerBeat(get, never):Int;
 	private static function get_stepsPerBeat()
 		return (bpmChangeMap.length == 0 ? dummyChange : bpmChangeMap[curChangeIndex]).stepsPerBeat;
 
-	/**
-	 * How much value notes to divide for beat (bottom or divisor number in time signature).
-	 * Only for a convinient way to access divisor instead of multiply by steps per beat.
-	 */
 	public static var denominator(get, never):Float;
 	private static function get_denominator() return FlxMath.roundDecimal(16 / stepsPerBeat, 2);
 
-	/**
-	 * Last step from BPM Change
-	 */
 	public static var lastStepChange(get, never):Float;
 	private static function get_lastStepChange() return curChange.stepTime;
 
-	/**
-	 * Last beat from BPM Change
-	 */
 	public static var lastBeatChange(get, never):Float;
 	private static function get_lastBeatChange() return curChange.beatTime;
 
-	/**
-	 * Last measure from BPM Change
-	 */
 	public static var lastMeasureChange(get, never):Float;
 	private static function get_lastMeasureChange() return curChange.measureTime;
 
-	/**
-	 * Current step
-	 */
 	public static var curStep:Int = 0;
 
-	/**
-	 * Current beat
-	 */
 	public static var curBeat:Int = 0;
 
-	/**
-	 * Current measure
-	 */
 	public static var curMeasure:Int = 0;
 
-	/**
-	 * Current step, as a `Float` (ex: 4.94, instead of 4)
-	 */
 	public static var curStepFloat:Float = 0;
 
-	/**
-	 * Current beat, as a `Float` (ex: 1.24, instead of 1)
-	 */
 	public static var curBeatFloat:Float = 0;
 
-	/**
-	 * Current measure, as a `Float` (ex: 1.24, instead of 1)
-	 */
 	public static var curMeasureFloat:Float = 0;
 
 	@:dox(hide) public static var lastSongPos:Float = 0;
 	@:dox(hide) public static var offset:Float = 0;
 
-	/**
-	 * Array of all BPM changes that have been mapped.
-	 */
 	public static var bpmChangeMap:Array<BPMChangeEvent>;
 
-	/**
-	 * Array of all events that have been rejected by the Conductor.
-	 */
 	public static var invalidEvents:Array<ChartEvent> = [];
 
 	private static var validEventNames:Array<String> = ["BPM Change", "Time Signature Change", "Continuous BPM Change"];
@@ -230,10 +157,6 @@ final class Conductor
 		return curChange;
 	}
 
-	/**
-	 * Maps BPM changes from a song.
-	 * @param song Song to map BPM changes from.
-	 */
 	public static function mapBPMChanges(song:ChartData) {
 		var curChange:BPMChangeEvent = {
 			songTime: 0,
@@ -249,7 +172,6 @@ final class Conductor
 		invalidEvents = [];
 		if (song.events == null) return;
 
-		// fix the sort first...
 		var events:Array<ChartEvent> = [for (e in song.events) if (e.params != null && validEventNames.contains(e.name)) e];
 		events.sort((a, b) -> MathUtil.equal(a.time, b.time) ? (a.name == "Time Signature Change" ? -1 : 1) : Std.int(a.time - b.time));
 
@@ -258,7 +180,7 @@ final class Conductor
 
 	private static function mapEvent(e:ChartEvent, curChange:BPMChangeEvent) {
 		var name = e.name, params = e.params, time = e.time;
-		if (curChange.continuous && MathUtil.lessThan(time, curChange.endSongTime)) { //ensure that you cannot place any conductor events during a continuous change
+		if (curChange.continuous && MathUtil.lessThan(time, curChange.endSongTime)) {
 			invalidEvents.push(e);
 			Logs.trace('Invalid Conductor event "${e.name}" at ${e.time} (Intersecting continuous change!)', WARNING);
 			return curChange;
@@ -267,14 +189,12 @@ final class Conductor
 		if (name == "BPM Change" && params[0] is Float && curChange.bpm != params[0])
 			curChange = mapBPMChange(curChange, time, params[0]);
 		else if (name == "Time Signature Change") {
-			//if (beatsPerMeasure == curChange.beatsPerMeasure && stepsPerBeat == curChange.stepsPerBeat) continue;
-			/* TODO: make so time sigs doesnt stop the bpm change if its in the duration of bpm change */
 
 			if (curChange.songTime != time) curChange = mapBPMChange(curChange, time, curChange.bpm);
 			curChange.beatsPerMeasure = params[0];
 
 			if (params[2]) curChange.stepsPerBeat = params[1];
-			else curChange.stepsPerBeat = Math.floor(16 / params[1]); // convert from denominator to stepsPerBeat
+			else curChange.stepsPerBeat = Math.floor(16 / params[1]);
 
 			curChange.stepTime = CoolUtil.floorInt(curChange.stepTime + .99998);
 			curChange.beatTime = CoolUtil.floorInt(curChange.beatTime + .99998);
@@ -284,7 +204,7 @@ final class Conductor
 			var prevBPM = curChange.bpm;
 			if (curChange.bpm == params[0]) {
 				invalidEvents.push(e);
-				return curChange; //DO NOT!!!!
+				return curChange;
 			}
 
 			curChange = mapBPMChange(curChange, time, params[0]);
@@ -355,7 +275,7 @@ final class Conductor
 	}
 
 	private static function __updateSongPos(elapsed:Float) {
-		if (FlxG.sound.music != null) { // CNE FlxSound is Interpolated.
+		if (FlxG.sound.music != null) {
 			lastSongPos = FlxG.sound.music.time - songOffset;
 			if (FlxG.sound.music.playing) songPosition = FlxG.sound.music.time;
 		}
@@ -370,7 +290,6 @@ final class Conductor
 	private static var __updateBeat:Bool;
 	private static var __updateMeasure:Bool;
 
-	/** Solo se actualiza mientras el charter esta abierto (no afecta al juego). */
 	public static var active:Bool = false;
 
 	private static function update() {

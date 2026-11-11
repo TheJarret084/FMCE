@@ -10,32 +10,24 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Motor de traducciones estilo Codename Engine. */
 class Translations
 {
-	/** Idioma por defecto (respaldo). Se puede cambiar desde Flags. */
+
 	public static var DEFAULT_LANGUAGE(get, never):String;
 	public static var DEFAULT_LANGUAGE_NAME(get, never):String;
 
-	/** Idioma actual. Al asignarlo se recargan los XML. */
 	public static var language(get, set):String;
 
-	/** Mapa del idioma actual (`id` -> texto). */
 	public static var table:Map<String, String> = new Map();
 
-	/** Mapa del idioma por defecto, usado cuando falta una clave en el actual. */
 	public static var fallbackTable:Map<String, String> = new Map();
 
-	/** Lista `codigo/Nombre` de todos los idiomas encontrados (el defecto primero). */
 	public static var foundLanguages:Array<String> = [];
 
-	/** Nombre visible de cada idioma. */
 	public static var nameMap:Map<String, String> = new Map();
 
-	/** Config (`config.ini`) de cada idioma. */
 	public static var configs:Map<String, Map<String, String>> = new Map();
 
-	/** Si el idioma actual muestra las claves que faltan en vez de usar el respaldo. */
 	public static var showMissingIds:Bool = false;
 
 	static var scanned:Bool = false;
@@ -52,7 +44,6 @@ class Translations
 		reloadTables();
 	}
 
-	/** Vuelve a explorar `assets/languages` (util si se agregan idiomas en caliente). */
 	public static function rescan():Void
 	{
 		scanned = false;
@@ -63,7 +54,6 @@ class Translations
 		reloadTables();
 	}
 
-	/** Cambia el idioma y recarga las tablas. Si `code` no existe usa el de por defecto. */
 	public static function setLanguage(code:String):Void
 	{
 		ensureScanned();
@@ -112,7 +102,6 @@ class Translations
 		return table.exists(id) || fallbackTable.exists(id);
 	}
 
-	/** Devuelve el texto sin formatear (para usar `.format([...])` encima). */
 	public static function raw(id:String, ?def:String):String
 	{
 		ensureLoaded();
@@ -125,11 +114,9 @@ class Translations
 		return text;
 	}
 
-	/** Traduce un id y reemplaza `{0}`, `{1}`... con `params`. */
 	public static function translate(?id:String, ?params:Array<Dynamic>, ?def:String):String
 		return format(raw(id, def), params);
 
-	/** Traduce una dificultad (`normal` -> `diff.normal`), con `id` como respaldo. */
 	public static function translateDiff(?id:String, ?params:Array<Dynamic>):String
 		return translate(id != null ? "diff." + id.toLowerCase() : null, params, id);
 
@@ -142,7 +129,6 @@ class Translations
 		return text;
 	}
 
-	/** `Resume Song` -> `resumeSong` (mismo criterio que Codename). */
 	public static function raw2Id(raw:String):String
 	{
 		if (raw == null) return "";
@@ -151,7 +137,6 @@ class Translations
 		return [for (i => part in parts) i != 0 ? part.charAt(0).toUpperCase() + part.substr(1) : part].join("");
 	}
 
-	/** `charter.file.newChart` -> `New chart` (ultimo segmento, camelCase a palabras). */
 	public static function humanize(id:String):String
 	{
 		if (id == null || id.length == 0) return "";
@@ -171,8 +156,6 @@ class Translations
 
 	public static inline function isLanguageLoaded():Bool
 		return table != null && table.keys().hasNext();
-
-	// ---------------------------------------------------------------- carga
 
 	static function reloadTables():Void
 	{
@@ -257,8 +240,6 @@ class Translations
 	static inline function isTranslationNode(name:String):Bool
 		return name == "str" || name == "text" || name == "trans" || name == "lang" || name == "string";
 
-	// -------------------------------------------------------------- idiomas
-
 	static function ensureScanned():Void
 	{
 		if (scanned) return;
@@ -281,7 +262,6 @@ class Translations
 			configs.set(code, config);
 		}
 
-		// El idioma por defecto siempre primero.
 		foundLanguages.push(DEFAULT_LANGUAGE + "/" + getLanguageName(DEFAULT_LANGUAGE));
 		var others = [for (code in codes) if (code != DEFAULT_LANGUAGE) code];
 		others.sort(function(a, b) return Reflect.compare(getLanguageName(a).toLowerCase(), getLanguageName(b).toLowerCase()));
@@ -433,8 +413,6 @@ class Translations
 
 		return null;
 	}
-
-	// ------------------------------------------------------- getters/setters
 
 	static function firstLanguageCode():String
 	{

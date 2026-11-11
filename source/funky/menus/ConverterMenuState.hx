@@ -21,12 +21,11 @@ using StringTools;
 private typedef ConverterRow =
 {
 	var label:String;
-	/** 0 = todos los .fnmm, 2 = un .fnmm, 3 = jugar el ultimo nivel, 4 = exportar un nivel. */
+
 	var kind:Int;
 	var path:Null<String>;
 }
 
-/** Convierte los .fnmm de `levels/` a niveles FMCE (y al reves, en modo exportar). Con la UI de Codename. */
 class ConverterMenuState extends UIState
 {
 	static inline var OK_COLOR:Int = 0xFF8FE388;
@@ -70,9 +69,9 @@ class ConverterMenuState extends UIState
 	var job:Null<ConversionJob>;
 	var overlay:Null<LoadingOverlay>;
 	var results:Array<ConversionResult> = [];
-	/** Frames a esperar antes del primer `step()` de un job, para que la pantalla de carga se dibuje antes del trabajo pesado. */
+
 	var warmup:Int = 0;
-	/** Segundos de pausa al terminar, antes de mostrar el resultado. */
+
 	var closing:Float = -1;
 
 	public function new(?exportMode:Bool = false)
@@ -94,7 +93,6 @@ class ConverterMenuState extends UIState
 		}
 		catch (e:Dynamic) {}
 
-		// ventana izquierda: la lista
 		var winH = FlxG.height - MARGIN * 2;
 		listWindow = new UIWindow(MARGIN, MARGIN, LIST_W, winH, "");
 		add(listWindow);
@@ -107,7 +105,6 @@ class ConverterMenuState extends UIState
 		downButton = new UIButton(MARGIN + 130, MARGIN + winH - 48, "Bajar", function() scroll(visibleRows), 100, 32);
 		add(downButton);
 
-		// ventana derecha: resultado y botones
 		var rightX = MARGIN * 2 + LIST_W;
 		var rightW = FlxG.width - rightX - MARGIN;
 		add(new UIWindow(rightX, MARGIN, rightW, winH, "Resultado"));
@@ -264,7 +261,6 @@ class ConverterMenuState extends UIState
 		TransitionHandler.switchState(next);
 	}
 
-	/** Muestra el texto del panel; si es mas largo de lo que cabe, lo corta. */
 	function showDetail(text:String, color:Int):Void
 	{
 		var lines = text.split("\n");
@@ -304,7 +300,6 @@ class ConverterMenuState extends UIState
 		super.update(elapsed);
 		if (leaving) return;
 
-		// Mientras convierte solo se puede cancelar: lo hecho queda en `.convert.json` y la siguiente vez continua.
 		if (job != null || closing >= 0)
 		{
 			if (KeyBinds.justPressed(KeyBinds.BACK) || FlxG.keys.justPressed.ESCAPE) cancelJobs();
@@ -348,7 +343,6 @@ class ConverterMenuState extends UIState
 		overlay.setProgress(0, Path.withoutExtension(Path.withoutDirectory(path)));
 	}
 
-	/** Un pedazo de la conversion por frame, con presupuesto de tiempo para que el juego siga respondiendo. */
 	function tickJobs(elapsed:Float):Void
 	{
 		if (closing >= 0)
@@ -413,7 +407,6 @@ class ConverterMenuState extends UIState
 		}
 	}
 
-	/** Terminaron todos los jobs: muestra el resultado (y avisa con una ventana si algo fallo). */
 	function conclude():Void
 	{
 		hideOverlay();

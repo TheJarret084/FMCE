@@ -3,14 +3,12 @@ package funkin.editors.charter;
 import flixel.math.FlxPoint;
 import funkin.backend.chart.ChartData;
 
-/** Editor de `action_packs` de events.json. */
 class CharterActionPacksScreen extends UISubstateWindow {
 	public static inline var WIN_WIDTH:Int = 440;
 
 	public var packs:Array<ChartActionPack> = [];
 	public var packsList:UIButtonList<ActionPackButton>;
 
-	/** Packs en edicion (la copia de trabajo de la ventana abierta): el dropdown de RunActionPack los usa mientras tanto. */
 	public static var editing:Null<Array<ChartActionPack>> = null;
 
 	public var saveButton:UIButton;
@@ -80,7 +78,6 @@ class CharterActionPacksScreen extends UISubstateWindow {
 		packsList.add(button);
 	}
 
-	/** Abre los eventos del pack con la misma ventana que usan los eventos del grid. */
 	public function editPack(pack:ChartActionPack):Void {
 		var holder = new CharterEvent(0, [for (a in pack.actions) copyAction(a)]);
 		var screen = new CharterEventScreenNew(holder);
@@ -94,7 +91,7 @@ class CharterActionPacksScreen extends UISubstateWindow {
 	public function deletePack(pack:ChartActionPack):Void {
 		var index = packs.indexOf(pack);
 		if (index < 0) return;
-		// borrar un pack corre los indices de los siguientes: solo se permite si nadie apunta a el ni a los que le siguen
+
 		var uses = countReferences(index);
 		if (uses > 0) {
 			Logs.trace('No se puede borrar el pack #$index: $uses accion(es) RunActionPack apuntan a el o a uno posterior. Cambialas antes.', WARNING);
@@ -109,13 +106,12 @@ class CharterActionPacksScreen extends UISubstateWindow {
 		for (b in packsList.buttons.members) if (b != null) b.refreshLabel(packs.indexOf(b.pack));
 	}
 
-	/** Cuantas acciones `RunActionPack` (en eventos o en otros packs) apuntan al pack `index` o a uno posterior. */
 	function countReferences(index:Int):Int {
 		var n = 0;
 		function check(e:ChartEvent) if (e.name == "RunActionPack" && e.params.length > 0 && Std.int(e.params[0]) >= index) n++;
 		for (e in Charter.instance.eventsGroup.members) for (a in e.events) check(a);
 		for (p in packs) for (a in p.actions) check(a);
-		// notas con onPress / onMiss apuntando a ese pack o a uno posterior
+
 		for (note in Charter.instance.notesGroup)
 			if (note != null && note.exists && (note.onPress >= index || note.onMiss >= index)) n++;
 		return n;

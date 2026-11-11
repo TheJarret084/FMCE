@@ -32,11 +32,11 @@ class Main extends Sprite
 
 		Log.init();
 		CrashHandler.init();
-		// assets.pack ANTES de cualquier otra cosa que pida un asset (Paths, ClientPrefs, traducciones...).
+
 		AssetPack.mount();
 		Paths.init();
 		ClientPrefs.load();
-		// Cerrar la ventana con la X (o que Android mate la app) no pasa por el menu de opciones: se guarda aqui tambien.
+
 		lime.app.Application.current.onExit.add(function(_:Int) ClientPrefs.save());
 		TranslationUtil.init();
 
@@ -55,7 +55,7 @@ class Main extends Sprite
 		FlxG.signals.focusLost.add(function() ClientPrefs.save());
 		funky.core.CursorManager.init();
 		addChild(new Framerate());
-		addChild(new LogOverlay()); // logs en pantalla (F2)
+		addChild(new LogOverlay());
 		Log.info("Juego iniciado :happy:");
 	}
 }

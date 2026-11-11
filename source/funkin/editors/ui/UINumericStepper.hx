@@ -19,7 +19,6 @@ class UINumericStepper extends UITextBox {
 
 		set_value(value);
 
-		// TODO: add stepper buttons
 	}
 
 	private function __onChange(text:String) {

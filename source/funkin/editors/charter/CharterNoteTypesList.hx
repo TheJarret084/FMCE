@@ -28,7 +28,7 @@ class CharterNoteTypesList extends UISubstateWindow {
 		noteTypesList.addButton.callback = () -> noteTypesList.add(new NoteTypeButton(0, 0, TU.translate("charterNoteTypesList.editType", [noteTypesList.buttons.members.length]), noteTypesList.buttons.members.length, noteTypesFileList, noteTypesList));
 		noteTypesList.cameraSpacing = 0; noteTypesList.dragCallback = (object:NoteTypeButton, oldIndex:Int, newIndex:Int) -> {object.IDText.text = '${newIndex}.';};
 		for (i=>noteType in Charter.instance.noteTypes)
-			// TODO: make this translatable
+
 			noteTypesList.add(new NoteTypeButton(0, 0, noteType, i, noteTypesFileList, noteTypesList));
 		add(noteTypesList);
 		noteTypesList.frames = Paths.getFrames('editors/ui/inputbox');
@@ -112,7 +112,7 @@ class NoteTypeButton extends UIButton {
 		noteSpr.frames = Paths.getFrames(path);
 		noteSpr.animation.addByPrefix('scroll', 'green0');
 		noteSpr.animation.play("scroll");
-		noteSpr.updateHitbox(); /*noteSpr.angle = 20;*/
+		noteSpr.updateHitbox();
 		noteSpr.setGraphicSize(34, 34);
 		noteSpr.updateHitbox(); noteSpr.antialiasing = true;
 	}

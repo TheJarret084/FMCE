@@ -6,7 +6,6 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 import sys.FileSystem;
 
-/** Rutas absolutas del puente nativo y del Discord SDK para hxcpp. */
 class DiscordBuild
 {
 	public static function xml():Array<Field>
@@ -15,7 +14,7 @@ class DiscordBuild
 		var native = api + "/native";
 		var root = Path.normalize(FileSystem.fullPath(api + "/../../.."));
 		var discord = root + "/source/libs/discord";
-		var stage = root + "/building/_discord/jni"; // lo deja building/discord-android.sh (los .so salen del .aar)
+		var stage = root + "/building/_discord/jni";
 
 		var build = '
 <files id="haxe">

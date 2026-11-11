@@ -4,7 +4,6 @@ import flixel.FlxG;
 import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.input.keyboard.FlxKey;
 
-/** Controles abstractos de interfaz/menú. */
 class KeyBinds
 {
 	public static inline final UP:String = "up";
@@ -62,7 +61,7 @@ class KeyBinds
 
 	public static function getKeyboard(action:String):Array<String>
 	{
-		// Typed as Null<> on purpose: settings.xml may simply have no entry.
+
 		var keys:Null<Array<String>> = ClientPrefs.getMenuKeyboard(action);
 		return (keys != null && keys.length > 0) ? keys : legacyKeyboardFallback(action);
 	}
@@ -79,7 +78,6 @@ class KeyBinds
 	public static function setGamepad(action:String, button:String):Void
 		ClientPrefs.setMenuGamepad(action, button);
 
-	/** A human-readable name for the current keyboard binding of `action`, for on-screen hints. */
 	public static function label(action:String, ?separator:String = " / "):String
 	{
 		var names = getKeyboard(action);
@@ -87,10 +85,6 @@ class KeyBinds
 		return [for (n in names) keyDisplayName(n)].join(separator);
 	}
 
-	/**
-	 * Like `label`, but also mentions the bound gamepad button when there is
-	 * one. Used by menus that want to advertise controller support.
-	 */
 	public static function labelWithGamepad(action:String, ?separator:String = " / "):String
 	{
 		var keyboard = label(action, separator);
@@ -99,7 +93,6 @@ class KeyBinds
 		return keyboard + separator + "[" + button + "]";
 	}
 
-	/** Localized name for a key, for on-screen hints. Falls back to the raw name. */
 	public static function keyDisplayName(name:String):String
 	{
 		var display = KEY_DISPLAY.get(name.toUpperCase());

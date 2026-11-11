@@ -5,7 +5,6 @@ import openfl.ui.MouseCursor;
 import funky.backend.utils.native.*;
 import funky.core.Log;
 
-/** Small, platform-neutral editor API. */
 class NativeAPI
 {
 	public static function setCursorIcon(icon:CodeCursor):Void
@@ -22,11 +21,10 @@ class NativeAPI
 		#end
 	}
 
-	/** Shows a message box. */
 	public static function showMessageBox(caption:String, message:String, icon:MessageBoxIcon = MSG_WARNING):Void
 	{
 		#if android
-		// No hay cuadro nativo usable en Android: se muestra en el log en pantalla.
+
 		if (icon == MSG_ERROR) Log.error('$caption: $message');
 		else Log.warn('$caption: $message');
 		#elseif windows
@@ -39,7 +37,7 @@ class NativeAPI
 			Log.trace('$caption: $message');
 		}
 		#elseif (sys || html5)
-		// Linux, Mac and every other `sys`/html5 target lands here.
+
 		try
 		{
 			lime.app.Application.current.window.alert(message, caption);
@@ -98,8 +96,6 @@ enum abstract CodeCursor(String) from String to String
 			case "hand" | "drag": MouseCursor.HAND;
 			case "ibeam": MouseCursor.IBEAM;
 
-			// Extended native cursor names. These avoid OpenFL's private
-			// __CROSSHAIR, __MOVE, __WAIT, etc. fields.
 			case "crosshair": cast "crosshair";
 			case "move": cast "move";
 			case "wait": cast "wait";
@@ -109,7 +105,6 @@ enum abstract CodeCursor(String) from String to String
 			case "resize_h" | "resize_l" | "resize_r": cast "resize_we";
 			case "resize_v" | "resize_t" | "resize_b": cast "resize_ns";
 
-			// Not guaranteed as native cursors; use a safe fallback.
 			case "custom" | "disabled" | "drag_open":
 				MouseCursor.ARROW;
 

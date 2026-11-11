@@ -38,80 +38,38 @@ import flixel.animation.FlxAnimationController;
 
 using StringTools;
 
-/** Various utilities, that have no specific Util class. */
 @:allow(funkin.game.PlayState)
 final class CoolUtil
 {
-	/**
-	 * Gets the last exception stack. Useful for debugging.
-	 */
+
 	public static function getLastExceptionStack():String {
 		return CallStack.toString(CallStack.exceptionStack());
 	}
 
-	/*
-	 * Returns `v` if not null
-	 * @param v The value
-	 * @return A bool value
-	 */
 	public static inline function isNotNull(v:Null<Dynamic>):Bool {
 		return v != null && !isNaN(v);
 	}
 
-	/*
-	 * Returns `v` if not null, `defaultValue` otherwise.
-	 * @param v The value
-	 * @param defaultValue The default value
-	 * @return The return value
-	 */
 	public static inline function getDefault<T>(v:Null<T>, defaultValue:T):T {
-		return (v == null || isNaN((v : Dynamic))) ? defaultValue : v; // isNaN comprueba el tipo en runtime: el `cast` directo a Float no compila en hxcpp con T = Array/clases
+		return (v == null || isNaN((v : Dynamic))) ? defaultValue : v;
 	}
 
-	/**
-	 * For use when using Std.parseFloat, if not using that then use `getDefault`.
-	 * @param v The value
-	 * @param defaultValue The default value
-	 * @return The return value
-	 */
 	public static inline function getDefaultFloat(v:Float, defaultValue:Float):Float {
 		return (Math.isNaN(v)) ? defaultValue : v;
 	}
 
-	/**
-	 * Applies the % operator, but without any negatives.
-	 *
-	 * @param dividend The intial value. The left side of the equation.
-	 * @param divisor What to modulo by. The right side of the equation.
-	 * @return A positive reminder of `dividend / divisor`.
-	 */
 	public static inline function positiveModulo(dividend:Float, divisor:Float) {
 		return ((dividend % divisor) + divisor) % divisor;
 	}
 
-	/**
-	 * Applies the % operator, but without any negatives. But it's an int.
-	 *
-	 * @param dividend The intial value. The left side of the equation.
-	 * @param divisor What to modulo by. The right side of the equation.
-	 * @return A positive reminder of `dividend / divisor`.
-	 */
 	public static inline function positiveModuloInt(dividend:Int, divisor:Int) {
 		return ((dividend % divisor) + divisor) % divisor;
 	}
 
-	/**
-	 * Shortcut to parse JSON from an Asset path
-	 * @param assetPath Path to the JSON asset.
-	 */
 	public static function parseJson(assetPath:String) {
 		return Json.parse(Assets.getText(assetPath));
 	}
 
-	/**
-	 * Deletes a folder recursively
-	 * @param delete Path to the folder.
-	 */
 	@:noUsing public static function deleteFolder(delete:String) {
 		#if sys
 		if (!FileSystem.exists(delete)) return;
@@ -128,11 +86,6 @@ final class CoolUtil
 		#end
 	}
 
-	/**
-	 * Safe saves a file (even adding eventual missing folders) and shows a warning box instead of making the program crash
-	 * @param path Path to save the file at.
-	 * @param content Content of the file to save (as String or Bytes).
-	 */
 	@:noUsing public static function safeSaveFile(path:String, content:OneOfTwo<String, Bytes>, showErrorBox:Bool = true) {
 		#if sys
 		try {
@@ -147,14 +100,6 @@ final class CoolUtil
 		#end
 	}
 
-	/**
-	 * Creates eventual missing folders to the specified `path`
-	 *
-	 * WARNING: eventual files in `path` will be considered as folders! Just to make possible folders be named as `songs.json` for example
-	 *
-	 * @param path Path to check.
-	 * @return The initial Path.
-	 */
 	@:noUsing public static function addMissingFolders(path:String):String {
 		#if sys
 		var folders:Array<String> = path.split("/");
@@ -169,47 +114,21 @@ final class CoolUtil
 		return path;
 	}
 
-	/**
-	 * Shortcut to parse a JSON string
-	 * @param str Path to the JSON string
-	 * @return Parsed JSON
-	 */
 	public inline static function parseJsonString(str:String)
 		return Json.parse(str);
 
-	/**
-	 * Whenever a value is NaN or not.
-	 * @param v Value
-	 */
 	public static inline function isNaN(v:Dynamic):Bool {
 		return (v is Float) ? Math.isNaN(cast(v, Float)) : false;
 	}
 
-	/**
-	 * Returns the first element of an Array
-	 * @param array Array
-	 * @return T Last element
-	 */
 	public static inline function first<T>(array:Array<T>):T {
 		return array[0];
 	}
 
-	/**
-	 * Returns the last element of an Array
-	 * @param array Array
-	 * @return T Last element
-	 */
 	public static inline function last<T>(array:Array<T>):T {
 		return array[array.length - 1];
 	}
 
-	/**
-	 * Sets a field's default value, and returns it. In case it already exists, returns the existing one.
-	 * @param v Dynamic to set the default value to
-	 * @param name Name of the value
-	 * @param defaultValue Default value
-	 * @return T New/old value.
-	 */
 	public static function setFieldDefault<T>(v:Dynamic, name:String, defaultValue:T):T {
 		if (Reflect.hasField(v, name)) {
 			var f:Null<Dynamic> = Reflect.field(v, name);
@@ -220,21 +139,11 @@ final class CoolUtil
 		return defaultValue;
 	}
 
-	/**
-	 * Add several zeros at the beginning of a string, so that `2` becomes `02`.
-	 * @param str String to add zeros
-	 * @param num The length required
-	 */
 	public static inline function addZeros(str:String, num:Int) {
 		while(str.length < num) str = '0${str}';
 		return str;
 	}
 
-	/**
-	 * Add several zeros at the end of a string, so that `2` becomes `20`, useful for ms.
-	 * @param str String to add zeros
-	 * @param num The length required
-	 */
 	public static inline function addEndZeros(str:String, num:Int) {
 		while(str.length < num) str = '${str}0';
 		return str;
@@ -242,11 +151,6 @@ final class CoolUtil
 
 	private static var sizeLabels:Array<String> = ["B", "KB", "MB", "GB", "TB"];
 
-	/**
-	 * Returns a string representation of a size, following this format: `1.02 GB`, `134.00 MB`
-	 * @param size Size to convert to string
-	 * @return String Result string representation
-	 */
 	public static function getSizeString(size:Float):String {
 		var rSize:Float = size;
 		var label:Int = 0;
@@ -258,11 +162,6 @@ final class CoolUtil
 		return Std.int(rSize) + ((label <= 1) ? "" : "." + addZeros(Std.string(Std.int((rSize % 1) * 100)), 2)) + sizeLabels[label];
 	}
 
-	/**
-	 * Returns a string representation of a size, following this format: `1.02 GB`, `134.00 MB`, using Float64 on cpp targets
-	 * @param size Size to convert to string
-	 * @return String Result string representation
-	 */
 	 public static function getSizeString64(size: #if cpp Float64 #else Float #end):String {
 		var rSize: #if cpp Float64 #else Float #end = size;
 		var label:Int = 0;
@@ -274,63 +173,31 @@ final class CoolUtil
 		return Std.int(rSize) + ((label <= 1) ? "" : "." + addZeros(Std.string(Std.int((rSize % 1) * 100)), 2)) + sizeLabels[label];
 	}
 
-	/**
-	 * Replaces in a string any kind of IP with `[Your IP]` making the string safer to trace.
-	 * @param msg String to check and edit
-	 * @return String Result without any kind of IP
-	 */
 	public static inline function removeIP(msg:String):String {
-		return ~/\d+.\d+.\d+.\d+/.replace(msg, "[Your IP]"); // For now its just IPs but who knows in the future..  - Nex
+		return ~/\d+.\d+.\d+.\d+/.replace(msg, "[Your IP]");
 	}
 
-	/**
-	 * Alternative linear interpolation function for each frame use, without worrying about framerate changes.
-	 * @param v1 Begin value
-	 * @param v2 End value
-	 * @param ratio Ratio
-	 * @return Float Final value
-	 */
 	@:noUsing public static inline function fpsLerp(v1:Float, v2:Float, ratio:Float):Float {
 		return FlxMath.lerp(v1, v2, getFPSRatio(ratio));
 	}
-	/**
-	 * Lerps from color1 into color2 (Shortcut to `FlxColor.interpolate`)
-	 * @param color1 Color 1
-	 * @param color2 Color 2
-	 * @param ratio Ratio
-	 * @param fpsSensitive Whenever the ratio should be fps sensitive (adapted when game is running at 120 instead of 60)
-	 */
+
 	@:noUsing public static inline function lerpColor(color1:FlxColor, color2:FlxColor, ratio:Float, fpsSensitive:Bool = false) {
 		if (!fpsSensitive)
 			ratio = getFPSRatio(ratio);
 		return FlxColor.interpolate(color1, color2, ratio);
 	}
 
-	/**
-	 * Modifies a lerp ratio based on current FPS to keep a stable speed on higher framerate.
-	 * @param ratio Ratio
-	 * @param delta Delta/Elapsed for the fps-modified ratio (Optional)
-	 * @return FPS-Modified Ratio
-	 */
 	@:noUsing public static inline function getFPSRatio(ratio:Float, ?delta:Float):Float
 		return 1.0 - Math.pow(1.0 - ratio, (delta == null ? FlxG.elapsed : delta) * 60);
 
-	/**
-	 * Tries to get a color from a `Dynamic` variable.
-	 * @param c `Dynamic` color.
-	 * @return The result color, or `null` if invalid.
-	 */
 	public static function getColorFromDynamic(c:Dynamic):Null<FlxColor> {
-		// -1
+
 		if (c is Int) return c;
 
-		// -1.0
 		if (c is Float) return Std.int(c);
 
-		// "#FFFFFF"
 		if (c is String) return FlxColor.fromString(c);
 
-		// [255, 255, 255]
 		if (c is Array) {
 			var r:Int = 0;
 			var g:Int = 0;
@@ -352,10 +219,6 @@ final class CoolUtil
 		return null;
 	}
 
-	/**
-	 * Plays the main menu theme.
-	 * @param fadeIn
-	 */
 	@:noUsing public static function playMenuSong(fadeIn:Bool = false) {
 		if (FlxG.sound.music == null || !FlxG.sound.music.playing) {
 			playMusic(Paths.music(Flags.DEFAULT_MENU_MUSIC), true, fadeIn ? 0 : 1, true, 102);
@@ -363,11 +226,6 @@ final class CoolUtil
 		}
 	}
 
-	/**
-	 * Preloads a character.
-	 * @param name Character name
-	 * @param spriteName (Optional) sprite name.
-	 */
 	@:noUsing public static function preloadCharacter(name:String, ?spriteName:String) {
 		if (name == null) return;
 		if (spriteName == null)
@@ -376,15 +234,6 @@ final class CoolUtil
 		Paths.getFrames('characters/$spriteName');
 	}
 
-	/**
-	 * Plays music, while resetting the Conductor, and taking info from INI in count.
-	 * @param path Path to the music
-	 * @param Persist Whenever the music should persist while switching states
-	 * @param DefaultBPM Default BPM of the music (102)
-	 * @param Volume Volume of the music (1)
-	 * @param Looped Whenever the music loops (true)
-	 * @param Group A group that this music belongs to (default)
-	 */
 	@:noUsing public static function playMusic(path:String, Persist:Bool = false, Volume:Float = 1, Looped:Bool = true, DefaultBPM:Float = 102, ?Group:FlxSoundGroup) {
 		Conductor.reset();
 		if (FlxG.sound.music == null || !FlxG.sound.music.exists) FlxG.sound.music = new FlxSound();
@@ -404,7 +253,7 @@ final class CoolUtil
 			var beatsPerMeasure:Float = Flags.DEFAULT_BEATS_PER_MEASURE, stepsPerBeat:Float = Flags.DEFAULT_STEPS_PER_BEAT;
 			if (timeSignParsed.length == 2) {
 				beatsPerMeasure = Math.isNaN(timeSignParsed[0]) ? Flags.DEFAULT_BEATS_PER_MEASURE : timeSignParsed[0];
-				stepsPerBeat = Math.isNaN(timeSignParsed[1]) ? Flags.DEFAULT_STEPS_PER_BEAT : (16 / timeSignParsed[1]); // from denominator
+				stepsPerBeat = Math.isNaN(timeSignParsed[1]) ? Flags.DEFAULT_STEPS_PER_BEAT : (16 / timeSignParsed[1]);
 			}
 
 			var bpm:Float = Std.parseFloat(musicData["BPM"]).getDefault(DefaultBPM);
@@ -416,11 +265,6 @@ final class CoolUtil
 		FlxG.sound.music.play();
 	}
 
-	/**
-	 * Plays a specified Menu SFX.
-	 * @param menuSFX Menu SFX to play
-	 * @param volume At which volume it should play
-	 */
 	@:noUsing public static inline function playMenuSFX(menuSFX:CoolSfx = SCROLL, volume:Float = 1):FlxSound {
 		return FlxG.sound.play(Paths.sound(switch(menuSFX) {
 			case CONFIRM:	Flags.DEFAULT_MENU_CONFIRM_SOUND;
@@ -433,33 +277,15 @@ final class CoolUtil
 		}), volume);
 	}
 
-	/**
-	 * Allows you to split a text file from a path, into a "cool text file", AKA a list. Allows for comments. For example,
-	 * `# comment`
-	 * `test1`
-	 * ` `
-	 * `test2`
-	 * will return `["test1", "test2"]`
-	 * @param path
-	 * @return Array<String>
-	 */
 	@:noUsing public static function coolTextFile(path:String):Array<String>
 	{
 		var trim:String;
 		return [for(line in Assets.getText(path).split("\n")) if ((trim = line.trim()) != "" && !trim.startsWith("#")) trim];
 	}
 
-	/**
-	 * Returns an array of number from min to max. Equivalent of `[for (i in min...max) i]`.
-	 * @param max Max value
-	 * @param min Minimal value (0)
-	 * @return Array<Int> Final array
-	 */
 	@:noUsing public static inline function numberArray(max:Int, ?min:Int = 0):Array<Int>
 	{
-		/*return [for (i in min...max) i];*/
-		// Reason for change:
-		// Old one uses push instead of creating an array with the wanted size.
+
 		var len:Int = CoolUtil.maxInt(max - min, 0);
 		#if cpp
 		var arr:Array<Int> = untyped __cpp__("::Array_obj< int >::__new({0})", len);
@@ -477,11 +303,6 @@ final class CoolUtil
 		return [for (i in min...max) i];
 	}
 
-	/**
-	 * Switches frames from 2 FlxAnimations.
-	 * @param anim1 First animation
-	 * @param anim2 Second animation
-	 */
 	@:noUsing public static function switchAnimFrames(anim1:FlxAnimation, anim2:FlxAnimation) {
 		if (anim1 == null || anim2 == null) return;
 		var old = anim1.frames;
@@ -489,12 +310,6 @@ final class CoolUtil
 		anim2.frames = old;
 	}
 
-	/**
-	 * Swaps two animations on an animation controller.
-	 * @param animation Animation controller
-	 * @param anim1 First animation
-	 * @param anim2 Second animation
-	 */
 	public static function swapAnims(animation:FlxAnimationController, anim1:String, anim2:String) @:privateAccess {
 		var flxAnim1 = animation.getByName(anim1);
 		animation._animations.remove(anim1);
@@ -512,14 +327,6 @@ final class CoolUtil
 		}
 	}
 
-	/**
-	 * Allows you to set a graphic size (ex: 150x150), with proper hitbox without a stretched sprite.
-	 * @param sprite Sprite to apply the new graphic size to
-	 * @param width Width
-	 * @param height Height
-	 * @param fill Whenever the sprite should fill instead of shrinking (true)
-	 * @param maxScale Maximum scale (0 / none)
-	 */
 	public static inline function setUnstretchedGraphicSize(sprite:FlxSprite, width:Int, height:Int, fill:Bool = true, maxScale:Float = 0) {
 		sprite.setGraphicSize(width, height);
 		sprite.updateHitbox();
@@ -543,11 +350,6 @@ final class CoolUtil
 			sprite.scale.y = newScaleX;
 	}
 
-	/**
-	 * Returns a simple string representation of a FlxKey. Used in Controls options.
-	 * @param key Key
-	 * @return Simple representation
-	 */
 	public static inline function keyToString(key:Null<FlxKey>):String {
 		return switch(key) {
 			case null | 0 | NONE:	"---";
@@ -585,12 +387,6 @@ final class CoolUtil
 		}
 	}
 
-	/**
-	 * Centers an object in a camera's field, basically `screenCenter()` but `camera.width` and `camera.height` are used instead of `FlxG.width` and `FlxG.height`.
-	 * @param obj Sprite to center
-	 * @param cam Camera
-	 * @param axes Axes (XY)
-	 */
 	public static inline function cameraCenter(obj:FlxObject, cam:FlxCamera, axes:FlxAxes = XY) {
 		switch(axes) {
 			case XY:
@@ -603,28 +399,13 @@ final class CoolUtil
 		}
 	}
 
-	/**
-	 * Equivalent of `setGraphicSize`, except that it can accept floats and automatically updates the hitbox.
-	 * @param sprite Sprite to set the size of
-	 * @param width Width
-	 * @param height Height
-	 */
 	public static inline function setSpriteSize(sprite:FlxSprite, width:Float, height:Float) {
 		sprite.scale.set(width / sprite.frameWidth, height / sprite.frameHeight);
 		sprite.updateHitbox();
 	}
 
-	/**
-	 * Gets an XML attribute from an `Access` abstract, without throwing an exception if invalid.
-	 * Example: `xml.getAtt("test").getDefault("Hello, World!");`
-	 * @param xml XML to get the attribute from
-	 * @param name Name of the attribute
-	 */
 	public static inline function getAtt(xml:Access, name:String) {
-		/*if (!xml.has.resolve(name)) return null;
-		return xml.att.resolve(name);*/
-		// Reason for change:
-		// Old one has error checking 4 times, this one has it once.
+
 		var xml:Xml = xml.x;
 		if (xml.nodeType != Element) {
 			throw 'Bad node type, expected Element but found ${xml.nodeType}';
@@ -633,13 +414,6 @@ final class CoolUtil
 		return xml.attributeMap.exists(name) ? xml.attributeMap.get(name) : null;
 	}
 
-	/**
-	 * Sets automatically all the compatible formats to a text.
-	 *
-	 * WARNING: These are dependant from the font, so if the font doesn't support for example the `bold` format it won't work!
-	 * @param text Text to set the format for
-	 * @param formats Array of the formats (to get the formats from a node, you can use `XMLUtil.getTextFormats(node)`)
-	 */
 	public static function autoSetFormat(text:FlxText, formats:Array<TextFormat>) {
 		var i = 0;
 		@:privateAccess
@@ -674,11 +448,6 @@ final class CoolUtil
 		return text;
 	}
 
-	/**
-	 * Loads an animated graphic, and automatically animates it.
-	 * @param spr Sprite to load the graphic for
-	 * @param path Path to the graphic
-	 */
 	public static function loadAnimatedGraphic(spr:FlxSprite, path:String, fps:Float = 24.0) {
 		spr.frames = Paths.getFrames(path, true);
 
@@ -690,11 +459,6 @@ final class CoolUtil
 		return spr;
 	}
 
-	/**
-	 * Copies a color transform from color1 to color2
-	 * @param color1 Color transform to copy to
-	 * @param color2 Color transform to copy from
-	 */
 	public static inline function copyColorTransform(color1:ColorTransform, color2:ColorTransform) {
 		color1.alphaMultiplier 	= color2.alphaMultiplier;
 		color1.alphaOffset 		= color2.alphaOffset;
@@ -706,12 +470,6 @@ final class CoolUtil
 		color1.redOffset 		= color2.redOffset;
 	}
 
-	/**
-	 * Resets an FlxSprite
-	 * @param spr Sprite to reset
-	 * @param x New X position
-	 * @param y New Y position
-	 */
 	public static function resetSprite(spr:FlxSprite, x:Float, y:Float) {
 		spr.reset(x, y);
 		spr.alpha = 1;
@@ -725,73 +483,38 @@ final class CoolUtil
 		FlxTween.cancelTweensOf(spr);
 	}
 
-	/**
-	 * Gets the macro class created by hscript-improved for an abstract / enum
-	 */
 	@:noUsing public static inline function getMacroAbstractClass(className:String) {
 		return Type.resolveClass(className + '_HSC');
 	}
 
-	/**
-	 * Basically indexOf, but starts from the end.
-	 * @param array Array to scan
-	 * @param element Element
-	 * @return Index, or -1 if unsuccessful.
-	 */
 	public static inline function indexOfFromLast<T>(array:Array<T>, element:T):Int {
-		/*var i = array.length - 1;
-		while(i >= 0) {
-			if (array[i] == element)
-				break;
-			i--;
-		}
-		return i;*/
-		// Reason for change:
-		// Old one was made because at the time we didnt know the lastIndexOf function.
+
 		return array.lastIndexOf(element);
 	}
 
-	/**
-	 * Clears the content of an array
-	 */
 	public static inline function clear<T>(array:Array<T>):Array<T> {
-		// while(array.length > 0)
-		// 	array.shift();
+
 		array.resize(0);
 		return array;
 	}
 
-	/**
-	 * Push an entire group into an array.
-	 * @param array Array to push the group into
-	 * @param ...args Group entries
-	 * @return Array<T>
-	 */
 	public static inline function pushGroup<T>(array:Array<T>, ...args:T):Array<T> {
 		for(a in args)
 			array.push(a);
 		return array;
 	}
 
-	/**
-	 * Opens an URL in the browser.
-	 * @param url
-	 */
 	@:noUsing public static inline function openURL(url:String) {
 		#if linux
-		// generally `xdg-open` should work in every distro
+
 		var cmd = Sys.command("xdg-open", [url]);
-		// run old command JUST IN CASE it fails, which it shouldn't
+
 		if (cmd != 0) cmd = Sys.command("/usr/bin/xdg-open", [url]);
 		#else
 		FlxG.openURL(url);
 		#end
 	}
 
-	/**
-	 * Browse a path in the operating system's explorer
-	 * @param path
-	 */
 	public static inline function browsePath(path:String) {
 		var formattedPath:String = Path.normalize(path);
 
@@ -806,40 +529,17 @@ final class CoolUtil
 		#end
 	}
 
-	/**
-	 * Converts a timestamp to a readable format such as `01:22` (`mm:ss`)
-	 */
 	public static inline function timeToStr(time:Float)
 		return '${Std.string(Std.int(time / 60000)).addZeros(2)}:${Std.string(Std.int(time / 1000) % 60).addZeros(2)}.${Std.string(Std.int(time % 1000)).addZeros(3)}';
 
-	/**
-	 * Stops a sound, set its time to 0 then play it again.
-	 * @param sound Sound to replay.
-	 */
 	public static inline function replay(sound:FlxSound) sound.play(true, 0);
 
-	/**
-	 * Equivalent of `Math.max`, except doesn't require a Int -> Float -> Int conversion.
-	 * @param p1
-	 * @param p2
-	 * @return return p1 < p2 ? p2 : p1
-	 */
 	@:noUsing public static inline function maxInt(p1:Int, p2:Int)
 		return p1 < p2 ? p2 : p1;
 
-	/**
-	 * Equivalent of `Math.min`, except doesn't require a Int -> Float -> Int conversion.
-	 * @param p1
-	 * @param p2
-	 * @return return p1 > p2 ? p2 : p1
-	 */
 	@:noUsing public static inline function minInt(p1:Int, p2:Int)
 		return p1 > p2 ? p2 : p1;
 
-	/**
-	 * Equivalent of `Math.floor`, except doesn't require a Int -> Float -> Int conversion.
-	 * @param e Value to get the floor of.
-	 */
 	public static inline function floorInt(e:Float) {
 		var r = Std.int(e);
 		if (e < 0 && r != e)
@@ -847,25 +547,10 @@ final class CoolUtil
 		return r;
 	}
 
-	/**
-	 * Quantizes a value to a certain amount.
-	 * Example: `quantize(2.5543, 1)` will return `2.0`
-	 * Example: `quantize(2.5543, 10)` will return `2.5`
-	 * Example: `quantize(2.5543, 100)` will return `2.55`
-	 *
-	 * @param Value Value to quantize
-	 * @param Quant Quantization amount
-	 */
 	@:noUsing public static inline function quantize(Value:Float, Quant:Float) {
 		return Math.fround(Value * Quant) / Quant;
 	}
 
-	/**
-	 * Sets a SoundFrontEnd's music to a FlxSound.
-	 * Example: `FlxG.sound.setMusic(music);`
-	 * @param frontEnd SoundFrontEnd to set the music of
-	 * @param music Music
-	 */
 	public static inline function setMusic(frontEnd:SoundFrontEnd, music:FlxSound) {
 		if (frontEnd.music == music) return;
 
@@ -874,19 +559,9 @@ final class CoolUtil
 		frontEnd.defaultMusicGroup.add(frontEnd.music = music);
 	}
 
-	/**
-	 * Gets the FlxEase from a string.
-	 * @param mainEase Main ease
-	 * @param suffix Suffix (Ignored if `mainEase` is `linear`)
-	 */
 	@:noUsing public static inline function flxeaseFromString(mainEase:String, ?suffix:String)
 		return Reflect.field(FlxEase, mainEase + (mainEase == "linear" || suffix == null ? "" : suffix));
 
-	/*
-	 * Returns the filename of a path, without the extension.
-	 * @param path Path to get the filename from
-	 * @return Filename
-	 */
 	@:noUsing public static inline function getFilename(file:String) {
 		var file = new haxe.io.Path(file);
 		return file.file;
@@ -899,14 +574,6 @@ final class CoolUtil
 		return angle - diff;
 	}
 
-	/**
-	 * Returns the screen position of an object, while taking the camera zoom into account.
-	 *
-	 * @param	object	Any `FlxObject`
-	 * @param   camera  The desired "screen" coordinate space. If `null`, `FlxG.camera` is used.
-	 * @param   result  Optional arg for the returning point
-	 * @return  The screen position of the object.
-	 */
 	public static function worldToScreenPosition(object:FlxObject, ?camera:FlxCamera, ?result:FlxPoint) {
 		if (result == null)
 			result = FlxPoint.get();
@@ -919,14 +586,6 @@ final class CoolUtil
 		return result;
 	}
 
-	/**
-	 * Returns the screen position of an point, while taking the camera zoom into account.
-	 *
-	 * @param	object	Any `FlxObject`
-	 * @param   camera  The desired "screen" coordinate space. If `null`, `FlxG.camera` is used.
-	 * @param   result  Optional arg for the returning point
-	 * @return  The screen position of the object.
-	 */
 	 public static function pointToScreenPosition(object:FlxPoint, ?camera:FlxCamera, ?result:FlxPoint) {
 		if (result == null)
 			result = FlxPoint.get();
@@ -941,13 +600,6 @@ final class CoolUtil
 		return result;
 	}
 
-	/**
-	 * Returns if the mouse is overlapping the sprite on a given camera, taking the camera's position, scroll and zoom into account.
-	 *
-	 * @param   sprite  Any `FlxObject`
-	 * @param   camera  The camera you want to check overlap on. Uses the sprite's camera by default.
-	 * @return  Bool
-	 */
 	public static function mouseOverlaps(sprite:FlxObject, ?camera:FlxCamera) {
 		var camToCheck:FlxCamera = camera ?? sprite.camera;
 		var posthing:FlxPoint = FlxG.mouse.getWorldPosition(camToCheck);
@@ -955,11 +607,6 @@ final class CoolUtil
 		return posthing != null && FlxMath.inBounds(posthing.x, sprite.x, sprite.x + sprite.width) && FlxMath.inBounds(posthing.y, sprite.y, sprite.y + sprite.height);
 	}
 
-	/**
-	 * Sorts an array alphabetically.
-	 * @param array Array to sort
-	 * @param lowercase Whenever the array should be sorted in lowercase
-	 */
 	public static function sortAlphabetically(array:Array<String>, ?lowercase:Bool=false) {
 		array.sort(function(a1, a2):Int {
 			if(lowercase) {
@@ -973,11 +620,6 @@ final class CoolUtil
 		return array;
 	}
 
-	/**
-	 * Pushes an element to an array, but only if it doesn't already exist.
-	 * @param array Array to push to
-	 * @param element Element to push
-	 */
 	public static inline function pushOnce<T>(array:Array<T>, element:T) {
 		#if (haxe >= "4.0.0")
 		if (!array.contains(element))
@@ -989,11 +631,7 @@ final class CoolUtil
 	}
 
 	#if !(haxe >= "4.0.0")
-	/**
-	 * Checks if an array contains an element.
-	 * @param array Array to check
-	 * @param element Element to check
-	 */
+
 	public static inline function contains<T>(array:Array<T>, element:T) {
 		return array.indexOf(element) != -1;
 	}
@@ -1036,11 +674,6 @@ final class CoolUtil
 		#end
 	}
 
-	/**
-	 * Converts a string of "1..3,5,7..9,8..5" into an array of numbers like [1,2,3,5,7,8,9,8,7,6,5]
-	 * @param input String to parse
-	 * @return Array of numbers
-	 */
 	public static function parseNumberRange(input:String):Array<Int> {
 		var result:Array<Int> = [];
 		var parts:Array<String> = input.split(",");
@@ -1075,13 +708,6 @@ final class CoolUtil
 		return result;
 	}
 
-	/**
-	 * Converts an array of numbers into a string of ranges.
-	 * Example: [1,2,3,5,7,8,9,8,7,6,5] -> "1..3,5,7..9,8..5"
-	 * @param numbers Array of numbers
-	 * @param separator Separator between ranges
-	 * @return String representing the ranges
-	 */
 	public static function formatNumberRange(numbers:Array<Int>, separator:String = ","):String {
 		if (numbers.length == 0) return "";
 
@@ -1091,9 +717,9 @@ final class CoolUtil
 		while (i < numbers.length) {
 			var start = numbers[i];
 			var end = start;
-			var direction = 0; // 0: no sequence, 1: increasing, -1: decreasing
+			var direction = 0;
 
-			if (i + 1 < numbers.length) { // detect direction of sequence
+			if (i + 1 < numbers.length) {
 				if (numbers[i + 1] == end + 1) {
 					direction = 1;
 				} else if (numbers[i + 1] == end - 1) {
@@ -1108,11 +734,11 @@ final class CoolUtil
 				}
 			}
 
-			if (start == end) { // no direction
+			if (start == end) {
 				result.push('${start}');
-			} else if (start + direction == end) { // 1 step increment
+			} else if (start + direction == end) {
 				result.push('${start},${end}');
-			} else { // store as range
+			} else {
 				result.push('${start}..${end}');
 			}
 
@@ -1122,12 +748,6 @@ final class CoolUtil
 		return result.join(separator);
 	}
 
-	/**
-	 * Deep flattens an array.
-	 * Example: `deepFlatten([1, [2, 3], 4])` will return `[1, 2, 3, 4]`
-	 * @param arr Array to flatten
-	 * @param result Result array
-	 */
 	public static function deepFlatten(arr:Array<Dynamic>, ?result:Array<Dynamic>):Array<Dynamic> {
 		if(arr == null) return [];
 		if(result == null) result = [];
@@ -1141,20 +761,10 @@ final class CoolUtil
 		return result;
 	}
 
-	/**
-	 * Gets the luminance of the given color
-	 * @param color Color to use
-	 * @return Number between 0 and 1
-	*/
 	public static function getLuminance(color:FlxColor):Float {
 		return (0.2126*color.redFloat + 0.7152*color.greenFloat + 0.0722*color.blueFloat);
 	}
 
-	/**
-	 * ! REQUIRES FULL PATH!!!
-	 * @param path
-	 * @return Bool
-	 */
 	public static function imageHasFrameData(path:String):String {
 		if (FileSystem.exists(Path.withExtension(path, "xml"))) return "xml";
 		if (FileSystem.exists(Path.withExtension(path, "txt"))) return "txt";
@@ -1163,15 +773,13 @@ final class CoolUtil
 		return null;
 	}
 
-	// loads frames with no image, but with data, so you can parse it
 	public static function loadFramesFromData(data:String, ext:String = null):FlxFramesCollection {
 		var frames:FlxFramesCollection = null;
 		var tempBitmap:BitmapData = new BitmapData(1, 1, false);
 
-		// Worlds hackiest work around alert???
 		var graphic:FlxGraphic = FlxG.bitmap.add(tempBitmap);
 		@:privateAccess {
-			// prevent errors from being shown, such as Size is too small
+
 			graphic.width = 9999999;
 			graphic.height = 9999999;
 		}
@@ -1220,10 +828,8 @@ final class CoolUtil
 		return getAnimsListFromFrames(spr.frames);
 	}
 
-	// TODO: check this for bugs
-	// Code from https://github.com/elnabo/equals/blob/master/src/equals/Equal.hx, (MIT License), but updated to work with haxe 4
 	public static function deepEqual<T> (a:T, b:T) : Bool {
-		if (a == b) { return true; } // if physical equality
+		if (a == b) { return true; }
 		if (isNull(a) ||  isNull(b)) {
 			return false;
 		}
@@ -1232,9 +838,9 @@ final class CoolUtil
 			case TNull, TInt, TBool, TUnknown:
 				return a == b;
 			case TFloat:
-				return Math.isNaN(cast a) && Math.isNaN(cast b); // only valid true result remaining
+				return Math.isNaN(cast a) && Math.isNaN(cast b);
 			case TFunction:
-				return Reflect.compareMethods(a, b); // only physical equality can be tested for function
+				return Reflect.compareMethods(a, b);
 			case TEnum(_):
 				if (EnumValueTools.getIndex(cast a) != EnumValueTools.getIndex(cast b)) {
 					return false;
@@ -1289,7 +895,7 @@ final class CoolUtil
 			var pa = Reflect.field(a, field);
 			var pb = Reflect.field(b, field);
 			if (isFunction(pa)) {
-				// ignore function as only physical equality can be tested, unless null
+
 				if (isNull(pa) != isNull(pb)) {
 					return false;
 				}
@@ -1350,7 +956,7 @@ final class CoolUtil
 					var arr:Array<Dynamic> = cast target;
 					target = arr[index];
 				}
-			} else { // TClass(String)
+			} else {
 				target = Reflect.getProperty(target, component);
 			}
 			if (!Reflect.isObject(target) && !(target is Array))
@@ -1435,7 +1041,6 @@ class PropertyInfo {
 	}
 }
 
-/** SFXs to play using `CoolUtil.playMenuSFX`. */
 enum abstract CoolSfx(Int) from Int {
 	var SCROLL = 0;
 	var CONFIRM = 1;
@@ -1444,13 +1049,11 @@ enum abstract CoolSfx(Int) from Int {
 	var UNCHECKED = 4;
 	var WARNING = 5;
 
-	/** Reemplaza {0}, {1}... por los argumentos (equivalente a `String.format` de Codename). */
 	public static function format(str:String, args:Array<Dynamic>):String {
 		for (i => a in args) str = StringTools.replace(str, '{$i}', Std.string(a));
 		return str;
 	}
 
-	/** El sprite pasa a ser un rectangulo solido de `width` x `height` (grafico de 1x1 escalado). */
 	public static function makeSolid<T:flixel.FlxSprite>(sprite:T, width:Float, height:Float, color:flixel.util.FlxColor = 0xFFFFFFFF, unique:Bool = false, ?key:String):T {
 		sprite.makeGraphic(1, 1, 0xFFFFFFFF, unique, key != null ? key : "__charter_solid");
 		sprite.scale.set(width, height);
@@ -1460,7 +1063,6 @@ enum abstract CoolSfx(Int) from Int {
 		return sprite;
 	}
 
-	/** Area de mundo que ve la camara. */
 	public static function getViewRect(cam:flixel.FlxCamera, ?rect:flixel.math.FlxRect):flixel.math.FlxRect {
 		if (rect == null) rect = flixel.math.FlxRect.get();
 		return rect.set(cam.scroll.x + cam.viewMarginLeft, cam.scroll.y + cam.viewMarginTop, cam.viewWidth, cam.viewHeight);
@@ -1477,7 +1079,6 @@ enum abstract CoolSfx(Int) from Int {
 		cam.filters = [for (f in cam.filters) if (!(f is openfl.filters.ShaderFilter) || cast(f, openfl.filters.ShaderFilter).shader != shader) f];
 	}
 
-	/** Un FlxSound con audio cargado. */
 	public static inline function soundLoaded(sound:flixel.sound.FlxSound):Bool
 		return sound != null && sound.length > 0;
 }

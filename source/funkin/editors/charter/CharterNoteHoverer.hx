@@ -25,7 +25,7 @@ class CharterNoteHoverer extends CharterNote {
 						case 1: 180;
 						case 2: 0;
 						case 3: 90;
-						default: 0; // how is that even possible
+						default: 0;
 					};
 				} else
 					visible = false;
@@ -61,7 +61,7 @@ class CharterNoteHoverer extends CharterNote {
 								case 1: 180;
 								case 2: 0;
 								case 3: 90;
-								default: 0; // how is that even possible
+								default: 0;
 							};
 
 							sustainSpr.scale.set(10, (40 * draggingNote.susLength) + (height/2));
@@ -70,15 +70,14 @@ class CharterNoteHoverer extends CharterNote {
 							sustainSpr.exists = draggingNote.susLength != 0;
 
 							type = draggingNote.type;
-							//typeText.text = Std.string(draggingNote.type);
-							//typeText.exists = draggingNote.type != 0;
+
 							typeText.follow(this, 20 - (typeText.frameWidth/2), 20 - (typeText.frameHeight/2));
 
 							super.draw();
 						}
 					}
 				}
-			default: // do nothing
+			default:
 		}
 	}
 

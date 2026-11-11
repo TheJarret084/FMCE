@@ -2,7 +2,6 @@ package funkin.backend.utils;
 
 import flixel.util.FlxColor;
 
-/** Additional class for FlxColor lerping. */
 class FlxInterpolateColor {
 	public var red:Float = 0;
 	public var green:Float = 0;

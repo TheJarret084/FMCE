@@ -8,14 +8,13 @@ import haxe.zip.Reader;
 
 typedef FnfcAudio =
 {
-	/** Nombre del archivo dentro del .fnfc (Inst.ogg, Voices-darnell.ogg...). */
+
 	var name:String;
 	var bytes:Bytes;
-	/** Como se llama en `music/` del nivel de FMCE. */
+
 	var target:String;
 }
 
-/** Un `.fnfc` de Friday Night Funkin' (un zip): `<cancion>-chart.json`, `<cancion>-metadata.json`, `Inst.ogg` y las `Voices*.ogg`. */
 class FnfcPackage
 {
 	public var chart(default, null):String = null;
@@ -23,7 +22,7 @@ class FnfcPackage
 	public var songName(default, null):Null<String> = null;
 	public var bpm(default, null):Null<Float> = null;
 	public var audio(default, null):Array<FnfcAudio> = [];
-	/** Audios del paquete que no se copian (alternativos, etc.). */
+
 	public var skipped(default, null):Array<String> = [];
 
 	public function new() {}
@@ -31,7 +30,6 @@ class FnfcPackage
 	public static function isFnfc(path:Null<String>):Bool
 		return path != null && Path.extension(path).toLowerCase() == "fnfc";
 
-	/** Lanza un String con el motivo si no es un .fnfc valido. */
 	public static function read(bytes:Bytes):FnfcPackage
 	{
 		var entries = try Reader.readZip(new BytesInput(bytes)) catch (e:Dynamic) throw "No es un .fnfc valido (no se pudo abrir el zip).";
@@ -62,7 +60,7 @@ class FnfcPackage
 			else if (ext == "ogg" || ext == "mp3" || ext == "wav" || ext == "m4a")
 			{
 				var base = Path.withoutExtension(lower);
-				// Inst.ogg es la musica del nivel (music.ogg); las Voices* conservan su nombre (el sufijo lo usa cada strumline).
+
 				if (base == "inst") pack.audio.push({name: name, bytes: Reader.unzip(entry), target: "music." + ext});
 				else if (StringTools.startsWith(base, "voices")) pack.audio.push({name: name, bytes: Reader.unzip(entry), target: name});
 				else pack.skipped.push(name);

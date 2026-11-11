@@ -4,7 +4,6 @@ import haxe.ds.Vector;
 import haxe.io.Bytes;
 import haxe.io.BytesOutput;
 
-/** Escritor de bits como Vorbis: el primer bit va en el bit menos significativo del byte. */
 private class BitWriter
 {
 	var out:BytesOutput = new BytesOutput();
@@ -13,7 +12,6 @@ private class BitWriter
 
 	public function new() {}
 
-	/** Escribe los `bits` bajos de `value` (hasta 16 por llamada). */
 	public function write(value:Int, bits:Int):Void
 	{
 		if (bits <= 0) return;
@@ -39,7 +37,6 @@ private class BitWriter
 		write((value >>> 16) & 0xFFFF, 16);
 	}
 
-	/** Bits de un codigo de Huffman: el primero que se lee es el del extremo alto. */
 	public function writeCode(code:Int, length:Int):Void
 	{
 		var i = length - 1;
@@ -62,20 +59,18 @@ private class BitWriter
 	}
 }
 
-/** Un codebook escalar (dimension 1) con codigos de Huffman canonicos; la entrada 0 es la mas corta. */
 private class Book
 {
 	public var entries:Int;
 	public var lengths:Array<Int> = [];
 	public var codes:Array<Int> = [];
-	/** Valor que representa cada entrada (-K..K). Vacio en el classbook. */
+
 	public var values:Array<Int> = [];
 	public var maxValue:Int = 0;
 	var entryOfValue:Array<Int> = [];
 
 	public function new() {}
 
-	/** Libro de enteros -K..K con probabilidad ~ ratio^|v|. */
 	public static function ofValues(k:Int, ratio:Float):Book
 	{
 		var b = new Book();
@@ -104,7 +99,6 @@ private class Book
 		return b;
 	}
 
-	/** Classbook con largos fijos (ya en orden no decreciente). */
 	public static function ofLengths(lengths:Array<Int>):Book
 	{
 		var b = new Book();
@@ -127,7 +121,6 @@ private class Book
 	public inline function entryFor(value:Int):Int
 		return entryOfValue[value + maxValue];
 
-	/** Largos de un arbol de Huffman para los pesos dados. */
 	static function huffman(weights:Array<Float>):Array<Int>
 	{
 		var n = weights.length;
@@ -162,13 +155,12 @@ private class Book
 	}
 }
 
-/** Codificador de OGG Vorbis en Haxe puro, hecho para que el .FNMM (Funky Maker: Mobile, que pide OGG) pueda llevar una mezcla. */
 class OggVorbisEncoder
 {
 	static inline var BLOCK:Int = 2048;
 	static inline var HALF:Int = 1024;
 	static inline var PART:Int = 16;
-	/** Valor maximo de un coeficiente cuantizado (antes del acoplamiento): el angulo puede llegar al doble. */
+
 	static inline var QMAX:Int = 511;
 	static inline var CLASSES:Int = 6;
 	static inline var FLOOR_FIRST:Float = 1.0649863e-07;
@@ -180,7 +172,7 @@ class OggVorbisEncoder
 	var endBin:Int;
 	var floorY0:Int = 0;
 	var floorY1:Int = 0;
-	/** Cuanto mas chico, mas fiel: relacion senal/ruido que se busca en cada frame, en dB. */
+
 	var snrDb:Float;
 	var tiltSteps:Int;
 	var dbPerStep:Float;
@@ -188,7 +180,6 @@ class OggVorbisEncoder
 	var specs:Array<Vector<Float>>;
 	var window:Vector<Float>;
 
-	// FFT de HALF/2 puntos y twiddles de la DCT-IV
 	var fftRe:Vector<Float>;
 	var fftIm:Vector<Float>;
 	var fftCos:Vector<Float>;
@@ -207,7 +198,6 @@ class OggVorbisEncoder
 		this.channels = channels;
 		this.rate = rate;
 
-		// libros: 0 = classbook (clase de cada particion); 1..4 = valores para cada clase
 		books = [
 			Book.ofLengths([1, 2, 3, 4, 5, 5]),
 			Book.ofValues(1, 0.30),
@@ -217,7 +207,6 @@ class OggVorbisEncoder
 			Book.ofValues(1023, 0.985)
 		];
 
-		// el paso de cuantizacion se calcula en cada frame a partir de su volumen; la tabla del floor va de -141 dB a 0 dB en 255 pasos
 		snrDb = 12 + 38 * quality;
 		dbPerStep = 20 * Math.log(1.0 / FLOOR_FIRST) / Math.log(10) / 255;
 		tiltSteps = Math.round(tiltDb / dbPerStep);
@@ -243,7 +232,6 @@ class OggVorbisEncoder
 	static inline function clampInt(v:Int, lo:Int, hi:Int):Int
 		return v < lo ? lo : (v > hi ? hi : v);
 
-	/** Amplitud de la floor para cada bin: lo mismo que calcula el decodificador (linea entera + tabla en dB). */
 	function renderFloor():Void
 	{
 		floorY1 = clampInt(floorY0 + tiltSteps, 0, 255);
@@ -275,8 +263,6 @@ class OggVorbisEncoder
 
 	static inline function dbTable(i:Int):Float
 		return Math.pow(FLOOR_FIRST, (255 - clampInt(i, 0, 255)) / 255.0);
-
-	// ------------------------------------------------------------------ transformada
 
 	function initFft():Void
 	{
@@ -357,7 +343,6 @@ class OggVorbisEncoder
 		}
 	}
 
-	/** DCT-IV de HALF puntos: `fold` -> `spec`. */
 	function dct4():Void
 	{
 		var h = HALF >> 1;
@@ -382,7 +367,6 @@ class OggVorbisEncoder
 		}
 	}
 
-	/** MDCT de un bloque ya enventanado `x` (BLOCK muestras) -> `spec` (HALF coeficientes), con la escala del decodificador. */
 	function mdct(x:Vector<Float>):Void
 	{
 		var h = HALF >> 1;
@@ -393,8 +377,6 @@ class OggVorbisEncoder
 		}
 		dct4();
 	}
-
-	// ------------------------------------------------------------------ cabeceras
 
 	static function packFloat(w:BitWriter, x:Float):Void
 	{
@@ -423,15 +405,15 @@ class OggVorbisEncoder
 		w.write24(0x564342);
 		w.write(1, 16);
 		w.write24(b.entries);
-		w.write(0, 1); // no ordenado
-		w.write(0, 1); // no disperso
+		w.write(0, 1);
+		w.write(0, 1);
 		for (len in b.lengths) w.write(len - 1, 5);
 		if (b.values.length == 0)
 		{
 			w.write(0, 4);
 			return;
 		}
-		w.write(1, 4); // lookup tipo 1 (lattice): con dimension 1 cada entrada tiene su propio valor
+		w.write(1, 4);
 		packFloat(w, -b.maxValue);
 		packFloat(w, 1.0);
 		var valueBits = 1;
@@ -452,7 +434,7 @@ class OggVorbisEncoder
 		o.writeInt32(0);
 		o.writeInt32(nominalBitrate);
 		o.writeInt32(0);
-		o.writeByte(11 | (11 << 4)); // blocksize_0 = blocksize_1 = 2^11
+		o.writeByte(11 | (11 << 4));
 		o.writeByte(1);
 		return o.getBytes();
 	}
@@ -479,18 +461,15 @@ class OggVorbisEncoder
 		w.write(books.length - 1, 8);
 		for (b in books) writeBook(w, b);
 
-		// transformaciones de tiempo: una, sin uso
 		w.write(0, 6);
 		w.write(0, 16);
 
-		// floor: tipo 1, sin particiones (solo los puntos 0 y 2^rangebits), multiplicador 1 (rango 256)
 		w.write(0, 6);
 		w.write(1, 16);
 		w.write(0, 5);
 		w.write(0, 2);
 		w.write(10, 4);
 
-		// residuo: tipo 1, cinco clases (0 = silencio)
 		w.write(0, 6);
 		w.write(1, 16);
 		w.write24(0);
@@ -505,7 +484,6 @@ class OggVorbisEncoder
 		}
 		for (c in 1...CLASSES) w.write(c, 8);
 
-		// mapping: un submapa; en estereo, acoplamiento canal 0 (magnitud) / canal 1 (angulo)
 		w.write(0, 6);
 		w.write(0, 16);
 		w.write(0, 1);
@@ -523,7 +501,6 @@ class OggVorbisEncoder
 		w.write(0, 8);
 		w.write(0, 8);
 
-		// un modo: bloque corto (= BLOCK, los dos tamanos son iguales)
 		w.write(0, 6);
 		w.write(0, 1);
 		w.write(0, 16);
@@ -533,8 +510,6 @@ class OggVorbisEncoder
 		w.write(1, 1);
 		return w.finish();
 	}
-
-	// ------------------------------------------------------------------ paquetes de audio
 
 	function sampleAt(pcm:Bytes, offset:Int, frames:Int, pos:Int, ch:Int):Float
 	{
@@ -565,9 +540,8 @@ class OggVorbisEncoder
 			}
 		}
 
-		// paso de este frame: ruido de cuantizacion (paso / raiz de 12) a `snrDb` por debajo del volumen del frame
 		var rms = Math.sqrt(energy / (endBin * channels));
-		// ... pero nunca tan fino que el coeficiente mas grande no entre en el libro mas ancho
+
 		var step = Math.max(Math.max(rms * 3.46 / Math.pow(10, snrDb / 20), peak / (QMAX * 0.98)), 1.0e-5);
 		floorY0 = clampInt(255 + Math.round(20 * Math.log(step) / Math.log(10) / dbPerStep), 0, 255);
 		renderFloor();
@@ -624,7 +598,7 @@ class OggVorbisEncoder
 			}
 
 		var w = new BitWriter();
-		w.write(0, 1); // paquete de audio
+		w.write(0, 1);
 		for (ch in 0...channels)
 		{
 			w.write(1, 1);
@@ -649,8 +623,6 @@ class OggVorbisEncoder
 		}
 		return w.finish();
 	}
-
-	// ------------------------------------------------------------------ Ogg
 
 	static var crcTable:Null<Array<Int>> = null;
 
@@ -690,7 +662,7 @@ class OggVorbisEncoder
 		o.writeString("OggS");
 		o.writeByte(0);
 		o.writeByte(flags);
-		// granule como int64 little endian (las posiciones caben en 52 bits)
+
 		var low = Std.int(granule % 4294967296.0);
 		var high = Std.int(Math.floor(granule / 4294967296.0));
 		o.writeInt32(low);
@@ -707,14 +679,6 @@ class OggVorbisEncoder
 		return bytes;
 	}
 
-	// ------------------------------------------------------------------ API
-
-	/**
-	 * Codifica PCM de 16 bits entrelazado (`frames` cuadros, 1 o 2 canales) a OGG Vorbis.
-	 * @param quality 0 = chico, 1 = mejor (el paso de cuantizacion baja de -30 dB a -80 dB).
-	 * @param cutoffHz los agudos por encima de esto se descartan.
-	 * @param tiltDb cuanto mas grueso es el paso en los agudos que en los graves.
-	 */
 	public static function encode(pcm:Bytes, offset:Int, frames:Int, channels:Int, rate:Int, quality:Float = 0.55, cutoffHz:Float = 16500, tiltDb:Float = 14):Bytes
 	{
 		if (channels < 1 || channels > 2) throw "solo se codifica mono o estereo";
@@ -755,7 +719,7 @@ class OggVorbisEncoder
 			lastGranule = granule;
 			if (t == 0)
 			{
-				// el primer paquete no produce muestras: va solo en su pagina (granule 0), asi los lectores saben donde empieza el audio
+
 				out.write(page(serial, seq++, 0x00, 0, pending));
 				pending = [];
 				segs = 0;

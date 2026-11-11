@@ -9,7 +9,6 @@ enum ConfigKind
 	SEPARATOR;
 }
 
-/** Una fila del menu de opciones (estilo Codename: accion, checkbox, numero, slider, separador). */
 class ConfigItem
 {
 	public var kind:ConfigKind;
@@ -18,7 +17,6 @@ class ConfigItem
 	public var color:Int = 0xFFFFFFFF;
 	public var suffix:String = "";
 
-	/** Icono a la izquierda (creditos): URL a descargar y asset de respaldo en images/credits/. */
 	public var hasIcon:Bool = false;
 	public var iconUrl:Null<String>;
 	public var iconAsset:Null<String>;
@@ -28,7 +26,7 @@ class ConfigItem
 	public var setBool:Bool->Void;
 	public var getNum:Void->Float;
 	public var setNum:Float->Void;
-	/** Si existe, reemplaza el texto de la fila cada frame (ej: "CARRIL 1: A"). */
+
 	public var dynamicLabel:Void->String;
 
 	public var min:Float = 0;
@@ -51,7 +49,6 @@ class ConfigItem
 		return item;
 	}
 
-	/** Accion que abre otra pantalla: lleva " >" al final como en Codename. */
 	public static function submenu(label:String, desc:String, onSelect:Void->Void):ConfigItem
 	{
 		var item = action(label, desc, onSelect);
@@ -83,7 +80,6 @@ class ConfigItem
 		return item;
 	}
 
-	/** Slider 0..1 en pasos de `step`, mostrado como porcentaje. */
 	public static function slider(label:String, desc:String, step:Float, get:Void->Float, set:Float->Void):ConfigItem
 	{
 		var item = new ConfigItem(SLIDER);

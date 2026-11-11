@@ -24,7 +24,6 @@ import funky.menus.options.ConfigItem;
 import funky.core.Log;
 import funkin.backend.utils.TranslationUtil as TU;
 
-/** Una fila visible: texto + (checkbox | numero | slider). Se posiciona desde ConfigMenu. */
 private class Row extends FlxGroup
 {
 	public static inline var HEIGHT:Float = 74;
@@ -182,18 +181,17 @@ private class Row extends FlxGroup
 	}
 }
 
-/** Menu de opciones estilo Codename (TreeMenu) con fila centrada. */
 class ConfigMenu extends FlxGroup
 {
 	static var font:Null<String> = null;
 	static var fontLoaded:Bool = false;
 
 	public var onExit:Void->Void;
-	/** Avisa del fondo de la pantalla visible (null = el de por defecto); solo lo usan los creditos. */
+
 	public var onBackgroundChange:String->Void;
-	/** Abre un substate encima del host correcto (ConfigState o el ConfigSubState de la pausa). */
+
 	public var openSubState:FlxSubState->Void;
-	/** Reconstruye la raiz (se usa al cambiar de idioma). */
+
 	public var rootFactory:Void->ConfigScreen;
 	public var stack:Array<ConfigScreen> = [];
 
@@ -238,11 +236,9 @@ class ConfigMenu extends FlxGroup
 		descText.setFormat(font, 18, 0xFFD8D8E0, FlxTextAlign.LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		add(descText);
 
-		// Boton ATRAS en su lugar de siempre (arriba a la izquierda, igual que en los demas menus), con mouse o dedo.
 		backButton = BackButton.place();
 		add(backButton);
 
-		// El titulo y la descripcion arrancan despues del boton, no pasan por debajo.
 		titleText.x = descText.x = BackButton.WIDTH;
 		titleText.fieldWidth = descText.fieldWidth = FlxG.width - BackButton.WIDTH - 14;
 
@@ -253,7 +249,6 @@ class ConfigMenu extends FlxGroup
 		}
 	}
 
-	/** Botones arriba/abajo del movil: solo cuando el menu acepta input (no al salir, ni capturando una tecla). */
 	function navigate(dir:Int):Void
 	{
 		if (exiting || capture != null || enterT < 0.35) return;
@@ -268,14 +263,12 @@ class ConfigMenu extends FlxGroup
 		build(screen, 0);
 	}
 
-	/** Guarda como se construye la raiz y la muestra. */
 	public function setRootFactory(factory:Void->ConfigScreen):Void
 	{
 		rootFactory = factory;
 		setRoot(factory());
 	}
 
-	/** Vuelve a la raiz para refrescar titulos, descripciones y filas (cambio de idioma). */
 	public function reloadRoot():Void
 	{
 		if (rootFactory == null) return;
@@ -301,7 +294,6 @@ class ConfigMenu extends FlxGroup
 	public function isCapturing():Bool
 		return capture != null;
 
-	/** Espera la proxima tecla (ESC cancela) y la entrega como texto de FlxKey ("A", "LEFT"...). */
 	public function captureKey(onKey:String->Void, ?onCancel:Void->Void):Void
 	{
 		capture = onKey;
@@ -349,7 +341,6 @@ class ConfigMenu extends FlxGroup
 		descText.text = text;
 		descText.y = titleText.y + titleText.height + 2;
 
-		// La barra de arriba cubre tambien el boton ATRAS (esquina izquierda), para que las filas no pasen por debajo de el.
 		headBG.scale.set(FlxG.width, Math.max(descText.y + descText.height + 8, BackButton.Y + BackButton.SIZE + 4));
 		headBG.updateHitbox();
 	}
@@ -440,7 +431,6 @@ class ConfigMenu extends FlxGroup
 		var screen = top();
 		if (screen == null) return;
 
-		// ATRAS: la tecla o el boton de arriba a la izquierda (mouse o dedo).
 		if (KeyBinds.justPressed(KeyBinds.BACK) || BackButton.clicked(backButton))
 		{
 			back();
@@ -504,7 +494,7 @@ class ConfigMenu extends FlxGroup
 				select(i);
 			else if ((row.item.kind == NUMBER || row.item.kind == SLIDER))
 			{
-				// Tocar la mitad izquierda del valor baja, la derecha sube. Tocar el nombre no hace nada.
+
 				if (p.x >= row.label.x + row.label.width) adjust(row.item, p.x < row.valueMid ? -1 : 1);
 			}
 			else
@@ -582,7 +572,6 @@ class ConfigMenu extends FlxGroup
 			exitMenu();
 	}
 
-	/** Guarda las preferencias y avisa al host (state o substate) para que cierre. */
 	public function exitMenu():Void
 	{
 		if (exiting) return;

@@ -13,22 +13,20 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Un `.hx` de un nivel, con su propio interprete (hscript-improved: clases, `import`, `using`). */
 class LevelScript
 {
 	static var EXTENSIONS:Array<String> = ["hx", "hscript", "hsc", "hxs"];
 
-	/** El script que se esta ejecutando ahora mismo (null fuera de un script). Util para trazas y errores. */
 	public static var current(default, null):Null<LevelScript> = null;
 
 	public final name:String;
-	/** Igual que `name`: como lo llama Codename. */
+
 	public var fileName(get, never):String;
-	/** Ruta del archivo en disco. */
+
 	public final path:String;
-	/** false = `Scripts.call` lo salta (`disableScript()` desde el propio script). */
+
 	public var active:Bool = true;
-	/** true si ya se ejecuto (`load`). */
+
 	public var loaded(default, null):Bool = false;
 
 	public var interp:Interp = new Interp();
@@ -42,7 +40,6 @@ class LevelScript
 	inline function get_fileName():String
 		return name;
 
-	/** Lee y parsea `path`, pero NO lo ejecuta: llama a `load()` cuando ya tenga padre y mapa publico. */
 	public function new(name:String, path:String, levelDir:String, globals:Map<String, Dynamic>, ?publicMap:Map<String, Dynamic>, ?parent:Dynamic)
 	{
 		this.name = name;
@@ -68,7 +65,6 @@ class LevelScript
 		interp.variables.set("debugPrint", print);
 		interp.variables.set("trace", print);
 
-		// Como en Codename.
 		interp.variables.set("__script__", this);
 		interp.variables.set("disableScript", function():Void active = false);
 		interp.variables.set("state", FlxG.state);
@@ -90,7 +86,6 @@ class LevelScript
 		#end
 	}
 
-	/** Ejecuta el script (una sola vez) y llama a su `new()` si lo define. */
 	public function load():Void
 	{
 		if (loaded) return;
@@ -112,21 +107,15 @@ class LevelScript
 		current = previous;
 	}
 
-	/**
-	 * Objeto "padre" del script (el PlayState): `healthBar` se escribe `healthBar`, no `game.healthBar`.
-	 * Lo que el script define el mismo (variables, funciones) tiene prioridad sobre lo del padre.
-	 */
 	public function setParent(parent:Dynamic):Void
 	{
 		interp.scriptObject = parent;
 		interp.invalidateCache();
 	}
 
-	/** Mapa de variables publicas (`public var`) compartido por todos los scripts. */
 	public function setPublicMap(map:Map<String, Dynamic>):Void
 		interp.publicVariables = map;
 
-	/** Variable del script: las suyas primero y despues las publicas. */
 	public function get(key:String):Dynamic
 	{
 		var value = interp.variables.get(key);
@@ -140,11 +129,9 @@ class LevelScript
 		interp.invalidateCache();
 	}
 
-	/** true si el script define una funcion `func`. */
 	public function exists(func:String):Bool
 		return Reflect.isFunction(interp.variables.get(func));
 
-	/** Llama a `func` si el script la define; devuelve lo que retorna (null si no existe, esta desactivado o falla). */
 	public function call(func:String, ?args:Array<Dynamic>):Dynamic
 	{
 		if (!active) return null;
@@ -167,7 +154,6 @@ class LevelScript
 		return result;
 	}
 
-	/** `#if android ... #end` dentro de los scripts. */
 	static function preprocessors():Map<String, Dynamic>
 	{
 		var values = new Map<String, Dynamic>();
@@ -181,7 +167,6 @@ class LevelScript
 		return values;
 	}
 
-	/** Resuelve `import a.b.C;` buscando `<nivel>/source/a/b/C.hx` (y `<nivel>/a/b/C.hx`). */
 	function onImportFailed(cl:Array<String>, ?asName:String):Bool
 	{
 		#if sys
@@ -191,7 +176,7 @@ class LevelScript
 			for (ext in EXTENSIONS)
 			{
 				var file = Path.join([root, relative + "." + ext]);
-				if (imported.exists(file)) return true; // ya cargado en este script
+				if (imported.exists(file)) return true;
 				if (!FileSystem.exists(file)) continue;
 
 				try
@@ -218,14 +203,12 @@ class LevelScript
 	function onWarn(error:Error):Void
 		Log.warn('[Script ' + name + '] ' + error.toString());
 
-	/** Un mismo error sale una sola vez en el log (onUpdate lo repetiria cada frame). */
 	function report(message:String):Void
 	{
 		if (reported.exists(message)) return;
 		reported.set(message, true);
 		Log.error('[Script ' + name + '] ' + message);
 
-		// Modo test: el juego para y sale la ventana de error. Jugando normal solo queda en el log.
 		var game = funky.game.PlayState.instance;
 		if (game != null) game.scriptFailed(name + ":\n" + message);
 	}

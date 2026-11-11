@@ -12,7 +12,6 @@ import funky.core.KeyBinds;
 import funky.core.Paths;
 import funky.core.TransitionHandler;
 
-/** Una herramienta de la pantalla: su icono (`editors/icons/<icon>`), el texto y lo que hace. */
 private typedef Tool =
 {
 	var label:String;
@@ -23,13 +22,11 @@ private typedef Tool =
 	var ?text:FlxText;
 }
 
-/** Despues de elegir el nivel en el modo avanzado: elige que herramienta abrir (o exportar el nivel como .FMCE). */
 class AdvancedToolsState extends FlxState
 {
 	static inline var MUTED:Int = 0xFF858B97;
 	static inline var ACTIVE:Int = 0xFFFFFFFF;
 
-	/** Ancho de cada casilla y alto (centro) de la fila de iconos. */
 	static inline var SLOT_W:Float = 200;
 	static inline var ICON_Y:Float = 300;
 
@@ -50,7 +47,6 @@ class AdvancedToolsState extends FlxState
 	{
 		super.create();
 
-		// Los editores usan breakfast en vez de la musica del menu (y la recuperan al volver del charter).
 		funky.core.CoolUtil.playEditorSong();
 
 		FlxG.mouse.visible = true;
@@ -77,7 +73,7 @@ class AdvancedToolsState extends FlxState
 		add(back);
 
 		addTool("CODE STUDIO", "Scripts (.hx) y archivos .json del nivel", "debugOptions", function() go(new AdvancedEditorState(levelName)));
-		// antiGay = true bloquea todo el modo avanzado (para el release); si no, los editores salen en todas las plataformas
+
 		addTool("CHART EDITOR", "Notas, sustains, strumlines, eventos globales y waveform", "chart", function() go(funkin.editors.charter.CharterLauncher.open(levelName)));
 		addTool("SPRITE EDITOR", "config.json de cada sprite: tipo, animaciones, indices, velocidad, loop, escala y pivote", "character",
 			function() go(new advanced.editors.SpriteEditorState(levelName)));
@@ -85,7 +81,6 @@ class AdvancedToolsState extends FlxState
 		addTool("EXPORTAR .FMCE", "Comprime el nivel en exports/" + levelName + ".FMCE (sin copias .bak / .bck)", "alphabet", exportLevel);
 		addTool("EXPORTAR .FNMM", "Exporta el nivel a exports/" + levelName + ".FNMM (la carpeta data/ no entra)", "alphabet", function() go(new funky.menus.FNMMExportState(levelName)));
 
-		// casillas centradas
 		var startX = (FlxG.width - tools.length * SLOT_W) / 2 + SLOT_W / 2;
 		for (i in 0...tools.length)
 		{
@@ -138,7 +133,6 @@ class AdvancedToolsState extends FlxState
 		TransitionHandler.switchState(next);
 	}
 
-	/** Exporta el nivel a `.FMCE` y deja el resultado en la barra de info (no sale de la pantalla). */
 	function exportLevel():Void
 	{
 		var result = LevelArchive.exportLevel(levelName);
@@ -171,7 +165,6 @@ class AdvancedToolsState extends FlxState
 		super.update(elapsed);
 		if (chosen) return;
 
-		// el seleccionado "crece" suave
 		for (i in 0...tools.length)
 		{
 			var target = i == selected ? 1.15 : 0.9;
@@ -193,7 +186,6 @@ class AdvancedToolsState extends FlxState
 			return;
 		}
 
-		// toque / click: sobre el icono (o su texto); sobre "< VOLVER" regresa a la lista de niveles
 		if (FlxG.mouse.justPressed)
 		{
 			if (FlxG.mouse.overlaps(back))

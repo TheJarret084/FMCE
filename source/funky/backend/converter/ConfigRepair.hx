@@ -16,7 +16,6 @@ typedef RepairResult =
 	var orphans:Array<String>;
 }
 
-/** Repara los `config.json` de niveles ya convertidos al formato `anim` / `name`: */
 class ConfigRepair
 {
 	public static function repairLevel(levelDir:String):RepairResult
@@ -47,7 +46,6 @@ class ConfigRepair
 		return result;
 	}
 
-	/** @return -1 si la carpeta no tiene config + atlas; si no, cuantas entradas se corrigieron. */
 	static function repairSprite(dir:String, orphans:Array<String>):Int
 	{
 		#if sys
@@ -59,7 +57,6 @@ class ConfigRepair
 		var atlas:Dynamic = funky.core.JsonLoose.parse(File.getContent(spritePath));
 		if (!Std.isOfType(config.data, Array) || atlas.meta == null || !Std.isOfType(atlas.meta.frameTags, Array)) return -1;
 
-		// Tags por orden de aparicion en el atlas: el N-esimo es la animacion `index` N de la tira original.
 		var tags:Array<Dynamic> = atlas.meta.frameTags;
 		tags.sort((a, b) -> Std.int(a.from) - Std.int(b.from));
 		var tagNames = [for (tag in tags) Std.string(tag.name)];
@@ -67,7 +64,6 @@ class ConfigRepair
 		var fixed = 0;
 		var sprite = Path.withoutDirectory(dir);
 
-		// La escala global (`scale` afuera de `data`) ya no existe: se suma a la `scale` de cada animacion.
 		if (Reflect.hasField(config, "scale"))
 		{
 			var global = Std.parseFloat(Std.string(config.scale));
@@ -83,17 +79,13 @@ class ConfigRepair
 
 		for (item in (config.data : Array<Dynamic>))
 		{
-			// `spd` multiplicador (viejo) -> `spd` FPS + `spd_fps: true`.
+
 			if (SpriteBuilder.migrateSpd(item)) fixed++;
 
-			// Con `indices` la entrada no necesita tag.
 			if (Std.isOfType(item.indices, Array) && (item.indices : Array<Dynamic>).length > 0) continue;
 
-			// 1) `anim` ya apunta a un tag real: nada que hacer.
 			if (item.anim != null && tagNames.contains(Std.string(item.anim))) continue;
 
-			// 2) `index` (posicion original en la tira) manda: el tag N-esimo del atlas es la animacion N.
-			//    Asi un `name` que coincide por casualidad con OTRO tag no engaña (name "anim0" con index 1).
 			var index = item.index != null ? Std.parseInt(Std.string(item.index)) : null;
 			if (index != null && index >= 0 && index < tagNames.length)
 			{
@@ -102,7 +94,6 @@ class ConfigRepair
 				continue;
 			}
 
-			// 3) Sin `index`: el nombre que traia es el del atlas (formato FNMM viejo).
 			var key:Null<String> = item.name != null ? Std.string(item.name) : null;
 			if (key != null && tagNames.contains(key))
 			{
@@ -111,7 +102,7 @@ class ConfigRepair
 			}
 			else if (item.name == null && (config.data : Array<Dynamic>).indexOf(item) < tagNames.length)
 			{
-				// Formato nuevo (sin `name` ni `index`): la posicion en `data` es el numero del tag.
+
 				item.anim = tagNames[(config.data : Array<Dynamic>).indexOf(item)];
 				fixed++;
 			}

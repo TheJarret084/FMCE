@@ -9,7 +9,6 @@ import funky.core.Storage;
 import sys.FileSystem;
 #end
 
-/** Lee archivos `.fnmm` para jugarlos directo desde Freeplay. */
 class FNMMLoader
 {
 	public static function listArchives(?root:String):Array<String>

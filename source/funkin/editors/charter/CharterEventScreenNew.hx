@@ -32,10 +32,6 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 
 	var bg:UISliceSprite;
 
-	/**
-	 * Si se asigna, la pantalla edita una lista suelta de acciones (un ActionPack) en vez de un evento del grid:
-	 * al cerrar entrega la lista con esto y no toca el grid ni el undo.
-	 */
 	public var onQuit:Array<ChartEvent>->Void = null;
 
 	public function new(?chartEvent:Null<CharterEvent>) {
@@ -46,7 +42,6 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 	public override function create() {
 		super.create();
 
-		// prevent the song from continuing (todo con null-check: en FMCE la musica / las voces pueden no estar cargadas)
 		if (FlxG.sound.music != null) FlxG.sound.music.pause();
 		if (Charter.instance.vocals != null) Charter.instance.vocals.pause();
 		for (strumLine in Charter.instance.strumLines.members)
@@ -90,7 +85,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		eventsList.alpha = 0;
 		eventsList.cameras = [cam];
 		eventsList.addButton.callback = () -> {
-			__ignoreLastClick = true; // Stop closing >:D
+			__ignoreLastClick = true;
 			openSubState(new CharterEventTypeSelection(function(eventName) {
 				events.push({
 					time: Conductor.getTimeForStep(chartEvent.step),
@@ -105,7 +100,6 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 			eventsList.add(new EventButtonNew(i, CharterEvent.safeEventIcon(i), k, this, eventsList));
 		add(eventsList);
 
-		// this took forever to find out omg >:D -lunar
 		eventsList.cameraSpacing = 0; eventsList.topHeight = 0;
 
 		changeTab(0);
@@ -119,7 +113,6 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		if (save)
 			saveCurTab();
 
-		// destroy old elements
 		paramsFields = [];
 		for (e in paramsPanel.members.copy()) {
 			if (e == null) continue;
@@ -136,7 +129,6 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 			eventName.text = EventsData.displayName(curEvent.name);
 			bWidth = eventName.x + eventName.width+16;
 
-			// add new elements
 			for(k=>param in EventsData.getEventParams(curEvent.name)) {
 				function addLabel() {
 					var label:UIText = new UIText(eventName.x+6, winHeight, 0, param.name);
@@ -196,7 +188,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						textBox;
 					case TActionPack:
 						addLabel();
-						// mientras se editan los packs, los de la ventana (aun sin guardar); si no, los del chart
+
 						var packs = CharterActionPacksScreen.editing != null ? CharterActionPacksScreen.editing : (PlayState.SONG.actionPacks == null ? [] : PlayState.SONG.actionPacks);
 						var options = [for (i => p in packs) '#$i ' + (p.name != null ? p.name + ' ' : '') + '(${p.actions.length})'];
 						if (options.length == 0) options = [TU.translate("charterActionPacks.none")];
@@ -232,7 +224,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						var current = Std.string(value == null ? "" : value);
 						var at = sprites.indexOf(current);
 						if (at < 0 && current != "") {
-							// un sprite que ya no esta en sprites/: se conserva para no perder el valor
+
 							sprites.push(current);
 							at = sprites.length - 1;
 						}
@@ -251,7 +243,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						paramsFields.push(null);
 						null;
 				} catch (e:Dynamic) {
-					// un campo roto no debe tumbar la ventana: queda en el log y el parametro conserva su valor
+
 					Logs.trace('Event "${curEvent.name}": param "${param.key}" could not be built: ${Std.string(e)}', ERROR);
 					while (paramsFields.length > k) paramsFields.pop();
 					paramsFields.push(null);
@@ -266,7 +258,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 					bWidth = Math.max(bWidth, eventName.x + 6 + cast(lastAdded, FlxSprite).width + 6 + 10);
 				}
 			}
-			wireObjectParams(EventsData.getEventParams(curEvent.name)); // aqui `curEvent` es el ChartEvent local (linea 135), no el indice
+			wireObjectParams(EventsData.getEventParams(curEvent.name));
 		} else {
 			eventName.text = "No event";
 			curEvent = -1;
@@ -275,18 +267,16 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		}
 
 		winHeight = Math.max(winHeight, (eventsList.buttonSize.y * (eventsList.buttons.length + 1))-4) + 10;
-		bWidth += 10+75+10+4; // add events list width to account for event name being on a diff cam +4 because margins >:D
+		bWidth += 10+75+10+4;
 		update(0);
 	}
 
-	/** Numero del objeto elegido en el parametro `TObject` de un evento (0 si no tiene). */
 	function objectChosen(event:ChartEvent):Int {
 		for (k => param in EventsData.getEventParams(event.name))
 			if (param.type == TObject) return Std.int(asFloat(k < event.params.length ? event.params[k] : null, param.defValue));
 		return 0;
 	}
 
-	/** Dropdown de una lista de textos. Si el valor guardado se pasa de la lista se agregan entradas "(no existe)" para no cambiarlo. */
 	function listDropdown(options:Array<String>, selected:Int, missingText:String, emptyText:String):UIDropDown {
 		var list = options.copy();
 		if (selected < 0) selected = 0;
@@ -295,7 +285,6 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		return new UIDropDown(eventName.x+6, winHeight, 320, 32, list, selected);
 	}
 
-	/** Cambia las opciones de un dropdown ya creado (al elegir otro objeto cambian sus posiciones y animaciones). */
 	function setDropdownOptions(drop:UIDropDown, options:Array<String>, emptyText:String):Void {
 		var list = options.copy();
 		if (list.length == 0) list.push(emptyText);
@@ -305,7 +294,6 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		drop.label.text = list[drop.index];
 	}
 
-	/** La posicion y la animacion dependen del objeto: al cambiarlo se vuelven a llenar. */
 	function wireObjectParams(params:Array<EventParamInfo>):Void {
 		var objectAt = -1;
 		for (k => param in params) if (param.type == TObject) objectAt = k;
@@ -326,13 +314,11 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		};
 	}
 
-	/** true si hay algun action pack al que apuntar (si no, el dropdown solo muestra "ninguno" y se guarda -1). */
 	function hasActionPacks():Bool {
 		var packs = CharterActionPacksScreen.editing != null ? CharterActionPacksScreen.editing : PlayState.SONG.actionPacks;
 		return packs != null && packs.length > 0;
 	}
 
-	/** Valor de un parametro numerico como Float: el events.json puede traerlo como Int, Float o String. */
 	static function asFloat(value:Dynamic, def:Dynamic):Float {
 		var n = value == null ? Math.NaN : Std.parseFloat(Std.string(value));
 		if (!Math.isNaN(n)) return n;
@@ -351,13 +337,12 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		bg.bHeight = cam.height = cast winHeight + 10;
 		eventsList.bHeight = cast winHeight - 10;
 
-		// Bound stuff from being off screen
 		var screenSpaceY:Float = (screenPos.y + winHeight + 10) - FlxG.height;
-		screenPos.x = FlxMath.bound(screenPos.x, 4, (FlxG.width - 20) - bWidth - 4); // FlxG.width - 20 for the scroll bar on the right
-		if (screenSpaceY > -8) { // border of 8 of screen >:D
+		screenPos.x = FlxMath.bound(screenPos.x, 4, (FlxG.width - 20) - bWidth - 4);
+		if (screenSpaceY > -8) {
 			bg.bHeight -= cast screenSpaceY + 8; cam.height -= cast screenSpaceY + 8;
 
-			screenSpaceY -= 20; // events list is slight diff with its camera
+			screenSpaceY -= 20;
 			if (screenSpaceY > -8) eventsList.bHeight -= cast screenSpaceY + 8;
 		}
 
@@ -450,7 +435,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 				else if (p is UINumericStepper) {
 					var stepper = cast(p, UINumericStepper);
 					@:privateAccess stepper.__onChange(stepper.label.text);
-					if (stepper.precision == 0) // int
+					if (stepper.precision == 0)
 						Std.int(stepper.value);
 					else
 						stepper.value;
@@ -495,7 +480,7 @@ class EventButtonNew extends UIButton {
 		deleteButton = new UIButton(bWidth - 30, y + (bHeight - 26) / 2, null, function () {
 			var idx = substate.events.indexOf(event);
 			if (idx < 0) return;
-			substate.saveCurTab(); // antes de que los indices se corran
+			substate.saveCurTab();
 			substate.events.splice(idx, 1);
 			parent.remove(this);
 			substate.changeTab(idx < substate.events.length ? idx : substate.events.length - 1, false);

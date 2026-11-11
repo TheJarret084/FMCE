@@ -18,20 +18,15 @@ import funky.game.HealthIcon;
 import funky.menus.BoldText;
 import funky.menus.MainMenuState;
 
-/** Entrada al modo avanzado: elige el nivel y despues la herramienta (Code Studio o Chart Editor). */
 class AdvancedModeState extends FlxState
 {
-	/**
-	 * Seguro del modo avanzado. true = no se puede entrar (ni con la tecla 7 en el menu principal,
-	 * ni desde Opciones). Funciona igual en escritorio y celular.
-	 */
+
 	public static var antiGay:Bool = false;
 
 	static inline var BG:Int = 0xFF101217;
 	static inline var MUTED:Int = 0xFF858B97;
 	static inline var ACTIVE:Int = 0xFFFFFFFF;
 
-	/** Separacion vertical entre filas y posicion (en Y) del nivel seleccionado, como el arbol de editores de Codename. */
 	static inline var ROW_H:Float = 112;
 	static inline var ANCHOR_Y:Float = 290;
 	static inline var ROW_X:Float = 190;
@@ -49,7 +44,6 @@ class AdvancedModeState extends FlxState
 	var chosen:Bool = false;
 	var info:FlxText;
 
-	/** Nivel que debe aparecer ya seleccionado al abrir (viene del Freeplay con la tecla 7). */
 	var startLevel:Null<String>;
 
 	public function new(?startLevel:String)
@@ -70,20 +64,18 @@ class AdvancedModeState extends FlxState
 
 	function createMenu():Void
 	{
-		// Los editores usan breakfast (la de Codename) en vez de la musica del menu.
+
 		CoolUtil.playEditorSong();
 
 		var bg = new FlxSprite().makeGraphic(FlxG.width, FlxG.height, 0xFF000000);
 		add(bg);
 
-		// Fondo de los editores (`editors/bgs/default`): en mosaico, deslizandose de izquierda a derecha.
 		try
 		{
 			add(new EditorBackdrop());
 		}
 		catch (e:Dynamic) {}
 
-		// Titulo arriba a la izquierda + descripcion, igual que "Chart Editor >" de Codename.
 		add(new BoldText(16, 6, "MODO AVANZADO >", 0.55));
 		var desc = new FlxText(18, 50, FlxG.width - 40, "Selecciona el nivel que quieres editar.\n" + KeyBinds.label(KeyBinds.ACCEPT) + " para elegir  |  ESC volver", 15);
 		desc.color = MUTED;
@@ -122,7 +114,6 @@ class AdvancedModeState extends FlxState
 		info.alignment = FlxTextAlign.CENTER;
 		add(info);
 
-		// Importar un nivel .FMCE (tecla I o toque aqui)
 		importButton = new FlxText(FlxG.width - 330, 14, 310, "IMPORTAR .FMCE  [I]", 20);
 		importButton.color = ACTIVE;
 		importButton.alignment = FlxTextAlign.RIGHT;
@@ -134,7 +125,6 @@ class AdvancedModeState extends FlxState
 		TransitionHandler.playIn(this);
 	}
 
-	/** Coloca las filas alrededor del seleccionado: el seleccionado queda fijo en ANCHOR_Y y el resto se desliza (scroll suave). */
 	function layoutRows(lerp:Float):Void
 	{
 		scrollPos += (selected - scrollPos) * lerp;
@@ -168,7 +158,6 @@ class AdvancedModeState extends FlxState
 
 	}
 
-	/** Icono del oponente del nivel, como en Freeplay; se carga al acercarse a la fila para no cargar todos de golpe. */
 	function iconFor(index:Int):Null<HealthIcon>
 	{
 		if (icons[index] != null) return icons[index];
@@ -202,10 +191,6 @@ class AdvancedModeState extends FlxState
 		info.text = levels.length == 0 ? "Crea un nivel en la carpeta levels/ para usar el modo avanzado." : (selected + 1) + " / " + levels.length;
 	}
 
-	/**
-	 * Importa niveles `.FMCE`: los que haya sueltos en `levels/`; si no hay, en escritorio abre el selector de archivos.
-	 * (En celular: copia el .FMCE a la carpeta `levels/` del juego y pulsa de nuevo.)
-	 */
 	function importLevels():Void
 	{
 		#if sys
@@ -243,7 +228,6 @@ class AdvancedModeState extends FlxState
 		#end
 	}
 
-	/** Un .FMCE elegido con el selector de archivos (escritorio). */
 	function importPicked(path:String):Void
 	{
 		var result = LevelArchive.importArchive(path);
@@ -258,7 +242,6 @@ class AdvancedModeState extends FlxState
 		info.color = good ? 0xFF8FE388 : 0xFFFF8A8A;
 	}
 
-	/** Vuelve a leer `levels/` y rehace las filas (despues de importar). */
 	function reloadLevels():Void
 	{
 		for (row in rows) remove(row, true).destroy();
@@ -341,7 +324,6 @@ class AdvancedModeState extends FlxState
 		}
 		if (KeyBinds.justPressed(KeyBinds.ACCEPT)) openSelected();
 
-		// Toque / clic: sobre la fila seleccionada abre el nivel; sobre otra, la selecciona.
 		if (FlxG.mouse.justPressed)
 		{
 			for (i in 0...rows.length)

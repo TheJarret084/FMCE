@@ -19,10 +19,9 @@ typedef SpriteConvertResult = {
 	var error:Null<String>;
 }
 
-/** Convierte atlas Sparrow (*.xml) a JSON estilo Aseprite. */
 class SpriteFolderConverter
 {
-	/** Convierte todo lo que cuelgue de `root`. Devuelve un resultado por atlas encontrado. */
+
 	public static function convertTree(root:String, overwrite:Bool = false):Array<SpriteConvertResult>
 	{
 		var results:Array<SpriteConvertResult> = [];
@@ -32,7 +31,6 @@ class SpriteFolderConverter
 		return results;
 	}
 
-	/** Convierte un unico `.xml`. */
 	public static function convertFile(xmlPath:String, overwrite:Bool = false):SpriteConvertResult
 	{
 		var jsonPath = Path.withExtension(xmlPath, "json");
@@ -87,21 +85,15 @@ class SpriteFolderConverter
 	}
 
 	#if sys
-	/** Lado de cada frame de un icono estilo FNF (la imagen mide 150 de alto y 150 o 300 de ancho). */
+
 	public static inline var FNF_ICON_SIZE:Int = 150;
 
-	/** Frames de un icono FNF segun el tamano del PNG: 300x150 = 2 (normal, perdiendo), 150x150 = 1. 0 si no es de ese tamano. */
 	public static function fnfIconFrames(size:Null<{w:Int, h:Int}>):Int
 	{
 		if (size == null || size.h != FNF_ICON_SIZE) return 0;
 		return size.w == FNF_ICON_SIZE * 2 ? 2 : (size.w == FNF_ICON_SIZE ? 1 : 0);
 	}
 
-	/**
-	 * Icono base de FNF: `sprite.png` suelto de 300x150 (2 frames de 150x150: anim0 normal y anim1 perdiendo) o de 150x150 (1 frame).
-	 * La imagen no se toca: solo se escribe el `sprite.json` (Aseprite) que la mapea y, si falta, un `config.json` con `type: icon`.
-	 * No hace nada si la carpeta ya trae `sprite.json` / `sprite.xml` o si el PNG no mide eso. true = lo mapeo.
-	 */
 	public static function mapFnfIcon(dir:String):Bool
 	{
 		try
@@ -166,7 +158,7 @@ class SpriteFolderConverter
 	static function walk(dir:String, overwrite:Bool, out:Array<SpriteConvertResult>, depth:Int):Void
 	{
 		if (depth > 12) return;
-		// Iconos FNF sueltos (sprite.png de 300x150 / 150x150 sin json): se mapean al cargar el nivel.
+
 		mapFnfIcon(dir);
 		var entries = FileSystem.readDirectory(dir);
 		entries.sort(Reflect.compare);
@@ -180,7 +172,6 @@ class SpriteFolderConverter
 			}
 			if (Path.extension(entry).toLowerCase() != "xml") continue;
 
-			// Solo atlas Sparrow: cualquier otro .xml (settings.xml, stage.xml...) se deja en paz.
 			var text:String = null;
 			try text = File.getContent(path) catch (_:Dynamic) continue;
 			if (!SparrowToAseprite.isSparrow(text)) continue;
@@ -189,7 +180,6 @@ class SpriteFolderConverter
 		}
 	}
 
-	/** Ancho/alto de un PNG leyendo solo la cabecera IHDR. */
 	public static function pngSize(path:String):Null<{w:Int, h:Int}>
 	{
 		try
@@ -197,7 +187,7 @@ class SpriteFolderConverter
 			var input = File.read(path, true);
 			var header = input.read(24);
 			input.close();
-			// firma PNG + longitud + "IHDR"
+
 			if (header.length < 24 || header.get(1) != 0x50 || header.get(2) != 0x4E || header.get(3) != 0x47) return null;
 			var w = (header.get(16) << 24) | (header.get(17) << 16) | (header.get(18) << 8) | header.get(19);
 			var h = (header.get(20) << 24) | (header.get(21) << 16) | (header.get(22) << 8) | header.get(23);

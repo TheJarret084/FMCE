@@ -2,13 +2,11 @@ package funky.core;
 
 import haxe.Json;
 
-/** JSON tolerante: acepta comas de mas antes de } o ]. */
 class JsonLoose
 {
 	public static function parse(raw:String):Dynamic
 		return Json.parse(strip(raw));
 
-	/** Quita las comas finales (y el BOM) sin tocar lo que hay dentro de los strings. */
 	public static function strip(raw:String):String
 	{
 		if (raw.length > 0 && raw.charCodeAt(0) == 0xFEFF) raw = raw.substr(1);

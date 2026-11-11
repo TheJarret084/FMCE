@@ -9,7 +9,6 @@ import flixel.util.FlxColor;
 import openfl.display.BitmapData;
 import openfl.geom.Rectangle;
 
-/** Hitbox tactil a pantalla completa dividida por lanes. */
 class Hitbox extends FlxSpriteGroup
 {
 	static inline var DOWN_ALPHA:Float = 0.75;
@@ -17,12 +16,12 @@ class Hitbox extends FlxSpriteGroup
 	static inline var UP_TIME:Float = 0.1;
 	static inline var HINT_ALPHA:Float = 0.2;
 	static inline var GRADIENT_ROWS:Int = 128;
-	/** Fraccion de la pantalla (desde abajo) que ocupan las columnas. Antes era toda la altura. */
+
 	public static inline var HEIGHT_RATIO:Float = 0.9;
 
 	public var laneCount(default, null):Int;
 	public var columnWidth(default, null):Float;
-	/** Y donde empieza la zona tactil; arriba de esto los toques no cuentan. */
+
 	public var zoneTop(default, null):Float;
 	public var zoneHeight(default, null):Float;
 
@@ -39,7 +38,6 @@ class Hitbox extends FlxSpriteGroup
 		zoneTop = FlxG.height - zoneHeight;
 		scrollFactor.set();
 
-		// Guia (el `hitbox_hint` del original): separadores y linea inferior, muy tenues.
 		for (lane in 1...this.laneCount)
 		{
 			var line = new FlxSprite(Std.int(lane * columnWidth) - 1, zoneTop).makeGraphic(2, Std.int(zoneHeight), FlxColor.WHITE);
@@ -57,7 +55,7 @@ class Hitbox extends FlxSpriteGroup
 		{
 			var glow = new FlxSprite(Std.int(lane * columnWidth), 0);
 			glow.loadGraphic(gradient(laneColor(lane)), false, 0, 0, true);
-			// El degradado son 128 filas estiradas a toda la pantalla: sin suavizado se ven escalones.
+
 			glow.antialiasing = true;
 			glow.setGraphicSize(Math.ceil(columnWidth), Std.int(zoneHeight));
 			glow.updateHitbox();
@@ -70,11 +68,9 @@ class Hitbox extends FlxSpriteGroup
 		}
 	}
 
-	/** Columna bajo la coordenada x de pantalla. */
 	public inline function laneAt(screenX:Float):Int
 		return Std.int(Math.max(0, Math.min(laneCount - 1, Math.floor(screenX / columnWidth))));
 
-	/** Enciende o apaga el brillo de una lane. Solo hace algo si el estado cambio. */
 	public function setDown(lane:Int, down:Bool):Void
 	{
 		if (lane < 0 || lane >= laneCount || isDown[lane] == down) return;
@@ -84,7 +80,6 @@ class Hitbox extends FlxSpriteGroup
 		tweens[lane] = FlxTween.num(glow.alpha, down ? DOWN_ALPHA : 0, down ? DOWN_TIME : UP_TIME, {ease: FlxEase.circInOut}, function(a:Float) glow.alpha = a);
 	}
 
-	/** Degradado vertical: transparente arriba y del color del lane abajo, donde estan los dedos. */
 	static function gradient(color:FlxColor):BitmapData
 	{
 		var bitmap = new BitmapData(2, GRADIENT_ROWS, true, 0x00000000);

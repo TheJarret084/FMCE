@@ -3,8 +3,7 @@ package funkin.backend.shaders;
 import flixel.addons.display.FlxRuntimeShader;
 import openfl.utils.Assets;
 
-/** Shader `.frag` de assets/shaders/<nombre>.frag (misma API que el CustomShader de Codename). */
-@:keep // los scripts de noteskin lo usan por reflection (hset/hget): que DCE no lo borre
+@:keep
 class CustomShader extends FlxRuntimeShader {
 	public var path:String;
 
@@ -17,7 +16,6 @@ class CustomShader extends FlxRuntimeShader {
 		super(frag, vert);
 	}
 
-	/** Asigna un uniform por nombre (acepta un valor o un array). */
 	public function hset(name:String, value:Dynamic):Void {
 		var param:Dynamic = Reflect.field(data, name);
 		if (param == null) return;

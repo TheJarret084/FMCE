@@ -5,15 +5,7 @@ import funky.core.Addons;
 import funky.core.Log;
 import openfl.utils.Assets;
 
-/**
- * Shader `.frag` con carpeta opcional.
- *
- * - Sin carpeta usa `assets/shaders/`.
- * - Con carpeta usa esa carpeta: si empieza con `assets/` lee del pack; si no, la trata como ruta
- *   relativa a `addons/` (ej. `noteskins/fmm/shaders`), asi funciona tanto con addons externos como
- *   con los que vienen dentro del build.
- */
-@:keep // los scripts lo crean por reflection: que DCE no lo borre
+@:keep
 class CustomShader extends FlxRuntimeShader
 {
 	public var path:String;
@@ -33,7 +25,7 @@ class CustomShader extends FlxRuntimeShader
 		}
 		else
 		{
-			// `Addons` ya antepone "addons/" y prefiere la carpeta externa.
+
 			var rel = folder.indexOf("addons/") == 0 ? folder.substr("addons/".length) : folder;
 			frag = Addons.getText(rel + '/' + name + '.frag');
 			vert = Addons.getText(rel + '/' + name + '.vert');
@@ -44,7 +36,6 @@ class CustomShader extends FlxRuntimeShader
 		super(frag, vert);
 	}
 
-	/** Asigna un uniform por nombre (acepta un valor o un array). */
 	public function hset(name:String, value:Dynamic):Void
 	{
 		var param:Dynamic = Reflect.field(data, name);

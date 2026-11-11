@@ -17,7 +17,6 @@ import sys.io.File;
 import sys.io.FileOutput;
 #end
 
-/** Una exportacion hecha por etapas (cada `step()` hace un pedazo y devuelve el control). */
 class FNMMExportJob
 {
 	public var result(default, null):FNMMExportResult;
@@ -40,7 +39,7 @@ class FNMMExportJob
 	var spriteNames:Array<String> = [];
 	var spriteIndex:Int = 0;
 	var task:Null<FNMMSpriteExport> = null;
-	/** Archivos del sprite en curso: solo pasan al zip si el sprite se exporto completo (nada de tiras sueltas sin sprite.json). */
+
 	var taskFiles:Array<{path:String, bytes:Bytes}> = [];
 	var exported:Array<String> = [];
 	#end
@@ -118,7 +117,7 @@ class FNMMExportJob
 		if (chart == null || !Reflect.isObject(chart)) throw "chart.json no es un objeto JSON";
 		var parsedMeta = FMCEToFNMMExporter.readJson(Path.join([dir, "meta.json"]));
 		if (parsedMeta != null) meta = parsedMeta;
-		// si el chart.json no trae `fmceChart: true` se detecta el tipo y se pasa a FMCE antes de exportarlo
+
 		chart = funky.backend.chart.ChartNormalizer.ensure(dir, chartPath, chart, meta);
 
 		plan = FMCEToFNMMExporter.plan(levelName);
@@ -136,7 +135,6 @@ class FNMMExportJob
 		stage = "chart";
 	}
 
-	/** `data.json` del .FNMM: `strumLines[strumline][lane] = [{start, duration, props}]`, tiempos en segundos. */
 	function stepChart():Void
 	{
 		label = "chart";
@@ -162,7 +160,6 @@ class FNMMExportJob
 		var declared = Std.int(num(Reflect.field(meta, "lanes"), 0));
 		var laneCount = Std.int(Math.max(declared > 0 ? declared : 4, highest + 1));
 
-		// scene.json puede apuntar a strumlines que el chart no tiene
 		var strumCount = Std.int(Math.max(2, lines.length));
 		var scene = FMCEToFNMMExporter.readJson(Path.join([dir, "scene.json"]));
 		var objects = FMCEToFNMMExporter.field(scene, "objects");
@@ -244,7 +241,6 @@ class FNMMExportJob
 			return;
 		}
 
-		// scene.json lleva [oponente, jugador]; si solo estan en meta.icons {P1, P2}, se pasan
 		var icons = Reflect.field(scene, "icons");
 		var metaIcons = Reflect.field(meta, "icons");
 		if (!Std.isOfType(icons, Array) && metaIcons != null)
@@ -278,7 +274,7 @@ class FNMMExportJob
 			add("music.ogg", File.getBytes(tracks[0]));
 		else
 		{
-			// Funky Maker: Mobile lee un solo `music.ogg`: varias pistas se mezclan, y un audio que no es OGG se convierte.
+
 			label = tracks.length > 1 ? "mezclando " + tracks.length + " pistas" : "convirtiendo a ogg";
 			var names = [for (t in tracks) Path.withoutDirectory(t)];
 			var mixed = AudioMixer.mix(names, [for (t in tracks) File.getBytes(t)], FMCEToFNMMExporter.OGG_QUALITY);
@@ -290,7 +286,7 @@ class FNMMExportJob
 			}
 			else
 			{
-				// no hubo forma de decodificar/codificar: se manda el audio principal tal cual (si no es OGG, el FNMM no lo va a leer)
+
 				var main = plan.music != null ? plan.music : tracks[0];
 				var ext = Path.extension(main).toLowerCase();
 				if (FMCEToFNMMExporter.AUDIO.indexOf(ext) < 0) ext = "ogg";

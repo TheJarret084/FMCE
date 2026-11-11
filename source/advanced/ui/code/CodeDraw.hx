@@ -4,10 +4,9 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
 
-/** Helpers para dibujar y para saber donde esta el mouse. */
 class CodeDraw
 {
-	/** true mientras hay un menu abierto: el resto de la UI ignora el mouse. */
+
 	public static var blocked:Bool = false;
 
 	public static function rect(x:Float, y:Float, w:Float, h:Float, color:Int):FlxSprite
@@ -34,7 +33,6 @@ class CodeDraw
 	public static inline function over(x:Float, y:Float, w:Float, h:Float):Bool
 		return FlxG.mouse.x >= x && FlxG.mouse.x < x + w && FlxG.mouse.y >= y && FlxG.mouse.y < y + h;
 
-	/** Recorta con "…" si no entra en `maxChars` caracteres. */
 	public static function fit(value:String, maxChars:Int):String
 	{
 		if (value.length <= maxChars) return value;

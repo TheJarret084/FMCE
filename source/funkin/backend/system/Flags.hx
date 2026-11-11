@@ -2,7 +2,6 @@ package funkin.backend.system;
 
 import flixel.util.FlxColor;
 
-/** Constantes por defecto de Codename (sin el sistema de flags.ini). */
 class Flags
 {
 	public static var JSON_PRETTY_PRINT:String = "\t";
@@ -54,7 +53,7 @@ class Flags
 	public static var DEFAULT_GITAROO:Bool = true;
 	public static var DEFAULT_MUTE_VOCALS_ON_MISS:Bool = true;
 	public static var DEFAULT_MAX_HEALTH:Float = 2.0;
-	public static var DEFAULT_HEALTH:Null<Float> = null;//DEFAULT_MAX_HEALTH / 2.0;
+	public static var DEFAULT_HEALTH:Null<Float> = null;
 	public static var DEFAULT_ICONBOP:Bool = true;
 	public static var DEFAULT_INTRO_LENGTH:Int = 5;
 	public static var DEFAULT_INTRO_SPRITES:Array<String> = [null, 'game/ready', 'game/set', 'game/go'];

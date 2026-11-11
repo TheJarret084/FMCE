@@ -13,7 +13,6 @@ import openfl.Assets as OpenFlAssets;
 import advanced.AdvancedModeState;
 import funky.core.ClientPrefs;
 
-/** Opciones desde el menu principal (estilo OptionsMenu de Codename). */
 class ConfigState extends FlxState
 {
 	var menu:ConfigMenu;
@@ -52,7 +51,6 @@ class ConfigState extends FlxState
 		super.update(elapsed);
 		if (leaving) return;
 
-		// Mismo atajo que en el menu principal (antiGay = true lo bloquea).
 		if (!AdvancedModeState.antiGay && FlxG.keys.justPressed.SEVEN)
 		{
 			leaving = true;

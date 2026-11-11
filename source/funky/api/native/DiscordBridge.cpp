@@ -1,6 +1,5 @@
-// Puente al Discord Social SDK. Ver DiscordBridge.h.
-// Rich presence SIN iniciar sesion: con SetApplicationId + UpdateRichPresence el SDK le pasa la actividad al Discord que
-// el usuario ya tiene abierto (en Android, a la app de Discord). No hace falta OAuth ni Client::Connect.
+
+
 #define DISCORDPP_IMPLEMENTATION
 #include "discordpp.h"
 
@@ -68,7 +67,7 @@ namespace discord
 
 		discordpp::Activity activity;
 		activity.SetType(discordpp::ActivityTypes::Playing);
-		// El SDK pone el nombre y el ID desde la aplicacion del portal; esto es solo por si algun dia lo respeta.
+
 		if (!g_name.empty()) activity.SetName(g_name);
 		activity.SetDetails(opt(details));
 		activity.SetState(opt(state));
@@ -86,7 +85,7 @@ namespace discord
 		if (startSeconds > 0 || endSeconds > 0)
 		{
 			discordpp::ActivityTimestamps timestamps;
-			if (startSeconds > 0) timestamps.SetStart(static_cast<uint64_t>(startSeconds) * 1000ULL); // el SDK los pide en milisegundos
+			if (startSeconds > 0) timestamps.SetStart(static_cast<uint64_t>(startSeconds) * 1000ULL);
 			if (endSeconds > 0) timestamps.SetEnd(static_cast<uint64_t>(endSeconds) * 1000ULL);
 			activity.SetTimestamps(timestamps);
 		}
@@ -113,8 +112,6 @@ namespace discord
 		if (!g_client) return;
 		g_client->ClearRichPresence();
 
-		// El "quitar" es asincrono: si soltamos el cliente enseguida puede no llegar a Discord y la presencia se queda
-		// pegada despues de cerrar el juego. Le damos turno al SDK ~300 ms para que lo mande.
 		for (int i = 0; i < 30; ++i)
 		{
 			discordpp::RunCallbacks();

@@ -13,7 +13,6 @@ import sys.io.File;
 import sys.io.FileInput;
 import sys.io.FileSeek;
 
-/** Libreria de OpenFL/Lime que lee de `assets.pack` (lo arma `building/pack-assets.py`). */
 class PackLibrary extends AssetLibrary
 {
 	static inline var MAGIC:String = "FMPK";
@@ -21,7 +20,6 @@ class PackLibrary extends AssetLibrary
 
 	public var packPath(default, null):String;
 
-	/** Cantidad de archivos que trae el .pack. */
 	public var count(default, null):Int = 0;
 
 	var file:Null<FileInput>;
@@ -33,7 +31,6 @@ class PackLibrary extends AssetLibrary
 	var mutex:sys.thread.Mutex = new sys.thread.Mutex();
 	#end
 
-	/** Abre y lee el indice. Lanza una excepcion si el archivo no existe o no es un .pack valido. */
 	public function new(path:String, ?fallback:AssetLibrary)
 	{
 		super();
@@ -41,8 +38,6 @@ class PackLibrary extends AssetLibrary
 		this.fallback = fallback;
 		readIndex();
 	}
-
-	// ───────────────────────────── indice ─────────────────────────────
 
 	function open():FileInput
 	{
@@ -92,7 +87,6 @@ class PackLibrary extends AssetLibrary
 		}
 	}
 
-	/** Los bytes de un archivo del .pack, o null si no esta / no se pudo leer. */
 	function readEntry(id:String):Null<Bytes>
 	{
 		var offset = offsets.get(id);
@@ -126,8 +120,6 @@ class PackLibrary extends AssetLibrary
 	inline function inPack(id:String):Bool
 		return offsets.exists(id);
 
-	// ───────────────────────────── AssetLibrary ─────────────────────────────
-
 	override public function exists(id:String, type:String):Bool
 	{
 		if (inPack(id)) return super.exists(id, type);
@@ -151,7 +143,7 @@ class PackLibrary extends AssetLibrary
 
 	override public function getPath(id:String):String
 	{
-		// Un archivo dentro del .pack no tiene ruta propia en disco.
+
 		if (inPack(id)) return null;
 		return fallback != null ? fallback.getPath(id) : null;
 	}
@@ -202,8 +194,6 @@ class PackLibrary extends AssetLibrary
 		return fallback != null ? fallback.getFont(id) : null;
 	}
 
-	// Las versiones "load" (asincronas) devuelven el resultado ya listo: leer del .pack es un seek local, no hay red ni espera.
-
 	override public function loadBytes(id:String):Future<lime.utils.Bytes>
 		return inPack(id) ? ready(function() return getBytes(id)) : (fallback != null ? fallback.loadBytes(id) : super.loadBytes(id));
 
@@ -234,7 +224,7 @@ class PackLibrary extends AssetLibrary
 	override public function unload():Void
 	{
 		super.unload();
-		// La proxima lectura lo vuelve a abrir (open es perezoso).
+
 		if (file != null)
 		{
 			try file.close() catch (_:Dynamic) {}

@@ -7,16 +7,13 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Monta `assets.pack` (todo `assets/`, compilado por `building/pack-assets.py`) como la libreria "default" de OpenFL. */
 class AssetPack
 {
 	public static inline var FILE:String = "assets.pack";
 	public static inline var ID_FILE:String = "assets.id";
 
-	/** true si el .pack quedo montado. */
 	public static var mounted(default, null):Bool = false;
 
-	/** Ruta del .pack en uso (null si no hay). */
 	public static var path(default, null):Null<String> = null;
 
 	public static function mount():Bool
@@ -50,7 +47,7 @@ class AssetPack
 	}
 
 	#if (sys && !FMCE_LOOSE_ASSETS)
-	/** Donde esta el .pack legible con seek, o null. */
+
 	static function locate():Null<String>
 	{
 		#if android
@@ -63,10 +60,7 @@ class AssetPack
 	#end
 
 	#if (sys && android && !FMCE_LOOSE_ASSETS)
-	/**
-	 * Copia el .pack del APK a la carpeta privada de la app, solo si falta o si `assets.id` (un texto chiquito que
-	 * tambien viaja en el APK) no coincide con el de la copia ya extraida. Cuesta leer el .pack entero una vez; despues no.
-	 */
+
 	static function extractFromApk():Null<String>
 	{
 		var dir = lime.system.System.applicationStorageDirectory;
@@ -80,14 +74,13 @@ class AssetPack
 
 		if (!LimeAssets.exists(FILE))
 		{
-			// Sin .pack en el APK: si ya hay una copia vieja se usa antes que nada.
+
 			return FileSystem.exists(packFile) ? packFile : null;
 		}
 
 		Log.info('[AssetPack] extrayendo $FILE del APK (id ' + (bundledId == null ? "?" : bundledId.substr(0, 12)) + ')');
 		if (!FileSystem.exists(dir)) FileSystem.createDirectory(dir);
 
-		// Primero se borra el id: si algo corta a mitad, la proxima vez se extrae de nuevo.
 		if (FileSystem.exists(idFile)) FileSystem.deleteFile(idFile);
 
 		var bytes = LimeAssets.getBytes(FILE);

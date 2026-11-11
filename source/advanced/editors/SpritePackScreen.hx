@@ -14,7 +14,6 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-/** Administrador de sprites del nivel: una cuadricula con la miniatura de cada sprite de `<nivel>/sprites/`. */
 class SpritePackScreen extends UISubstateWindow
 {
 	static inline var COLS:Int = 4;
@@ -25,7 +24,6 @@ class SpritePackScreen extends UISubstateWindow
 	static inline var HEAD:Int = 40;
 	static inline var THUMB:Int = 80;
 
-	/** Paleta del editor de escena: marco de las listas, seleccion azul y borrar en rojo claro. */
 	static inline var CELL_COLOR:Int = 0xFF3A4152;
 	static inline var SELECT_COLOR:Int = 0xFF8CC4FF;
 	static inline var DANGER_COLOR:Int = 0xFFFF8080;
@@ -55,7 +53,6 @@ class SpritePackScreen extends UISubstateWindow
 	var lastClickTime:Float = 0;
 	var mouseP:FlxPoint = FlxPoint.get();
 
-	/** @param current sprite que ya tiene el campo (se marca al abrir). @param startOnIcons abre en el filtro ICONOS. */
 	public function new(levelDir:String, current:String, onPick:String->Void, allowNone:Bool = false, startOnIcons:Bool = false, ?onImported:String->Void)
 	{
 		super();
@@ -130,20 +127,17 @@ class SpritePackScreen extends UISubstateWindow
 		scrollToSelected();
 	}
 
-	// ── datos ──
-
 	function reloadNames():Void
 	{
 		var names = SpriteBuilder.listSprites(levelDir);
 		kinds = new Map<String, String>();
 		for (n in names) kinds.set(n, kindOf(n));
-		// los iconos primero, como en el resto del editor
+
 		var icons = [for (n in names) if (kinds.get(n) == "icon") n];
 		var others = [for (n in names) if (kinds.get(n) != "icon") n];
 		all = icons.concat(others);
 	}
 
-	/** `type` del config.json del sprite ("icon", "character"...) o "". */
 	function kindOf(name:String):String
 	{
 		#if sys
@@ -186,7 +180,6 @@ class SpritePackScreen extends UISubstateWindow
 		refresh();
 	}
 
-	/** Foto del primer frame del sprite (null si no se pudo: video, atlas de Animate...). */
 	function thumbFor(name:String):Null<FlxGraphic>
 	{
 		if (thumbs.exists(name)) return thumbs.get(name);
@@ -209,8 +202,6 @@ class SpritePackScreen extends UISubstateWindow
 		thumbs.set(name, g);
 		return g;
 	}
-
-	// ── dibujo ──
 
 	function refresh():Void
 	{
@@ -255,8 +246,6 @@ class SpritePackScreen extends UISubstateWindow
 		countText.text = shown.length + (shown.length == 1 ? " sprite" : " sprites");
 		useButton.selectable = selected != "" && all.indexOf(selected) >= 0;
 	}
-
-	// ── acciones ──
 
 	function apply():Void
 	{

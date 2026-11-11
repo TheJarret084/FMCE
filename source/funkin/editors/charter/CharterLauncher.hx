@@ -4,7 +4,6 @@ import flixel.FlxState;
 import funkin.backend.chart.Chart;
 import haxe.io.Path;
 
-/** Punto de entrada del charter: `go(CharterLauncher.open("MiNivel"))` desde el modo avanzado (solo escritorio). */
 class CharterLauncher {
 	static var inited:Bool = false;
 
