@@ -127,7 +127,7 @@ class NoteSkinScript
 	/** `shader("sombra")`: primero `noteskins/<id>/shaders/sombra.frag`, despues `assets/shaders/sombra.frag`. */
 	public function makeShader(name:String):Dynamic
 	{
-		#if !nme && !flash
+		#if (!nme && !flash)
 		var local = skin.shaderSource(name);
 		if (local != null) return new NoteSkinShader(local, null, name);
 		return new CustomShader(name);
@@ -144,7 +144,7 @@ class NoteSkinScript
 		globals.set("skin", skin);
 		globals.set("NoteSkin", NoteSkin);
 		globals.set("NoteSkinScript", NoteSkinScript);
-		#if !nme && !flash
+		#if (!nme && !flash)
 		globals.set("NoteSkinShader", NoteSkinShader);
 		globals.set("CustomShader", CustomShader);
 		globals.set("FlxRuntimeShader", flixel.addons.display.FlxRuntimeShader);
