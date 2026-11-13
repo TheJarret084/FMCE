@@ -32,6 +32,11 @@
 		<str id="gameplay.scrollSpeed.desc">Base scroll speed (applies on restart)</str>
 		<str id="gameplay.noteSkin.name">NOTES: {0}</str>
 		<str id="gameplay.noteSkin.desc">Pick a note skin (noteSkin.xml). Applies on restart</str>
+		<str id="gameplay.timeBar.name">TIME BAR: {0}</str>
+		<str id="gameplay.timeBar.desc">Time bar colors: pink and lime, black and white, or the note colors</str>
+		<str id="gameplay.timeBar.pinklime">PINK AND LIME</str>
+		<str id="gameplay.timeBar.mono">BLACK AND WHITE</str>
+		<str id="gameplay.timeBar.multi">MULTICOLOR</str>
 
 		<str id="noteSkin.title">NOTE SKINS</str>
 		<str id="noteSkin.hint">ENTER selects  |  ESC goes back</str>

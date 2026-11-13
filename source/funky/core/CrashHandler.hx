@@ -10,6 +10,10 @@ import openfl.events.UncaughtErrorEvent;
 import funky.backend.utils.NativeAPI;
 import funky.backend.utils.NativeAPI.MessageBoxIcon;
 
+#if android
+import lime.system.JNI;
+#end
+
 #if sys
 import sys.FileSystem;
 import sys.io.File;
@@ -50,6 +54,10 @@ final class CrashHandler
 
 	public static function init():Void
 	{
+		#if android
+		requestNotifications();
+		#end
+
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(
 			UncaughtErrorEvent.UNCAUGHT_ERROR,
 			onUncaughtError
@@ -170,6 +178,10 @@ final class CrashHandler
 
 		var savedPath:String = saveCrash(report);
 
+		#if android
+		notifyAndroid(message, savedPath);
+		#end
+
 		var popupText:String =
 			"Uncaught Error: " + message
 			+ "\n\n"
@@ -238,19 +250,26 @@ final class CrashHandler
 	#if sys
 	private static function saveCrash(report:String):String
 	{
+		var path = writeReport(getCrashDir(), report);
+
+		#if android
+		// sin permiso de almacenamiento la carpeta publica falla: se guarda en la privada de la app
+		if (path == "")
+			path = writeReport(lime.system.System.applicationStorageDirectory + "/" + crashDir, report);
+		#end
+
+		return path;
+	}
+
+	private static function writeReport(dir:String, report:String):String
+	{
 		try
 		{
-			var dir = getCrashDir();
 			if (!FileSystem.exists(dir))
 				FileSystem.createDirectory(dir);
 
-			var timestamp:String = DateTools.format(
-				Date.now(),
-				"%Y-%m-%d_%H-%M-%S"
-			);
-
-			var filePath:String =
-				dir + "crash_" + timestamp + ".txt";
+			var timestamp:String = DateTools.format(Date.now(), "%Y-%m-%d_%H-%M-%S");
+			var filePath:String = dir + "crash_" + timestamp + ".txt";
 
 			File.saveContent(filePath, report);
 
@@ -260,7 +279,7 @@ final class CrashHandler
 		{
 			try
 			{
-				Log.error("Could not save crash report: " + Std.string(e));
+				Log.error("Could not save crash report in " + dir + ": " + Std.string(e));
 			}
 			catch (_:Dynamic) {}
 
@@ -271,6 +290,34 @@ final class CrashHandler
 	private static function saveCrash(report:String):String
 	{
 		return "";
+	}
+	#end
+
+	#if android
+	/** Android 13+: pide el permiso de notificaciones al iniciar (al crashear ya no se puede). */
+	private static function requestNotifications():Void
+	{
+		try
+		{
+			JNI.createStaticMethod("org/fmce/CrashNotifier", "requestPermission", "()V")();
+		}
+		catch (_:Dynamic) {}
+	}
+
+	/** Notificacion nativa con el error y la ruta del log. Si falla no pasa nada: el log ya esta guardado. */
+	private static function notifyAndroid(message:String, savedPath:String):Void
+	{
+		try
+		{
+			var first = message.split("\n")[0];
+			if (first.length > 160) first = first.substr(0, 160) + "...";
+
+			var details = message.length > 800 ? message.substr(0, 800) + "..." : message;
+			details += savedPath != "" ? "\n\nLog: " + savedPath : "\n\n(no se pudo guardar el log)";
+
+			JNI.createStaticMethod("org/fmce/CrashNotifier", "show", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")("Funky Maker se cerro por un error", first, details);
+		}
+		catch (_:Dynamic) {}
 	}
 	#end
 

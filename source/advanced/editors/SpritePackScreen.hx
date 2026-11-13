@@ -5,6 +5,7 @@ import flixel.FlxSprite;
 import flixel.graphics.FlxGraphic;
 import flixel.math.FlxPoint;
 import flixel.text.FlxText;
+import advanced.AdvLang;
 import funkin.editors.ui.*;
 import funky.game.SpriteBuilder;
 import haxe.Json;
@@ -66,7 +67,7 @@ class SpritePackScreen extends UISubstateWindow
 
 	public override function create():Void
 	{
-		winTitle = "Administrador de sprites";
+		winTitle = AdvLang.t("spritePack.title", null, "Administrador de sprites");
 		winWidth = PAD * 2 + COLS * CELL + (COLS - 1) * GAP;
 		winHeight = HEAD + ROWS * CELL + (ROWS - 1) * GAP + 14 + 28 + 8 + 28 + 10 + 32 + PAD;
 		super.create();
@@ -91,7 +92,7 @@ class SpritePackScreen extends UISubstateWindow
 		}
 
 		var rowY = wy + HEAD + ROWS * CELL + (ROWS - 1) * GAP + 14;
-		var titles = ["Todos", "Iconos", "Otros"];
+		var titles = [AdvLang.t("spritePack.all", null, "Todos"), AdvLang.t("spritePack.icons", null, "Iconos"), AdvLang.t("spritePack.others", null, "Otros")];
 		var fx = wx + PAD;
 		for (i in 0...3)
 		{
@@ -112,14 +113,14 @@ class SpritePackScreen extends UISubstateWindow
 		var x = wx + PAD;
 		if (allowNone)
 		{
-			var none = new UIButton(x, buttonsY, "Quitar", function() pickNone(), 100, 32);
+			var none = new UIButton(x, buttonsY, AdvLang.t("spritePack.remove", null, "Quitar"), function() pickNone(), 100, 32);
 			none.color = DANGER_COLOR;
 			add(none);
 			x += 104;
 		}
-		add(new UIButton(x, buttonsY, "+ Nuevo", function() importSprite(), 100, 32));
+		add(new UIButton(x, buttonsY, AdvLang.t("spritePack.new", null, "+ Nuevo"), function() importSprite(), 100, 32));
 		x += 104;
-		useButton = new UIButton(x, buttonsY, "Usar", function() apply(), Std.int(wx + winWidth - PAD - x), 32);
+		useButton = new UIButton(x, buttonsY, AdvLang.t("spritePack.use", null, "Usar"), function() apply(), Std.int(wx + winWidth - PAD - x), 32);
 		add(useButton);
 
 		reloadNames();
@@ -242,8 +243,8 @@ class SpritePackScreen extends UISubstateWindow
 			}
 		}
 
-		nameText.text = selected == "" ? "(ninguno)" : "\"" + selected + "\"";
-		countText.text = shown.length + (shown.length == 1 ? " sprite" : " sprites");
+		nameText.text = selected == "" ? AdvLang.t("spritePack.none", null, "(ninguno)") : "\"" + selected + "\"";
+		countText.text = shown.length == 1 ? AdvLang.t("spritePack.countOne", [shown.length], "{0} sprite") : AdvLang.t("spritePack.countMany", [shown.length], "{0} sprites");
 		useButton.selectable = selected != "" && all.indexOf(selected) >= 0;
 	}
 

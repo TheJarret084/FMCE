@@ -406,7 +406,8 @@ class VideoStripTask
 	function run():Void
 	{
 		var info = VideoStrip.probe(ffmpeg, path);
-		if (info == null) throw "no se pudo leer el video (ni con ffmpeg ni su cabecera)";
+		if (info == null) info = probeByFrame();
+		if (info == null) throw "no se pudo leer el video (ni con ffmpeg, ni su cabecera, ni decodificando un frame)";
 		sourceWidth = info.w;
 		sourceHeight = info.h;
 		fps = Math.min(FMCEToFNMMExporter.VIDEO_MAX_FPS, Math.max(FMCEToFNMMExporter.VIDEO_MIN_FPS, info.fps));
@@ -423,6 +424,36 @@ class VideoStripTask
 		if (cancelled) throw "cancelado";
 		percent = 35;
 		buildTape();
+	}
+	#end
+
+	#if !android
+	function probeByFrame():Null<VideoInfo>
+	{
+		try
+		{
+			VideoStrip.wipe(work);
+			FileSystem.createDirectory(work);
+			var shot = Path.join([work, "probe.png"]);
+			var p = new Process(ffmpeg, ["-y", "-hide_banner", "-v", "error", "-nostdin", "-i", path, "-map", "0:v:0", "-frames:v", "1", "-an", "-sn", "-dn", shot]);
+			p.stderr.readAll();
+			var code = p.exitCode();
+			p.close();
+			if (code != 0 || !FileSystem.exists(shot)) return null;
+			var head = File.getBytes(shot);
+			if (head.length < 24) return null;
+			var w = head.get(16) << 24 | head.get(17) << 16 | head.get(18) << 8 | head.get(19);
+			var h = head.get(20) << 24 | head.get(21) << 16 | head.get(22) << 8 | head.get(23);
+			VideoStrip.wipe(work);
+			if (w <= 0 || h <= 0) return null;
+			warnings.push("el video " + Path.withoutDirectory(path) + " no tenia cabecera legible: se exporto a " + FMCEToFNMMExporter.VIDEO_MAX_FPS + " fps con el tamano del primer frame");
+			return {w: w, h: h, fps: FMCEToFNMMExporter.VIDEO_MAX_FPS, seconds: 0};
+		}
+		catch (e:Dynamic)
+		{
+			Log.warn('[VideoStrip] no se pudo sacar un frame de $path: $e');
+		}
+		return null;
 	}
 	#end
 

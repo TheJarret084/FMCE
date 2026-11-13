@@ -2,26 +2,17 @@ package funky.scripting;
 
 import animate.FlxAnimateFrames;
 import flixel.FlxCamera;
-import flixel.FlxG;
-import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
-import flixel.tweens.FlxEase;
-import flixel.tweens.FlxTween;
-import flixel.util.FlxColor;
-import flixel.util.FlxTimer;
 import funky.backend.FunkinSprite;
 import funky.backend.system.framerate.Framerate;
-import funky.core.ClientPrefs;
 import funky.core.Conductor;
 import funky.core.Log;
-import funky.core.Paths;
 import funky.core.Storage;
 import funky.game.LevelSprite;
 import funky.game.SpriteBuilder;
 import funky.game.Stage;
-import haxe.Json;
 import haxe.io.Path;
 
 #if sys
@@ -35,8 +26,8 @@ class Scripts
 
 	public static inline var LEGACY_DIR:String = "scripts";
 
-	public static inline var CONTINUE:Int = 0;
-	public static inline var STOP:Int = 1;
+	public static inline var CONTINUE:Int = Script.CONTINUE;
+	public static inline var STOP:Int = Script.STOP;
 
 	static var EXTENSIONS:Array<String> = ["hx", "hscript", "hsc", "hxs"];
 
@@ -174,15 +165,44 @@ class Scripts
 		for (script in scripts) script.set(key, value);
 	}
 
+	/**
+	 * Nombres alternativos (estilo Codename / Psych) que se llaman ademas del nombre real. Si el alias no define `args`
+	 * recibe los mismos argumentos que el original. Ojo: a diferencia de Codename no llegan eventos (`event.note`),
+	 * llegan los valores sueltos (`note`, `lane`...). Para saber el lado de una nota: `note.strumLine == playerLine`.
+	 */
+	static function alias(name:String, ?args:Void->Null<Array<Dynamic>>):{name:String, args:Void->Null<Array<Dynamic>>}
+		return {name: name, args: args};
+
 	static final ALIASES:Map<String, Array<{name:String, args:Void->Null<Array<Dynamic>>}>> = [
-		"onLoad" => [{name: "onCreate", args: null}, {name: "create", args: null}],
-		"onCreatePost" => [{name: "postCreate", args: null}],
-		"onUpdate" => [{name: "update", args: null}],
-		"onUpdatePost" => [{name: "postUpdate", args: null}],
-		"onStepHit" => [{name: "stepHit", args: () -> [Conductor.currentStep]}],
-		"onBeatHit" => [{name: "beatHit", args: () -> [Conductor.currentBeat]}],
-		"onSectionHit" => [{name: "measureHit", args: () -> [Std.int(Conductor.currentBeat / 4)]}],
-		"onDestroy" => [{name: "destroy", args: null}]
+		// ciclo de vida
+		"onLoad" => [alias("onCreate"), alias("create")],
+		"onCreatePost" => [alias("postCreate")],
+		"onUpdate" => [alias("update")],
+		"onUpdatePost" => [alias("postUpdate")],
+		"onStepHit" => [alias("stepHit", () -> [Conductor.currentStep])],
+		"onBeatHit" => [alias("beatHit", () -> [Conductor.currentBeat])],
+		"onSectionHit" => [alias("measureHit", () -> [Std.int(Conductor.currentBeat / 4)])],
+		"onDestroy" => [alias("destroy")],
+
+		// notas: Pre = antes de animar/puntuar (como onNoteHit de Codename), sin Pre = ya procesada (onPostNoteHit)
+		"goodNoteHitPre" => [alias("onNoteHit"), alias("onPlayerHit")],
+		"opponentNoteHitPre" => [alias("onNoteHit"), alias("onDadHit"), alias("onOpponentHit")],
+		"goodNoteHit" => [alias("onPostNoteHit"), alias("onPostPlayerHit")],
+		"opponentNoteHit" => [alias("onPostNoteHit"), alias("onPostDadHit"), alias("onPostOpponentHit")],
+		"noteMiss" => [alias("onNoteMiss"), alias("onPlayerMiss")],
+		"noteMissPress" => [alias("onGhostMiss")],
+		"onSpawnNote" => [alias("onNoteCreation")],
+		"onSpawnNotePost" => [alias("onPostNoteCreation")],
+		"preReceptorGeneration" => [alias("onStrumCreation")],
+		"postReceptorGeneration" => [alias("onPostStrumCreation")],
+
+		// partida
+		"onSongStart" => [alias("onStartSong")],
+		"onEndSong" => [alias("onSongEnd")],
+		"onCountdownStarted" => [alias("onPostStartCountdown")],
+		"onCountdownTick" => [alias("onCountdown")],
+		"onPause" => [alias("onGamePause")],
+		"onMoveCamera" => [alias("onCameraMove")]
 	];
 
 	public static function call(func:String, ?args:Array<Dynamic>):Bool
@@ -198,7 +218,7 @@ class Scripts
 			for (alias in aliases)
 			{
 
-				var aliasArgs = alias.args != null ? alias.args() : (func == "onUpdate" || func == "onUpdatePost" ? args : []);
+				var aliasArgs = alias.args != null ? alias.args() : args;
 				if (callOne(alias.name, aliasArgs)) stopped = true;
 			}
 		}
@@ -231,28 +251,11 @@ class Scripts
 
 	static function baseGlobals():Map<String, Dynamic>
 	{
-		var globals = new Map<String, Dynamic>();
+		var globals = Script.commonGlobals();
 
-		globals.set("Function_Continue", CONTINUE);
-		globals.set("Function_Stop", STOP);
-
-		globals.set("Std", Std);
-		globals.set("Math", Math);
-		globals.set("Reflect", Reflect);
-		globals.set("StringTools", StringTools);
-		globals.set("Json", Json);
-		globals.set("Xml", Xml);
-		globals.set("Type", Type);
-		globals.set("Date", Date);
-		globals.set("Lambda", Lambda);
 		#if sys globals.set("Sys", Sys); #end
 
-		globals.set("Assets", openfl.utils.Assets);
-		globals.set("Application", lime.app.Application);
-
-		globals.set("FlxG", FlxG);
 		globals.set("FlxBasic", flixel.FlxBasic);
-		globals.set("FlxSprite", FlxSprite);
 		globals.set("FlxText", FlxText);
 		globals.set("FlxBar", flixel.ui.FlxBar);
 		globals.set("FlxGroup", FlxGroup);
@@ -262,33 +265,21 @@ class Scripts
 		globals.set("FlxSound", flixel.sound.FlxSound);
 		globals.set("FlxMath", flixel.math.FlxMath);
 		globals.set("FlxAnimateFrames", FlxAnimateFrames);
-		globals.set("FlxTween", FlxTween);
-		globals.set("FlxEase", FlxEase);
-		globals.set("FlxTimer", FlxTimer);
-		globals.set("FlxColor", abstractClass("flixel.util.FlxColor", colors()));
-		globals.set("FlxPoint", abstractClass("flixel.math.FlxPoint", null));
-		globals.set("FlxAxes", abstractClass("flixel.util.FlxAxes", null));
+		globals.set("FlxPoint", Script.abstractClass("flixel.math.FlxPoint", null));
+		globals.set("FlxAxes", Script.abstractClass("flixel.util.FlxAxes", null));
 
-		globals.set("PlayState", funky.game.PlayState);
 		globals.set("PlayHUD", funky.game.PlayHUD);
 		globals.set("HealthBar", funky.game.HealthBar);
 		globals.set("HealthIcon", funky.game.HealthIcon);
-		globals.set("Note", funky.game.Note);
-		globals.set("Strum", funky.game.Strum);
-		globals.set("StrumLine", funky.game.StrumLine);
 		globals.set("FunkinSprite", FunkinSprite);
 		globals.set("LevelSprite", LevelSprite);
 		globals.set("SpriteBuilder", SpriteBuilder);
 		globals.set("Stage", Stage);
 		globals.set("Storage", Storage);
-		globals.set("Paths", Paths);
-		globals.set("Conductor", Conductor);
-		globals.set("ClientPrefs", ClientPrefs);
 		globals.set("NoteSkin", funky.core.NoteSkin);
 		globals.set("Difficulty", funky.core.Difficulty);
 		globals.set("KeyBinds", funky.core.KeyBinds);
 		globals.set("CoolUtil", funky.core.CoolUtil);
-		globals.set("Log", Log);
 
 		globals.set("Framerate", Framerate);
 
@@ -300,34 +291,5 @@ class Scripts
 		globals.set("getVar", function(name:String):Dynamic return shared.get(name));
 
 		return globals;
-	}
-
-	static function abstractClass(name:String, fallback:Dynamic):Dynamic
-	{
-		var cls = Type.resolveClass(name + "_HSC");
-		return cls != null ? cls : fallback;
-	}
-
-	static function colors():Dynamic
-	{
-		return {
-			TRANSPARENT: FlxColor.TRANSPARENT,
-			WHITE: FlxColor.WHITE,
-			BLACK: FlxColor.BLACK,
-			GRAY: FlxColor.GRAY,
-			RED: FlxColor.RED,
-			GREEN: FlxColor.GREEN,
-			BLUE: FlxColor.BLUE,
-			YELLOW: FlxColor.YELLOW,
-			ORANGE: FlxColor.ORANGE,
-			CYAN: FlxColor.CYAN,
-			LIME: FlxColor.LIME,
-			MAGENTA: FlxColor.MAGENTA,
-			PINK: FlxColor.PINK,
-			PURPLE: FlxColor.PURPLE,
-			fromRGB: function(r:Int, g:Int, b:Int, a:Int = 255):Int return FlxColor.fromRGB(r, g, b, a),
-			fromString: function(value:String):Int return FlxColor.fromString(value),
-			interpolate: function(a:Int, b:Int, factor:Float = 0.5):Int return FlxColor.interpolate(a, b, factor)
-		};
 	}
 }

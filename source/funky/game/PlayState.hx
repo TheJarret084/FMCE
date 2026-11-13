@@ -218,7 +218,6 @@ class PlayState extends MusicBeatState
 	/**
 	 * Strumlines extra del chart (2, 3, ...), por indice. Son CPU y van separadas del oponente.
 	 */
-	public var extraLines:Map<Int, StrumLine> = new Map<Int, StrumLine>();
 
 	/**
 	 * Strumlines que se dibujan y se actualizan (la 1 queda fuera si no tiene notas).
@@ -319,22 +318,13 @@ class PlayState extends MusicBeatState
 	 * Strumlines creadas, incluida la 1 aunque este vacia y oculta.
 	 */
 	function allLines():Array<StrumLine>
-	{
-		var out = [playerLine, opponentLine];
-
-		for (line in extraLines)
-			out.push(line);
-
-		return out;
-	}
+		return [playerLine, opponentLine];
 
 	/**
-	 * Strumline por indice del chart: 0 jugador, 1 oponente, 2+ extras.
+	 * Strumline por indice del chart: 0 jugador, 1 oponente. Las demas no existen (sus notas se ignoran).
 	 */
 	public function lineFor(index:Int):Null<StrumLine>
-	{
-		return index == 0 ? playerLine : (index == 1 ? opponentLine : extraLines.get(index));
-	}
+		return index == 0 ? playerLine : (index == 1 ? opponentLine : null);
 
 	// EVENTO GUI
 
@@ -469,39 +459,19 @@ class PlayState extends MusicBeatState
 		var strumY = ClientPrefs.isDownScroll() ? FlxG.height - STRUM_BOTTOM_GAP : STRUM_TOP;
 
 		var showOpponent = song.hasOpponentNotes;
-		var cpuIndexes:Array<Int> = [];
-
-		if (showOpponent)
-			cpuIndexes.push(1);
-
-		for (extra in song.extraLines)
-			cpuIndexes.push(extra);
-
 		var lineWidth = span;
 		var cpuWidth = middle ? span * MINI_LINE_SCALE : span;
-		var cpuX:Array<Float> = [for (_ in cpuIndexes) SIDE_MARGIN];
 
 		playerLine = new StrumLine(strumX, strumY, ClientPrefs.isBotplay(), false, song.laneCount, lineWidth);
 		playerLine.index = 0;
 
-		opponentLine = new StrumLine(cpuX[0], strumY, true, true, song.laneCount, cpuWidth);
+		opponentLine = new StrumLine(SIDE_MARGIN, strumY, true, true, song.laneCount, cpuWidth);
 		opponentLine.index = 1;
 
 		var activeLines:Array<StrumLine> = [];
 
-		for (i in 0...cpuIndexes.length)
-		{
-			if (cpuIndexes[i] == 1)
-			{
-				activeLines.push(opponentLine);
-				continue;
-			}
-
-			var extraLine = new StrumLine(cpuX[i], strumY, true, true, song.laneCount, cpuWidth);
-			extraLine.index = cpuIndexes[i];
-			extraLines.set(cpuIndexes[i], extraLine);
-			activeLines.push(extraLine);
-		}
+		if (showOpponent)
+			activeLines.push(opponentLine);
 
 		activeLines.push(playerLine);
 		hudLines = activeLines;

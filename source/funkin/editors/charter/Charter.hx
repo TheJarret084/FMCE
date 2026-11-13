@@ -238,12 +238,14 @@ class Charter extends UIState {
 						icon: Options.charterEnablePlaytestScripts ? 1 : 0
 					},
 					null,
+/*
 					{
 						label: translate("chart.editChartData"),
 						color: 0xFF959829, icon: 4,
 						onCreate: function (button:UIContextMenuOptionSpr) {button.label.offset.x = button.icon.offset.x = -2;},
 						onSelect: chart_edit_data
 					},
+*/
 					{
 						label: translate("chart.editMetadata"),
 						color: 0xFF959829, icon: 4,
@@ -254,7 +256,7 @@ class Charter extends UIState {
 						label: translate("chart.editActionPacks"),
 						color: 0xFF959829, icon: 4,
 						onCreate: function (button:UIContextMenuOptionSpr) {button.label.offset.x = button.icon.offset.x = -2;},
-						onSelect: chart_edit_actionpacks
+						onSelect: chart_edit_actionpacks // este sigue roto
 					}
 
 				]

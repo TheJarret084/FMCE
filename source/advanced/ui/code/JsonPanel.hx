@@ -258,9 +258,9 @@ class JsonPanel extends FlxSpriteGroup
 		add(CodeDraw.rect(x, y, 1, h, CodeTheme.BORDER));
 		add(CodeDraw.rect(x, y, w, CodeTheme.PANEL_HEAD_H, CodeTheme.MENU));
 		add(CodeDraw.rect(x, y + CodeTheme.PANEL_HEAD_H - 1, w, 1, CodeTheme.BORDER));
-		titleText = CodeDraw.label(x + 12, y + 6, "INSPECTOR JSON", CodeTheme.FONT_SMALL, CodeTheme.MUTED);
+		titleText = CodeDraw.label(x + 12, y + 6, CodeLang.t("json.title", null, "INSPECTOR JSON"), CodeTheme.FONT_SMALL, CodeTheme.MUTED);
 		add(titleText);
-		add(new CodeButton(x + 124, y + 2, 66, 22, "Archivos", function()
+		add(new CodeButton(x + 124, y + 2, 66, 22, CodeLang.t("json.files", null, "Archivos"), function()
 		{
 			if (onClose != null) onClose();
 		}, CodeTheme.ACCENT, CodeTheme.FONT_SMALL));
@@ -292,7 +292,7 @@ class JsonPanel extends FlxSpriteGroup
 			slots.push(s);
 		}
 
-		emptyText = CodeDraw.label(x + 14, rowsY + 10, "No hay datos JSON", CodeTheme.FONT_SMALL, CodeTheme.DIM);
+		emptyText = CodeDraw.label(x + 14, rowsY + 10, CodeLang.t("json.empty", null, "No hay datos JSON"), CodeTheme.FONT_SMALL, CodeTheme.DIM);
 		emptyText.visible = false;
 		add(emptyText);
 
@@ -325,7 +325,7 @@ class JsonPanel extends FlxSpriteGroup
 
 		selNode = -1;
 		followCaret = -1;
-		pathText.text = partial ? "Archivo grande: se muestra solo una parte" : "";
+		pathText.text = partial ? CodeLang.t("json.partial", null, "Archivo grande: se muestra solo una parte") : "";
 		rebuildVisible();
 		clampScroll();
 		layoutRows();
@@ -392,7 +392,7 @@ class JsonPanel extends FlxSpriteGroup
 			p = nodes[p].parent;
 		}
 		parts.reverse();
-		return parts.length == 0 ? "raíz" : parts.join(" > ");
+		return parts.length == 0 ? CodeLang.t("json.root", null, "raíz") : parts.join(" > ");
 	}
 
 	public function follow(caret:Int):Void

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<language>
+	<group name="AdvancedSceneEditor" prefix="advanced.sceneEditor.">
+
+		<str id="menuFile">Archivo</str>
+		<str id="save">Guardar</str>
+		<str id="reload">Recargar desde el disco</str>
+		<str id="exit">Salir</str>
+		<str id="menuObject">Objeto</str>
+		<str id="add">Agregar</str>
+		<str id="duplicate">Duplicar</str>
+		<str id="delete">Borrar</str>
+		<str id="layerUp">Subir capa</str>
+		<str id="layerDown">Bajar capa</str>
+		<str id="mirrorH">Espejo horizontal</str>
+		<str id="mirrorV">Espejo vertical</str>
+		<str id="toggleFixed">Cambiar fixed</str>
+		<str id="toggleVisible">Cambiar visible</str>
+		<str id="menuSelection">Seleccion</str>
+		<str id="nextObject">Objeto siguiente</str>
+		<str id="prevObject">Objeto anterior</str>
+		<str id="nextSprite">Sprite siguiente</str>
+		<str id="prevSprite">Sprite anterior</str>
+		<str id="multiSelect">Seleccion multiple (alternar)</str>
+		<str id="selectAll">Seleccionar todo</str>
+		<str id="clearExtraSelection">Quitar la seleccion extra</str>
+		<str id="menuView">Ver</str>
+		<str id="nextCamera">Camara siguiente</str>
+		<str id="gameView">Ver como en el juego</str>
+		<str id="tabObjects">Objetos</str>
+		<str id="tabCameras">Camaras</str>
+		<str id="objectListTitle">Objetos (la lista es el orden de capas)</str>
+		<str id="cameraListTitle">Camaras (la 1 es el origen del mundo)</str>
+		<str id="windowCamera">Camara</str>
+		<str id="tabPosition">Posicion</str>
+		<str id="tabAppearance">Apariencia</str>
+		<str id="tabLogic">Logica</str>
+		<str id="fixedCheck">Fixed (pegado a la pantalla)</str>
+		<str id="positionsTransform">Posiciones (transform)</str>
+		<str id="positionX">Posicion X</str>
+		<str id="positionY">Posicion Y</str>
+		<str id="scaleX">Escala X</str>
+		<str id="scaleY">Escala Y</str>
+		<str id="mirrorX">Espejo X</str>
+		<str id="mirrorY">Espejo Y</str>
+		<str id="parallaxX">Parallax X</str>
+		<str id="parallaxY">Parallax Y</str>
+		<str id="sprite">Sprite</str>
+		<str id="opacity">Opacidad</str>
+		<str id="visible">Visible</str>
+		<str id="color">Color</str>
+		<str id="strumline">Strumline (-1 = ninguna)</str>
+		<str id="zoom">Zoom</str>
+		<str id="deleteCamera">Borrar camara</str>
+		<str id="cameraHelp">En la vista: arrastra para mover la camara,
+rueda para el zoom. Flechas: mover (SHIFT x10,
+CTRL fino). Solo se borra la ultima camara.</str>
+		<str id="cameraDeleteDenied">Solo se puede borrar la ultima camara (la 1 es el origen del mundo): los eventos las usan por numero.</str>
+		<str id="unsavedTitle">Cambios sin guardar</str>
+		<str id="unsavedBody">Hay cambios en scene.json que todavia no guardaste.</str>
+		<str id="cancel">Cancelar</str>
+		<str id="exitNoSave">Salir sin guardar</str>
+		<str id="saveAndExit">Guardar y salir</str>
+		<str id="noValidScene">No hay un scene.json valido en el disco.</str>
+		<str id="reloaded">Recargado desde el disco.</str>
+		<str id="posIndex">{0} de {1}</str>
+		<str id="cameraNum">Camara {0}</str>
+		<str id="cameraNumOrigin">Camara {0} (origen)</str>
+		<str id="hiddenTag">(oculto)</str>
+		<str id="positionAdded">Posicion {0} agregada (copia de la anterior). Los eventos ObjectPositionSet usan estos numeros.</str>
+		<str id="saved">Guardado: scene.json</str>
+		<str id="eventsFollow">{0} eventos siguen a su objeto</str>
+		<str id="eventsOrphaned">{0} eventos apuntan a un objeto borrado</str>
+		<str id="eventsUpdateFailed">no se pudo actualizar events.json: {0}</str>
+		<str id="writeFailed">No se pudo escribir {0}</str>
+		<str id="infoWorldCam">Mundo fijo - camara {0}/{1}</str>
+		<str id="infoViewCam">Vista de la camara {0}/{1}</str>
+		<str id="infoUnsaved">* sin guardar</str>
+		<str id="infoSelected">{0} elegidos</str>
+		<str id="infoPosition">posicion {0} de {1}</str>
+		<str id="hintObjects">Click y arrastra para mover. Rueda: escala. Flechas: mover (SHIFT x10, CTRL fino). Arrastra los botones de la lista para cambiar las capas.</str>
+		<str id="hintCameras">Pestaña Camaras (mundo fijo): arrastra el marco rojo o toca el mundo para mover la camara, rueda: zoom, flechas: mover (SHIFT x10, CTRL fino).</str>
+
+	</group>
+</language>

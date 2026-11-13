@@ -1,5 +1,6 @@
 package advanced.editors;
 
+import advanced.AdvLang;
 import funky.backend.converter.SparrowToAseprite;
 import funky.backend.converter.SpriteFolderConverter;
 import funky.core.Paths;
@@ -42,7 +43,7 @@ class SpriteImporter
 		}
 		catch (e:Dynamic)
 		{
-			result.failed.push("no pude crear " + inbox);
+			result.failed.push(AdvLang.t("importer.cantCreate", [inbox], "no pude crear " + inbox));
 			return result;
 		}
 
@@ -63,7 +64,7 @@ class SpriteImporter
 			var name = cleanName(base);
 			if (name == "")
 			{
-				result.failed.push(file + " (nombre invalido)");
+				result.failed.push(AdvLang.t("importer.invalidName", [file], file + " (nombre invalido)"));
 				continue;
 			}
 
@@ -119,7 +120,7 @@ class SpriteImporter
 			}
 			catch (e:Dynamic)
 			{
-				result.failed.push(name + " (" + Std.string(e) + ")");
+				result.failed.push(AdvLang.t("importer.failedItem", [name, Std.string(e)], name + " (" + Std.string(e) + ")"));
 				removeDir(dest);
 			}
 		}
@@ -133,7 +134,7 @@ class SpriteImporter
 		#if sys
 		var dest = SpriteBuilder.spriteDir(levelDir, name);
 		var existed = FileSystem.exists(dest);
-		if (existed && !overwrite) return "ya existe";
+		if (existed && !overwrite) return AdvLang.t("importer.exists", null, "ya existe");
 
 		try
 		{
@@ -184,7 +185,7 @@ class SpriteImporter
 			return Std.string(e);
 		}
 		#else
-		return "importar necesita un target sys";
+		return AdvLang.t("importer.needsSys", null, "importar necesita un target sys");
 		#end
 	}
 

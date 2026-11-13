@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<language>
+	<group name="AdvancedMenus" prefix="advanced.">
+
+		<str id="modeMenu.title">ADVANCED MODE &gt;</str>
+		<str id="modeMenu.desc">Select the level you want to edit.\n{0} to choose  |  ESC back</str>
+		<str id="modeMenu.noLevels">No levels in {0}</str>
+		<str id="modeMenu.importButton">IMPORT .FMCE  [I]</str>
+		<str id="modeMenu.presenceTitle">Advanced Mode</str>
+		<str id="modeMenu.presenceSelecting">Selecting level</str>
+		<str id="modeMenu.createLevel">Create a level in the levels/ folder to use advanced mode.</str>
+		<str id="modeMenu.importDialog">Import .FMCE level</str>
+		<str id="modeMenu.noArchives">No .FMCE found in {0} (copy it there and press IMPORT again)</str>
+		<str id="modeMenu.importedItem">{0} ({1} files)</str>
+		<str id="modeMenu.imported">Imported: {0}</str>
+		<str id="modeMenu.gay">GAY!</str>
+
+		<str id="tools.title">ADVANCED MODE</str>
+		<str id="tools.back">&lt; BACK</str>
+		<str id="tools.codeStudio">CODE STUDIO</str>
+		<str id="tools.codeStudioDesc">Level scripts (.hx) and .json files</str>
+		<str id="tools.chartEditor">CHART EDITOR</str>
+		<str id="tools.chartEditorDesc">Notes, sustains, strumlines, global events and waveform</str>
+		<str id="tools.spriteEditor">SPRITE EDITOR</str>
+		<str id="tools.spriteEditorDesc">config.json of each sprite: type, animations, indices, speed, loop, scale and pivot</str>
+		<str id="tools.sceneEditor">SCENE EDITOR</str>
+		<str id="tools.sceneEditorDesc">scene.json: objects, layers, parallax, fixed, strumlines and cameras</str>
+		<str id="tools.exportFmce">EXPORT .FMCE</str>
+		<str id="tools.exportFmceDesc">Compresses the level into exports/{0}.FMCE (without .bak / .bck copies)</str>
+		<str id="tools.exportFnmm">EXPORT .FNMM</str>
+		<str id="tools.exportFnmmDesc">Exports the level to exports/{0}.FNMM (the data/ folder is not included)</str>
+		<str id="tools.hint">{0}/{1} move  |  {2} choose  |  ESC back</str>
+		<str id="tools.exported">Exported: {0} ({1} files)</str>
+
+		<str id="spriteImport.title">Import sprite</str>
+		<str id="spriteImport.imageLabel">Image (.png / .jpg) - with its .xml or .json next to it if it is an atlas</str>
+		<str id="spriteImport.nameLabel">Sprite name</str>
+		<str id="spriteImport.import">Import</str>
+		<str id="spriteImport.cancel">Cancel</str>
+		<str id="spriteImport.replace">Replace</str>
+		<str id="spriteImport.existsTitle">The sprite already exists</str>
+		<str id="spriteImport.existsBody">There is already a sprite named "{0}" in this level.\nReplacing changes its image and its atlas (its config.json is kept).</str>
+		<str id="spriteImport.failedTitle">Could not import</str>
+		<str id="spriteImport.close">Close</str>
+
+		<str id="spritePack.title">Sprite manager</str>
+		<str id="spritePack.all">All</str>
+		<str id="spritePack.icons">Icons</str>
+		<str id="spritePack.others">Others</str>
+		<str id="spritePack.remove">Remove</str>
+		<str id="spritePack.new">+ New</str>
+		<str id="spritePack.use">Use</str>
+		<str id="spritePack.none">(none)</str>
+		<str id="spritePack.countOne">{0} sprite</str>
+		<str id="spritePack.countMany">{0} sprites</str>
+
+	</group>
+</language>

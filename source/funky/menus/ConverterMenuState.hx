@@ -6,6 +6,7 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import funkin.editors.ui.*;
 import funkin.editors.ui.UIWarningSubstate.WarningButton;
+import funky.backend.LevelArchive;
 import funky.backend.converter.ConversionJob;
 import funky.backend.converter.FMCEToFNMMExporter;
 import funky.backend.converter.FNMMToFMCEConverter;
@@ -44,6 +45,11 @@ class ConverterMenuState extends UIState
 	var rows:Array<ConverterRow> = [];
 	var rowButtons:Array<UIButton> = [];
 	var archives:Array<String> = [];
+	var fmceArchives:Array<String> = [];
+	var browsing:Bool = false;
+	var pendingPaths:Null<Array<String>> = null;
+	var extraLines:Array<String> = [];
+	var importButton:UIButton;
 	var selected:Int = 0;
 	var topIndex:Int = 0;
 	var visibleRows:Int = 1;
@@ -123,6 +129,9 @@ class ConverterMenuState extends UIState
 		backButton = new UIButton(rightX + 40 + buttonW * 2, buttonY, "Volver", function() leave(new MainMenuState()), buttonW, 32);
 		add(backButton);
 
+		importButton = new UIButton(rightX + 20, buttonY - 40, "Importar desde archivos", pickFiles, buttonW * 2 + 10, 32);
+		add(importButton);
+
 		refresh();
 	}
 
@@ -137,6 +146,7 @@ class ConverterMenuState extends UIState
 	{
 		if (busy()) return;
 		exportMode = !exportMode;
+		browsing = false;
 		statusNote = null;
 		selected = 0;
 		topIndex = 0;
@@ -157,8 +167,22 @@ class ConverterMenuState extends UIState
 	{
 		rows = [];
 		archives = exportMode ? [] : scanArchives();
+		fmceArchives = exportMode ? [] : LevelArchive.listArchives();
+		if (exportMode) browsing = false;
+		importButton.visible = importButton.selectable = importButton.shouldPress = !exportMode && !busy();
 
-		if (exportMode)
+		if (browsing)
+		{
+			var found = scanPhone();
+			rows.push({label: "< Volver", kind: 7, path: null});
+			for (file in found) rows.push({label: Path.withoutDirectory(file), kind: 6, path: file});
+			listTitle.text = "Archivos del telefono";
+			modeButton.field.text = "Modo: importar";
+			statusText.text = statusNote != null ? statusNote : found.length + (found.length == 1 ? " archivo .fnmm/.fmce" : " archivos .fnmm/.fmce");
+			showDetail(found.length == 0 ? "No se encontro ningun .fnmm ni .fmce en Descargas, Documentos, Telegram ni WhatsApp.\nSi acabas de descargarlo, toca Refrescar.\nSi sigue sin salir, da \"acceso a todos los archivos\" al juego en Ajustes."
+				: "Toca un archivo para importarlo. Se copia a levels/ y se convierte solo.", MUTED);
+		}
+		else if (exportMode)
 		{
 			for (level in FMCEToFNMMExporter.listLevels()) rows.push({label: level, kind: 4, path: level});
 			listTitle.text = "Niveles de FMCE";
@@ -170,6 +194,7 @@ class ConverterMenuState extends UIState
 		{
 			if (playablePath != null) rows.push({label: "JUGAR  " + Path.withoutDirectory(playablePath), kind: 3, path: playablePath});
 			if (archives.length > 0) rows.push({label: "Convertir todos (" + archives.length + ")", kind: 0, path: null});
+			for (fmce in fmceArchives) rows.push({label: Path.withoutExtension(Path.withoutDirectory(fmce)) + "   [.FMCE]", kind: 5, path: fmce});
 			for (archive in archives)
 			{
 				var resumable = FNMMToFMCEConverter.hasProgress(archive, Paths.levelsRoot());
@@ -177,9 +202,9 @@ class ConverterMenuState extends UIState
 			}
 			listTitle.text = "Archivos .FNMM";
 			modeButton.field.text = "Modo: importar";
-			statusText.text = statusNote != null ? statusNote : archives.length == 0 ? "Sin archivos .fnmm" : archives.length + (archives.length == 1 ? " archivo encontrado" : " archivos encontrados");
-			showDetail(archives.length == 0 ? "No hay archivos .fnmm. Copialos a esta carpeta y toca Refrescar:\n" + Paths.levelsRoot()
-				: "Elige un archivo para convertirlo. \"Convertir todos\" los hace uno detras de otro.", MUTED);
+			statusText.text = statusNote != null ? statusNote : (archives.length + fmceArchives.length) == 0 ? "Sin archivos .fnmm ni .fmce" : (archives.length + fmceArchives.length) + " archivo(s) encontrado(s)";
+			showDetail((archives.length + fmceArchives.length) == 0 ? "Toca \"Importar desde archivos\" para elegir un .fnmm o .fmce.\nTambien puedes copiarlos a esta carpeta y tocar Refrescar:\n" + Paths.levelsRoot()
+				: "Elige un archivo para importarlo. \"Convertir todos\" convierte los .fnmm uno detras de otro.", MUTED);
 		}
 		statusText.color = statusNote != null ? statusColor : MUTED;
 
@@ -234,6 +259,14 @@ class ConverterMenuState extends UIState
 			case 0: run(null);
 			case 3: play(row.path);
 			case 4: exportLevel(row.path);
+			case 5: importPicked([row.path], false);
+			case 6: importPicked([row.path], true);
+			case 7:
+				browsing = false;
+				statusNote = null;
+				selected = 0;
+				topIndex = 0;
+				refresh();
 			default: run(row.path);
 		}
 	}
@@ -274,6 +307,124 @@ class ConverterMenuState extends UIState
 		detailText.color = color;
 	}
 
+	/** Boton "Importar desde archivos": escritorio = ventana del sistema; movil = lista de los .fnmm/.fmce del telefono. */
+	function pickFiles():Void
+	{
+		if (busy() || exportMode) return;
+		#if desktop
+		var dialog = new lime.ui.FileDialog();
+		dialog.onSelectMultiple.add(function(paths:Array<String>) pendingPaths = paths);
+		dialog.onSelect.add(function(path:String) pendingPaths = [path]);
+		dialog.browse(lime.ui.FileDialogType.OPEN_MULTIPLE, "fnmm;fmce", null, "Importar .FNMM / .FMCE");
+		#else
+		browsing = true;
+		statusNote = null;
+		selected = 0;
+		topIndex = 0;
+		refresh();
+		#end
+	}
+
+	/** Importa archivos elegidos: .fmce se descomprime en levels/, .fnmm se copia a levels/ y se convierte. copyFnmm=false si ya estan en levels/. */
+	function importPicked(paths:Array<String>, copy:Bool):Void
+	{
+		#if sys
+		if (busy() || paths == null || paths.length == 0) return;
+		Paths.ensureLevelsRoot();
+		extraLines = [];
+		var toConvert:Array<String> = [];
+		var fmceOk = 0;
+		var fmceFail = 0;
+		for (path in paths)
+		{
+			var lower = path.toLowerCase();
+			if (StringTools.endsWith(lower, ".fmce"))
+			{
+				var result = LevelArchive.importArchive(path);
+				if (result.ok)
+				{
+					fmceOk++;
+					extraLines.push("- " + result.level + " -> importado (" + result.files + " archivos)  |  LISTO PARA JUGAR");
+					if (!copy) LevelArchive.archiveDone(path);
+				}
+				else
+				{
+					fmceFail++;
+					extraLines.push("- " + Path.withoutDirectory(path) + " -> FALLO: " + result.error);
+				}
+			}
+			else if (StringTools.endsWith(lower, ".fnmm"))
+			{
+				var dest = Paths.levelsRoot() + Path.withoutDirectory(path);
+				try
+				{
+					var same = StringTools.replace(path, "\\", "/") == StringTools.replace(dest, "\\", "/");
+					if (!same) sys.io.File.copy(path, dest);
+					toConvert.push(dest);
+				}
+				catch (e:Dynamic)
+				{
+					fmceFail++;
+					extraLines.push("- " + Path.withoutDirectory(path) + " -> FALLO al copiar: " + Std.string(e));
+				}
+			}
+			else
+			{
+				fmceFail++;
+				extraLines.push("- " + Path.withoutDirectory(path) + " -> no es .fnmm ni .fmce");
+			}
+		}
+
+		browsing = false;
+		if (fmceOk > 0) playablePath = null;
+		if (toConvert.length > 0)
+		{
+			runQueue(toConvert);
+			return;
+		}
+		statusNote = fmceFail == 0 ? "Importados: " + fmceOk : "Importados: " + fmceOk + "  |  fallidos: " + fmceFail;
+		statusColor = fmceFail == 0 ? OK_COLOR : FAIL_COLOR;
+		refresh();
+		showDetail(extraLines.join("\n"), statusColor);
+		#else
+		showDetail("Importar necesita una build de escritorio o Android (sys).", FAIL_COLOR);
+		#end
+	}
+
+	/** .fnmm/.fmce sueltos en las carpetas donde suele caer lo descargado (Android). */
+	function scanPhone():Array<String>
+	{
+		var found:Array<String> = [];
+		#if sys
+		var root = "/storage/emulated/0/";
+		var dirs = [
+			root + "Download", root + "Downloads", root + "Documents", root + "Telegram/Telegram Documents", root + "WhatsApp/Media/WhatsApp Documents",
+			root + "Android/media/org.telegram.messenger/Telegram/Telegram Documents", root + "Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Documents", root
+		];
+		var seen = new Map<String, Bool>();
+		for (dir in dirs)
+		{
+			try
+			{
+				if (!sys.FileSystem.exists(dir) || !sys.FileSystem.isDirectory(dir)) continue;
+				for (entry in sys.FileSystem.readDirectory(dir))
+				{
+					var full = dir + "/" + entry;
+					var lower = entry.toLowerCase();
+					if ((StringTools.endsWith(lower, ".fnmm") || StringTools.endsWith(lower, ".fmce")) && !seen.exists(full) && !sys.FileSystem.isDirectory(full))
+					{
+						seen.set(full, true);
+						found.push(full);
+					}
+				}
+			}
+			catch (e:Dynamic) {}
+		}
+		found.sort(Reflect.compare);
+		#end
+		return found;
+	}
+
 	function scanArchives():Array<String>
 	{
 		#if sys
@@ -308,7 +459,25 @@ class ConverterMenuState extends UIState
 		}
 		if (subState != null) return;
 
-		if (KeyBinds.justPressed(KeyBinds.BACK) || FlxG.keys.justPressed.ESCAPE) leave(new MainMenuState());
+		if (pendingPaths != null)
+		{
+			var paths = pendingPaths;
+			pendingPaths = null;
+			importPicked(paths, true);
+			return;
+		}
+		if (FlxG.keys.justPressed.I && !exportMode) pickFiles();
+		if (KeyBinds.justPressed(KeyBinds.BACK) || FlxG.keys.justPressed.ESCAPE)
+		{
+			if (browsing)
+			{
+				browsing = false;
+				selected = 0;
+				topIndex = 0;
+				refresh();
+			}
+			else leave(new MainMenuState());
+		}
 		if (FlxG.keys.justPressed.R) userRefresh();
 		if (FlxG.keys.justPressed.E) toggleMode();
 		if (FlxG.mouse.wheel != 0) scroll(-FlxG.mouse.wheel);
@@ -320,8 +489,14 @@ class ConverterMenuState extends UIState
 
 	function run(archive:Null<String>):Void
 	{
+		extraLines = [];
+		runQueue(archive == null ? archives.copy() : [archive]);
+	}
+
+	function runQueue(list:Array<String>):Void
+	{
 		#if sys
-		queue = archive == null ? archives.copy() : [archive];
+		queue = list;
 		if (queue.length == 0) return;
 		results = [];
 		overlay = new LoadingOverlay("Convirtiendo...");
@@ -412,7 +587,7 @@ class ConverterMenuState extends UIState
 		hideOverlay();
 		closing = -1;
 		var failed = 0;
-		var lines:Array<String> = [];
+		var lines:Array<String> = extraLines.copy();
 		var errors:Array<String> = [];
 		for (result in results)
 		{
@@ -438,6 +613,7 @@ class ConverterMenuState extends UIState
 			statusNote = "Terminadas: " + results.length + "  |  fallidas: " + failed;
 		}
 		statusColor = color;
+		extraLines = [];
 		Log.info('[ConverterMenu] done, failed=' + failed);
 		refresh();
 		showDetail(lines.join("\n"), color);
@@ -466,6 +642,8 @@ class ConverterMenuState extends UIState
 		rows = [];
 		rowButtons = [];
 		archives = [];
+		fmceArchives = [];
+		extraLines = [];
 		queue = [];
 		job = null;
 		overlay = null;

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<language>
+	<group name="AdvancedSpriteEditor" prefix="advanced.spriteEditor.">
+
+		<str id="noSprites">This level has no valid sprites in sprites/. Tap + to import.</str>
+		<str id="menu.file">File</str>
+		<str id="menu.save">Save</str>
+		<str id="menu.reload">Reload from disk</str>
+		<str id="menu.importSprite">Import sprite...</str>
+		<str id="menu.importInbox">Import from the {0} folder</str>
+		<str id="menu.exit">Exit</str>
+		<str id="menu.edit">Edit</str>
+		<str id="menu.newAnim">New animation</str>
+		<str id="deleteAnim">Delete animation</str>
+		<str id="menu.replay">Play again</str>
+		<str id="sprite">Sprite</str>
+		<str id="previous">Previous</str>
+		<str id="next">Next</str>
+		<str id="animation">Animation</str>
+		<str id="menu.view">View</str>
+		<str id="menu.zoomIn">Zoom in</str>
+		<str id="menu.zoomOut">Zoom out</str>
+		<str id="menu.zoomReset">Zoom 100%</str>
+		<str id="menu.ghostCurrent">Ghost of the current animation</str>
+		<str id="menu.clearGhosts">Remove all ghosts</str>
+		<str id="sprites">Sprites</str>
+		<str id="animations">Animations</str>
+		<str id="type">Type</str>
+		<str id="smoothing">Smoothing</str>
+		<str id="ingameName">In-game name (anim + position)</str>
+		<str id="tagSpriteJson">Tag in sprite.json</str>
+		<str id="tagAtlas">Atlas symbol / label</str>
+		<str id="tagOnSave">The new tag shows up when you save.</str>
+		<str id="speed">Speed</str>
+		<str id="scale">Scale</str>
+		<str id="pivotX">Pivot X</str>
+		<str id="pivotY">Pivot Y</str>
+		<str id="loop">Loop</str>
+		<str id="play">Play</str>
+		<str id="speedFps">Speed in FPS (off = beats it lasts)</str>
+		<str id="spdFpsOn">spd = raw FPS.</str>
+		<str id="spdBeatsOn">spd = beats the whole animation lasts (follows the BPM). Shows up when you save.</str>
+		<str id="indicesLabel">Atlas indices (e.g. 0,1,2,5-8; empty = frameTag)</str>
+		<str id="indicesOnSave">The indices show up when you save.</str>
+		<str id="ghostCheck">Ghost (align the others against this one)</str>
+		<str id="imported">Imported: {0}</str>
+		<str id="importedList">Imported: {0}</str>
+		<str id="skippedList">already existed: {0}</str>
+		<str id="failedList">failed: {0}</str>
+		<str id="noPng">No .png found in {0} (put the .png there and, if it has an atlas, its .xml or .json)</str>
+		<str id="importNeedsSys">Importing needs a sys target.</str>
+		<str id="reloaded">Reloaded from disk.</str>
+		<str id="nameAuto">The name is automatic: anim + the position in data.</str>
+		<str id="nameEmpty">The name cannot be empty.</str>
+		<str id="nameExists">An animation named {0} already exists.</str>
+		<str id="deleteConfirm">Confirm: delete {0}</str>
+		<str id="deleteHint">Tap again to delete the animation (it is only removed from config.json).</str>
+		<str id="videoCantOpen">{0} (could not be opened)</str>
+		<str id="ghostNoAtlas">Ghosts are not available for Animate atlases.</str>
+		<str id="saved">Saved: {0}/config.json</str>
+		<str id="writeFailed">Could not write {0}</str>
+		<str id="unsaved.title">Unsaved changes</str>
+		<str id="unsaved.body">There are changes in this sprite's config.json that you haven't saved yet.</str>
+		<str id="cancel">Cancel</str>
+		<str id="exitNoSave">Exit without saving</str>
+		<str id="saveAndExit">Save and exit</str>
+		<str id="info.zoom">Zoom {0}%</str>
+		<str id="info.frame">Frame {0}</str>
+		<str id="info.unsaved">* unsaved</str>
+		<str id="info.videoMissing">(missing video: {0})</str>
+		<str id="info.spriteFailed">(the sprite failed to load: check sprite.png and sprite.json)</str>
+		<str id="info.help">Drag the sprite or use the arrow keys (SHIFT x10) to move the pivot (the cross). G: ghost of this animation. Wheel: zoom. Q/E sprite, A/D animation.</str>
+
+	</group>
+</language>

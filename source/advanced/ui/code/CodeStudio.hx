@@ -84,7 +84,7 @@ class CodeStudio extends FlxSpriteGroup
 			if (inspector != null && inspector.exists) inspector.follow(editor.field.caretIndex);
 		};
 
-		welcome = CodeDraw.label(0, bodyY + Std.int(editorH / 2) - 30, "Elige un archivo del explorador", 18, CodeTheme.DIM, mainW);
+		welcome = CodeDraw.label(0, bodyY + Std.int(editorH / 2) - 30, CodeLang.t("ui.welcome", null, "Elige un archivo del explorador"), 18, CodeTheme.DIM, mainW);
 		welcome.alignment = FlxTextAlign.CENTER;
 
 		tabs = new TabBar(tabsY, mainW);
@@ -92,7 +92,7 @@ class CodeStudio extends FlxSpriteGroup
 		tabs.onClose = closeTab;
 
 		tree = new FileTree(mainW, tabsY, CodeTheme.EXPLORER_W, statusY - tabsY);
-		tree.setTitle(levelName != null ? levelName : "Nivel");
+		tree.setTitle(levelName != null ? levelName : CodeLang.t("ui.levelDefault", null, "Nivel"));
 		tree.onOpen = function(f) activate(f);
 		tree.onNewScript = newScript;
 
@@ -143,7 +143,7 @@ class CodeStudio extends FlxSpriteGroup
 		add(menu);
 
 		tree.setFiles(files, null);
-		output.log("[FMCE] Code Studio listo. Ctrl+S guarda, Ctrl+F busca, Ctrl+G va a una linea.", CodeTheme.MUTED);
+		output.log("[FMCE] " + CodeLang.t("log.ready", null, "Code Studio listo. Ctrl+S guarda, Ctrl+F busca, Ctrl+G va a una línea."), CodeTheme.MUTED);
 		if (files.length > 0) openFile(0);
 		else activate(null);
 
@@ -153,17 +153,17 @@ class CodeStudio extends FlxSpriteGroup
 	function buildToolbar(levelName:Null<String>):ToolBar
 	{
 		var t = new ToolBar(CodeTheme.MENU_H, FlxG.width);
-		t.addButton("Guardar", CodeTheme.TEXT, save);
-		t.addButton("Guardar todo", CodeTheme.TEXT, saveAll);
+		t.addButton(CodeLang.t("toolbar.save", null, "Guardar"), CodeTheme.TEXT, save);
+		t.addButton(CodeLang.t("toolbar.saveAll", null, "Guardar todo"), CodeTheme.TEXT, saveAll);
 		t.addSeparator();
-		t.addButton("+ Script", CodeTheme.TEXT, newScript);
+		t.addButton(CodeLang.t("toolbar.newScript", null, "+ Script"), CodeTheme.TEXT, newScript);
 		t.addSeparator();
-		t.addButton("► Ejecutar", CodeTheme.OK, run);
-		t.addButton("Sprites", CodeTheme.TEXT, previewSprites);
+		t.addButton(CodeLang.t("toolbar.run", null, "► Ejecutar"), CodeTheme.OK, run);
+		t.addButton(CodeLang.t("toolbar.sprites", null, "Sprites"), CodeTheme.TEXT, previewSprites);
 		t.addSeparator();
-		t.addButton("Buscar", CodeTheme.TEXT, function() openFind(""));
+		t.addButton(CodeLang.t("toolbar.find", null, "Buscar"), CodeTheme.TEXT, function() openFind(""));
 		t.addSeparator();
-		inspectorBtn = t.addButton("{ } Inspector JSON", CodeTheme.TEXT, toggleInspector);
+		inspectorBtn = t.addButton(CodeLang.t("toolbar.inspector", null, "{ } Inspector JSON"), CodeTheme.TEXT, toggleInspector);
 		inspectorBtn.toggled = inspectorOn;
 		t.setTitle(levelName != null ? levelName : "");
 		return t;
@@ -173,57 +173,57 @@ class CodeStudio extends FlxSpriteGroup
 	{
 		return [
 			{
-				title: "Archivo",
+				title: CodeLang.t("menu.file", null, "Archivo"),
 				items: function():Array<MenuItem> return [
-					{label: "Guardar", shortcut: "Ctrl+S", action: save, disabled: !canSave()},
-					{label: "Guardar todo", shortcut: "Ctrl+Mayús+S", action: saveAll},
+					{label: CodeLang.t("file.save", null, "Guardar"), shortcut: "Ctrl+S", action: save, disabled: !canSave()},
+					{label: CodeLang.t("file.saveAll", null, "Guardar todo"), shortcut: CodeLang.t("shortcut.saveAll", null, "Ctrl+Mayús+S"), action: saveAll},
 					{label: "", separator: true},
-					{label: "Nuevo script", shortcut: "Ctrl+N", action: newScript},
-					{label: "Cerrar pestaña", shortcut: "Ctrl+W", action: function() closeTab(currentOpen()), disabled: currentOpen() == null},
+					{label: CodeLang.t("file.newScript", null, "Nuevo script"), shortcut: "Ctrl+N", action: newScript},
+					{label: CodeLang.t("file.closeTab", null, "Cerrar pestaña"), shortcut: "Ctrl+W", action: function() closeTab(currentOpen()), disabled: currentOpen() == null},
 					{label: "", separator: true},
-					{label: "Volver", shortcut: "ESC", action: function()
+					{label: CodeLang.t("file.back", null, "Volver"), shortcut: "ESC", action: function()
 					{
 						if (onExit != null) onExit();
 					}}
 				]
 			},
 			{
-				title: "Editar",
+				title: CodeLang.t("menu.edit", null, "Editar"),
 				items: function():Array<MenuItem> return [
-					{label: "Deshacer", shortcut: "Ctrl+Z", action: editor.undo, disabled: !canEdit()},
-					{label: "Rehacer", shortcut: "Ctrl+Y", action: editor.redo, disabled: !canEdit()},
+					{label: CodeLang.t("edit.undo", null, "Deshacer"), shortcut: "Ctrl+Z", action: editor.undo, disabled: !canEdit()},
+					{label: CodeLang.t("edit.redo", null, "Rehacer"), shortcut: "Ctrl+Y", action: editor.redo, disabled: !canEdit()},
 					{label: "", separator: true},
-					{label: "Buscar…", shortcut: "Ctrl+F", action: function() openFind("")},
-					{label: "Ir a la línea…", shortcut: "Ctrl+G", action: function() openFind(":")},
+					{label: CodeLang.t("edit.find", null, "Buscar…"), shortcut: "Ctrl+F", action: function() openFind("")},
+					{label: CodeLang.t("edit.goToLine", null, "Ir a la línea…"), shortcut: "Ctrl+G", action: function() openFind(":")},
 					{label: "", separator: true},
-					{label: "Formatear JSON", shortcut: "Alt+Mayús+F", action: formatJson, disabled: !canFormat()}
+					{label: CodeLang.t("edit.formatJson", null, "Formatear JSON"), shortcut: CodeLang.t("shortcut.formatJson", null, "Alt+Mayús+F"), action: formatJson, disabled: !canFormat()}
 				]
 			},
 			{
-				title: "Ver",
+				title: CodeLang.t("menu.view", null, "Ver"),
 				items: function():Array<MenuItem> return [
-					{label: output.collapsed ? "Mostrar salida" : "Ocultar salida", shortcut: "Ctrl+J", action: toggleOutput},
-					{label: "Limpiar salida", action: output.clearLog},
+					{label: output.collapsed ? CodeLang.t("view.showOutput", null, "Mostrar salida") : CodeLang.t("view.hideOutput", null, "Ocultar salida"), shortcut: "Ctrl+J", action: toggleOutput},
+					{label: CodeLang.t("view.clearOutput", null, "Limpiar salida"), action: output.clearLog},
 					{label: "", separator: true},
-					{label: inspectorOn ? "Ocultar inspector JSON" : "Mostrar inspector JSON", shortcut: "F4", action: toggleInspector}
+					{label: inspectorOn ? CodeLang.t("view.hideInspector", null, "Ocultar inspector JSON") : CodeLang.t("view.showInspector", null, "Mostrar inspector JSON"), shortcut: "F4", action: toggleInspector}
 				]
 			},
 			{
-				title: "Proyecto",
+				title: CodeLang.t("menu.project", null, "Proyecto"),
 				items: function():Array<MenuItem> return [
-					{label: "Ejecutar script", shortcut: "F5", action: run, disabled: !(currentOpen() != null && currentOpen().kind == "haxe")},
-					{label: "Editor de sprites", shortcut: "F6", action: previewSprites}
+					{label: CodeLang.t("project.runScript", null, "Ejecutar script"), shortcut: "F5", action: run, disabled: !(currentOpen() != null && currentOpen().kind == "haxe")},
+					{label: CodeLang.t("project.spriteEditor", null, "Editor de sprites"), shortcut: "F6", action: previewSprites}
 				]
 			},
 			{
-				title: "Ayuda",
+				title: CodeLang.t("menu.help", null, "Ayuda"),
 				items: function():Array<MenuItem> return [
-					{label: "Ctrl+Tab: siguiente pestaña"},
-					{label: "Tab / Mayús+Tab: sangría"},
-					{label: "Ctrl+/: comentar líneas"},
-					{label: "Ctrl+D: duplicar línea"},
-					{label: "Clic central: cerrar pestaña"},
-					{label: "Inspector JSON: clic en una fila va a esa clave"}
+					{label: CodeLang.t("help.nextTab", null, "Ctrl+Tab: siguiente pestaña")},
+					{label: CodeLang.t("help.indent", null, "Tab / Mayús+Tab: sangría")},
+					{label: CodeLang.t("help.comment", null, "Ctrl+/: comentar líneas")},
+					{label: CodeLang.t("help.duplicate", null, "Ctrl+D: duplicar línea")},
+					{label: CodeLang.t("help.middleClick", null, "Clic central: cerrar pestaña")},
+					{label: CodeLang.t("help.inspector", null, "Inspector JSON: clic en una fila va a esa clave")}
 				]
 			}
 		];
@@ -283,7 +283,7 @@ class CodeStudio extends FlxSpriteGroup
 		if (f.dirty && !f.closeArmed)
 		{
 			f.closeArmed = true;
-			warn("[FMCE] " + f.name + " tiene cambios sin guardar. Guarda con Ctrl+S o cierra otra vez para descartarlos.");
+			warn("[FMCE] " + CodeLang.t("log.unsavedClose", [f.name], "{0} tiene cambios sin guardar. Guarda con Ctrl+S o cierra otra vez para descartarlos."));
 			return;
 		}
 		var wasActive = f == currentOpen();
@@ -329,7 +329,7 @@ class CodeStudio extends FlxSpriteGroup
 		var f = onNewScript();
 		if (f == null)
 		{
-			warn("[FMCE] No se pudo crear un script nuevo aqui.");
+			warn("[FMCE] " + CodeLang.t("log.newScriptFail", null, "No se pudo crear un script nuevo aquí."));
 			return;
 		}
 		files.push(f);
@@ -340,7 +340,7 @@ class CodeStudio extends FlxSpriteGroup
 		});
 		tree.setFiles(files, f);
 		activate(f);
-		info("[FMCE] Nuevo script: " + f.name + " (guárdalo con Ctrl+S)");
+		info("[FMCE] " + CodeLang.t("log.newScript", [f.name], "Nuevo script: {0} (guárdalo con Ctrl+S)"));
 	}
 
 	public function hasUnsaved():Bool
@@ -363,7 +363,7 @@ class CodeStudio extends FlxSpriteGroup
 		var f = currentOpen();
 		if (f == null) return;
 		syncFile(f);
-		if (saveOne(f)) status.setMessage(f.name + "  •  Guardado");
+		if (saveOne(f)) status.setMessage(CodeLang.t("status.saved", [f.name], "{0}  •  Guardado"));
 		refreshFileStatus(false);
 		tabs.refresh(openTabs, f);
 		tree.refreshMarks();
@@ -380,8 +380,8 @@ class CodeStudio extends FlxSpriteGroup
 			if (saveOne(f)) count++;
 			else failed++;
 		}
-		if (count == 0 && failed == 0) info("[FMCE] No hay cambios que guardar.");
-		else status.setMessage("Guardados " + count + " archivo(s)" + (failed > 0 ? ", " + failed + " con error" : ""), failed > 0);
+		if (count == 0 && failed == 0) info("[FMCE] " + CodeLang.t("log.noChanges", null, "No hay cambios que guardar."));
+		else status.setMessage(CodeLang.t("status.savedCount", [count], "Guardados {0} archivo(s)") + (failed > 0 ? CodeLang.t("status.savedFailed", [failed], ", {0} con error") : ""), failed > 0);
 		tabs.refresh(openTabs, currentOpen());
 		tree.refreshMarks();
 	}
@@ -390,17 +390,17 @@ class CodeStudio extends FlxSpriteGroup
 	{
 		if (!f.editable)
 		{
-			status.setMessage(f.name + "  •  SOLO LECTURA");
-			warn("[FMCE] No se puede modificar " + f.name + ". " + f.readOnlyReason);
+			status.setMessage(CodeLang.t("status.readOnly", [f.name], "{0}  •  SOLO LECTURA"));
+			warn("[FMCE] " + CodeLang.t("log.readOnly", [f.name, f.readOnlyReason], "No se puede modificar {0}. {1}"));
 			return false;
 		}
 		if (onSave(f))
 		{
 			f.markSaved();
-			ok("[FMCE] Guardado " + f.path);
+			ok("[FMCE] " + CodeLang.t("log.saved", [f.path], "Guardado {0}"));
 			return true;
 		}
-		status.setMessage(f.name + "  •  error al guardar", true);
+		status.setMessage(CodeLang.t("status.saveError", [f.name], "{0}  •  error al guardar"), true);
 		return false;
 	}
 
@@ -410,7 +410,7 @@ class CodeStudio extends FlxSpriteGroup
 		if (f == null) return;
 		if (f.kind != "haxe")
 		{
-			warn("[FMCE] Ejecutar solo prepara scripts Haxe. Abre un .hx.");
+			warn("[FMCE] " + CodeLang.t("log.runOnlyHaxe", null, "Ejecutar solo prepara scripts Haxe. Abre un .hx."));
 			return;
 		}
 		save();
@@ -437,11 +437,11 @@ class CodeStudio extends FlxSpriteGroup
 		{
 			var pretty = Json.stringify(Json.parse(editor.getText()), null, "  ");
 			editor.setTextAsEdit(pretty);
-			info("[FMCE] JSON formateado.");
+			info("[FMCE] " + CodeLang.t("log.jsonFormatted", null, "JSON formateado."));
 		}
 		catch (e:Dynamic)
 		{
-			error("[FMCE] No se puede formatear: " + Std.string(e));
+			error("[FMCE] " + CodeLang.t("log.formatFail", [Std.string(e)], "No se puede formatear: {0}"));
 		}
 	}
 
@@ -449,7 +449,7 @@ class CodeStudio extends FlxSpriteGroup
 	{
 		inspectorOn = !inspectorOn;
 		var f = currentOpen();
-		if (inspectorOn && (f == null || f.kind != "json")) info("[FMCE] El inspector aparece al abrir un archivo .json.");
+		if (inspectorOn && (f == null || f.kind != "json")) info("[FMCE] " + CodeLang.t("log.inspectorHint", null, "El inspector aparece al abrir un archivo .json."));
 		runJsonCheck();
 	}
 
@@ -491,21 +491,21 @@ class CodeStudio extends FlxSpriteGroup
 		if (f == null || f.kind != "json")
 		{
 			editor.setErrorLine(-1);
-			status.setMessage(f == null ? "Listo" : f.name);
+			status.setMessage(f == null ? CodeLang.t("status.ready", null, "Listo") : f.name);
 			return;
 		}
 		var text = editor.getText();
 		if (text.length > 600000)
 		{
 			editor.setErrorLine(-1);
-			status.setMessage(f.name + "  •  JSON grande: no se valida mientras escribes");
+			status.setMessage(CodeLang.t("status.jsonLarge", [f.name], "{0}  •  JSON grande: no se valida mientras escribes"));
 			return;
 		}
 		try
 		{
 			Json.parse(text);
 			editor.setErrorLine(-1);
-			status.setMessage(f.name + (f.editable ? "" : "  •  SOLO LECTURA"));
+			status.setMessage(f.editable ? f.name : CodeLang.t("status.readOnly", [f.name], "{0}  •  SOLO LECTURA"));
 		}
 		catch (e:Dynamic)
 		{
@@ -523,7 +523,7 @@ class CodeStudio extends FlxSpriteGroup
 				}
 			}
 			editor.setErrorLine(line);
-			status.setMessage("JSON inválido" + (line >= 0 ? " (línea " + (line + 1) + ")" : "") + ": " + msg, true);
+			status.setMessage(line >= 0 ? CodeLang.t("status.jsonInvalidLine", [line + 1, msg], "JSON inválido (línea {0}): {1}") : CodeLang.t("status.jsonInvalid", [msg], "JSON inválido: {0}"), true);
 		}
 	}
 
@@ -544,24 +544,43 @@ class CodeStudio extends FlxSpriteGroup
 		if (f == null)
 		{
 			status.setFileInfo("", "");
-			if (updateMessage) status.setMessage("Listo");
+			if (updateMessage) status.setMessage(CodeLang.t("status.ready", null, "Listo"));
 			return;
 		}
-		var extra = (f.editable ? "" : "SOLO LECTURA  ") + (f.crlf ? "CRLF" : "LF");
+		var extra = (f.editable ? "" : CodeLang.t("status.readOnlyShort", null, "SOLO LECTURA") + "  ") + (f.crlf ? "CRLF" : "LF");
 		status.setFileInfo(f.kindLabel(), extra);
 		if (!f.editable && updateMessage) warn("[FMCE] " + f.readOnlyReason);
 	}
 
-	public function log(message:String):Void
+	/**
+	 * level: "error" | "warn" | "ok" | "info". Si no se indica, se adivina por palabras clave
+	 * (ES/EN) como antes; los mensajes traducidos deberian pasar siempre el nivel.
+	 */
+	public function log(message:String, ?level:String):Void
 	{
-		var lower = message.toLowerCase();
 		var color = CodeTheme.TEXT;
-		if (lower.indexOf("error") >= 0 || lower.indexOf("invalid") >= 0 || lower.indexOf("bloquead") >= 0 || lower.indexOf("no se pudo") >= 0)
-			color = CodeTheme.ERROR;
-		else if (lower.indexOf("aun no") >= 0 || lower.indexOf("no se puede") >= 0 || lower.indexOf("sin guardar") >= 0)
-			color = CodeTheme.WARN;
-		else if (lower.indexOf("guardado") >= 0 || lower.indexOf("saved") >= 0)
-			color = CodeTheme.OK;
+		if (level != null)
+		{
+			color = switch (level)
+			{
+				case "error": CodeTheme.ERROR;
+				case "warn": CodeTheme.WARN;
+				case "ok": CodeTheme.OK;
+				default: CodeTheme.TEXT;
+			};
+		}
+		else
+		{
+			var lower = message.toLowerCase();
+			if (lower.indexOf("error") >= 0 || lower.indexOf("invalid") >= 0 || lower.indexOf("bloquead") >= 0 || lower.indexOf("no se pudo") >= 0
+				|| lower.indexOf("blocked") >= 0 || lower.indexOf("could not") >= 0)
+				color = CodeTheme.ERROR;
+			else if (lower.indexOf("aun no") >= 0 || lower.indexOf("no se puede") >= 0 || lower.indexOf("sin guardar") >= 0
+				|| lower.indexOf("not connected") >= 0 || lower.indexOf("cannot") >= 0 || lower.indexOf("unsaved") >= 0)
+				color = CodeTheme.WARN;
+			else if (lower.indexOf("guardado") >= 0 || lower.indexOf("saved") >= 0)
+				color = CodeTheme.OK;
+		}
 		output.log(timeTag() + message, color);
 	}
 

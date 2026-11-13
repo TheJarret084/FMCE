@@ -315,7 +315,7 @@ class ConfigScreens
 			menu: [
 				{
 					name: "Funky Maker!: Mobile (de KingGC)",
-					desc: "Literalmente usamos su nombre, base principal de todo (nota de creador: espero algun dia ser revisor, es mi unico sueño en ese juego)",
+					desc: "Literalmente usamos su nombre, base principal de todo (nota de Jarret/Owner: espero algun dia ser revisor, es mi unico sueño en ese juego)",
 					url: "https://play.google.com/store/apps/details?id=com.kingamescreator.fnmm",
 					color: FlxColor.fromRGB(242,255,119)
 
@@ -352,13 +352,18 @@ class ConfigScreens
 			]
 		},{
 			name: "Testers",
-			desc: "Quienes se aninaron a probar el engine y reportaron bugs",
+			desc: "Beta testers de escritorio: quienes se animaron a probar el engine y reportaron bugs",
 			background: "othersEngines",
 			menu: [
 				{
 					name: "Pecela",
 					desc: "Reporto 15 Crashes en Windows, todos en el chart Editor, que cosas no?",
 					color: FlxColor.WHITE
+				},
+				{
+					name: "Donigay",
+					desc: "Reporto que las noteSkins estaban rotos",
+					color: FlxColor.fromRGB(255, 105, 180)
 				}
 			]
 		}

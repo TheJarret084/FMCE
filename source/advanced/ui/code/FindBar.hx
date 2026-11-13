@@ -37,7 +37,7 @@ class FindBar extends FlxSpriteGroup
 
 		add(CodeDraw.rect(0, y, w, CodeTheme.FIND_H, CodeTheme.MENU));
 		add(CodeDraw.rect(0, y + CodeTheme.FIND_H - 1, w, 1, CodeTheme.BORDER));
-		add(CodeDraw.label(12, y + 9, "Buscar", CodeTheme.FONT_SMALL + 1, CodeTheme.MUTED));
+		add(CodeDraw.label(12, y + 9, CodeLang.t("find.label", null, "Buscar"), CodeTheme.FONT_SMALL + 1, CodeTheme.MUTED));
 		add(CodeDraw.rect(76, y + 5, 300, 24, CodeTheme.EDITOR));
 		add(CodeDraw.rect(76, y + 28, 300, 1, CodeTheme.ACCENT));
 		frozenText = CodeDraw.label(82, y + 8, "", CodeTheme.FONT_SMALL + 1, CodeTheme.TEXT);
@@ -51,8 +51,8 @@ class FindBar extends FlxSpriteGroup
 			search(false);
 		});
 		add(caseButton);
-		add(new CodeButton(424, y + 5, 70, 24, "◄ Ant", function() step(false)));
-		add(new CodeButton(498, y + 5, 70, 24, "Sig ►", function() step(true)));
+		add(new CodeButton(424, y + 5, 70, 24, CodeLang.t("find.prev", null, "◄ Ant"), function() step(false)));
+		add(new CodeButton(498, y + 5, 70, 24, CodeLang.t("find.next", null, "Sig ►"), function() step(true)));
 		info = CodeDraw.label(580, y + 9, "", CodeTheme.FONT_SMALL + 1, CodeTheme.MUTED);
 		add(info);
 		add(new CodeButton(w - 34, y + 5, 26, 24, "×", close, CodeTheme.MUTED, 16));
@@ -151,10 +151,10 @@ class FindBar extends FlxSpriteGroup
 			if (line > 0)
 			{
 				editor.goToLine(line);
-				info.text = "Ir a la linea " + line;
+				info.text = CodeLang.t("find.goto", [line], "Ir a la línea {0}");
 			}
 			else
-				info.text = "Escribe un numero de linea";
+				info.text = CodeLang.t("find.typeLine", null, "Escribe un número de línea");
 			return;
 		}
 		if (input.text == "")
@@ -183,12 +183,12 @@ class FindBar extends FlxSpriteGroup
 	{
 		if (idx < 0)
 		{
-			info.text = "Sin resultados";
+			info.text = CodeLang.t("find.noResults", null, "Sin resultados");
 			info.color = CodeTheme.ERROR;
 			return;
 		}
 		var m = editor.matchInfo(input.text, caseSensitive);
-		info.text = m.current + " de " + m.total;
+		info.text = CodeLang.t("find.matchCount", [m.current, m.total], "{0} de {1}");
 		info.color = CodeTheme.MUTED;
 	}
 

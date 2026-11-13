@@ -58,7 +58,7 @@ class CodeStudioFile
 		{
 			case "haxe": "Haxe";
 			case "json": "JSON";
-			default: "Texto";
+			default: CodeLang.t("kind.text", null, "Texto");
 		};
 	}
 }

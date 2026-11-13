@@ -22,9 +22,6 @@ class Main extends Sprite
 {
 	public static var instance:Main;
 
-	static inline var GAME_WIDTH:Int = 1280;
-	static inline var GAME_HEIGHT:Int = 720;
-
 	public function new()
 	{
 		super();
@@ -51,7 +48,7 @@ class Main extends Sprite
 		MemoryUtil.enable();
 		FlxG.signals.postStateSwitch.add(() -> MemoryUtil.clearMajor());
 
-		addChild(new FlxGame(GAME_WIDTH, GAME_HEIGHT, SplashState, 60, 60, true));
+		addChild(new FlxGame(1280, 720, SplashState, 60, 60, true));
 		FlxG.signals.focusLost.add(function() ClientPrefs.save());
 		funky.core.CursorManager.init();
 		addChild(new Framerate());

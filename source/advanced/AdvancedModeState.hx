@@ -5,6 +5,7 @@ import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
+import advanced.AdvLang;
 import advanced.ui.EditorBackdrop;
 import funky.api.DiscordClient;
 import funky.backend.LevelArchive;
@@ -76,8 +77,8 @@ class AdvancedModeState extends FlxState
 		}
 		catch (e:Dynamic) {}
 
-		add(new BoldText(16, 6, "MODO AVANZADO >", 0.55));
-		var desc = new FlxText(18, 50, FlxG.width - 40, "Selecciona el nivel que quieres editar.\n" + KeyBinds.label(KeyBinds.ACCEPT) + " para elegir  |  ESC volver", 15);
+		add(new BoldText(16, 6, AdvLang.t("modeMenu.title", null, "MODO AVANZADO >"), 0.55));
+		var desc = new FlxText(18, 50, FlxG.width - 40, AdvLang.t("modeMenu.desc", [KeyBinds.label(KeyBinds.ACCEPT)], "Selecciona el nivel que quieres editar.\n{0} para elegir  |  ESC volver"), 15);
 		desc.color = MUTED;
 		add(desc);
 
@@ -103,7 +104,7 @@ class AdvancedModeState extends FlxState
 		}
 		else
 		{
-			var empty = new FlxText(0, 255, FlxG.width, "No hay niveles en " + Paths.levelsRoot(), 18);
+			var empty = new FlxText(0, 255, FlxG.width, AdvLang.t("modeMenu.noLevels", [Paths.levelsRoot()], "No hay niveles en {0}"), 18);
 			empty.color = MUTED;
 			empty.alignment = FlxTextAlign.CENTER;
 			add(empty);
@@ -114,12 +115,12 @@ class AdvancedModeState extends FlxState
 		info.alignment = FlxTextAlign.CENTER;
 		add(info);
 
-		importButton = new FlxText(FlxG.width - 330, 14, 310, "IMPORTAR .FMCE  [I]", 20);
+		importButton = new FlxText(FlxG.width - 330, 14, 310, AdvLang.t("modeMenu.importButton", null, "IMPORTAR .FMCE  [I]"), 20);
 		importButton.color = ACTIVE;
 		importButton.alignment = FlxTextAlign.RIGHT;
 		add(importButton);
 
-		DiscordClient.customPresence("Modo Avanzado", "Seleccionando nivel", "fmce", "", false);
+		DiscordClient.customPresence(AdvLang.t("modeMenu.presenceTitle", null, "Modo Avanzado"), AdvLang.t("modeMenu.presenceSelecting", null, "Seleccionando nivel"), "fmce", "", false);
 		scrollPos = selected;
 		layoutRows(1);
 		TransitionHandler.playIn(this);
@@ -188,7 +189,7 @@ class AdvancedModeState extends FlxState
 	{
 		if (info == null) return;
 		info.color = MUTED;
-		info.text = levels.length == 0 ? "Crea un nivel en la carpeta levels/ para usar el modo avanzado." : (selected + 1) + " / " + levels.length;
+		info.text = levels.length == 0 ? AdvLang.t("modeMenu.createLevel", null, "Crea un nivel en la carpeta levels/ para usar el modo avanzado.") : (selected + 1) + " / " + levels.length;
 	}
 
 	function importLevels():Void
@@ -200,10 +201,10 @@ class AdvancedModeState extends FlxState
 			#if desktop
 			var dialog = new lime.ui.FileDialog();
 			dialog.onSelect.add(function(path:String) pendingImport = path);
-			dialog.browse(lime.ui.FileDialogType.OPEN, "fmce", null, "Importar nivel .FMCE");
+			dialog.browse(lime.ui.FileDialogType.OPEN, "fmce", null, AdvLang.t("modeMenu.importDialog", null, "Importar nivel .FMCE"));
 			return;
 			#else
-			setInfo("No hay .FMCE en " + funky.core.Paths.levelsRoot() + " (copialo ahi y vuelve a tocar IMPORTAR)", false);
+			setInfo(AdvLang.t("modeMenu.noArchives", [funky.core.Paths.levelsRoot()], "No hay .FMCE en {0} (copialo ahi y vuelve a tocar IMPORTAR)"), false);
 			return;
 			#end
 		}
@@ -217,14 +218,15 @@ class AdvancedModeState extends FlxState
 			{
 				okCount++;
 				LevelArchive.archiveDone(path);
-				messages.push(result.level + " (" + result.files + " archivos)");
+				messages.push(AdvLang.t("modeMenu.importedItem", [result.level, result.files], "{0} ({1} archivos)"));
 			}
 			else
 				messages.push(result.error);
 		}
 
 		reloadLevels();
-		setInfo((okCount > 0 ? "Importado: " : "") + messages.join(" | "), okCount > 0);
+		var joined = messages.join(" | ");
+		setInfo(okCount > 0 ? AdvLang.t("modeMenu.imported", [joined], "Importado: {0}") : joined, okCount > 0);
 		#end
 	}
 
@@ -232,7 +234,7 @@ class AdvancedModeState extends FlxState
 	{
 		var result = LevelArchive.importArchive(path);
 		if (result.ok) reloadLevels();
-		setInfo(result.ok ? "Importado: " + result.level + " (" + result.files + " archivos)" : result.error, result.ok);
+		setInfo(result.ok ? AdvLang.t("modeMenu.imported", [AdvLang.t("modeMenu.importedItem", [result.level, result.files], "{0} ({1} archivos)")], "Importado: {0}") : result.error, result.ok);
 	}
 
 	function setInfo(text:String, good:Bool):Void
@@ -280,7 +282,7 @@ class AdvancedModeState extends FlxState
 
 	function createGay():Void
 	{
-		var text = new FlxText(0, 0, FlxG.width, "¡GAY!", 64);
+		var text = new FlxText(0, 0, FlxG.width, AdvLang.t("modeMenu.gay", null, "¡GAY!"), 64);
 		text.alignment = FlxTextAlign.CENTER;
 		text.screenCenter();
 		add(text);

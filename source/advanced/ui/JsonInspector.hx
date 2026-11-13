@@ -1,5 +1,6 @@
 package advanced.ui;
 
+import advanced.AdvLang;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;
@@ -95,7 +96,7 @@ class JsonInspector extends FlxSpriteGroup
 		if (breadcrumb != null) breadcrumb.text = breadcrumbText();
 		if (current == null)
 		{
-			showInvalid("JSON invalido");
+			showInvalid(AdvLang.t("inspector.invalid", null, "JSON invalido"));
 			return;
 		}
 
@@ -112,7 +113,7 @@ class JsonInspector extends FlxSpriteGroup
 
 		if (entries.length == 0)
 		{
-			emptyText = text(0, HEADER_H + 70, FlxG.width, "Este objeto esta vacio", 18, MUTED);
+			emptyText = text(0, HEADER_H + 70, FlxG.width, AdvLang.t("inspector.emptyObject", null, "Este objeto esta vacio"), 18, MUTED);
 			emptyText.alignment = FlxTextAlign.CENTER;
 			add(emptyText);
 		}
@@ -126,7 +127,7 @@ class JsonInspector extends FlxSpriteGroup
 		add(rect(0, 0, FlxG.width, HEADER_H, PANEL));
 		add(rect(0, HEADER_H - 1, FlxG.width, 1, BORDER));
 
-		title = text(20, 13, 190, "JSON Inspector", 18, TEXT);
+		title = text(20, 13, 190, AdvLang.t("inspector.title", null, "JSON Inspector"), 18, TEXT);
 		add(title);
 		breadcrumb = text(225, 16, FlxG.width - 320, breadcrumbText(), 13, MUTED);
 		add(breadcrumb);
@@ -175,7 +176,7 @@ class JsonInspector extends FlxSpriteGroup
 	function showInvalid(reason:String):Void
 	{
 		add(rect(PAD, HEADER_H + 12, FlxG.width - PAD * 2, 90, CARD));
-		var t = text(PAD + 18, HEADER_H + 29, FlxG.width - PAD * 4, "JSON invalido", 18, 0xFFFF7B7B);
+		var t = text(PAD + 18, HEADER_H + 29, FlxG.width - PAD * 4, AdvLang.t("inspector.invalid", null, "JSON invalido"), 18, 0xFFFF7B7B);
 		add(t);
 		var r = text(PAD + 18, HEADER_H + 58, FlxG.width - PAD * 4, reason, 12, MUTED);
 		add(r);
@@ -183,31 +184,45 @@ class JsonInspector extends FlxSpriteGroup
 
 	function breadcrumbText():String
 	{
-		if (keyStack.length == 0) return "root";
-		return "root  ›  " + keyStack.join("  ›  ");
+		var rootName = AdvLang.t("inspector.root", null, "root");
+		if (keyStack.length == 0) return rootName;
+		return rootName + "  ›  " + keyStack.join("  ›  ");
 	}
 
 	function isContainer(value:Dynamic):Bool
 		return Std.isOfType(value, Array) || (value != null && Reflect.isObject(value) && !Std.isOfType(value, String));
 
+	function typeKind(value:Dynamic):String
+	{
+		if (value == null) return "null";
+		if (Std.isOfType(value, Bool)) return "bool";
+		if (Std.isOfType(value, Int) || Std.isOfType(value, Float)) return "number";
+		if (Std.isOfType(value, String)) return "text";
+		if (Std.isOfType(value, Array)) return "array";
+		return "object";
+	}
+
 	function typeName(value:Dynamic):String
 	{
-		if (value == null) return "NULO";
-		if (Std.isOfType(value, Bool)) return "BOOLEANO";
-		if (Std.isOfType(value, Int) || Std.isOfType(value, Float)) return "NÚMERO";
-		if (Std.isOfType(value, String)) return "TEXTO";
-		if (Std.isOfType(value, Array)) return "ARRAY";
-		return "OBJETO";
+		return switch (typeKind(value))
+		{
+			case "null": AdvLang.t("inspector.type.null", null, "NULO");
+			case "bool": AdvLang.t("inspector.type.bool", null, "BOOLEANO");
+			case "number": AdvLang.t("inspector.type.number", null, "NÚMERO");
+			case "text": AdvLang.t("inspector.type.text", null, "TEXTO");
+			case "array": AdvLang.t("inspector.type.array", null, "ARRAY");
+			default: AdvLang.t("inspector.type.object", null, "OBJETO");
+		}
 	}
 
 	function typeColor(value:Dynamic):Int
 	{
-		return switch (typeName(value))
+		return switch (typeKind(value))
 		{
-			case "NÚMERO": NUMBER;
-			case "TEXTO": STRING;
-			case "BOOLEANO": BOOL;
-			case "NULO": NULLC;
+			case "number": NUMBER;
+			case "text": STRING;
+			case "bool": BOOL;
+			case "null": NULLC;
 			default: ACCENT;
 		}
 	}
@@ -217,8 +232,8 @@ class JsonInspector extends FlxSpriteGroup
 		if (value == null) return "null";
 		if (Std.isOfType(value, String)) return '"' + Std.string(value) + '"';
 		if (Std.isOfType(value, Bool)) return value ? "true" : "false";
-		if (Std.isOfType(value, Array)) return (cast value:Array<Dynamic>).length + " elementos";
-		if (Reflect.isObject(value)) return Reflect.fields(value).length + " objetos";
+		if (Std.isOfType(value, Array)) return AdvLang.t("inspector.elements", [(cast value:Array<Dynamic>).length], (cast value:Array<Dynamic>).length + " elementos");
+		if (Reflect.isObject(value)) return AdvLang.t("inspector.objects", [Reflect.fields(value).length], Reflect.fields(value).length + " objetos");
 		return Std.string(value);
 	}
 
@@ -273,22 +288,22 @@ class JsonInspector extends FlxSpriteGroup
 		dialog = new FlxSpriteGroup();
 		add(dialog);
 		dialog.add(rect(25, 105, FlxG.width - 50, 390, 0xFF202A28));
-		dialog.add(text(55, 140, FlxG.width - 110, 'Editar "$key"', 28, TEXT));
-		dialog.add(text(55, 198, FlxG.width - 110, "Clave", 12, MUTED));
+		dialog.add(text(55, 140, FlxG.width - 110, AdvLang.t("inspector.editKey", [key], 'Editar "$key"'), 28, TEXT));
+		dialog.add(text(55, 198, FlxG.width - 110, AdvLang.t("inspector.key", null, "Clave"), 12, MUTED));
 
 		dialogKey = input(key, 55, 216, FlxG.width - 110, 52);
 		FlxG.stage.addChild(dialogKey);
-		dialog.add(text(55, 285, 90, "Tipo", 12, MUTED));
+		dialog.add(text(55, 285, 90, AdvLang.t("inspector.type", null, "Tipo"), 12, MUTED));
 		dialogType = text(55, 307, 190, typeName(value), 16, typeColor(value));
 		dialog.add(dialogType);
-	var change = text(175, 306, 100, "Cambiar", 16, ACCENT);
-	dialog.add(change);
+		var change = text(175, 306, 100, AdvLang.t("inspector.change", null, "Cambiar"), 16, ACCENT);
+		dialog.add(change);
 
 		dialogValue = input(valueToText(value), 55, 350, FlxG.width - 110, 58);
 		FlxG.stage.addChild(dialogValue);
 
-		dialog.add(text(390, 438, 95, "Cancelar", 15, MUTED));
-		dialog.add(text(505, 438, 90, "Guardar", 15, ACCENT));
+		dialog.add(text(390, 438, 95, AdvLang.t("inspector.cancel", null, "Cancelar"), 15, MUTED));
+		dialog.add(text(505, 438, 90, AdvLang.t("inspector.save", null, "Guardar"), 15, ACCENT));
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, onDialogKey);
 	}
 
@@ -306,18 +321,18 @@ class JsonInspector extends FlxSpriteGroup
 		dialog = new FlxSpriteGroup();
 		add(dialog);
 		dialog.add(rect(25, 105, FlxG.width - 50, 390, 0xFF202A28));
-		dialog.add(text(55, 140, FlxG.width - 110, "Nuevo valor", 28, TEXT));
-		dialog.add(text(55, 198, FlxG.width - 110, "Clave", 12, MUTED));
+		dialog.add(text(55, 140, FlxG.width - 110, AdvLang.t("inspector.newValue", null, "Nuevo valor"), 28, TEXT));
+		dialog.add(text(55, 198, FlxG.width - 110, AdvLang.t("inspector.key", null, "Clave"), 12, MUTED));
 		dialogKey = input("newKey", 55, 216, FlxG.width - 110, 52);
 		FlxG.stage.addChild(dialogKey);
-		dialog.add(text(55, 285, 90, "Tipo", 12, MUTED));
-		dialogType = text(55, 307, 190, "TEXTO", 16, STRING);
+		dialog.add(text(55, 285, 90, AdvLang.t("inspector.type", null, "Tipo"), 12, MUTED));
+		dialogType = text(55, 307, 190, typeName(""), 16, STRING);
 		dialog.add(dialogType);
-		dialog.add(text(175, 306, 100, "Cambiar", 16, ACCENT));
+		dialog.add(text(175, 306, 100, AdvLang.t("inspector.change", null, "Cambiar"), 16, ACCENT));
 		dialogValue = input("", 55, 350, FlxG.width - 110, 58);
 		FlxG.stage.addChild(dialogValue);
-		dialog.add(text(390, 438, 95, "Cancelar", 15, MUTED));
-		dialog.add(text(505, 438, 90, "Guardar", 15, ACCENT));
+		dialog.add(text(390, 438, 95, AdvLang.t("inspector.cancel", null, "Cancelar"), 15, MUTED));
+		dialog.add(text(505, 438, 90, AdvLang.t("inspector.save", null, "Guardar"), 15, ACCENT));
 		FlxG.stage.addEventListener(KeyboardEvent.KEY_DOWN, onDialogKey);
 	}
 

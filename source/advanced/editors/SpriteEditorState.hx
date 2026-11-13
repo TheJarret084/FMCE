@@ -1,5 +1,6 @@
 package advanced.editors;
 
+import advanced.AdvLang;
 import advanced.AdvancedToolsState;
 import advanced.ui.EditorListButton;
 import advanced.ui.FieldStepper;
@@ -146,7 +147,7 @@ class SpriteEditorState extends UIState
 		for (name in sprites) addSpriteButton(name);
 		SaveWarning.saveFunc = save;
 		if (sprites.length > 0) selectSprite(0);
-		else notify("Este nivel no tiene sprites validos en sprites/. Toca + para importar.");
+		else notify(AdvLang.t("spriteEditor.noSprites", null, "Este nivel no tiene sprites validos en sprites/. Toca + para importar."));
 	}
 
 	inline function centerX():Float
@@ -162,48 +163,48 @@ class SpriteEditorState extends UIState
 	{
 		topMenu = [
 			{
-				label: "Archivo",
+				label: AdvLang.t("spriteEditor.menu.file", null, "Archivo"),
 				childs: [
-					{label: "Guardar", keybind: [CONTROL, S], onSelect: function(_) save()},
-					{label: "Recargar desde el disco", keybind: [CONTROL, R], onSelect: function(_) reload()},
-					{label: "Importar sprite...", onSelect: function(_) importSprites()},
-					{label: "Importar desde la carpeta " + SpriteImporter.INBOX, onSelect: function(_) importFromInbox()},
+					{label: AdvLang.t("spriteEditor.menu.save", null, "Guardar"), keybind: [CONTROL, S], onSelect: function(_) save()},
+					{label: AdvLang.t("spriteEditor.menu.reload", null, "Recargar desde el disco"), keybind: [CONTROL, R], onSelect: function(_) reload()},
+					{label: AdvLang.t("spriteEditor.menu.importSprite", null, "Importar sprite..."), onSelect: function(_) importSprites()},
+					{label: AdvLang.t("spriteEditor.menu.importInbox", [SpriteImporter.INBOX], "Importar desde la carpeta {0}"), onSelect: function(_) importFromInbox()},
 					null,
-					{label: "Salir", keybind: [ESCAPE], onSelect: function(_) exit()}
+					{label: AdvLang.t("spriteEditor.menu.exit", null, "Salir"), keybind: [ESCAPE], onSelect: function(_) exit()}
 				]
 			},
 			{
-				label: "Editar",
+				label: AdvLang.t("spriteEditor.menu.edit", null, "Editar"),
 				childs: [
-					{label: "Nueva animacion", keybind: [INSERT], onSelect: function(_) newAnim()},
-					{label: "Borrar animacion", keybind: [DELETE], onSelect: function(_) deleteAnim()},
+					{label: AdvLang.t("spriteEditor.menu.newAnim", null, "Nueva animacion"), keybind: [INSERT], onSelect: function(_) newAnim()},
+					{label: AdvLang.t("spriteEditor.deleteAnim", null, "Borrar animacion"), keybind: [DELETE], onSelect: function(_) deleteAnim()},
 					null,
-					{label: "Reproducir de nuevo", keybind: [SPACE], onSelect: function(_) playCurrent()}
+					{label: AdvLang.t("spriteEditor.menu.replay", null, "Reproducir de nuevo"), keybind: [SPACE], onSelect: function(_) playCurrent()}
 				]
 			},
 			{
-				label: "Sprite",
+				label: AdvLang.t("spriteEditor.sprite", null, "Sprite"),
 				childs: [
-					{label: "Anterior", keybind: [Q], onSelect: function(_) selectSprite(spriteIdx - 1)},
-					{label: "Siguiente", keybind: [E], onSelect: function(_) selectSprite(spriteIdx + 1)}
+					{label: AdvLang.t("spriteEditor.previous", null, "Anterior"), keybind: [Q], onSelect: function(_) selectSprite(spriteIdx - 1)},
+					{label: AdvLang.t("spriteEditor.next", null, "Siguiente"), keybind: [E], onSelect: function(_) selectSprite(spriteIdx + 1)}
 				]
 			},
 			{
-				label: "Animacion",
+				label: AdvLang.t("spriteEditor.animation", null, "Animacion"),
 				childs: [
-					{label: "Anterior", keybind: [A], onSelect: function(_) selectAnim(animIdx - 1)},
-					{label: "Siguiente", keybind: [D], onSelect: function(_) selectAnim(animIdx + 1)}
+					{label: AdvLang.t("spriteEditor.previous", null, "Anterior"), keybind: [A], onSelect: function(_) selectAnim(animIdx - 1)},
+					{label: AdvLang.t("spriteEditor.next", null, "Siguiente"), keybind: [D], onSelect: function(_) selectAnim(animIdx + 1)}
 				]
 			},
 			{
-				label: "Ver",
+				label: AdvLang.t("spriteEditor.menu.view", null, "Ver"),
 				childs: [
-					{label: "Acercar", onSelect: function(_) setZoom(zoom + 0.5)},
-					{label: "Alejar", onSelect: function(_) setZoom(zoom - 0.5)},
-					{label: "Zoom 100%", onSelect: function(_) setZoom(1)},
+					{label: AdvLang.t("spriteEditor.menu.zoomIn", null, "Acercar"), onSelect: function(_) setZoom(zoom + 0.5)},
+					{label: AdvLang.t("spriteEditor.menu.zoomOut", null, "Alejar"), onSelect: function(_) setZoom(zoom - 0.5)},
+					{label: AdvLang.t("spriteEditor.menu.zoomReset", null, "Zoom 100%"), onSelect: function(_) setZoom(1)},
 					null,
-					{label: "Ghost de la animacion actual", keybind: [G], onSelect: function(_) setGhost(entry(), !isGhost(entry()))},
-					{label: "Quitar todos los ghosts", onSelect: function(_) clearGhosts()}
+					{label: AdvLang.t("spriteEditor.menu.ghostCurrent", null, "Ghost de la animacion actual"), keybind: [G], onSelect: function(_) setGhost(entry(), !isGhost(entry()))},
+					{label: AdvLang.t("spriteEditor.menu.clearGhosts", null, "Quitar todos los ghosts"), onSelect: function(_) clearGhosts()}
 				]
 			}
 		];
@@ -215,12 +216,12 @@ class SpriteEditorState extends UIState
 	function buildLeft():Void
 	{
 		var listH = Std.int((FlxG.height - TOP) * 0.5);
-		spriteList = new UIButtonList<EditorListButton>(0, TOP, LEFT_W, listH, "Sprites", FlxPoint.get(LEFT_W - 30, 28), null, 4);
+		spriteList = new UIButtonList<EditorListButton>(0, TOP, LEFT_W, listH, AdvLang.t("spriteEditor.sprites", null, "Sprites"), FlxPoint.get(LEFT_W - 30, 28), null, 4);
 		spriteList.cameras = [uiCamera];
 		spriteList.addButton.callback = importSprites;
 		add(spriteList);
 
-		animList = new UIButtonList<EditorListButton>(0, TOP + listH, LEFT_W, FlxG.height - TOP - listH, "Animaciones", FlxPoint.get(LEFT_W - 30, 28), null, 4);
+		animList = new UIButtonList<EditorListButton>(0, TOP + listH, LEFT_W, FlxG.height - TOP - listH, AdvLang.t("spriteEditor.animations", null, "Animaciones"), FlxPoint.get(LEFT_W - 30, 28), null, 4);
 		animList.cameras = [uiCamera];
 		animList.addButton.callback = newAnim;
 		add(animList);
@@ -230,15 +231,15 @@ class SpriteEditorState extends UIState
 	{
 		var x0 = FlxG.width - RIGHT_W;
 		var y0 = TOP;
-		ui(new UIWindow(x0, y0, RIGHT_W, 150, "Sprite"));
-		label(x0 + 20, y0 + 38, "Tipo");
+		ui(new UIWindow(x0, y0, RIGHT_W, 150, AdvLang.t("spriteEditor.sprite", null, "Sprite")));
+		label(x0 + 20, y0 + 38, AdvLang.t("spriteEditor.type", null, "Tipo"));
 		typeDrop = ui(new UIDropDown(x0 + 20, y0 + 58, RIGHT_W - 40, 32, cast TYPES, 0));
 		typeDrop.onChange = function(i:Int)
 		{
 			Reflect.setField(cfg, "type", TYPES[i]);
 			touch();
 		};
-		bilinearCheck = ui(new UICheckbox(x0 + 20, y0 + 110, "Suavizado", false));
+		bilinearCheck = ui(new UICheckbox(x0 + 20, y0 + 110, AdvLang.t("spriteEditor.smoothing", null, "Suavizado"), false));
 		bilinearCheck.onChecked = function(b:Bool)
 		{
 			Reflect.setField(cfg, "bilinear", b);
@@ -246,50 +247,50 @@ class SpriteEditorState extends UIState
 		};
 
 		var y1 = y0 + 160;
-		ui(new UIWindow(x0, y1, RIGHT_W, 514, "Animacion"));
-		label(x0 + 20, y1 + 38, "Nombre en el juego (anim + posicion)");
+		ui(new UIWindow(x0, y1, RIGHT_W, 514, AdvLang.t("spriteEditor.animation", null, "Animacion")));
+		label(x0 + 20, y1 + 38, AdvLang.t("spriteEditor.ingameName", null, "Nombre en el juego (anim + posicion)"));
 		nameBox = ui(new UITextBox(x0 + 20, y1 + 58, "", RIGHT_W - 40));
 		nameBox.onChange = renameAnim;
-		tagLabel = label(x0 + 20, y1 + 98, "Tag del sprite.json");
+		tagLabel = label(x0 + 20, y1 + 98, AdvLang.t("spriteEditor.tagSpriteJson", null, "Tag del sprite.json"));
 		tagBox = ui(new UITextBox(x0 + 20, y1 + 118, "", RIGHT_W - 40));
 		tagBox.onChange = function(t:String)
 		{
 			setEntry("anim", StringTools.trim(t));
-			notify("El tag nuevo se ve al guardar.");
+			notify(AdvLang.t("spriteEditor.tagOnSave", null, "El tag nuevo se ve al guardar."));
 		};
-		label(x0 + 20, y1 + 164, "Velocidad");
+		label(x0 + 20, y1 + 164, AdvLang.t("spriteEditor.speed", null, "Velocidad"));
 		speedStep = ui(new FieldStepper(x0 + 20, y1 + 184, 24, 1, 2, 0.05, 240, 120));
 		speedStep.onValue = function(v:Float) setEntry("spd", JsonFile.round(v));
-		label(x0 + 156, y1 + 164, "Escala");
+		label(x0 + 156, y1 + 164, AdvLang.t("spriteEditor.scale", null, "Escala"));
 		animScaleStep = ui(new FieldStepper(x0 + 156, y1 + 184, 1, 0.05, 2, 0.05, 20, 120));
 		animScaleStep.onValue = function(v:Float) setEntry("scale", JsonFile.round(v));
-		label(x0 + 20, y1 + 230, "Pivote X");
+		label(x0 + 20, y1 + 230, AdvLang.t("spriteEditor.pivotX", null, "Pivote X"));
 		pivotXStep = ui(new FieldStepper(x0 + 20, y1 + 250, 0, 1, 1, null, null, 120));
 		pivotXStep.onValue = function(v:Float) setPivot(v, null);
-		label(x0 + 156, y1 + 230, "Pivote Y");
+		label(x0 + 156, y1 + 230, AdvLang.t("spriteEditor.pivotY", null, "Pivote Y"));
 		pivotYStep = ui(new FieldStepper(x0 + 156, y1 + 250, 0, 1, 1, null, null, 120));
 		pivotYStep.onValue = function(v:Float) setPivot(null, v);
-		loopCheck = ui(new UICheckbox(x0 + 20, y1 + 300, "Loop", true));
+		loopCheck = ui(new UICheckbox(x0 + 20, y1 + 300, AdvLang.t("spriteEditor.loop", null, "Loop"), true));
 		loopCheck.onChecked = function(b:Bool) setEntry("loop", b);
-		var play = ui(new UIButton(x0 + 156, y1 + 296, "Reproducir", playCurrent, 120, 32));
-		spdFpsCheck = ui(new UICheckbox(x0 + 20, y1 + 332, "Velocidad en FPS (apagado = beats que dura)", true));
+		var play = ui(new UIButton(x0 + 156, y1 + 296, AdvLang.t("spriteEditor.play", null, "Reproducir"), playCurrent, 120, 32));
+		spdFpsCheck = ui(new UICheckbox(x0 + 20, y1 + 332, AdvLang.t("spriteEditor.speedFps", null, "Velocidad en FPS (apagado = beats que dura)"), true));
 		spdFpsCheck.onChecked = function(b:Bool)
 		{
 			setEntry("spd_fps", b);
-			notify(b ? "spd = FPS crudos." : "spd = beats que dura la animacion completa (sigue al BPM). Se ve al guardar.");
+			notify(b ? AdvLang.t("spriteEditor.spdFpsOn", null, "spd = FPS crudos.") : AdvLang.t("spriteEditor.spdBeatsOn", null, "spd = beats que dura la animacion completa (sigue al BPM). Se ve al guardar."));
 		};
-		label(x0 + 20, y1 + 372, "Indices del atlas (ej: 0,1,2,5-8; vacio = frameTag)");
+		label(x0 + 20, y1 + 372, AdvLang.t("spriteEditor.indicesLabel", null, "Indices del atlas (ej: 0,1,2,5-8; vacio = frameTag)"));
 		indicesBox = ui(new UITextBox(x0 + 20, y1 + 392, "", RIGHT_W - 40));
 		indicesBox.onChange = function(t:String)
 		{
 			setEntry("indices", parseIndices(t));
-			notify("Los indices se ven al guardar.");
+			notify(AdvLang.t("spriteEditor.indicesOnSave", null, "Los indices se ven al guardar."));
 		};
 
-		ghostCheck = ui(new UICheckbox(x0 + 20, y1 + 430, "Ghost (alinear las demas contra esta)", false));
+		ghostCheck = ui(new UICheckbox(x0 + 20, y1 + 430, AdvLang.t("spriteEditor.ghostCheck", null, "Ghost (alinear las demas contra esta)"), false));
 		ghostCheck.onChecked = function(b:Bool) setGhost(entry(), b);
 
-		deleteButton = ui(new UIButton(x0 + 20, y1 + 468, "Borrar animacion", requestDeleteAnim, RIGHT_W - 40, 32));
+		deleteButton = ui(new UIButton(x0 + 20, y1 + 468, AdvLang.t("spriteEditor.deleteAnim", null, "Borrar animacion"), requestDeleteAnim, RIGHT_W - 40, 32));
 		deleteButton.color = 0xFFFF8A8A;
 
 		animWidgets = [nameBox, tagBox, speedStep, animScaleStep, pivotXStep, pivotYStep, loopCheck, spdFpsCheck, indicesBox, ghostCheck, play, deleteButton];
@@ -327,7 +328,7 @@ class SpriteEditorState extends UIState
 			else
 				selectSprite(Std.int(Math.max(0, sprites.indexOf(name))));
 
-			notify("Importado: " + name);
+			notify(AdvLang.t("spriteEditor.imported", [name], "Importado: {0}"));
 		}));
 		#else
 		importFromInbox();
@@ -354,16 +355,16 @@ class SpriteEditorState extends UIState
 			else
 				selectSprite(Std.int(Math.max(0, sprites.indexOf(result.imported[0]))));
 
-			parts.push("Importados: " + result.imported.join(", "));
+			parts.push(AdvLang.t("spriteEditor.importedList", [result.imported.join(", ")], "Importados: {0}"));
 		}
 
-		if (result.skipped.length > 0) parts.push("ya existian: " + result.skipped.join(", "));
-		if (result.failed.length > 0) parts.push("fallaron: " + result.failed.join(", "));
-		if (parts.length == 0) parts.push("No hay .png en " + result.inbox + " (pon ahi el .png y, si tiene atlas, su .xml o .json)");
+		if (result.skipped.length > 0) parts.push(AdvLang.t("spriteEditor.skippedList", [result.skipped.join(", ")], "ya existian: {0}"));
+		if (result.failed.length > 0) parts.push(AdvLang.t("spriteEditor.failedList", [result.failed.join(", ")], "fallaron: {0}"));
+		if (parts.length == 0) parts.push(AdvLang.t("spriteEditor.noPng", [result.inbox], "No hay .png en {0} (pon ahi el .png y, si tiene atlas, su .xml o .json)"));
 
 		notify(parts.join(" | "));
 		#else
-		notify("Importar necesita un target sys.");
+		notify(AdvLang.t("spriteEditor.importNeedsSys", null, "Importar necesita un target sys."));
 		#end
 	}
 
@@ -486,7 +487,7 @@ class SpriteEditorState extends UIState
 		dirty = false;
 		SaveWarning.showWarning = false;
 		loadCurrent(animIdx);
-		notify("Recargado desde el disco.");
+		notify(AdvLang.t("spriteEditor.reloaded", null, "Recargado desde el disco."));
 	}
 
 	inline function entry():Dynamic
@@ -519,7 +520,7 @@ class SpriteEditorState extends UIState
 		typeDrop.index = Std.int(Math.max(0, TYPES.indexOf(type)));
 		typeDrop.label.text = TYPES[typeDrop.index];
 		bilinearCheck.checked = Reflect.field(cfg, "bilinear") == true;
-		tagLabel.text = atlas ? "Simbolo / label del atlas" : "Tag del sprite.json";
+		tagLabel.text = atlas ? AdvLang.t("spriteEditor.tagAtlas", null, "Simbolo / label del atlas") : AdvLang.t("spriteEditor.tagSpriteJson", null, "Tag del sprite.json");
 	}
 
 	function syncAnimWidgets():Void
@@ -600,7 +601,7 @@ class SpriteEditorState extends UIState
 		if (!atlas)
 		{
 
-			notify("El nombre es automatico: anim + la posicion en data.");
+			notify(AdvLang.t("spriteEditor.nameAuto", null, "El nombre es automatico: anim + la posicion en data."));
 			nameBox.label.text = Std.string(Reflect.field(e, "name"));
 			return;
 		}
@@ -608,7 +609,7 @@ class SpriteEditorState extends UIState
 		var clash = Lambda.exists(entries, o -> o != e && Reflect.field(o, "name") == name);
 		if (name == "" || clash)
 		{
-			notify(name == "" ? "El nombre no puede quedar vacio." : "Ya existe una animacion llamada " + name + ".");
+			notify(name == "" ? AdvLang.t("spriteEditor.nameEmpty", null, "El nombre no puede quedar vacio.") : AdvLang.t("spriteEditor.nameExists", [name], "Ya existe una animacion llamada {0}."));
 			nameBox.label.text = Std.string(Reflect.field(e, "name"));
 			return;
 		}
@@ -635,15 +636,15 @@ class SpriteEditorState extends UIState
 
 		deleteArmed = e;
 		deleteArmedAt = haxe.Timer.stamp();
-		deleteButton.field.text = "Confirmar: borrar " + Std.string(Reflect.field(e, "name"));
+		deleteButton.field.text = AdvLang.t("spriteEditor.deleteConfirm", [Std.string(Reflect.field(e, "name"))], "Confirmar: borrar {0}");
 		deleteButton.color = 0xFFFF4444;
-		notify("Toca otra vez para borrar la animacion (solo se quita del config.json).");
+		notify(AdvLang.t("spriteEditor.deleteHint", null, "Toca otra vez para borrar la animacion (solo se quita del config.json)."));
 	}
 
 	function disarmDelete():Void
 	{
 		deleteArmed = null;
-		deleteButton.field.text = "Borrar animacion";
+		deleteButton.field.text = AdvLang.t("spriteEditor.deleteAnim", null, "Borrar animacion");
 		deleteButton.color = 0xFFFF8A8A;
 	}
 
@@ -734,7 +735,7 @@ class SpriteEditorState extends UIState
 		{
 			video.destroy();
 			video = null;
-			videoMissing = anim + FunkinVideoSprite.EXTENSION + " (no se pudo abrir)";
+			videoMissing = AdvLang.t("spriteEditor.videoCantOpen", [anim + FunkinVideoSprite.EXTENSION], "{0} (no se pudo abrir)");
 		}
 		place();
 	}
@@ -782,7 +783,7 @@ class SpriteEditorState extends UIState
 		if (e == null) return;
 		if (atlas)
 		{
-			notify("Los ghosts no estan disponibles en atlas de Animate.");
+			notify(AdvLang.t("spriteEditor.ghostNoAtlas", null, "Los ghosts no estan disponibles en atlas de Animate."));
 			ghostCheck.checked = false;
 			return;
 		}
@@ -924,11 +925,11 @@ class SpriteEditorState extends UIState
 			dirty = false;
 			SaveWarning.showWarning = false;
 			UIState.playEditorSound(funkin.backend.system.Flags.DEFAULT_EDITOR_SAVE_SOUND);
-			notify("Guardado: " + sprites[spriteIdx] + "/config.json");
+			notify(AdvLang.t("spriteEditor.saved", [sprites[spriteIdx]], "Guardado: {0}/config.json"));
 			loadCurrent(animIdx);
 		}
 		else
-			notify("No se pudo escribir " + cfgPath);
+			notify(AdvLang.t("spriteEditor.writeFailed", [cfgPath], "No se pudo escribir {0}"));
 	}
 
 	function exit():Void
@@ -938,13 +939,13 @@ class SpriteEditorState extends UIState
 			FlxG.switchState(new AdvancedToolsState(levelName));
 			return;
 		}
-		openSubState(new UIWarningSubstate("Cambios sin guardar", "Hay cambios en el config.json de este sprite que todavia no guardaste.", [
-			{label: "Cancelar", color: 0x969533, onClick: function(_) {}},
-			{label: "Salir sin guardar", color: 0x969533, onClick: function(_) {
+		openSubState(new UIWarningSubstate(AdvLang.t("spriteEditor.unsaved.title", null, "Cambios sin guardar"), AdvLang.t("spriteEditor.unsaved.body", null, "Hay cambios en el config.json de este sprite que todavia no guardaste."), [
+			{label: AdvLang.t("spriteEditor.cancel", null, "Cancelar"), color: 0x969533, onClick: function(_) {}},
+			{label: AdvLang.t("spriteEditor.exitNoSave", null, "Salir sin guardar"), color: 0x969533, onClick: function(_) {
 				SaveWarning.showWarning = false;
 				FlxG.switchState(new AdvancedToolsState(levelName));
 			}},
-			{label: "Guardar y salir", color: 0x969533, onClick: function(_) {
+			{label: AdvLang.t("spriteEditor.saveAndExit", null, "Guardar y salir"), color: 0x969533, onClick: function(_) {
 				save();
 				FlxG.switchState(new AdvancedToolsState(levelName));
 			}}
@@ -1014,8 +1015,8 @@ class SpriteEditorState extends UIState
 	function refreshInfo():Void
 	{
 		var frame = isVideo ? (video != null ? Std.int(video.frameWidth) + " x " + Std.int(video.frameHeight) : "-") : (sprite != null && sprite.loaded ? Std.int(sprite.frameWidth) + " x " + Std.int(sprite.frameHeight) : "-");
-		infoText.text = "Zoom " + Std.int(zoom * 100) + "%   Frame " + frame + (dirty ? "   * sin guardar" : "") + (isVideo ? (videoMissing != null ? "   (falta el video: " + videoMissing + ")" : "") : (sprite != null && !sprite.loaded ? "   (el sprite no cargo: revisa sprite.png y sprite.json)" : ""))
-			+ "\nArrastra el sprite o usa las flechas (SHIFT x10) para mover el pivote (la cruz). G: ghost de esta animacion. Rueda: zoom. Q/E sprite, A/D animacion.";
+		infoText.text = AdvLang.t("spriteEditor.info.zoom", [Std.int(zoom * 100)], "Zoom {0}%") + "   " + AdvLang.t("spriteEditor.info.frame", [frame], "Frame {0}") + (dirty ? "   " + AdvLang.t("spriteEditor.info.unsaved", null, "* sin guardar") : "") + (isVideo ? (videoMissing != null ? "   " + AdvLang.t("spriteEditor.info.videoMissing", [videoMissing], "(falta el video: {0})") : "") : (sprite != null && !sprite.loaded ? "   " + AdvLang.t("spriteEditor.info.spriteFailed", null, "(el sprite no cargo: revisa sprite.png y sprite.json)") : ""))
+			+ "\n" + AdvLang.t("spriteEditor.info.help", null, "Arrastra el sprite o usa las flechas (SHIFT x10) para mover el pivote (la cruz). G: ghost de esta animacion. Rueda: zoom. Q/E sprite, A/D animacion.");
 	}
 
 	override public function destroy():Void

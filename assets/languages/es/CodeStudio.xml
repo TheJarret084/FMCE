@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<language>
+	<group name="CodeStudio" prefix="codeStudio.">
+
+		<str id="toolbar.save">Guardar</str>
+		<str id="toolbar.saveAll">Guardar todo</str>
+		<str id="toolbar.newScript">+ Script</str>
+		<str id="toolbar.run">► Ejecutar</str>
+		<str id="toolbar.sprites">Sprites</str>
+		<str id="toolbar.find">Buscar</str>
+		<str id="toolbar.inspector">{ } Inspector JSON</str>
+
+		<str id="menu.file">Archivo</str>
+		<str id="menu.edit">Editar</str>
+		<str id="menu.view">Ver</str>
+		<str id="menu.project">Proyecto</str>
+		<str id="menu.help">Ayuda</str>
+
+		<str id="file.save">Guardar</str>
+		<str id="file.saveAll">Guardar todo</str>
+		<str id="file.newScript">Nuevo script</str>
+		<str id="file.closeTab">Cerrar pestaña</str>
+		<str id="file.back">Volver</str>
+
+		<str id="edit.undo">Deshacer</str>
+		<str id="edit.redo">Rehacer</str>
+		<str id="edit.find">Buscar…</str>
+		<str id="edit.goToLine">Ir a la línea…</str>
+		<str id="edit.formatJson">Formatear JSON</str>
+
+		<str id="view.showOutput">Mostrar salida</str>
+		<str id="view.hideOutput">Ocultar salida</str>
+		<str id="view.clearOutput">Limpiar salida</str>
+		<str id="view.showInspector">Mostrar inspector JSON</str>
+		<str id="view.hideInspector">Ocultar inspector JSON</str>
+
+		<str id="project.runScript">Ejecutar script</str>
+		<str id="project.spriteEditor">Editor de sprites</str>
+
+		<str id="shortcut.saveAll">Ctrl+Mayús+S</str>
+		<str id="shortcut.formatJson">Alt+Mayús+F</str>
+
+		<str id="help.nextTab">Ctrl+Tab: siguiente pestaña</str>
+		<str id="help.indent">Tab / Mayús+Tab: sangría</str>
+		<str id="help.comment">Ctrl+/: comentar líneas</str>
+		<str id="help.duplicate">Ctrl+D: duplicar línea</str>
+		<str id="help.middleClick">Clic central: cerrar pestaña</str>
+		<str id="help.inspector">Inspector JSON: clic en una fila va a esa clave</str>
+
+		<str id="ui.welcome">Elige un archivo del explorador</str>
+		<str id="ui.levelDefault">Nivel</str>
+
+		<str id="tree.title">EXPLORADOR</str>
+		<str id="tree.empty">No hay archivos</str>
+
+		<str id="json.title">INSPECTOR JSON</str>
+		<str id="json.files">Archivos</str>
+		<str id="json.empty">No hay datos JSON</str>
+		<str id="json.partial">Archivo grande: se muestra solo una parte</str>
+		<str id="json.root">raíz</str>
+
+		<str id="output.title">SALIDA</str>
+		<str id="output.clear">Limpiar</str>
+
+		<str id="kind.text">Texto</str>
+
+		<str id="find.label">Buscar</str>
+		<str id="find.prev">◄ Ant</str>
+		<str id="find.next">Sig ►</str>
+		<str id="find.goto">Ir a la línea {0}</str>
+		<str id="find.typeLine">Escribe un número de línea</str>
+		<str id="find.noResults">Sin resultados</str>
+		<str id="find.matchCount">{0} de {1}</str>
+
+		<str id="status.ready">Listo</str>
+		<str id="status.saved">{0}  •  Guardado</str>
+		<str id="status.savedCount">Guardados {0} archivo(s)</str>
+		<str id="status.savedFailed">, {0} con error</str>
+		<str id="status.readOnly">{0}  •  SOLO LECTURA</str>
+		<str id="status.readOnlyShort">SOLO LECTURA</str>
+		<str id="status.saveError">{0}  •  error al guardar</str>
+		<str id="status.jsonLarge">{0}  •  JSON grande: no se valida mientras escribes</str>
+		<str id="status.jsonInvalid">JSON inválido: {0}</str>
+		<str id="status.jsonInvalidLine">JSON inválido (línea {0}): {1}</str>
+		<str id="status.caret">Ln {0}, Col {1}</str>
+		<str id="status.caretSel">Ln {0}, Col {1} ({2} sel)</str>
+		<str id="status.spaces">Espacios: {0}</str>
+
+		<str id="log.ready">Code Studio listo. Ctrl+S guarda, Ctrl+F busca, Ctrl+G va a una línea.</str>
+		<str id="log.unsavedClose">{0} tiene cambios sin guardar. Guarda con Ctrl+S o cierra otra vez para descartarlos.</str>
+		<str id="log.newScriptFail">No se pudo crear un script nuevo aquí.</str>
+		<str id="log.newScript">Nuevo script: {0} (guárdalo con Ctrl+S)</str>
+		<str id="log.noChanges">No hay cambios que guardar.</str>
+		<str id="log.readOnly">No se puede modificar {0}. {1}</str>
+		<str id="log.saved">Guardado {0}</str>
+		<str id="log.runOnlyHaxe">Ejecutar solo prepara scripts Haxe. Abre un .hx.</str>
+		<str id="log.jsonFormatted">JSON formateado.</str>
+		<str id="log.formatFail">No se puede formatear: {0}</str>
+		<str id="log.inspectorHint">El inspector aparece al abrir un archivo .json.</str>
+
+		<str id="advanced.presenceTitle">Modo Avanzado</str>
+		<str id="advanced.presenceEditing">Editando {0}</str>
+		<str id="advanced.spriteJsonReadOnly">sprite.json pertenece al atlas del sprite y se protege contra escritura.</str>
+		<str id="advanced.defaultScript">// FMCE Advanced\n// Este script se guarda en levels/&lt;nivel&gt;/data/scripts/.\n// Runtime de HScript pendiente: por ahora se edita y guarda.\n\nfunction onCreate()\n{\n    trace("FMCE: script cargado");\n}\n</str>
+		<str id="advanced.saveBlockedOutside">Save bloqueado: ruta fuera del nivel.</str>
+		<str id="advanced.saveBlockedHx">Save bloqueado: los .hx solo viven dentro de data/scripts/.</str>
+		<str id="advanced.jsonInvalid">JSON inválido: {0}</str>
+		<str id="advanced.saveError">Error al guardar: {0}</str>
+		<str id="advanced.runtimeNotConnected">El runtime de HScript aún no está conectado a PlayState.</str>
+		<str id="advanced.filePrepared">El archivo queda preparado en {0}</str>
+		<str id="advanced.unsavedExit">Hay cambios sin guardar. Vuelve a salir para descartarlos o guarda con Ctrl+S.</str>
+	</group>
+</language>

@@ -32,8 +32,6 @@ class SongData
 
 	public var notes:Array<FNMMNote>;
 
-	public var extraLines:Array<Int> = [];
-
 	public var hasOpponentNotes:Bool = true;
 
 	public var playerNotes:Array<FNMMNote>;
@@ -94,7 +92,6 @@ class SongData
 
 		playerNotes = [];
 		opponentNotes = [];
-		extraLines = [];
 		lastNoteTime = 0;
 		var highestLane:Int = 0;
 		for (note in notes)
@@ -103,12 +100,11 @@ class SongData
 
 			if (line == 0) playerNotes.push(note);
 			else if (line == 1) opponentNotes.push(note);
-			else if (extraLines.indexOf(line) < 0) extraLines.push(line);
+			else continue;
 
 			lastNoteTime = Math.max(lastNoteTime, note.time + note.length);
 			highestLane = Std.int(Math.max(highestLane, note.lane));
 		}
-		extraLines.sort(function(a, b) return a - b);
 		hasOpponentNotes = opponentNotes.length > 0;
 		if (laneCount < highestLane + 1) laneCount = highestLane + 1;
 		if (laneCount > ClientPrefs.MAX_LANES) laneCount = ClientPrefs.MAX_LANES;

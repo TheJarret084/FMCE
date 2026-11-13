@@ -96,7 +96,7 @@
 (11 nov):
 - [X] exportar videos para que la mierda esta los agarre
 - [ ] cuando el video no tenga header bonito igual exportarlo a la verga
-- [ ] poner público el repositorio 
+- [X] poner público el repositorio 
 - [ ] arreglar el puto readme que no sale el maldito desgraciado banner
 - [ ] addons parte 1: agregar noteSkins con esto su propio sistema y scripts para las notas
 - [ ] addons parte 2: scripting en chartEditor (ojalá nunca pidan esto wei porfavor)
@@ -111,3 +111,6 @@
      [ ] Opciones 
      [ ] creditos 
      [ ] agregar a donigay a los betatesters de desktop junto a pecela
+- [ ] arreglar la api de shaders
+- [ ] traducir avanced mode
+- [ ] hacer más simple la navegación entre estados (creo que eso molestó a abelito)

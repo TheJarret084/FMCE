@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<language>
+	<group name="AdvancedSceneEditor" prefix="advanced.sceneEditor.">
+
+		<str id="menuFile">File</str>
+		<str id="save">Save</str>
+		<str id="reload">Reload from disk</str>
+		<str id="exit">Exit</str>
+		<str id="menuObject">Object</str>
+		<str id="add">Add</str>
+		<str id="duplicate">Duplicate</str>
+		<str id="delete">Delete</str>
+		<str id="layerUp">Move layer up</str>
+		<str id="layerDown">Move layer down</str>
+		<str id="mirrorH">Mirror horizontally</str>
+		<str id="mirrorV">Mirror vertically</str>
+		<str id="toggleFixed">Toggle fixed</str>
+		<str id="toggleVisible">Toggle visible</str>
+		<str id="menuSelection">Selection</str>
+		<str id="nextObject">Next object</str>
+		<str id="prevObject">Previous object</str>
+		<str id="nextSprite">Next sprite</str>
+		<str id="prevSprite">Previous sprite</str>
+		<str id="multiSelect">Multiple selection (toggle)</str>
+		<str id="selectAll">Select all</str>
+		<str id="clearExtraSelection">Remove extra selection</str>
+		<str id="menuView">View</str>
+		<str id="nextCamera">Next camera</str>
+		<str id="gameView">View as in game</str>
+		<str id="tabObjects">Objects</str>
+		<str id="tabCameras">Cameras</str>
+		<str id="objectListTitle">Objects (the list is the layer order)</str>
+		<str id="cameraListTitle">Cameras (the 1st is the world origin)</str>
+		<str id="windowCamera">Camera</str>
+		<str id="tabPosition">Position</str>
+		<str id="tabAppearance">Appearance</str>
+		<str id="tabLogic">Logic</str>
+		<str id="fixedCheck">Fixed (stuck to the screen)</str>
+		<str id="positionsTransform">Positions (transform)</str>
+		<str id="positionX">Position X</str>
+		<str id="positionY">Position Y</str>
+		<str id="scaleX">Scale X</str>
+		<str id="scaleY">Scale Y</str>
+		<str id="mirrorX">Mirror X</str>
+		<str id="mirrorY">Mirror Y</str>
+		<str id="parallaxX">Parallax X</str>
+		<str id="parallaxY">Parallax Y</str>
+		<str id="sprite">Sprite</str>
+		<str id="opacity">Opacity</str>
+		<str id="visible">Visible</str>
+		<str id="color">Color</str>
+		<str id="strumline">Strumline (-1 = none)</str>
+		<str id="zoom">Zoom</str>
+		<str id="deleteCamera">Delete camera</str>
+		<str id="cameraHelp">In the view: drag to move the camera,
+wheel to zoom. Arrows: move (SHIFT x10,
+CTRL fine). Only the last camera can be deleted.</str>
+		<str id="cameraDeleteDenied">Only the last camera can be deleted (the 1st is the world origin): events use them by number.</str>
+		<str id="unsavedTitle">Unsaved changes</str>
+		<str id="unsavedBody">There are changes in scene.json that you have not saved yet.</str>
+		<str id="cancel">Cancel</str>
+		<str id="exitNoSave">Exit without saving</str>
+		<str id="saveAndExit">Save and exit</str>
+		<str id="noValidScene">There is no valid scene.json on disk.</str>
+		<str id="reloaded">Reloaded from disk.</str>
+		<str id="posIndex">{0} of {1}</str>
+		<str id="cameraNum">Camera {0}</str>
+		<str id="cameraNumOrigin">Camera {0} (origin)</str>
+		<str id="hiddenTag">(hidden)</str>
+		<str id="positionAdded">Position {0} added (copy of the previous one). ObjectPositionSet events use these numbers.</str>
+		<str id="saved">Saved: scene.json</str>
+		<str id="eventsFollow">{0} events follow their object</str>
+		<str id="eventsOrphaned">{0} events point to a deleted object</str>
+		<str id="eventsUpdateFailed">could not update events.json: {0}</str>
+		<str id="writeFailed">Could not write {0}</str>
+		<str id="infoWorldCam">Fixed world - camera {0}/{1}</str>
+		<str id="infoViewCam">Camera view {0}/{1}</str>
+		<str id="infoUnsaved">* unsaved</str>
+		<str id="infoSelected">{0} selected</str>
+		<str id="infoPosition">position {0} of {1}</str>
+		<str id="hintObjects">Click and drag to move. Wheel: scale. Arrows: move (SHIFT x10, CTRL fine). Drag the list buttons to change the layers.</str>
+		<str id="hintCameras">Cameras tab (fixed world): drag the red frame or tap the world to move the camera, wheel: zoom, arrows: move (SHIFT x10, CTRL fine).</str>
+
+	</group>
+</language>

@@ -1,5 +1,6 @@
 package advanced.editors;
 
+import advanced.AdvLang;
 import funkin.editors.ui.*;
 import funkin.editors.ui.UIWarningSubstate.WarningButton;
 import funky.game.SpriteBuilder;
@@ -25,27 +26,27 @@ class SpriteImportScreen extends UISubstateWindow
 
 	public override function create():Void
 	{
-		winTitle = "Importar sprite";
+		winTitle = AdvLang.t("spriteImport.title", null, "Importar sprite");
 		winWidth = 360;
 		winHeight = 230;
 		super.create();
 
-		explorerLabel = new UIText(20, windowSpr.y + 30 + 16 - 4, 0, "Imagen (.png / .jpg) - con su .xml o .json al lado si es atlas");
+		explorerLabel = new UIText(20, windowSpr.y + 30 + 16 - 4, 0, AdvLang.t("spriteImport.imageLabel", null, "Imagen (.png / .jpg) - con su .xml o .json al lado si es atlas"));
 		add(explorerLabel);
 
 		explorer = new UIImageExplorer(20, windowSpr.y + 30 + 16 + 20, 320, 58, function(_, _) refresh());
 		add(explorer);
 
-		nameLabel = new UIText(20, 0, 0, "Nombre del sprite");
+		nameLabel = new UIText(20, 0, 0, AdvLang.t("spriteImport.nameLabel", null, "Nombre del sprite"));
 		add(nameLabel);
 		nameBox = new UITextBox(20, 0, "", 320, 32);
 		add(nameBox);
 
-		saveButton = new UIButton(0, 0, "Importar", doSave, 125);
+		saveButton = new UIButton(0, 0, AdvLang.t("spriteImport.import", null, "Importar"), doSave, 125);
 		saveButton.selectable = false;
 		add(saveButton);
 
-		closeButton = new UIButton(0, 0, "Cancelar", function() close(), 125);
+		closeButton = new UIButton(0, 0, AdvLang.t("spriteImport.cancel", null, "Cancelar"), function() close(), 125);
 		closeButton.color = 0xFFFF0000;
 		add(closeButton);
 
@@ -83,16 +84,16 @@ class SpriteImportScreen extends UISubstateWindow
 		{
 			var buttons:Array<WarningButton> = [
 				{
-					label: "Reemplazar",
+					label: AdvLang.t("spriteImport.replace", null, "Reemplazar"),
 					color: 0xFFFF0000,
 					onClick: function(_) write(name, true)
 				},
 				{
-					label: "Cancelar",
+					label: AdvLang.t("spriteImport.cancel", null, "Cancelar"),
 					onClick: function(_) {}
 				}
 			];
-			openSubState(new UIWarningSubstate("El sprite ya existe", "Ya hay un sprite llamado \"" + name + "\" en este nivel.\nReemplazar cambia su imagen y su atlas (su config.json se conserva).", buttons, false));
+			openSubState(new UIWarningSubstate(AdvLang.t("spriteImport.existsTitle", null, "El sprite ya existe"), AdvLang.t("spriteImport.existsBody", [name], "Ya hay un sprite llamado \"{0}\" en este nivel.\nReemplazar cambia su imagen y su atlas (su config.json se conserva)."), buttons, false));
 			return;
 		}
 
@@ -104,7 +105,7 @@ class SpriteImportScreen extends UISubstateWindow
 		var error = SpriteImporter.importBytes(levelDir, name, explorer.imageBytes, explorer.isJpg, explorer.dataKind, explorer.dataText, overwrite);
 		if (error != null)
 		{
-			openSubState(new UIWarningSubstate("No se pudo importar", error, [{label: "Cerrar", onClick: function(_) {}}]));
+			openSubState(new UIWarningSubstate(AdvLang.t("spriteImport.failedTitle", null, "No se pudo importar"), error, [{label: AdvLang.t("spriteImport.close", null, "Cerrar"), onClick: function(_) {}}]));
 			return;
 		}
 

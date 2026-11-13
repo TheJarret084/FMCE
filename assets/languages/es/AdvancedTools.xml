@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<language>
+	<group name="AdvancedTools" prefix="advanced.">
+		<str id="importer.cantCreate">no pude crear {0}</str>
+		<str id="importer.invalidName">{0} (nombre invalido)</str>
+		<str id="importer.failedItem">{0} ({1})</str>
+		<str id="importer.exists">ya existe</str>
+		<str id="importer.needsSys">importar necesita un target sys</str>
+
+		<str id="inspector.title">JSON Inspector</str>
+		<str id="inspector.root">root</str>
+		<str id="inspector.emptyObject">Este objeto esta vacio</str>
+		<str id="inspector.invalid">JSON invalido</str>
+		<str id="inspector.elements">{0} elementos</str>
+		<str id="inspector.objects">{0} objetos</str>
+		<str id="inspector.type.null">NULO</str>
+		<str id="inspector.type.bool">BOOLEANO</str>
+		<str id="inspector.type.number">NÚMERO</str>
+		<str id="inspector.type.text">TEXTO</str>
+		<str id="inspector.type.array">ARRAY</str>
+		<str id="inspector.type.object">OBJETO</str>
+		<str id="inspector.editKey">Editar "{0}"</str>
+		<str id="inspector.newValue">Nuevo valor</str>
+		<str id="inspector.key">Clave</str>
+		<str id="inspector.type">Tipo</str>
+		<str id="inspector.change">Cambiar</str>
+		<str id="inspector.cancel">Cancelar</str>
+		<str id="inspector.save">Guardar</str>
+	</group>
+</language>

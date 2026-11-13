@@ -23,7 +23,7 @@ class StatusBar extends FlxSpriteGroup
 		barW = w;
 		bg = CodeDraw.rect(0, y, w, CodeTheme.STATUS_H, CodeTheme.STATUS);
 		add(bg);
-		left = CodeDraw.label(12, y + 5, "Listo", CodeTheme.FONT_SMALL, 0xFFFFFFFF);
+		left = CodeDraw.label(12, y + 5, CodeLang.t("status.ready", null, "Listo"), CodeTheme.FONT_SMALL, 0xFFFFFFFF);
 		add(left);
 		for (i in 0...3)
 		{
@@ -42,7 +42,7 @@ class StatusBar extends FlxSpriteGroup
 
 	public function setCaret(line:Int, col:Int, selected:Int):Void
 	{
-		caretText = "Ln " + line + ", Col " + col + (selected > 0 ? " (" + selected + " sel)" : "");
+		caretText = selected > 0 ? CodeLang.t("status.caretSel", [line, col, selected], "Ln {0}, Col {1} ({2} sel)") : CodeLang.t("status.caret", [line, col], "Ln {0}, Col {1}");
 		layoutRight();
 	}
 
@@ -55,7 +55,7 @@ class StatusBar extends FlxSpriteGroup
 
 	function layoutRight():Void
 	{
-		var texts = [caretText, "Espacios: 4", kindText + (extraText != "" ? "  " + extraText : "")];
+		var texts = [caretText, CodeLang.t("status.spaces", [4], "Espacios: {0}"), kindText + (extraText != "" ? "  " + extraText : "")];
 		var x:Float = barW - 12;
 		var i = texts.length - 1;
 		while (i >= 0)

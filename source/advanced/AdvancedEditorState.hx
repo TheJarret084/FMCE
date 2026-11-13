@@ -13,6 +13,7 @@ import funky.core.Log;
 import funky.core.Paths;
 import funky.core.TransitionHandler;
 import funky.scripting.Scripts;
+import advanced.ui.code.CodeLang;
 import advanced.ui.code.CodeStudio;
 import advanced.ui.code.CodeStudioFile;
 
@@ -45,7 +46,7 @@ class AdvancedEditorState extends FlxState
 
 		studio.setCovered(true);
 
-		DiscordClient.customPresence("Modo Avanzado", "Editando " + levelName, "fmce", "", false);
+		DiscordClient.customPresence(CodeLang.t("advanced.presenceTitle", null, "Modo Avanzado"), CodeLang.t("advanced.presenceEditing", [levelName], "Editando {0}"), "fmce", "", false);
 		TransitionHandler.playIn(this);
 	}
 
@@ -119,7 +120,7 @@ class AdvancedEditorState extends FlxState
 			{
 				var readOnly = isSpriteJson(rel);
 				out.push(new CodeStudioFile(rel, safeRead(abs), abs, !readOnly, "json",
-					readOnly ? "sprite.json pertenece al atlas del sprite y se protege contra escritura." : ""));
+					readOnly ? CodeLang.t("advanced.spriteJsonReadOnly", null, "sprite.json pertenece al atlas del sprite y se protege contra escritura.") : ""));
 			}
 		}
 	}
@@ -145,7 +146,7 @@ class AdvancedEditorState extends FlxState
 
 	static function defaultScript():String
 	{
-		return "// FMCE Advanced\n// Este script se guarda en levels/<nivel>/data/scripts/.\n// Runtime de HScript pendiente: por ahora se edita y guarda.\n\nfunction onCreate()\n{\n    trace(\"FMCE: script cargado\");\n}\n";
+		return CodeLang.t("advanced.defaultScript", null, "// FMCE Advanced\n// Este script se guarda en levels/<nivel>/data/scripts/.\n// Runtime de HScript pendiente: por ahora se edita y guarda.\n\nfunction onCreate()\n{\n    trace(\"FMCE: script cargado\");\n}\n");
 	}
 	#end
 
@@ -155,12 +156,12 @@ class AdvancedEditorState extends FlxState
 		if (file == null || !file.editable) return false;
 		if (!isInsideLevel(file.path))
 		{
-			studio.log("[FMCE] Save bloqueado: ruta fuera del nivel.");
+			studio.log("[FMCE] " + CodeLang.t("advanced.saveBlockedOutside", null, "Save bloqueado: ruta fuera del nivel."), "error");
 			return false;
 		}
 		if (file.kind == "haxe" && !isScriptPath(relativeToLevel(file.path)))
 		{
-			studio.log("[FMCE] Save bloqueado: los .hx solo viven dentro de data/scripts/.");
+			studio.log("[FMCE] " + CodeLang.t("advanced.saveBlockedHx", null, "Save bloqueado: los .hx solo viven dentro de data/scripts/."), "error");
 			return false;
 		}
 		if (file.kind == "json")
@@ -171,7 +172,7 @@ class AdvancedEditorState extends FlxState
 			}
 			catch (e:Dynamic)
 			{
-				studio.log("[FMCE] JSON invalido: " + Std.string(e));
+				studio.log("[FMCE] " + CodeLang.t("advanced.jsonInvalid", [Std.string(e)], "JSON inválido: {0}"), "error");
 				return false;
 			}
 		}
@@ -183,7 +184,7 @@ class AdvancedEditorState extends FlxState
 		}
 		catch (e:Dynamic)
 		{
-			studio.log("[FMCE] Save error: " + Std.string(e));
+			studio.log("[FMCE] " + CodeLang.t("advanced.saveError", [Std.string(e)], "Error al guardar: {0}"), "error");
 			return false;
 		}
 		return true;
@@ -215,8 +216,8 @@ class AdvancedEditorState extends FlxState
 	function prepareRun(file:CodeStudioFile):Void
 	{
 		if (file == null || file.kind != "haxe") return;
-		studio.log("[FMCE] HScript runtime aun no esta conectado a PlayState.");
-		studio.log("[FMCE] El archivo queda preparado en " + file.path);
+		studio.log("[FMCE] " + CodeLang.t("advanced.runtimeNotConnected", null, "El runtime de HScript aún no está conectado a PlayState."), "warn");
+		studio.log("[FMCE] " + CodeLang.t("advanced.filePrepared", [file.path], "El archivo queda preparado en {0}"), "info");
 	}
 
 	function openSpritePreview():Void
@@ -252,7 +253,7 @@ class AdvancedEditorState extends FlxState
 		if (studio != null && studio.hasUnsaved() && !leaveWarned)
 		{
 			leaveWarned = true;
-			studio.log("[FMCE] Hay cambios sin guardar. Vuelve a salir para descartarlos o guarda con Ctrl+S.");
+			studio.log("[FMCE] " + CodeLang.t("advanced.unsavedExit", null, "Hay cambios sin guardar. Vuelve a salir para descartarlos o guarda con Ctrl+S."), "warn");
 			return;
 		}
 		chosen = true;

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<language>
+	<group name="CodeStudio" prefix="codeStudio.">
+
+		<str id="toolbar.save">Save</str>
+		<str id="toolbar.saveAll">Save all</str>
+		<str id="toolbar.newScript">+ Script</str>
+		<str id="toolbar.run">► Run</str>
+		<str id="toolbar.sprites">Sprites</str>
+		<str id="toolbar.find">Find</str>
+		<str id="toolbar.inspector">{ } JSON Inspector</str>
+
+		<str id="menu.file">File</str>
+		<str id="menu.edit">Edit</str>
+		<str id="menu.view">View</str>
+		<str id="menu.project">Project</str>
+		<str id="menu.help">Help</str>
+
+		<str id="file.save">Save</str>
+		<str id="file.saveAll">Save all</str>
+		<str id="file.newScript">New script</str>
+		<str id="file.closeTab">Close tab</str>
+		<str id="file.back">Back</str>
+
+		<str id="edit.undo">Undo</str>
+		<str id="edit.redo">Redo</str>
+		<str id="edit.find">Find…</str>
+		<str id="edit.goToLine">Go to line…</str>
+		<str id="edit.formatJson">Format JSON</str>
+
+		<str id="view.showOutput">Show output</str>
+		<str id="view.hideOutput">Hide output</str>
+		<str id="view.clearOutput">Clear output</str>
+		<str id="view.showInspector">Show JSON inspector</str>
+		<str id="view.hideInspector">Hide JSON inspector</str>
+
+		<str id="project.runScript">Run script</str>
+		<str id="project.spriteEditor">Sprite editor</str>
+
+		<str id="shortcut.saveAll">Ctrl+Shift+S</str>
+		<str id="shortcut.formatJson">Alt+Shift+F</str>
+
+		<str id="help.nextTab">Ctrl+Tab: next tab</str>
+		<str id="help.indent">Tab / Shift+Tab: indent</str>
+		<str id="help.comment">Ctrl+/: comment lines</str>
+		<str id="help.duplicate">Ctrl+D: duplicate line</str>
+		<str id="help.middleClick">Middle click: close tab</str>
+		<str id="help.inspector">JSON inspector: click a row to jump to that key</str>
+
+		<str id="ui.welcome">Pick a file from the explorer</str>
+		<str id="ui.levelDefault">Level</str>
+
+		<str id="tree.title">EXPLORER</str>
+		<str id="tree.empty">No files</str>
+
+		<str id="json.title">JSON INSPECTOR</str>
+		<str id="json.files">Files</str>
+		<str id="json.empty">No JSON data</str>
+		<str id="json.partial">Large file: only part of it is shown</str>
+		<str id="json.root">root</str>
+
+		<str id="output.title">OUTPUT</str>
+		<str id="output.clear">Clear</str>
+
+		<str id="kind.text">Text</str>
+
+		<str id="find.label">Find</str>
+		<str id="find.prev">◄ Prev</str>
+		<str id="find.next">Next ►</str>
+		<str id="find.goto">Go to line {0}</str>
+		<str id="find.typeLine">Type a line number</str>
+		<str id="find.noResults">No results</str>
+		<str id="find.matchCount">{0} of {1}</str>
+
+		<str id="status.ready">Ready</str>
+		<str id="status.saved">{0}  •  Saved</str>
+		<str id="status.savedCount">Saved {0} file(s)</str>
+		<str id="status.savedFailed">, {0} failed</str>
+		<str id="status.readOnly">{0}  •  READ ONLY</str>
+		<str id="status.readOnlyShort">READ ONLY</str>
+		<str id="status.saveError">{0}  •  error while saving</str>
+		<str id="status.jsonLarge">{0}  •  Large JSON: not validated while typing</str>
+		<str id="status.jsonInvalid">Invalid JSON: {0}</str>
+		<str id="status.jsonInvalidLine">Invalid JSON (line {0}): {1}</str>
+		<str id="status.caret">Ln {0}, Col {1}</str>
+		<str id="status.caretSel">Ln {0}, Col {1} ({2} sel)</str>
+		<str id="status.spaces">Spaces: {0}</str>
+
+		<str id="log.ready">Code Studio ready. Ctrl+S saves, Ctrl+F finds, Ctrl+G goes to a line.</str>
+		<str id="log.unsavedClose">{0} has unsaved changes. Save with Ctrl+S or close again to discard them.</str>
+		<str id="log.newScriptFail">Could not create a new script here.</str>
+		<str id="log.newScript">New script: {0} (save it with Ctrl+S)</str>
+		<str id="log.noChanges">There are no changes to save.</str>
+		<str id="log.readOnly">Cannot modify {0}. {1}</str>
+		<str id="log.saved">Saved {0}</str>
+		<str id="log.runOnlyHaxe">Run only prepares Haxe scripts. Open a .hx file.</str>
+		<str id="log.jsonFormatted">JSON formatted.</str>
+		<str id="log.formatFail">Cannot format: {0}</str>
+		<str id="log.inspectorHint">The inspector shows up when you open a .json file.</str>
+
+		<str id="advanced.presenceTitle">Advanced Mode</str>
+		<str id="advanced.presenceEditing">Editing {0}</str>
+		<str id="advanced.spriteJsonReadOnly">sprite.json belongs to the sprite atlas and is write-protected.</str>
+		<str id="advanced.defaultScript">// FMCE Advanced\n// This script is saved in levels/&lt;level&gt;/data/scripts/.\n// HScript runtime pending: for now it can only be edited and saved.\n\nfunction onCreate()\n{\n    trace("FMCE: script loaded");\n}\n</str>
+		<str id="advanced.saveBlockedOutside">Save blocked: path is outside the level.</str>
+		<str id="advanced.saveBlockedHx">Save blocked: .hx files can only live inside data/scripts/.</str>
+		<str id="advanced.jsonInvalid">Invalid JSON: {0}</str>
+		<str id="advanced.saveError">Save error: {0}</str>
+		<str id="advanced.runtimeNotConnected">The HScript runtime is not connected to PlayState yet.</str>
+		<str id="advanced.filePrepared">The file is ready at {0}</str>
+		<str id="advanced.unsavedExit">There are unsaved changes. Exit again to discard them or save with Ctrl+S.</str>
+	</group>
+</language>

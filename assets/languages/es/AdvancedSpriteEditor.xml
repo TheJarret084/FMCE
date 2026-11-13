@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<language>
+	<group name="AdvancedSpriteEditor" prefix="advanced.spriteEditor.">
+
+		<str id="noSprites">Este nivel no tiene sprites validos en sprites/. Toca + para importar.</str>
+		<str id="menu.file">Archivo</str>
+		<str id="menu.save">Guardar</str>
+		<str id="menu.reload">Recargar desde el disco</str>
+		<str id="menu.importSprite">Importar sprite...</str>
+		<str id="menu.importInbox">Importar desde la carpeta {0}</str>
+		<str id="menu.exit">Salir</str>
+		<str id="menu.edit">Editar</str>
+		<str id="menu.newAnim">Nueva animacion</str>
+		<str id="deleteAnim">Borrar animacion</str>
+		<str id="menu.replay">Reproducir de nuevo</str>
+		<str id="sprite">Sprite</str>
+		<str id="previous">Anterior</str>
+		<str id="next">Siguiente</str>
+		<str id="animation">Animacion</str>
+		<str id="menu.view">Ver</str>
+		<str id="menu.zoomIn">Acercar</str>
+		<str id="menu.zoomOut">Alejar</str>
+		<str id="menu.zoomReset">Zoom 100%</str>
+		<str id="menu.ghostCurrent">Ghost de la animacion actual</str>
+		<str id="menu.clearGhosts">Quitar todos los ghosts</str>
+		<str id="sprites">Sprites</str>
+		<str id="animations">Animaciones</str>
+		<str id="type">Tipo</str>
+		<str id="smoothing">Suavizado</str>
+		<str id="ingameName">Nombre en el juego (anim + posicion)</str>
+		<str id="tagSpriteJson">Tag del sprite.json</str>
+		<str id="tagAtlas">Simbolo / label del atlas</str>
+		<str id="tagOnSave">El tag nuevo se ve al guardar.</str>
+		<str id="speed">Velocidad</str>
+		<str id="scale">Escala</str>
+		<str id="pivotX">Pivote X</str>
+		<str id="pivotY">Pivote Y</str>
+		<str id="loop">Loop</str>
+		<str id="play">Reproducir</str>
+		<str id="speedFps">Velocidad en FPS (apagado = beats que dura)</str>
+		<str id="spdFpsOn">spd = FPS crudos.</str>
+		<str id="spdBeatsOn">spd = beats que dura la animacion completa (sigue al BPM). Se ve al guardar.</str>
+		<str id="indicesLabel">Indices del atlas (ej: 0,1,2,5-8; vacio = frameTag)</str>
+		<str id="indicesOnSave">Los indices se ven al guardar.</str>
+		<str id="ghostCheck">Ghost (alinear las demas contra esta)</str>
+		<str id="imported">Importado: {0}</str>
+		<str id="importedList">Importados: {0}</str>
+		<str id="skippedList">ya existian: {0}</str>
+		<str id="failedList">fallaron: {0}</str>
+		<str id="noPng">No hay .png en {0} (pon ahi el .png y, si tiene atlas, su .xml o .json)</str>
+		<str id="importNeedsSys">Importar necesita un target sys.</str>
+		<str id="reloaded">Recargado desde el disco.</str>
+		<str id="nameAuto">El nombre es automatico: anim + la posicion en data.</str>
+		<str id="nameEmpty">El nombre no puede quedar vacio.</str>
+		<str id="nameExists">Ya existe una animacion llamada {0}.</str>
+		<str id="deleteConfirm">Confirmar: borrar {0}</str>
+		<str id="deleteHint">Toca otra vez para borrar la animacion (solo se quita del config.json).</str>
+		<str id="videoCantOpen">{0} (no se pudo abrir)</str>
+		<str id="ghostNoAtlas">Los ghosts no estan disponibles en atlas de Animate.</str>
+		<str id="saved">Guardado: {0}/config.json</str>
+		<str id="writeFailed">No se pudo escribir {0}</str>
+		<str id="unsaved.title">Cambios sin guardar</str>
+		<str id="unsaved.body">Hay cambios en el config.json de este sprite que todavia no guardaste.</str>
+		<str id="cancel">Cancelar</str>
+		<str id="exitNoSave">Salir sin guardar</str>
+		<str id="saveAndExit">Guardar y salir</str>
+		<str id="info.zoom">Zoom {0}%</str>
+		<str id="info.frame">Frame {0}</str>
+		<str id="info.unsaved">* sin guardar</str>
+		<str id="info.videoMissing">(falta el video: {0})</str>
+		<str id="info.spriteFailed">(el sprite no cargo: revisa sprite.png y sprite.json)</str>
+		<str id="info.help">Arrastra el sprite o usa las flechas (SHIFT x10) para mover el pivote (la cruz). G: ghost de esta animacion. Rueda: zoom. Q/E sprite, A/D animacion.</str>
+
+	</group>
+</language>

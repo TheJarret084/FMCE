@@ -63,7 +63,7 @@ class FileTree extends FlxSpriteGroup
 		add(CodeDraw.rect(x, y, 1, h, CodeTheme.BORDER));
 		add(CodeDraw.rect(x, y, w, CodeTheme.PANEL_HEAD_H, CodeTheme.MENU));
 		add(CodeDraw.rect(x, y + CodeTheme.PANEL_HEAD_H - 1, w, 1, CodeTheme.BORDER));
-		titleText = CodeDraw.label(x + 12, y + 6, "EXPLORADOR", CodeTheme.FONT_SMALL, CodeTheme.MUTED);
+		titleText = CodeDraw.label(x + 12, y + 6, CodeLang.t("tree.title", null, "EXPLORADOR"), CodeTheme.FONT_SMALL, CodeTheme.MUTED);
 		add(titleText);
 		add(new CodeButton(x + w - 30, y + 2, 24, 22, "+", function()
 		{
@@ -96,13 +96,13 @@ class FileTree extends FlxSpriteGroup
 			add(s.tail);
 			slots.push(s);
 		}
-		emptyText = CodeDraw.label(x + 14, rowsY + 10, "No hay archivos", CodeTheme.FONT_SMALL, CodeTheme.DIM);
+		emptyText = CodeDraw.label(x + 14, rowsY + 10, CodeLang.t("tree.empty", null, "No hay archivos"), CodeTheme.FONT_SMALL, CodeTheme.DIM);
 		emptyText.visible = false;
 		add(emptyText);
 	}
 
 	public function setTitle(value:String):Void
-		titleText.text = "EXPLORADOR  ·  " + CodeDraw.fit(value, 22);
+		titleText.text = CodeLang.t("tree.title", null, "EXPLORADOR") + "  ·  " + CodeDraw.fit(value, 22);
 
 	public function setFiles(list:Array<CodeStudioFile>, current:Null<CodeStudioFile>):Void
 	{

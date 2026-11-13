@@ -1,5 +1,6 @@
 package advanced;
 
+import advanced.AdvLang;
 import advanced.ui.EditorBackdrop;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -59,7 +60,7 @@ class AdvancedToolsState extends FlxState
 		}
 		catch (e:Dynamic) {}
 
-		var title = new FlxText(0, 62, FlxG.width, "MODO AVANZADO", 36);
+		var title = new FlxText(0, 62, FlxG.width, AdvLang.t("tools.title", null, "MODO AVANZADO"), 36);
 		title.alignment = FlxTextAlign.CENTER;
 		add(title);
 
@@ -68,18 +69,18 @@ class AdvancedToolsState extends FlxState
 		sub.alignment = FlxTextAlign.CENTER;
 		add(sub);
 
-		back = new FlxText(18, 14, 240, "< VOLVER", 20);
+		back = new FlxText(18, 14, 240, AdvLang.t("tools.back", null, "< VOLVER"), 20);
 		back.color = MUTED;
 		add(back);
 
-		addTool("CODE STUDIO", "Scripts (.hx) y archivos .json del nivel", "debugOptions", function() go(new AdvancedEditorState(levelName)));
+		addTool(AdvLang.t("tools.codeStudio", null, "CODE STUDIO"), AdvLang.t("tools.codeStudioDesc", null, "Scripts (.hx) y archivos .json del nivel"), "debugOptions", function() go(new AdvancedEditorState(levelName)));
 
-		addTool("CHART EDITOR", "Notas, sustains, strumlines, eventos globales y waveform", "chart", function() go(funkin.editors.charter.CharterLauncher.open(levelName)));
-		addTool("SPRITE EDITOR", "config.json de cada sprite: tipo, animaciones, indices, velocidad, loop, escala y pivote", "character",
+		addTool(AdvLang.t("tools.chartEditor", null, "CHART EDITOR"), AdvLang.t("tools.chartEditorDesc", null, "Notas, sustains, strumlines, eventos globales y waveform"), "chart", function() go(funkin.editors.charter.CharterLauncher.open(levelName)));
+		addTool(AdvLang.t("tools.spriteEditor", null, "SPRITE EDITOR"), AdvLang.t("tools.spriteEditorDesc", null, "config.json de cada sprite: tipo, animaciones, indices, velocidad, loop, escala y pivote"), "character",
 			function() go(new advanced.editors.SpriteEditorState(levelName)));
-		addTool("SCENE EDITOR", "scene.json: objetos, capas, parallax, fixed, strumlines y camaras", "stage", function() go(new advanced.editors.SceneEditorState(levelName)));
-		addTool("EXPORTAR .FMCE", "Comprime el nivel en exports/" + levelName + ".FMCE (sin copias .bak / .bck)", "alphabet", exportLevel);
-		addTool("EXPORTAR .FNMM", "Exporta el nivel a exports/" + levelName + ".FNMM (la carpeta data/ no entra)", "alphabet", function() go(new funky.menus.FNMMExportState(levelName)));
+		addTool(AdvLang.t("tools.sceneEditor", null, "SCENE EDITOR"), AdvLang.t("tools.sceneEditorDesc", null, "scene.json: objetos, capas, parallax, fixed, strumlines y camaras"), "stage", function() go(new advanced.editors.SceneEditorState(levelName)));
+		addTool(AdvLang.t("tools.exportFmce", null, "EXPORTAR .FMCE"), AdvLang.t("tools.exportFmceDesc", [levelName], "Comprime el nivel en exports/{0}.FMCE (sin copias .bak / .bck)"), "alphabet", exportLevel);
+		addTool(AdvLang.t("tools.exportFnmm", null, "EXPORTAR .FNMM"), AdvLang.t("tools.exportFnmmDesc", [levelName], "Exporta el nivel a exports/{0}.FNMM (la carpeta data/ no entra)"), "alphabet", function() go(new funky.menus.FNMMExportState(levelName)));
 
 		var startX = (FlxG.width - tools.length * SLOT_W) / 2 + SLOT_W / 2;
 		for (i in 0...tools.length)
@@ -113,8 +114,7 @@ class AdvancedToolsState extends FlxState
 		add(info);
 
 		var hint = new FlxText(0, FlxG.height - 65, FlxG.width,
-			KeyBinds.label(KeyBinds.LEFT) + "/" + KeyBinds.label(KeyBinds.RIGHT) + " mover  |  "
-			+ KeyBinds.label(KeyBinds.ACCEPT) + " elegir  |  ESC volver", 15);
+			AdvLang.t("tools.hint", [KeyBinds.label(KeyBinds.LEFT), KeyBinds.label(KeyBinds.RIGHT), KeyBinds.label(KeyBinds.ACCEPT)], "{0}/{1} mover  |  {2} elegir  |  ESC volver"), 15);
 		hint.color = MUTED;
 		hint.alignment = FlxTextAlign.CENTER;
 		add(hint);
@@ -137,7 +137,7 @@ class AdvancedToolsState extends FlxState
 	{
 		var result = LevelArchive.exportLevel(levelName);
 		info.color = result.ok ? 0xFF8FE388 : 0xFFFF8A8A;
-		info.text = result.ok ? "Exportado: " + result.path + " (" + result.files + " archivos)" : result.error;
+		info.text = result.ok ? AdvLang.t("tools.exported", [result.path, result.files], "Exportado: {0} ({1} archivos)") : result.error;
 	}
 
 	function select(index:Int):Void

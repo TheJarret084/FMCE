@@ -45,10 +45,10 @@ class OutputPanel extends FlxSpriteGroup
 		body.push(bodyBg);
 		add(CodeDraw.rect(x, y, w, CodeTheme.PANEL_HEAD_H, CodeTheme.MENU));
 		add(CodeDraw.rect(x, y, w, 1, CodeTheme.BORDER));
-		add(CodeDraw.label(x + 14, y + 6, "SALIDA", CodeTheme.FONT_SMALL, 0xFFFFFFFF));
+		add(CodeDraw.label(x + 14, y + 6, CodeLang.t("output.title", null, "SALIDA"), CodeTheme.FONT_SMALL, 0xFFFFFFFF));
 		add(CodeDraw.rect(x + 12, y + CodeTheme.PANEL_HEAD_H - 2, 52, 2, CodeTheme.ACCENT));
 
-		clearButton = new CodeButton(x + w - 120, y + 2, 76, 22, "Limpiar", clearLog, CodeTheme.MUTED, CodeTheme.FONT_SMALL);
+		clearButton = new CodeButton(x + w - 120, y + 2, 76, 22, CodeLang.t("output.clear", null, "Limpiar"), clearLog, CodeTheme.MUTED, CodeTheme.FONT_SMALL);
 		add(clearButton);
 		toggleButton = new CodeButton(x + w - 38, y + 2, 28, 22, "▼", function() setCollapsed(!collapsed), CodeTheme.MUTED, CodeTheme.FONT_SMALL);
 		add(toggleButton);
