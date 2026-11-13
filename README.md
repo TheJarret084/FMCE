@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="art/github/banner-new.png" alt="Le debo esto a cubick" width="100%">
+  <img src="https://github.com/TheJarret084/FMCE/blob/main/art%2FGithub%2Fbanner-new.png" alt="Le debo esto a cubick" width="100%">
 </p>
 
 
