@@ -133,7 +133,7 @@ class Storage
 	}
 
 	#if sys
-	static function hasAccess():Bool
+	public static function hasAccess():Bool
 	{
 		try
 		{

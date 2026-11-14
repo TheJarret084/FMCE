@@ -77,6 +77,7 @@ class ClientPrefs
 			timeBarStyle: "pinklime",
 
 			skipIntro: false,
+			splashSeen: false,
 
 			language: "es",
 
@@ -211,6 +212,7 @@ class ClientPrefs
 		data.noteSplashes = getBool(parsed, "noteSplashes", true);
 		if (Reflect.hasField(parsed, "timeBarStyle")) data.timeBarStyle = Std.string(Reflect.field(parsed, "timeBarStyle"));
 		data.skipIntro = getBool(parsed, "skipIntro", false);
+		data.splashSeen = getBool(parsed, "splashSeen", false);
 		if (Reflect.hasField(parsed, "language"))
 		{
 			var lang = Std.string(Reflect.field(parsed, "language"));
@@ -301,6 +303,7 @@ class ClientPrefs
 			data.noteSplashes = parseXmlBool(gameplay.get("noteSplashes"), true);
 			if (gameplay.get("timeBarStyle") != null) data.timeBarStyle = gameplay.get("timeBarStyle");
 			data.skipIntro = parseXmlBool(gameplay.get("skipIntro"), false);
+			data.splashSeen = parseXmlBool(gameplay.get("splashSeen"), false);
 
 			data.masterVolume = parseXmlFloat(gameplay.get("masterVolume"), 1.0);
 			data.musicVolume = parseXmlFloat(gameplay.get("musicVolume"), 1.0);
@@ -513,6 +516,7 @@ class ClientPrefs
 			gameplay.set("noteSplashes", Std.string(isNoteSplashes()));
 			gameplay.set("timeBarStyle", getTimeBarStyle());
 			gameplay.set("skipIntro", Std.string(isSkipIntro()));
+			gameplay.set("splashSeen", Std.string(isSplashSeen()));
 			gameplay.set("masterVolume", Std.string(getMasterVolume()));
 			gameplay.set("musicVolume", Std.string(getMusicVolume()));
 			gameplay.set("sfxVolume", Std.string(getSfxVolume()));
@@ -712,6 +716,12 @@ class ClientPrefs
 
 	public static function setSkipIntro(v:Bool):Void
 		Reflect.setField(data, "skipIntro", v);
+
+	public static function isSplashSeen():Bool
+		return getBool(data, "splashSeen", false);
+
+	public static function setSplashSeen(v:Bool):Void
+		Reflect.setField(data, "splashSeen", v);
 
 	public static function getLanguage():String
 	{

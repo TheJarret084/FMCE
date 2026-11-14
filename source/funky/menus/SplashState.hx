@@ -36,12 +36,11 @@ class SplashState extends FlxState
 
 	override public function create():Void
 	{
-		funky.core.Storage.init();
 		super.create();
 
 		FlxG.cameras.bgColor = FlxColor.BLACK;
 
-		if (ClientPrefs.isSkipIntro())
+		if (ClientPrefs.isSkipIntro() || ClientPrefs.isSplashSeen())
 		{
 			finishSplash();
 			return;
@@ -181,6 +180,14 @@ class SplashState extends FlxState
 			return;
 
 		finished = true;
+
+		// Solo cuenta como "ya se vio" si el video llego a arrancar (si faltaba el addon, se vuelve a intentar luego).
+		if (ready)
+		{
+			ClientPrefs.setSplashSeen(true);
+			ClientPrefs.save();
+		}
+
 		#if hxvlc
 		releaseVideo();
 		#end

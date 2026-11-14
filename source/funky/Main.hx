@@ -14,7 +14,7 @@ import funkin.backend.utils.TranslationUtil;
 import funky.api.DiscordClient;
 import funky.backend.system.framerate.Framerate;
 import funky.backend.system.LogOverlay;
-import funky.menus.SplashState;
+import funky.menus.other.CheckerState;
 
 import flixel.system.FlxSplash;
 
@@ -48,7 +48,7 @@ class Main extends Sprite
 		MemoryUtil.enable();
 		FlxG.signals.postStateSwitch.add(() -> MemoryUtil.clearMajor());
 
-		addChild(new FlxGame(1280, 720, SplashState, 60, 60, true));
+		addChild(new FlxGame(1280, 720, CheckerState, 60, 60, true));
 		FlxG.signals.focusLost.add(function() ClientPrefs.save());
 		funky.core.CursorManager.init();
 		addChild(new Framerate());

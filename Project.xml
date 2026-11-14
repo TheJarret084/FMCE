@@ -53,9 +53,10 @@
 		<!-- addons/ (noteskins, videos...) NO entra en el .pack: son recursos externos (hxvlc necesita archivos reales).
 		     Escritorio: Lime los copia junto al ejecutable. Android: quedan en el APK (y se puede ademas poner una carpeta
 		     addons/ en .JarretLabs-FMCE/ que gana sobre la del APK). Ver funky.core.Addons y DOCS/addons-y-pack.md. -->
-		<assets path="addons" rename="addons" />
+		<assets path="addons" rename="addons" exclude="noteskins.zip" unless="mobile" /> <!-- para no escribir toda esta mrd en data/data/game/... -->
 
 		<assets path="LICENSE" rename="LICENSE.txt" />
+        <assets path="art/game.md" rename="README.txt" />
 
 		<!-- Las fuentes van embebidas en el ejecutable (por eso pack-assets.py se salta assets/fonts). -->
 		<assets path="assets/fonts" embed="true" />
