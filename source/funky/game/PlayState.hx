@@ -219,10 +219,17 @@ class PlayState extends MusicBeatState
 	 * Strumlines extra del chart (2, 3, ...), por indice. Son CPU y van separadas del oponente.
 	 */
 
+	var extraLines:Map<Int, StrumLine> = new Map<Int, StrumLine>();
+
 	/**
 	 * Strumlines que se dibujan y se actualizan (la 1 queda fuera si no tiene notas).
 	 */
 	var hudLines:Array<StrumLine> = [];
+
+	/**
+	 * Strumlines cuya logica corre: las de hudLines mas las extra (que son CPU y no se dibujan, solo mueven a sus sprites).
+	 */
+	var logicLines:Array<StrumLine> = [];
 
 	/**
 	 * Grupos que oculta el evento GUI: strums, notas, confirms y HUD.
@@ -318,13 +325,13 @@ class PlayState extends MusicBeatState
 	 * Strumlines creadas, incluida la 1 aunque este vacia y oculta.
 	 */
 	function allLines():Array<StrumLine>
-		return [playerLine, opponentLine];
+		return [playerLine, opponentLine].concat([for (line in extraLines) line]);
 
 	/**
-	 * Strumline por indice del chart: 0 jugador, 1 oponente. Las demas no existen (sus notas se ignoran).
+	 * Strumline por indice del chart: 0 jugador, 1 oponente, 2+ extra (CPU, invisibles).
 	 */
 	public function lineFor(index:Int):Null<StrumLine>
-		return index == 0 ? playerLine : (index == 1 ? opponentLine : null);
+		return index == 0 ? playerLine : (index == 1 ? opponentLine : extraLines.get(index));
 
 	// EVENTO GUI
 
@@ -475,6 +482,33 @@ class PlayState extends MusicBeatState
 
 		activeLines.push(playerLine);
 		hudLines = activeLines;
+
+		// STRUMLINES EXTRA: una por cada indice 2+ que tenga notas. No se agregan a la escena (ni receptores, ni notas, ni splashes):
+		// solo corren su logica para que los sprites del stage con ese strumLine canten.
+		var extraLanes:Map<Int, Int> = new Map<Int, Int>();
+
+		for (chartNote in song.notes)
+		{
+			var lineIndex = SongData.lineOf(chartNote);
+
+			if (lineIndex < 2 || (startFromMs > 0 && chartNote.time < startFromMs))
+				continue;
+
+			var needed = chartNote.lane + 1;
+
+			if (!extraLanes.exists(lineIndex) || extraLanes.get(lineIndex) < needed)
+				extraLanes.set(lineIndex, needed);
+		}
+
+		for (lineIndex in extraLanes.keys())
+		{
+			var lanes = Std.int(Math.min(extraLanes.get(lineIndex), ClientPrefs.MAX_LANES));
+			var extra = new StrumLine(SIDE_MARGIN, strumY, true, true, lanes, cpuWidth);
+			extra.index = lineIndex;
+			extraLines.set(lineIndex, extra);
+		}
+
+		logicLines = hudLines.concat([for (line in extraLines) line]);
 
 		Scripts.set("playerLine", playerLine);
 		Scripts.set("opponentLine", opponentLine);
@@ -702,7 +736,7 @@ class PlayState extends MusicBeatState
 		Conductor.update(songTime);
 
 		// NOTAS Y BEATS
-		for (line in hudLines)
+		for (line in logicLines)
 			line.spawnDue(songTime, spawnAheadMs);
 
 		if (Conductor.justHitStep && Scripts.has)
@@ -731,7 +765,7 @@ class PlayState extends MusicBeatState
 
 		scrollDirection = ClientPrefs.isDownScroll() ? -1 : 1;
 
-		for (line in hudLines)
+		for (line in logicLines)
 			updateNotes(line);
 
 		hud.updateTime(songTime);
@@ -977,7 +1011,10 @@ class PlayState extends MusicBeatState
 					}
 
 					if (Scripts.has)
-						Scripts.call("opponentNoteHitPre", [note]);
+					{
+						if (line.index >= 2) Scripts.call("extraLaneNoteHitPre", [note, line.index]);
+						else Scripts.call("opponentNoteHitPre", [note]);
+					}
 
 					receptor.confirm(songTime);
 					state.hit = true;
@@ -988,7 +1025,10 @@ class PlayState extends MusicBeatState
 					runNoteEvent(note.queueNote != null ? note.queueNote.onPress : -1);
 
 					if (Scripts.has)
-						Scripts.call("opponentNoteHit", [note]);
+					{
+						if (line.index >= 2) Scripts.call("extraLaneNoteHit", [note, line.index]);
+						else Scripts.call("opponentNoteHit", [note]);
+					}
 
 					note.kill();
 				}

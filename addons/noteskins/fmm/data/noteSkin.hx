@@ -7,7 +7,11 @@ function onLoad()
 {
 	_arrowShadow = new CustomShader('dropShadow', pathShader);
 	_arrowShadow.hset('_alpha', 0.6);
+	_arrowShadow.hset('_disx', 4.0);
 	_arrowShadow.hset('_disy', 10.0);
+	_arrowShadow.hset('inner', false);
+	_arrowShadow.hset('inverted', false);
+	_arrowShadow.hset('knockout', false);
 }
 
 function onNote(note, lane)

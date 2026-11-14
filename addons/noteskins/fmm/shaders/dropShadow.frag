@@ -1,13 +1,12 @@
-
 #pragma header
 
-uniform float _alpha = 0.5;
-uniform float _disx = 4.0;
-uniform float _disy = 4.0;
+uniform float _alpha;
+uniform float _disx;
+uniform float _disy;
 
-uniform bool inner = false;
-uniform bool inverted = false;
-uniform bool knockout = false;
+uniform bool inner;
+uniform bool inverted;
+uniform bool knockout;
 
 void main()
 {

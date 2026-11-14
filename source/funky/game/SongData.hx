@@ -100,7 +100,12 @@ class SongData
 
 			if (line == 0) playerNotes.push(note);
 			else if (line == 1) opponentNotes.push(note);
-			else continue;
+			else
+			{
+				// Strumlines extra (2, 3, ...): no tocan laneCount ni los HUD, pero la cancion no debe terminar antes que ellas.
+				lastNoteTime = Math.max(lastNoteTime, note.time + note.length);
+				continue;
+			}
 
 			lastNoteTime = Math.max(lastNoteTime, note.time + note.length);
 			highestLane = Std.int(Math.max(highestLane, note.lane));

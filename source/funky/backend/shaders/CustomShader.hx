@@ -4,6 +4,7 @@ import flixel.addons.display.FlxRuntimeShader;
 import funky.core.Addons;
 import funky.core.Log;
 import openfl.display.BitmapData;
+import openfl.display.ShaderInput;
 import openfl.display.ShaderParameterType;
 import openfl.utils.Assets;
 
@@ -67,48 +68,55 @@ class CustomShader extends FlxRuntimeShader
 			return false;
 		}
 
-		if (Std.isOfType(value, BitmapData))
+		// Un sampler2D es un ShaderInput; todo lo demas, un ShaderParameter. (No sirve mirar hasField("value"/"input"):
+		// ambos arrancan en null y hasField da false hasta que se setean.)
+		if (Std.isOfType(param, ShaderInput))
 		{
-			if (Reflect.hasField(param, "input"))
+			if (!Std.isOfType(value, BitmapData))
 			{
-				param.input = cast(value, BitmapData);
-				return true;
+				Log.warn('[CustomShader:$path] "$name" es un sampler2D: pasa un BitmapData');
+				return false;
 			}
-			Log.warn('[CustomShader:$path] "$name" no es un sampler2D');
-			return false;
+			setSampler2D(name, cast value);
+			return true;
 		}
 
-		if (!Reflect.hasField(param, "value"))
+		if (Std.isOfType(value, BitmapData))
 		{
-			Log.warn('[CustomShader:$path] "$name" es un sampler2D: pasa un BitmapData');
+			Log.warn('[CustomShader:$path] "$name" no es un sampler2D');
 			return false;
 		}
 
 		var list:Array<Dynamic> = Std.isOfType(value, Array) ? cast value : [value];
 		var type:Null<ShaderParameterType> = Reflect.field(param, "type");
-		var out:Array<Dynamic> = [];
-		for (item in list)
+
+		// API de FlxRuntimeShader segun el tipo del uniform.
+		switch (type)
 		{
-			if (type == null) out.push(item);
-			else switch (type)
-			{
-				case BOOL, BOOL2, BOOL3, BOOL4:
-					out.push(item == true || (Std.isOfType(item, Float) && item != 0));
-				case INT, INT2, INT3, INT4:
-					out.push(Std.isOfType(item, Bool) ? (item ? 1 : 0) : Std.int(item));
-				default:
-					out.push(Std.isOfType(item, Bool) ? (item ? 1.0 : 0.0) : item);
-			}
+			case BOOL, BOOL2, BOOL3, BOOL4:
+				setBoolArray(name, [for (item in list) asBool(item)]);
+			case INT, INT2, INT3, INT4:
+				setIntArray(name, [for (item in list) asInt(item)]);
+			default:
+				setFloatArray(name, [for (item in list) asFloat(item)]);
 		}
-		param.value = out;
 		return true;
 	}
+
+	static inline function asBool(v:Dynamic):Bool
+		return v == true || (Std.isOfType(v, Float) && v != 0);
+
+	static inline function asInt(v:Dynamic):Int
+		return Std.isOfType(v, Bool) ? (v ? 1 : 0) : Std.int(v);
+
+	static inline function asFloat(v:Dynamic):Float
+		return Std.isOfType(v, Bool) ? (v ? 1.0 : 0.0) : cast v;
 
 	public function get(name:String):Dynamic
 	{
 		var param:Dynamic = Reflect.field(data, name);
 		if (param == null) return null;
-		if (Reflect.hasField(param, "input")) return param.input;
+		if (Std.isOfType(param, ShaderInput)) return getSampler2D(name);
 		var value:Null<Array<Dynamic>> = param.value;
 		if (value == null) return null;
 		return value.length == 1 ? value[0] : value;
