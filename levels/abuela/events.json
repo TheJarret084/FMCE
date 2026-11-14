@@ -1,0 +1,328 @@
+{
+	"action_packs": [
+		{
+			"actions": [
+				{
+					"props": {
+						"visible": true
+					},
+					"type": "GUI"
+				}
+			]
+		}
+	],
+	"events": [
+		{
+			"time": 0,
+			"actions": [
+				{
+					"props": {
+						"value": true,
+						"object": 3
+					},
+					"type": "ObjectVisibilitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"target": 0,
+						"transitionTime": 0,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				},
+				{
+					"props": {
+						"strumLine": 0,
+						"object": 1
+					},
+					"type": "ObjectChartChange"
+				},
+				{
+					"props": {
+						"visible": false
+					},
+					"type": "GUI"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 0,
+						"transitionTime": 0,
+						"transitionTimeUnit": "seconds",
+						"object": 5
+					},
+					"type": "ObjectOpacitySet"
+				}
+			]
+		},
+		{
+			"time": 16.941176,
+			"actions": [
+				{
+					"props": {
+						"anim": 1,
+						"object": 3
+					},
+					"type": "ObjectAnimationSet"
+				}
+			]
+		},
+		{
+			"time": 31.058824,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"target": 1,
+						"transitionTime": 2.7,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				}
+			]
+		},
+		{
+			"time": 32.205882,
+			"actions": [
+				{
+					"props": {
+						"visible": true
+					},
+					"type": "GUI"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 0,
+						"transitionTime": 0.4,
+						"transitionTimeUnit": "seconds",
+						"object": 5
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 0,
+						"transitionTime": 0.4,
+						"transitionTimeUnit": "seconds",
+						"object": 3
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 1,
+						"transitionTime": 0.4,
+						"transitionTimeUnit": "seconds",
+						"object": 0
+					},
+					"type": "ObjectOpacitySet"
+				}
+			]
+		},
+		{
+			"time": 48.176471,
+			"actions": [
+				{
+					"props": {
+						"strumLine": -1,
+						"object": 1
+					},
+					"type": "ObjectChartChange"
+				},
+				{
+					"props": {
+						"anim": 2,
+						"object": 1
+					},
+					"type": "ObjectAnimationSet"
+				}
+			]
+		},
+		{
+			"time": 48.705882,
+			"actions": [
+				{
+					"props": {
+						"anim": 6,
+						"object": 1
+					},
+					"type": "ObjectAnimationSet"
+				}
+			]
+		},
+		{
+			"time": 49.411765,
+			"actions": [
+				{
+					"props": {
+						"easingType": "circ",
+						"target": 0,
+						"transitionTime": 3,
+						"transitionTimeUnit": "seconds",
+						"mode": "focus"
+					},
+					"type": "CameraSet"
+				},
+				{
+					"props": {
+						"easingType": "circ",
+						"value": 1,
+						"transitionTime": 2.7,
+						"transitionTimeUnit": "seconds",
+						"object": 5
+					},
+					"type": "ObjectOpacitySet"
+				}
+			]
+		},
+		{
+			"time": 50.117647,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"value": 1,
+						"transitionTime": 0.3,
+						"transitionTimeUnit": "seconds",
+						"object": 5
+					},
+					"type": "ObjectOpacitySet"
+				}
+			]
+		},
+		{
+			"time": 50.470588,
+			"actions": [
+				{
+					"props": {
+						"anim": 0,
+						"object": 2
+					},
+					"type": "ObjectAnimationSet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 1,
+						"transitionTime": 0,
+						"transitionTimeUnit": "seconds",
+						"object": 2
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 0,
+						"transitionTime": 0,
+						"transitionTimeUnit": "seconds",
+						"object": 5
+					},
+					"type": "ObjectOpacitySet"
+				}
+			]
+		},
+		{
+			"time": 54.705882,
+			"actions": [
+				{
+					"props": {
+						"anim": 1,
+						"object": 2
+					},
+					"type": "ObjectAnimationSet"
+				}
+			]
+		},
+		{
+			"time": 58.941176,
+			"actions": [
+				{
+					"props": {
+						"anim": 2,
+						"object": 2
+					},
+					"type": "ObjectAnimationSet"
+				}
+			]
+		},
+		{
+			"time": 63.529412,
+			"actions": [
+				{
+					"props": {
+						"anim": 3,
+						"object": 2
+					},
+					"type": "ObjectAnimationSet"
+				}
+			]
+		},
+		{
+			"time": 65.647059,
+			"actions": [
+				{
+					"props": {
+						"anim": 0,
+						"object": 4
+					},
+					"type": "ObjectAnimationSet"
+				},
+				{
+					"props": {
+						"visible": false
+					},
+					"type": "GUI"
+				},
+				{
+					"props": {
+						"value": true,
+						"object": 4
+					},
+					"type": "ObjectVisibilitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 0,
+						"transitionTime": 0,
+						"transitionTimeUnit": "seconds",
+						"object": 5
+					},
+					"type": "ObjectOpacitySet"
+				},
+				{
+					"props": {
+						"easingType": "default",
+						"value": 0,
+						"transitionTime": 0,
+						"transitionTimeUnit": "seconds",
+						"object": 2
+					},
+					"type": "ObjectOpacitySet"
+				}
+			]
+		},
+		{
+			"time": 66.352941,
+			"actions": [
+				{
+					"props": {
+						"easingType": "default",
+						"value": 1,
+						"transitionTime": 2,
+						"transitionTimeUnit": "seconds",
+						"object": 5
+					},
+					"type": "ObjectOpacitySet"
+				}
+			]
+		}
+	]
+}

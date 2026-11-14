@@ -1,0 +1,77 @@
+{
+  "type": "sprite",
+  "data": [
+    {
+      "loop": true,
+      "anim": "idle",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 752,
+        "y": 656
+      }
+    },
+    {
+      "loop": true,
+      "anim": "left",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 812,
+        "y": 656
+      }
+    },
+    {
+      "loop": true,
+      "anim": "down",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 752,
+        "y": 644
+      }
+    },
+    {
+      "loop": true,
+      "anim": "up",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 749.3,
+        "y": 672
+      }
+    },
+    {
+      "loop": true,
+      "anim": "right",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 742.7,
+        "y": 657.3
+      }
+    },
+    {
+      "loop": true,
+      "spd_fps": true,
+      "anim": "idle",
+      "scale": 1,
+      "offset": {
+        "x": 741.3,
+        "y": 657.3
+      },
+      "indices": [],
+      "spd": 24
+    },
+    {
+      "loop": false,
+      "anim": "quecojones",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 746.7,
+        "y": 665.3
+      }
+    }
+  ]
+}

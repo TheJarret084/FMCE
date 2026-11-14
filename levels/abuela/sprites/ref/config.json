@@ -1,0 +1,15 @@
+{
+  "type": "sprite",
+  "data": [
+    {
+      "loop": true,
+      "anim": "anim0",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 625.3,
+        "y": 370.7
+      }
+    }
+  ]
+}

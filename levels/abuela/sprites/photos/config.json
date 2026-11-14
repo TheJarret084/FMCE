@@ -1,0 +1,54 @@
+{
+  "type": "video",
+  "bilinear": false,
+  "data": [
+    {
+      "loop": false,
+      "spd_fps": true,
+      "anim": "photos01",
+      "scale": 1,
+      "offset": {
+        "x": 0,
+        "y": 0
+      },
+      "indices": [],
+      "spd": 24
+    },
+    {
+      "loop": false,
+      "spd_fps": true,
+      "anim": "photos02",
+      "scale": 1,
+      "offset": {
+        "x": 0,
+        "y": 0
+      },
+      "indices": [],
+      "spd": 24
+    },
+    {
+      "loop": false,
+      "spd_fps": true,
+      "anim": "photos03",
+      "scale": 1,
+      "offset": {
+        "x": 0,
+        "y": 0
+      },
+      "indices": [],
+      "spd": 24
+    },
+    {
+      "loop": false,
+      "spd_fps": true,
+      "anim": "photos04",
+      "scale": 1,
+      "offset": {
+        "x": 0,
+        "y": 0
+      },
+      "indices": [],
+      "spd": 24
+    }
+  ]
+}

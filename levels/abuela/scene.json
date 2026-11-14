@@ -1,0 +1,190 @@
+{
+  "objects": [
+    {
+      "visible": true,
+      "opacity": 0,
+      "strumLine": -1,
+      "spr": "bosque",
+      "fixed": false,
+      "transform": [
+        {
+          "position": {
+            "x": 1102.6116,
+            "y": 512.9137
+          },
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "scale": {
+            "x": 0.5,
+            "y": 0.5
+          }
+        }
+      ],
+      "color": {
+        "b": 255,
+        "g": 255,
+        "r": 255
+      }
+    },
+    {
+      "fixed": false,
+      "transform": [
+        {
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "scale": {
+            "x": 0.27,
+            "y": 0.27
+          },
+          "position": {
+            "x": 1045.8425,
+            "y": 1108.4785
+          }
+        }
+      ],
+      "strumLine": -1,
+      "spr": "jordiwailll",
+      "visible": true,
+      "opacity": 1,
+      "color": {
+        "b": 255,
+        "r": 255,
+        "g": 255
+      }
+    },
+    {
+      "fixed": true,
+      "transform": [
+        {
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "scale": {
+            "x": 1.0526,
+            "y": 1.0526
+          },
+          "position": {
+            "x": 0.5163,
+            "y": 0.505
+          }
+        }
+      ],
+      "strumLine": -1,
+      "spr": "photos",
+      "visible": true,
+      "opacity": 0,
+      "color": {
+        "b": 255,
+        "r": 255,
+        "g": 255
+      }
+    },
+    {
+      "fixed": true,
+      "transform": [
+        {
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "scale": {
+            "x": 1.5553,
+            "y": 1.5553
+          },
+          "position": {
+            "x": 0.4979,
+            "y": 0.5117
+          }
+        }
+      ],
+      "strumLine": -1,
+      "spr": "intro",
+      "visible": true,
+      "opacity": 1,
+      "color": {
+        "b": 255,
+        "r": 255,
+        "g": 255
+      }
+    },
+    {
+      "transform": [
+        {
+          "scale": {
+            "x": 0.51,
+            "y": 0.51
+          },
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "position": {
+            "x": 1074.9753,
+            "y": 501.6572
+          }
+        }
+      ],
+      "fixed": false,
+      "spr": "pichazo",
+      "strumLine": -1,
+      "visible": false,
+      "color": {
+        "r": 255,
+        "b": 255,
+        "g": 255
+      },
+      "opacity": 1
+    },
+    {
+      "transform": [
+        {
+          "scale": {
+            "x": 2.1053,
+            "y": 2.1053
+          },
+          "scrollFactor": {
+            "x": 1,
+            "y": 1
+          },
+          "position": {
+            "x": 0.4683,
+            "y": 0.2549
+          }
+        }
+      ],
+      "fixed": true,
+      "spr": "block",
+      "strumLine": -1,
+      "visible": true,
+      "color": {
+        "r": 255,
+        "b": 255,
+        "g": 255
+      },
+      "opacity": 1
+    }
+  ],
+  "icons": [],
+  "cameras": [
+    {
+      "scale": 0.475,
+      "position": {
+        "x": 1080,
+        "y": 500.3517
+      }
+    },
+    {
+      "scale": 0.475,
+      "position": {
+        "x": 1080,
+        "y": 940.5868
+      }
+    }
+  ],
+  "landscape": true
+}

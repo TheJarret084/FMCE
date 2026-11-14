@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Created with Heroic Packer v0.1.6 https://heroicpacker.heroeyad.dev/
+-->
+<TextureAtlas imagePath="bubbleTrans.png" width="2882" height="4862" spritePadding="0" borderPadding="1" scale="0.75">
+	<SubTexture name="frame_0001" x="1" y="1" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0002" x="961" y="1" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0003" x="1921" y="1" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0004" x="1" y="541" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0005" x="961" y="541" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0006" x="1921" y="541" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0007" x="1" y="1081" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0008" x="961" y="1081" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0009" x="1921" y="1081" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0010" x="1" y="1621" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0011" x="961" y="1621" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0012" x="1921" y="1621" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0013" x="1" y="2161" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0014" x="1" y="2701" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0015" x="1" y="3241" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0016" x="1" y="3781" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0017" x="1" y="4321" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0018" x="961" y="2161" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0019" x="1921" y="2161" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0020" x="961" y="2701" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0021" x="1921" y="2701" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0022" x="961" y="3241" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0023" x="961" y="3241" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0024" x="961" y="3241" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0025" x="961" y="3781" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0026" x="961" y="4321" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0027" x="1921" y="3241" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0028" x="1921" y="3781" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+	<SubTexture name="frame_0029" x="1921" y="4321" width="960" height="540" frameX="0" frameY="0" frameWidth="960" frameHeight="540"/>
+</TextureAtlas>

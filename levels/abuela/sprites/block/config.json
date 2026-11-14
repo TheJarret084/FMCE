@@ -1,0 +1,20 @@
+{
+  "bilinear": true,
+  "data": [
+    {
+      "bilinear": true,
+      "indices": [],
+      "num": 1,
+      "spd": 576,
+      "anim": "anim0",
+      "loop": true,
+      "spd_fps": true,
+      "offset": {
+        "x": 150,
+        "y": 150
+      },
+      "scale": 3.24999999999997
+    }
+  ],
+  "type": "item"
+}

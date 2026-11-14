@@ -1,0 +1,18 @@
+{
+  "type": "video",
+  "bilinear": false,
+  "data": [
+    {
+      "loop": true,
+      "spd_fps": true,
+      "anim": "forest",
+      "scale": 1,
+      "offset": {
+        "x": 906,
+        "y": 490
+      },
+      "indices": [],
+      "spd": 24
+    }
+  ]
+}

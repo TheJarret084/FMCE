@@ -1,0 +1,15 @@
+{
+  "type": "video",
+  "data": [
+    {
+      "loop": false,
+      "anim": "tungazo",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 936,
+        "y": 536
+      }
+    }
+  ]
+}

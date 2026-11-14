@@ -1,0 +1,25 @@
+{
+  "type": "video",
+  "data": [
+    {
+      "loop": false,
+      "anim": "comienzo1",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 620,
+        "y": 362
+      }
+    },
+    {
+      "loop": false,
+      "anim": "comienzo2",
+      "spd_fps": true,
+      "spd": 24,
+      "offset": {
+        "x": 638,
+        "y": 360
+      }
+    }
+  ]
+}
