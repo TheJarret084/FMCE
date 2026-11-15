@@ -11,7 +11,6 @@ import flixel.util.FlxColor;
 import funky.core.ClientPrefs;
 import funky.core.CoolUtil;
 import funky.core.KeyBinds;
-import funky.core.NoteRGBShader;
 import funky.core.NoteSkin;
 import funky.core.Paths;
 import funky.core.TouchNav;

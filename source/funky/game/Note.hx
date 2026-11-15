@@ -1,7 +1,6 @@
 package funky.game;
 
 import flixel.FlxSprite;
-import funky.core.NoteRGBShader;
 import funky.core.NoteSkin;
 
 class QueueNote

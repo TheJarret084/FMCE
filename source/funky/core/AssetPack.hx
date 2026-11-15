@@ -16,6 +16,11 @@ class AssetPack
 
 	public static var path(default, null):Null<String> = null;
 
+	#if sys
+	/** El .pack montado (para que el Checker pueda revisarlo). */
+	public static var pack(default, null):Null<PackLibrary> = null;
+	#end
+
 	public static function mount():Bool
 	{
 		#if (sys && !FMCE_LOOSE_ASSETS)
@@ -32,6 +37,7 @@ class AssetPack
 			LimeAssets.registerLibrary("default", library);
 
 			path = file;
+			pack = library;
 			mounted = true;
 			Log.info('[AssetPack] ' + library.count + ' archivos desde $file');
 			return true;

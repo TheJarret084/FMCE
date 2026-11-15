@@ -7,6 +7,7 @@
 | `android-build.sh` | Android: prepara SDK/NDK y llama a `build.sh android` |
 | `libs.txt` | Dependencias (`nombre [version]`). Los scripts las instalan solos |
 | `alsoft.txt` | Config de OpenAL que `Project.xml` copia al build (si falta, no compila) |
+| `jarretTools/` | Build desde el celular (Termux): setup, keystore, build, install. Ignorada por git, ver su README |
 
 Android guarda sus datos en `/storage/emulated/0/.JarretLabs-FMCE/` (pide "Acceso a todos los archivos" la primera vez).
 
@@ -24,6 +25,9 @@ Sin `building/android.keystore` el release sale firmado en debug (instalable). P
 `keytool -genkey -v -keystore building/android.keystore -alias fmce -keyalg RSA -keysize 2048 -validity 10000`.
 El keystore solo se usa si `building/check-keystore.sh` lo da por bueno (abre con `ANDROID_KEY_ALIAS` y
 `ANDROID_STORE_PASSWORD` y se puede leer la llave); si falta o esta danado, el build sigue firmado en debug.
+
+Para compilar y verificar el APK de una sola vez: `bash test.sh [debug|release]` (o `--no-build` para revisar
+uno ya hecho). Comprueba que sea solo `arm64-v8a` y que ninguna `.so` sea armv7/x86.
 
 ## Flixel / OpenFL (forks de Codename)
 

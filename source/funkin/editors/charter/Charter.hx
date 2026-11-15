@@ -81,10 +81,6 @@ class Charter extends UIState {
 	public var quant:Int = 16;
 	public var quants:Array<Int> = [4, 8, 12, 16, 20, 24, 32, 48, 64, 192];
 
-	public var noteType:Int = 0;
-	public var noteTypes:Array<String> = [];
-	public var noteTypeText:UIText;
-
 	static inline var DEBUG_INPUT:Bool = false;
 	public var inputDebugText:UIText;
 
@@ -330,7 +326,7 @@ class Charter extends UIState {
 			},
 			{
 				label: translate("topBar.note") + " >",
-				childs: buildNoteTypesUI()
+				childs: buildNoteUI()
 			},
 			{
 				label: translate("topBar.snap") + " >",
@@ -443,9 +439,6 @@ class Charter extends UIState {
 		topMenuSpr = new UITopMenu(topMenu);
 		topMenuSpr.cameras = uiGroup.cameras = [uiCamera];
 
-		noteTypeText = new UIText(0, 0, 0, "(0) " + translate("noteTypes.default"));
-		noteTypeText.cameras = [uiCamera];
-
 		inputDebugText = new UIText(8, FlxG.height - 78, 0, "", 13);
 		inputDebugText.cameras = [uiCamera];
 		inputDebugText.active = true;
@@ -524,7 +517,6 @@ class Charter extends UIState {
 		add(strumLines);
 
 		add(topMenuSpr);
-		add(noteTypeText);
 		if (DEBUG_INPUT) add(inputDebugText);
 
 		add(uiGroup);
@@ -571,7 +563,6 @@ class Charter extends UIState {
 		__ensureStatics();
 
 		Conductor.setupSong(PlayState.SONG);
-		noteTypes = PlayState.SONG.noteTypes;
 
 		{
 			var music = new FlxSound();
@@ -607,7 +598,7 @@ class Charter extends UIState {
 			for (note in strL.notes) {
 				var n = new CharterNote();
 				var t = Conductor.getStepForTime(note.time);
-				n.updatePos(t, note.id, Conductor.getStepForTime(note.time + note.sLen) - t, note.type, strumLines.members[i]);
+				n.updatePos(t, note.id, Conductor.getStepForTime(note.time + note.sLen) - t, strumLines.members[i]);
 				n.onPress = note.onPress != null ? note.onPress : -1;
 				n.onMiss = note.onMiss != null ? note.onMiss : -1;
 				notesGroup.members[notesCreated++] = n;
@@ -627,7 +618,7 @@ class Charter extends UIState {
 		eventsGroup.autoSort = true;
 		for (e in eventsGroup.members) e.refreshEventIcons();
 
-		buildNoteTypesUI();
+		buildNoteUI();
 		updateBookmarks();
 		refreshBPMSensitive();
 
@@ -957,7 +948,7 @@ class Charter extends UIState {
 							var targetStrumline = strumLines.getStrumlineFromID(id);
 							note.updatePos(
 								CoolUtil.bound(FlxG.keys.pressed.SHIFT ? ((mousePos.y-20) / 40) : quantStep(mousePos.y/40), 0, __endStep-1),
-								(id-targetStrumline.startingID) % targetStrumline.keyCount, 0, noteType, targetStrumline
+								(id-targetStrumline.startingID) % targetStrumline.keyCount, 0, targetStrumline
 							);
 							notesGroup.add(note);
 							selection = [note];
@@ -986,7 +977,7 @@ class Charter extends UIState {
 										if (s is CharterNote) {
 											var n:CharterNote = cast s;
 											var newNote = new CharterNote();
-											newNote.updatePos(n.step, n.id, n.susLength, n.type, n.strumLine);
+											newNote.updatePos(n.step, n.id, n.susLength, n.strumLine);
 											newNote.onPress = n.onPress;
 											newNote.onMiss = n.onMiss;
 											notesGroup.add(newNote);
@@ -1032,7 +1023,7 @@ class Charter extends UIState {
 						n.tempSusLength = 0;
 
 						@:privateAccess n.__susInstaLerp = false;
-						n.updatePos(n.step, n.id, n.susLength, n.type);
+						n.updatePos(n.step, n.id, n.susLength);
 						undoChanges.push({before: oldSusLen, after: n.susLength, note: n});
 					});
 					undos.addToUndo(CEditSustains(undoChanges));
@@ -1203,7 +1194,7 @@ class Charter extends UIState {
 			for(note in strL.notes) {
 				var n = new CharterNote();
 				var t = Conductor.getStepForTime(note.time);
-				n.updatePos(t, note.id, Conductor.getStepForTime(note.time + note.sLen) - t, note.type, cStr);
+				n.updatePos(t, note.id, Conductor.getStepForTime(note.time + note.sLen) - t, cStr);
 				n.onPress = note.onPress != null ? note.onPress : -1;
 				n.onMiss = note.onMiss != null ? note.onMiss : -1;
 				notesGroup.add(n);
@@ -1357,13 +1348,6 @@ class Charter extends UIState {
 				snapButton.x = (lastButtonX -= snapButton.bWidth)-10;
 			}
 		}
-
-		if (topMenuSpr.members[noteIndex] != null) {
-			var noteTopButton:UITopMenuButton = cast topMenuSpr.members[noteIndex];
-			noteTypeText.x = noteTopButton.x + noteTopButton.bWidth + 6;
-			noteTypeText.y = Std.int((noteTopButton.bHeight - noteTypeText.height) / 2);
-		}
-		noteTypeText.text = '($noteType) ' + (noteTypes[noteType-1] == null ? translate("noteTypes.default") : noteTypes[noteType-1]);
 
 		super.update(elapsed);
 
@@ -1541,7 +1525,7 @@ class Charter extends UIState {
 				var time = note.time + Chart.offsetMs;
 				var n = new CharterNote();
 				var t = Conductor.getStepForTime(time);
-				n.updatePos(t, note.id, Conductor.getStepForTime(time + note.sLen) - t, note.type, strumLines.members[i]);
+				n.updatePos(t, note.id, Conductor.getStepForTime(time + note.sLen) - t, strumLines.members[i]);
 				n.onPress = note.onPress != null ? note.onPress : -1;
 				n.onMiss = note.onMiss != null ? note.onMiss : -1;
 				created.push(n);
@@ -1568,7 +1552,7 @@ class Charter extends UIState {
 			for (s in selection)
 				if (s is CharterNote) {
 				var note:CharterNote = cast s;
-				CNote(note.step - minStep, note.id, note.strumLineID, note.susLength, note.type, note.onPress, note.onMiss);
+				CNote(note.step - minStep, note.id, note.strumLineID, note.susLength, note.onPress, note.onMiss);
 			} else if (s is CharterEvent) {
 				var event:CharterEvent = cast s;
 				CEvent(event.step - minStep, [for (event in event.events) Reflect.copy(event)]);
@@ -1583,9 +1567,9 @@ class Charter extends UIState {
 		var sObjects:Array<ICharterSelectable> = [];
 		for(c in clipboard) {
 			switch(c) {
-				case CNote(step, id, strumLineID, susLength, type, onPress, onMiss):
+				case CNote(step, id, strumLineID, susLength, onPress, onMiss):
 					var note = new CharterNote();
-					note.updatePos(minStep + step, id, susLength, type, strumLines.members[CoolUtil.boundInt(strumLineID, 0, strumLines.length-1)]);
+					note.updatePos(minStep + step, id, susLength, strumLines.members[CoolUtil.boundInt(strumLineID, 0, strumLines.length-1)]);
 					note.onPress = onPress;
 					note.onMiss = onMiss;
 					notesGroup.add(note);
@@ -1669,7 +1653,7 @@ class Charter extends UIState {
 				checkSelectionForBPMUpdates();
 			case CEditSustains(changes):
 				for(n in changes)
-					n.note.updatePos(n.note.step, n.note.id, n.before, n.note.type);
+					n.note.updatePos(n.note.step, n.note.id, n.before);
 			case CEditEvent(event, oldEvents, newEvents):
 				event.events = oldEvents.copy();
 				event.refreshEventIcons();
@@ -1677,17 +1661,12 @@ class Charter extends UIState {
 				Charter.instance.updateBPMEvents();
 			case CEditActionPacks(oldPacks, newPacks):
 				PlayState.SONG.actionPacks = oldPacks;
-				buildNoteTypesUI();
+				buildNoteUI();
 			case CEditChartData(oldData, newData):
 				PlayState.SONG.stage = oldData.stage;
-			case CEditNoteTypes(oldArray, newArray):
-				noteTypes = oldArray;
-				changeNoteType(null, false);
 			case CEditBookmarks(oldArray, newArray):
 				PlayState.SONG.bookmarks = oldArray;
 				updateBookmarks();
-			case CEditSpecNotesType(notes, oldTypes, newTypes):
-				for(i=>note in notes) note.updatePos(note.step, note.id, note.susLength, oldTypes[i]);
 			case CEditNotePacks(notes, oldPress, oldMiss, newPress, newMiss):
 				for(i=>note in notes) { note.onPress = oldPress[i]; note.onMiss = oldMiss[i]; }
 			case CChangeBundle(changes):
@@ -1733,7 +1712,7 @@ class Charter extends UIState {
 				checkSelectionForBPMUpdates();
 			case CEditSustains(changes):
 				for(n in changes)
-					n.note.updatePos(n.note.step, n.note.id, n.after, n.note.type);
+					n.note.updatePos(n.note.step, n.note.id, n.after);
 			case CEditEvent(event, oldEvents, newEvents):
 				event.events = newEvents.copy();
 				event.refreshEventIcons();
@@ -1741,17 +1720,12 @@ class Charter extends UIState {
 				Charter.instance.updateBPMEvents();
 			case CEditActionPacks(oldPacks, newPacks):
 				PlayState.SONG.actionPacks = newPacks;
-				buildNoteTypesUI();
+				buildNoteUI();
 			case CEditChartData(oldData, newData):
 				PlayState.SONG.stage = newData.stage;
-			case CEditNoteTypes(oldArray, newArray):
-				noteTypes = newArray;
-				changeNoteType(null, false);
 			case CEditBookmarks(oldArray, newArray):
 				PlayState.SONG.bookmarks = newArray;
 				updateBookmarks();
-			case CEditSpecNotesType(notes, oldTypes, newTypes):
-				for(i=>note in notes) note.updatePos(note.step, note.id, note.susLength, newTypes[i]);
 			case CEditNotePacks(notes, oldPress, oldMiss, newPress, newMiss):
 				for(i=>note in notes) { note.onPress = newPress[i]; note.onMiss = newMiss[i]; }
 			case CChangeBundle(changes):
@@ -2198,31 +2172,11 @@ class Charter extends UIState {
 			if (s is CharterNote) {
 				var n:CharterNote = cast s;
 				var old:Float = n.susLength;
-				n.updatePos(n.step, n.id, Math.max(n.susLength + change, 0), n.type);
+				n.updatePos(n.step, n.id, Math.max(n.susLength + change, 0));
 				undoChanges.push({before: old, after: n.susLength, note: n});
 			}
 
 		undos.addToUndo(CEditSustains(undoChanges));
-	}
-
-	inline public function changeNoteType(?newID:Int, checkSelection:Bool = true) {
-		if(newID != null) noteType = newID;
-		noteType = CoolUtil.boundInt(noteType, 0, noteTypes.length);
-		buildNoteTypesUI();
-
-		var changedNotes:{notes:Array<CharterNote>, oldTypes:Array<Int>, newTypes:Array<Int>} = {notes:[], oldTypes:[], newTypes:[]};
-		for(note in notesGroup) if(note.type < 0 || note.type > noteTypes.length) {
-			changedNotes.notes.push(note); changedNotes.oldTypes.push(note.type); changedNotes.newTypes.push(0);
-			note.updatePos(note.step, note.id, note.susLength, 0);
-		}
-
-		if(checkSelection) for(s in selection)
-			if (s is CharterNote) {
-				var n:CharterNote = cast s;
-				changedNotes.notes.push(n); changedNotes.oldTypes.push(n.type); changedNotes.newTypes.push(newID);
-				n.updatePos(n.step, n.id, n.susLength, newID);
-			}
-		if(changedNotes.notes.length > 0) undos.addToUndo(CEditSpecNotesType(changedNotes.notes, changedNotes.oldTypes, changedNotes.newTypes));
 	}
 
 	function setNotePack(press:Bool, pack:Int) {
@@ -2243,19 +2197,16 @@ class Charter extends UIState {
 		var song = PlayState.SONG;
 		var packs = song != null && song.actionPacks != null ? song.actionPacks : [];
 		var options:Array<UIContextMenuOption> = [{
-			label: "(-1) " + (TU.exists("note.packNone") ? TU.translate("note.packNone") : "Ninguno"),
+			label: "(0) " + (TU.exists("note.packNone") ? TU.translate("note.packNone") : "Ninguno"),
 			onSelect: (_) -> {setNotePack(press, -1);}
 		}];
 		for (i => p in packs)
 			options.push({
-				label: '#$i ${p.name != null ? p.name + " " : ""}(${p.actions != null ? p.actions.length : 0})',
+				label: '#${i + 1} ${p.name != null ? p.name + " " : ""}(${p.actions != null ? p.actions.length : 0})',
 				onSelect: (_) -> {setNotePack(press, i);}
 			});
 		return options;
 	}
-
-	function editNoteTypesList(_)
-		FlxG.state.openSubState(new CharterNoteTypesList());
 
 	public static function pauseAudio():Void {
 		if (FlxG.sound.music != null) FlxG.sound.music.pause();
@@ -2266,7 +2217,7 @@ class Charter extends UIState {
 				if (strumLine != null && strumLine.vocals != null) strumLine.vocals.pause();
 	}
 
-	public function buildNoteTypesUI():Array<UIContextMenuOption> {
+	public function buildNoteUI():Array<UIContextMenuOption> {
 		var noteTopButton:UITopMenuButton = topMenuSpr == null ? null : cast topMenuSpr.members[noteIndex];
 		var newChilds:Array<UIContextMenuOption> = [
 			{
@@ -2298,37 +2249,6 @@ class Charter extends UIState {
 			null
 		];
 
-		var noteTypeOptions:Array<UIContextMenuOption> = [{
-			label: "(0) " + translate("noteTypes.default"),
-			keybind: [ZERO],
-			onSelect: (_) -> {changeNoteType(0);},
-			icon: this.noteType == 0 ? 1 : 0
-		}];
-
-		final noteKeys:Array<Array<Array<FlxKey>>> = [[[ZERO], [NUMPADZERO]], [[ONE], [NUMPADONE]], [[TWO], [NUMPADTWO]], [[THREE], [NUMPADTHREE]], [[FOUR], [NUMPADFOUR]], [[FIVE], [NUMPADFIVE]],
-												[[SIX], [NUMPADSIX]], [[SEVEN], [NUMPADSEVEN]], [[EIGHT], [NUMPADEIGHT]], [[NINE], [NUMPADNINE]]];
-		for (i=>type in noteTypes) {
-			var realNoteID:Int = i+1;
-			var newChild:UIContextMenuOption = {
-
-				label: '(${realNoteID}) ${type}',
-				onSelect: (_) -> {changeNoteType(realNoteID);},
-				icon: this.noteType == realNoteID ? 1 : 0
-			};
-			if (realNoteID <= 9) newChild.keybinds = noteKeys[realNoteID];
-			noteTypeOptions.push(newChild);
-		}
-		newChilds.push({
-			label: translate("note.noteTypesList"),
-			childs: noteTypeOptions
-		});
-		newChilds.push({
-			label: translate("note.editNoteTypesList"),
-			color: 0xFF959829, icon: 4,
-			onCreate: function (button:UIContextMenuOptionSpr) {button.label.offset.x = button.icon.offset.x = -2;},
-			onSelect: editNoteTypesList
-		});
-		newChilds.push(null);
 		newChilds.push({
 			label: TU.exists("note.onPress") ? TU.translate("note.onPress") : "onPress (action pack)",
 			childs: notePackOptions(true)
@@ -2358,7 +2278,7 @@ class Charter extends UIState {
 	public inline function buildNote(note:CharterNote):ChartNote {
 		var time = Conductor.getTimeForStep(note.step);
 		var cn:ChartNote = {
-			type: note.type,
+			type: 0,
 			time: time,
 			sLen: Conductor.getTimeForStep(note.step + note.susLength) - time,
 			id: note.id
@@ -2370,7 +2290,7 @@ class Charter extends UIState {
 
 	public function buildChart() {
 		PlayState.SONG.strumLines = [];
-		PlayState.SONG.noteTypes = this.noteTypes;
+		PlayState.SONG.noteTypes = [];
 		PlayState.SONG.chartVersion = Chart.version;
 		for(s in strumLines) {
 			s.strumLine.notes = [];
@@ -2480,11 +2400,6 @@ class Charter extends UIState {
 						]);
 					case CEditEvent(event, oldEvents, newEvents):
 						newChanges[i] = CEditEvent(cast(__relinkSingleSelection(event), CharterEvent), oldEvents, newEvents);
-					case CEditSpecNotesType(notesChanged, oldNoteTypes, newNoteTypes):
-						newChanges[i] = CEditSpecNotesType([
-							for (noteChanged in notesChanged)
-								cast(__relinkSingleSelection(noteChanged), CharterNote)
-						], oldNoteTypes, newNoteTypes);
 					case CEditNotePacks(notesChanged, oldPress, oldMiss, newPress, newMiss):
 						newChanges[i] = CEditNotePacks([
 							for (noteChanged in notesChanged)
@@ -2527,7 +2442,6 @@ class Charter extends UIState {
 			songPosition: Conductor.songPosition,
 			playbackSpeed: playBackSlider.value,
 			quantSelected: quant,
-			noteTypeSelected: noteType,
 			strumlinesDraggable: strumLines.draggable,
 			hitSounds: [for (strumLine in strumLines.members) strumLine.hitsoundVolume > 0],
 			mutedVocals: [for (strumLine in strumLines.members) !(strumLine.vocals.volume > 0)],
@@ -2541,7 +2455,6 @@ class Charter extends UIState {
 		Conductor.songPosition = playtestInfo.songPosition;
 		playBackSlider.value = playtestInfo.playbackSpeed;
 		quant = playtestInfo.quantSelected;
-		noteType = playtestInfo.noteTypeSelected;
 		strumLines.draggable = playtestInfo.strumlinesDraggable;
 
 		for (i => strumLine in strumLines.members) {
@@ -2564,16 +2477,14 @@ enum CharterChange {
 	CEditEvent(event:CharterEvent, oldEvents:Array<ChartEvent>, newEvents:Array<ChartEvent>);
 	CEditChartData(oldData:{stage:String}, newData:{stage:String});
 	CEditActionPacks(oldPacks:Array<ChartActionPack>, newPacks:Array<ChartActionPack>);
-	CEditNoteTypes(oldArray:Array<String>, newArray:Array<String>);
 	CEditBookmarks(oldArray:Array<ChartBookmark>, newArray:Array<ChartBookmark>);
-	CEditSpecNotesType(notes:Array<CharterNote>, oldNoteTypes:Array<Int>, newNoteTypes:Array<Int>);
 	CEditNotePacks(notes:Array<CharterNote>, oldPress:Array<Int>, oldMiss:Array<Int>, newPress:Array<Int>, newMiss:Array<Int>);
 
 	CChangeBundle(changes:Array<CharterChange>);
 }
 
 enum CharterCopyboardObject {
-	CNote(step:Float, id:Int, strumLineID:Int, susLength:Float, type:Int, onPress:Int, onMiss:Int);
+	CNote(step:Float, id:Int, strumLineID:Int, susLength:Float, onPress:Int, onMiss:Int);
 	CEvent(step:Float, events:Array<ChartEvent>);
 }
 
@@ -2630,7 +2541,6 @@ typedef PlaytestInfo = {
 	var songPosition:Float;
 	var playbackSpeed:Float;
 	var quantSelected:Int;
-	var noteTypeSelected:Int;
 	var strumlinesDraggable:Bool;
 	var hitSounds:Array<Bool>;
 	var mutedVocals:Array<Bool>;

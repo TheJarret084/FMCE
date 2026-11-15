@@ -15,6 +15,12 @@ class ClientPrefs
 
 	public static var data:Dynamic = defaultData();
 
+	/** De donde se leyo FMCE.sol en el ultimo load() (el Checker lo compara con solPath()). */
+	public static var loadedFrom:Null<String> = null;
+
+	/** true si el FMCE.sol existia pero no se pudo leer y se restauro con los valores por defecto. */
+	public static var solRecovered:Bool = false;
+
 	static function defaultLaneKeys():Array<Array<String>>
 	{
 		return [
@@ -145,6 +151,47 @@ class ClientPrefs
 		}
 	}
 
+	/** Lo que dice el FMCE.sol guardado sobre display.fps (null si no hay .sol o no lo trae). */
+	public static function solFpsSetting():Null<Bool>
+	{
+		var raw = readSol();
+		if (raw == null) return null;
+		try
+		{
+			var root = Xml.parse(raw).firstElement();
+			var display = root == null ? null : firstChild(root, "display");
+			if (display == null || display.get("fps") == null) return null;
+			return parseXmlBool(display.get("fps"), true);
+		}
+		catch (_:Dynamic) {}
+		return null;
+	}
+
+	/**
+	 * Si el FMCE.sol se leyo de otra carpeta que la que toca (en Android, antes de tener el permiso se usa la de respaldo),
+	 * lo copia al lugar correcto (sin pisar uno que ya este ahi) y recarga la config desde ahi.
+	 */
+	public static function relocateSol(from:Null<String>):Bool
+	{
+		var to = solPath();
+		if (from == to) return false;
+		try
+		{
+			if (from != null && FileSystem.exists(from) && !FileSystem.exists(to))
+			{
+				var dir = haxe.io.Path.directory(to);
+				if (dir != "" && !FileSystem.exists(dir)) FileSystem.createDirectory(dir);
+				File.copy(from, to);
+			}
+		}
+		catch (e:Dynamic)
+		{
+			trace('[ClientPrefs] no se pudo mover FMCE.sol a $to: ' + e);
+		}
+		load();
+		return true;
+	}
+
 	static function writeSol(xml:String):Void
 	{
 		var path = solPath();
@@ -160,10 +207,13 @@ class ClientPrefs
 	public static function load():Void
 	{
 		data = defaultData();
+		loadedFrom = solPath();
 
 		try
 		{
+			var existed = FileSystem.exists(loadedFrom);
 			var fromSol = readSol();
+			solRecovered = existed && fromSol == null;
 			if (fromSol != null)
 				loadXml(fromSol);
 			else

@@ -139,7 +139,7 @@ class SpriteFolderConverter
 					fmce: {source: "fnf-icon", type: "icon", animations: anims}
 				}
 			};
-			File.saveContent(Path.join([dir, "sprite.json"]), Json.stringify(out, null, "\t"));
+			File.saveContent(Path.join([dir, "sprite.json"]), funky.backend.SpriteSheet.stringify(out));
 
 			var configPath = Path.join([dir, "config.json"]);
 			if (!FileSystem.exists(configPath))
@@ -160,6 +160,7 @@ class SpriteFolderConverter
 		if (depth > 12) return;
 
 		mapFnfIcon(dir);
+		SpriteSheet.migrateFile(Path.join([dir, "sprite.json"]));
 		var entries = FileSystem.readDirectory(dir);
 		entries.sort(Reflect.compare);
 		for (entry in entries)

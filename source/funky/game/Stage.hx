@@ -5,7 +5,6 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.util.FlxColor;
-import haxe.Json;
 import haxe.io.Path;
 import funky.backend.FunkinVideoSprite;
 import funky.core.Log;
@@ -157,8 +156,16 @@ class Stage extends FlxGroup
 	public var camScale:Float = 1;
 	public var zoomMul:Float = 1;
 
+	/**
+	 * Desplazamiento extra de la camara en unidades del mundo, encima de camX/camY. Los eventos de camara (CameraSet) escriben
+	 * camX/camY y no lo tocan, asi que un script puede moverlo cada frame sin pelearse con ellos.
+	 */
+	public var camOffsetX:Float = 0;
+	public var camOffsetY:Float = 0;
+
 	var singUntil:Map<Int, Float> = new Map<Int, Float>();
 	var singing:Map<Int, Bool> = new Map<Int, Bool>();
+	var singLaneOf:Map<Int, Int> = new Map<Int, Int>();
 	var holdMs:Float = 500;
 
 	public var camHUD:Null<FlxCamera>;
@@ -444,7 +451,18 @@ class Stage extends FlxGroup
 		}
 
 		singing.set(strumLine, true);
+		singLaneOf.set(strumLine, lane);
 		singUntil.set(strumLine, songTime + holdMs);
+	}
+
+	/**
+	 * Lane que esta cantando la strumLine ahora mismo (0 izq, 1 abajo, 2 arriba, 3 der...), o -1 si no canta (o esta en miss).
+	 */
+	public function singLane(strumLine:Int):Int
+	{
+		if (singing.get(strumLine) != true) return -1;
+		var lane = singLaneOf.get(strumLine);
+		return lane == null ? -1 : lane;
 	}
 
 	static inline var HOLD_LOOP_FRAMES:Int = 2;
@@ -508,6 +526,7 @@ class Stage extends FlxGroup
 					continue;
 
 				singing.set(line, false);
+				singLaneOf.set(line, -1);
 
 				for (object in objects)
 				{
@@ -586,8 +605,8 @@ class Stage extends FlxGroup
 				var halfViewX = FlxG.width / 2 / ppu;
 				var halfViewY = FlxG.height / 2 / ppu;
 
-				px = (object.x - (camX - halfViewX) * object.scrollX) * ppu;
-				py = (object.y - (camY - halfViewY) * object.scrollY) * ppu;
+				px = (object.x - (camX + camOffsetX - halfViewX) * object.scrollX) * ppu;
+				py = (object.y - (camY + camOffsetY - halfViewY) * object.scrollY) * ppu;
 
 				totalX = object.scale * animScale * ppu;
 				totalY = object.scaleY * animScale * ppu;
@@ -753,6 +772,7 @@ class Stage extends FlxGroup
 			}
 
 			singing.set(strumLine, true);
+			singLaneOf.set(strumLine, -1);
 			singUntil.set(strumLine, songTime + holdMs);
 		}
 

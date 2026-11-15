@@ -74,7 +74,7 @@ class StripConverter
 			if (types == null) types = DEFAULT_TYPES;
 			var type = spriteType(dir);
 			if (types.indexOf(type) < 0) return false;
-			var data:Dynamic = Json.parse(File.getContent(Path.join([dir, "sprite.json"])));
+			var data:Dynamic = funky.backend.SpriteSheet.parse(File.getContent(Path.join([dir, "sprite.json"])));
 			if (Std.isOfType(data.frames, Array)) return true;
 			var tags:Array<Dynamic> = data.meta != null && Std.isOfType(data.meta.frameTags, Array) ? data.meta.frameTags : [];
 			for (tag in tags) if (newAnimName(Std.string(tag.name), type) != Std.string(tag.name)) return true;
@@ -110,7 +110,7 @@ class StripConverter
 			var pngPath = Path.join([dir, "sprite.png"]);
 			var configPath = Path.join([dir, "config.json"]);
 
-			var data:Dynamic = Json.parse(File.getContent(jsonPath));
+			var data:Dynamic = funky.backend.SpriteSheet.parse(File.getContent(jsonPath));
 			source = BitmapData.fromFile(pngPath);
 			if (source == null) throw "no se pudo leer " + pngPath;
 
@@ -329,7 +329,7 @@ class StripConverter
 			var config:Dynamic = Json.parse(File.getContent(configPath));
 			if (config.type != null) return Std.string(config.type);
 		}
-		var data:Dynamic = Json.parse(File.getContent(Path.join([dir, "sprite.json"])));
+		var data:Dynamic = funky.backend.SpriteSheet.parse(File.getContent(Path.join([dir, "sprite.json"])));
 		if (data.meta != null && data.meta.fmce != null && data.meta.fmce.type != null) return Std.string(data.meta.fmce.type);
 		return "sprite";
 	}

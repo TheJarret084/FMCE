@@ -1401,6 +1401,21 @@ class PlayState extends MusicBeatState
 	}
 
 	/**
+	 * Abre la configuracion completa destruyendo el nivel (sin preguntar). Al salir de ahi, ConfigState vuelve a cargar el nivel
+	 * desde donde se abrio, asi cualquier cambio (scroll, skin, teclas...) entra limpio.
+	 */
+	public function openConfig():Void
+	{
+		funky.core.ClientPrefs.save();
+		startFromMs = launchStartMs;
+		seeking = false;
+		skipCountdown = false;
+		leaveSong();
+		funky.menus.ConfigState.returnToLevel = true;
+		transitionTo(new funky.menus.ConfigState());
+	}
+
+	/**
 	 * Deja `target` (ms) dentro de la cancion: con margen antes del final y, cerca del inicio (menos de 1 s), en 0.
 	 */
 	public function clampSeek(target:Float):Float

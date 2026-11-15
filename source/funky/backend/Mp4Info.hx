@@ -13,6 +13,10 @@ class Mp4Info
 
 	static var cache:Map<String, Null<{w:Int, h:Int}>> = new Map();
 
+	/** Olvida lo que se leyo de un video (por si el archivo se volvio a bajar). */
+	public static function forget(path:String):Void
+		cache.remove(path);
+
 	public static function size(path:String):Null<{w:Int, h:Int}>
 	{
 		#if sys

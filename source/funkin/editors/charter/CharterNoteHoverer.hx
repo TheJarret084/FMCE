@@ -7,7 +7,7 @@ class CharterNoteHoverer extends CharterNote {
 		super();
 
 		snappedToGrid = selectable = autoAlpha = false; visible = sustainSpr.visible = false;
-		@:privateAccess __animSpeed = 1.25; typeVisible = false; alpha = 0.4;
+		@:privateAccess __animSpeed = 1.25; packVisible = false; alpha = 0.4;
 	}
 
 	@:noCompletion var __mousePos:FlxPoint = FlxPoint.get();
@@ -19,7 +19,7 @@ class CharterNoteHoverer extends CharterNote {
 				var inBoundsY:Bool = (__mousePos.y > 0 && __mousePos.y < (Charter.instance.__endStep)*40);
 				if ((__mousePos.x > 0 && __mousePos.x < Charter.instance.strumLines.totalKeyCount * 40 && inBoundsY) && showHoverer) {
 					step = CoolUtil.bound(FlxG.keys.pressed.SHIFT ? ((__mousePos.y-20) / 40) : Charter.instance.quantStep(__mousePos.y/40), 0, Charter.instance.__endStep-1);
-					id = Math.floor(__mousePos.x / 40); y = step * 40; x = id * 40; visible = true; sustainSpr.visible = typeVisible = false;
+					id = Math.floor(__mousePos.x / 40); y = step * 40; x = id * 40; visible = true; sustainSpr.visible = packVisible = false;
 					angle = switch(animation.curAnim.curFrame = ((id - Charter.instance.strumLines.getStrumlineFromID(id).startingID) % 4)) {
 						case 0: -90;
 						case 1: 180;
@@ -30,9 +30,9 @@ class CharterNoteHoverer extends CharterNote {
 				} else
 					visible = false;
 			case NOTE_DRAG:
-				visible = sustainSpr.visible = typeVisible = true; __doAnim = false;
+				visible = sustainSpr.visible = packVisible = true; __doAnim = false;
 			default:
-				visible = sustainSpr.visible = typeVisible = false; __doAnim = false;
+				visible = sustainSpr.visible = packVisible = false; __doAnim = false;
 		}
 	}
 
@@ -69,9 +69,8 @@ class CharterNoteHoverer extends CharterNote {
 							sustainSpr.updateHitbox(); sustainSpr.alpha = alpha; sustainSpr.follow(this, 15, 20);
 							sustainSpr.exists = draggingNote.susLength != 0;
 
-							type = draggingNote.type;
-
-							typeText.follow(this, 20 - (typeText.frameWidth/2), 20 - (typeText.frameHeight/2));
+							onPress = draggingNote.onPress;
+							onMiss = draggingNote.onMiss;
 
 							super.draw();
 						}

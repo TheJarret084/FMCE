@@ -391,7 +391,7 @@ class SpriteImportTask
 		var jsonPath = Path.join([dir, "sprite.json"]);
 		var configPath = Path.join([dir, "config.json"]);
 		var nativePath = Path.join([dir, FNMMSpriteImporter.NATIVE_BACKUP]);
-		File.saveContent(jsonPath + ".tmp", Json.stringify(atlasJson, null, "\t"));
+		File.saveContent(jsonPath + ".tmp", funky.backend.SpriteSheet.stringify(atlasJson));
 		File.saveContent(configPath + ".tmp", Json.stringify(config, null, "  "));
 
 		if (FileSystem.exists(nativePath)) FileSystem.deleteFile(nativePath);

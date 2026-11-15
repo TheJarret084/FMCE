@@ -128,6 +128,13 @@ class SceneEditorState extends UIState
 	var lastMX:Float = 0;
 	var lastMY:Float = 0;
 
+	// Optimizacion: el orden solo se revisa si la lista avisa que se arrastro algo,
+	// el texto de info solo se rehace si cambia algo y el debug va apagado (F3).
+	var orderDirty:Bool = false;
+	var showDebug:Bool = false;
+	var infoKey:Int = -1;
+	var infoKey2:Int = -1;
+
 	public function new(levelName:String)
 	{
 		super();
@@ -237,6 +244,7 @@ class SceneEditorState extends UIState
 		infoText = ui(new UIText(viewX, viewY + viewH + 10, viewW, "", 12));
 		debugText = ui(new UIText(viewX + 6, viewY + 4, viewW, "", 12));
 		infoText.alpha = 0.8;
+		debugText.exists = false;
 
 		spriteNames = SpriteBuilder.listSprites(levelDir);
 		spriteDrop.items = [for (i => name in spriteNames) {label: name, value: i}];
@@ -292,7 +300,8 @@ class SceneEditorState extends UIState
 				label: AdvLang.t("sceneEditor.menuView", null, "Ver"),
 				childs: [
 					{label: AdvLang.t("sceneEditor.nextCamera", null, "Camara siguiente"), keybind: [C], onSelect: function(_) setCamera((camIdx + 1) % camCount())},
-					{label: AdvLang.t("sceneEditor.gameView", null, "Ver como en el juego"), onSelect: function(_) gameView = !gameView}
+					{label: AdvLang.t("sceneEditor.gameView", null, "Ver como en el juego"), onSelect: function(_) gameView = !gameView},
+					{label: AdvLang.t("sceneEditor.toggleDebug", null, "Mostrar debug"), keybind: [F3], onSelect: function(_) toggleDebug()}
 				]
 			}
 		];
@@ -310,6 +319,7 @@ class SceneEditorState extends UIState
 		objectList = new UIButtonList<EditorListButton>(0, listY, LEFT_W, FlxG.height - listY, AdvLang.t("sceneEditor.objectListTitle", null, "Objetos (la lista es el orden de capas)"), FlxPoint.get(LEFT_W - 30, 28), null, 4);
 		objectList.cameras = [uiCamera];
 		objectList.addButton.callback = addObject;
+		objectList.dragCallback = function(_a, _b, _c) orderDirty = true;
 		add(objectList);
 
 		camList = new UIButtonList<EditorListButton>(0, listY, LEFT_W, FlxG.height - listY, AdvLang.t("sceneEditor.cameraListTitle", null, "Camaras (la 1 es el origen del mundo)"), FlxPoint.get(LEFT_W - 30, 28), null, 4);
@@ -729,9 +739,28 @@ class SceneEditorState extends UIState
 			var b:EditorListButton = null;
 			b = new EditorListButton(0, 0, listLabel(i), function() clickObject(objects.indexOf(b.item)), LEFT_W - 30, 28);
 			b.item = objects[i];
+			b.setDelete(function() deleteObject(objects.indexOf(b.item)));
 			objectList.add(b);
 		}
 		markList();
+	}
+
+	// Solo actualiza los textos de la lista (no recrea los botones).
+	function refreshLabels():Void
+	{
+		for (b in objectList.buttons.members)
+		{
+			if (b == null) continue;
+			var i = objects.indexOf(b.item);
+			if (i >= 0) b.field.text = listLabel(i);
+		}
+		markList();
+	}
+
+	function toggleDebug():Void
+	{
+		showDebug = !showDebug;
+		debugText.exists = showDebug;
 	}
 
 	function markList():Void
@@ -742,6 +771,8 @@ class SceneEditorState extends UIState
 
 	function syncOrder():Void
 	{
+		if (!orderDirty) return;
+		orderDirty = false;
 		var order:Array<Dynamic> = [for (b in objectList.buttons.members) if (b != null) b.item];
 		if (order.length != objects.length) return;
 		var changed = false;
@@ -756,6 +787,7 @@ class SceneEditorState extends UIState
 		for (v in views) layer.remove(v, true);
 		for (v in views) layer.add(v);
 		sel = current == null ? -1 : objects.indexOf(current);
+		refreshLabels();
 		touch();
 	}
 
@@ -1059,7 +1091,7 @@ class SceneEditorState extends UIState
 		if (sel < 0) return;
 		Reflect.setField(objects[sel], field, value);
 		touch();
-		refreshList();
+		refreshLabels();
 	}
 
 	function setVisible(i:Int, value:Bool):Void
@@ -1067,7 +1099,7 @@ class SceneEditorState extends UIState
 		Reflect.setField(objects[i], "visible", value);
 		visibleCheck.checked = value;
 		touch();
-		refreshList();
+		refreshLabels();
 	}
 
 	function mirror(axis:String):Void
@@ -1141,7 +1173,7 @@ class SceneEditorState extends UIState
 		touch();
 		fixedCheck.checked = fixed;
 		syncPositionWidgets();
-		refreshList();
+		refreshLabels();
 	}
 
 	function setSprite(i:Int, name:String):Void
@@ -1149,7 +1181,7 @@ class SceneEditorState extends UIState
 		Reflect.setField(objects[i], "spr", name);
 		replaceView(i);
 		touch();
-		refreshList();
+		refreshLabels();
 		syncObjectWidgets();
 	}
 
@@ -1164,13 +1196,45 @@ class SceneEditorState extends UIState
 	{
 		var cam = camPoint(camIdx);
 		var name = sel >= 0 ? Std.string(Reflect.field(objects[sel], "spr")) : (spriteNames.length > 0 ? spriteNames[0] : "");
-		objects.push({
+		insertObject(objects.length, {
 			visible: true, spr: name, strumLine: -1, fixed: false, opacity: 1,
 			color: {r: 255, g: 255, b: 255},
 			transform: [{position: {x: cam.x, y: cam.y}, scrollFactor: {x: 1, y: 1}, scale: {x: 1, y: 1}}]
 		});
-		rebuild();
 		select(objects.length - 1);
+		touch();
+	}
+
+	// Mete un objeto creando solo su vista (antes se rehacian todas).
+	function insertObject(index:Int, o:Dynamic, refresh:Bool = true):Void
+	{
+		objects.insert(index, o);
+		var v = makeView(index);
+		views.insert(index, v);
+		layer.insert(index, v);
+		if (refresh) refreshList();
+	}
+
+	// Quita objetos y sus vistas sin rehacer el resto.
+	function removeObjects(list:Array<Int>, keepCurrent:Bool = false):Void
+	{
+		if (list.length == 0) return;
+		var current = keepCurrent && sel >= 0 && sel < objects.length ? objects[sel] : null;
+		list.sort((a, b) -> b - a);
+		var first = list[list.length - 1];
+		for (i in list)
+		{
+			if (i < 0 || i >= objects.length) continue;
+			layer.remove(views[i], true);
+			views[i].destroy();
+			views.splice(i, 1);
+			objects.splice(i, 1);
+		}
+		extra = [];
+		sel = -1;
+		refreshList();
+		var at = current == null ? -1 : objects.indexOf(current);
+		select(at >= 0 ? at : Std.int(Math.min(first, objects.length - 1)));
 		touch();
 	}
 
@@ -1186,8 +1250,7 @@ class SceneEditorState extends UIState
 
 	function duplicate(i:Int):Void
 	{
-		objects.insert(i + 1, cloneObject(i));
-		rebuild();
+		insertObject(i + 1, cloneObject(i));
 		select(i + 1);
 		touch();
 	}
@@ -1206,10 +1269,10 @@ class SceneEditorState extends UIState
 		for (i in list)
 		{
 			var c = cloneObject(i);
-			objects.insert(i + 1, c);
+			insertObject(i + 1, c, false);
 			copies.push(c);
 		}
-		rebuild();
+		refreshList();
 		var at = [for (c in copies) objects.indexOf(c)];
 		at.sort((a, b) -> a - b);
 		select(at[0]);
@@ -1220,22 +1283,14 @@ class SceneEditorState extends UIState
 
 	function deleteSelected():Void
 	{
-		var list = selectedList();
-		if (list.length == 0) return;
-		list.sort((a, b) -> b - a);
-		var first = list[list.length - 1];
-		for (i in list) objects.splice(i, 1);
-		rebuild();
-		select(Std.int(Math.min(first, objects.length - 1)));
-		touch();
+		removeObjects(selectedList());
 	}
 
+	// Boton X de cada fila: borra solo ese objeto y deja la seleccion como estaba.
 	function deleteObject(i:Int):Void
 	{
-		objects.splice(i, 1);
-		rebuild();
-		select(Std.int(Math.min(i, objects.length - 1)));
-		touch();
+		if (i < 0 || i >= objects.length) return;
+		removeObjects([i], true);
 	}
 
 	function swap(i:Int, j:Int):Void
@@ -1244,7 +1299,12 @@ class SceneEditorState extends UIState
 		var tmp = objects[i];
 		objects[i] = objects[j];
 		objects[j] = tmp;
-		rebuild();
+		var tv = views[i];
+		views[i] = views[j];
+		views[j] = tv;
+		for (v in views) layer.remove(v, true);
+		for (v in views) layer.add(v);
+		refreshList();
 		select(j);
 		touch();
 	}
@@ -1449,7 +1509,7 @@ class SceneEditorState extends UIState
 				if (cx != 0 || cy != 0) panCamera(cx * (shift ? 100 : ctrl ? 1 : 10), cy * (shift ? 100 : ctrl ? 1 : 10));
 			}
 		}
-		debugText.text = 'DEBUG mouse screen=${FlxG.mouse.screenX},${FlxG.mouse.screenY} ui=${Std.int(mx)},${Std.int(my)} juego=${FlxG.width}x${FlxG.height} camUI=${uiCamera.width}x${uiCamera.height}\n'
+		if (showDebug) debugText.text = 'DEBUG mouse screen=${FlxG.mouse.screenX},${FlxG.mouse.screenY} ui=${Std.int(mx)},${Std.int(my)} juego=${FlxG.width}x${FlxG.height} camUI=${uiCamera.width}x${uiCamera.height}\n'
 			+ 'vista=$viewX,$viewY,$viewW,$viewH dentro=$inView presionado=$pressedNow borde=$pressEdge toque=$tapEdge menu=${topMenuSpr.anyMenuOpened} ctx=${curContextMenu != null} sel=$sel';
 		lastMX = mx;
 		lastMY = my;
@@ -1491,9 +1551,17 @@ class SceneEditorState extends UIState
 		refreshInfo();
 	}
 
+	inline function selCount():Int
+		return (sel >= 0 && sel < objects.length ? 1 : 0) + extra.length;
+
 	function refreshInfo():Void
 	{
-		infoText.text = (mode == 1 ? AdvLang.t("sceneEditor.infoWorldCam", [camIdx + 1, camCount()], "Mundo fijo - camara {0}/{1}") : AdvLang.t("sceneEditor.infoViewCam", [camIdx + 1, camCount()], "Vista de la camara {0}/{1}")) + (dirty ? "   " + AdvLang.t("sceneEditor.infoUnsaved", null, "* sin guardar") : "") + (mode == 0 && (multiMode || selectedList().length > 1) ? "   [" + AdvLang.t("sceneEditor.infoSelected", [selectedList().length], "{0} elegidos") + (multiMode ? ", MULTI" : "") + "]" : "") + (mode == 0 && sel >= 0 && tCount() > 1 ? "   (" + AdvLang.t("sceneEditor.infoPosition", [tIdx, tCount()], "posicion {0} de {1}") + ")" : "")
+		var key = (mode & 1) | ((dirty ? 1 : 0) << 1) | ((multiMode ? 1 : 0) << 2) | (Std.int(Math.min(selCount(), 255)) << 3) | (Std.int(Math.min(camIdx, 255)) << 11) | (Std.int(Math.min(camCount(), 255)) << 19);
+		var key2 = (mode == 0 && sel >= 0 ? tCount() : 0) * 1000 + tIdx;
+		if (key == infoKey && key2 == infoKey2) return;
+		infoKey = key;
+		infoKey2 = key2;
+		infoText.text = (mode == 1 ? AdvLang.t("sceneEditor.infoWorldCam", [camIdx + 1, camCount()], "Mundo fijo - camara {0}/{1}") : AdvLang.t("sceneEditor.infoViewCam", [camIdx + 1, camCount()], "Vista de la camara {0}/{1}")) + (dirty ? "   " + AdvLang.t("sceneEditor.infoUnsaved", null, "* sin guardar") : "") + (mode == 0 && (multiMode || selCount() > 1) ? "   [" + AdvLang.t("sceneEditor.infoSelected", [selCount()], "{0} elegidos") + (multiMode ? ", MULTI" : "") + "]" : "") + (mode == 0 && sel >= 0 && tCount() > 1 ? "   (" + AdvLang.t("sceneEditor.infoPosition", [tIdx, tCount()], "posicion {0} de {1}") + ")" : "")
 			+ (mode == 0 ? "\n" + AdvLang.t("sceneEditor.hintObjects", null, "Click y arrastra para mover. Rueda: escala. Flechas: mover (SHIFT x10, CTRL fino). Arrastra los botones de la lista para cambiar las capas.")
 				: "\n" + AdvLang.t("sceneEditor.hintCameras", null, "Pestaña Camaras (mundo fijo): arrastra el marco rojo o toca el mundo para mover la camara, rueda: zoom, flechas: mover (SHIFT x10, CTRL fino)."));
 	}

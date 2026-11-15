@@ -1,6 +1,5 @@
 package funky.backend.system;
 
-import flixel.FlxG;
 import lime.app.Application;
 
 class Flags

@@ -146,7 +146,7 @@ class NotesDrawGroup extends FlxFastTypedGroup<CharterNote> {
 		while (i < length) {
 			note = members[i++];
 			if (note != null && note.exists && note.visible)
-				note.drawNoteTypeText();
+				note.drawPackText();
 		}
 
 		FlxCamera._defaultCameras = oldDefaultCameras;

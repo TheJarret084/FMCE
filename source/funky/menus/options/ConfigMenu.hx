@@ -21,7 +21,6 @@ import funky.core.NavPad;
 import funky.core.TouchNav;
 import funky.menus.options.ConfigItem;
 
-import funky.core.Log;
 import funkin.backend.utils.TranslationUtil as TU;
 
 private class Row extends FlxGroup

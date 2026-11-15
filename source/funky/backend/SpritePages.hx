@@ -39,7 +39,7 @@ class SpritePages
 		var jsonPath = Path.join([dir, "sprite.json"]);
 		try
 		{
-			var data:Dynamic = Json.parse(File.getContent(jsonPath));
+			var data:Dynamic = SpriteSheet.parse(File.getContent(jsonPath));
 			if (!Std.isOfType(field(data, "frames"), Array)) return null;
 
 			var pages = pagesOf(data);
@@ -72,7 +72,7 @@ class SpritePages
 		{
 			try
 			{
-				var cached:Dynamic = Json.parse(File.getContent(cachedJson));
+				var cached:Dynamic = SpriteSheet.parse(File.getContent(cachedJson));
 				if (field(field(cached, "meta"), "stamp") == stamp)
 				{
 					var fromCache = fromPages(cache, cached, pagesOf(cached), null);
@@ -169,7 +169,7 @@ class SpritePages
 				for (k in 0...bitmaps.length)
 					File.saveBytes(Path.join([cache, pageFile(k)]), bitmaps[k].encode(bitmaps[k].rect, new PNGEncoderOptions(true)));
 
-				File.saveContent(cachedJson, Json.stringify(master, null, "\t"));
+				File.saveContent(cachedJson, SpriteSheet.stringify(master));
 				where = 'cache en ' + cache;
 			}
 			catch (e:Dynamic)

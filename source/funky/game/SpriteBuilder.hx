@@ -1,6 +1,5 @@
 package funky.game;
 
-import haxe.Json;
 import haxe.io.Path;
 import funky.backend.FunkinVideoSprite;
 import funky.core.Conductor;
@@ -167,7 +166,7 @@ class SpriteBuilder
 		#if sys
 		var dir = spriteDir(levelDir, name);
 		var fromConfig = readJson(Path.join([dir, "config.json"]));
-		var fromSprite = readJson(Path.join([dir, "sprite.json"]));
+		var fromSprite = funky.backend.SpriteSheet.expand(readJson(Path.join([dir, "sprite.json"])));
 		var meta = field(fromSprite, "meta");
 		var fmce = field(meta, "fmce");
 

@@ -65,14 +65,15 @@ class CharterDeleteAnim extends CharterNote {
 			sustainSpr.updateHitbox(); sustainSpr.follow(this, 15, 20);
 			sustainSpr.exists = deleteData.note.susLength != 0; sustainSpr.alpha = .8;
 
-			type = deleteData.note.type;
-			typeAlpha = .4;
+			onPress = deleteData.note.onPress;
+			onMiss = deleteData.note.onMiss;
+			packAlpha = .4;
 
 			var mult = FlxEase.quadInOut(deleteData.time/deleteTime);
 
 			for (member in [this, sustainSpr])
 				member.alpha *= mult;
-			typeAlpha *= mult;
+			packAlpha *= mult;
 
 			super.draw();
 		}

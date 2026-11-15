@@ -114,3 +114,4 @@
 - [ ] arreglar la api de shaders
 - [ ] traducir avanced mode
 - [ ] hacer más simple la navegación entre estados (creo que eso molestó a abelito)
+- [ ] revisar el spritecache ya que pecela empieza a laguearle demaciado

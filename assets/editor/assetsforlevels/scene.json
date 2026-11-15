@@ -1,8 +1,6 @@
 {
   "objects": [],
   "landscape": true,
-  "width": 2160,
-  "height": 1920,
   "cameras": [
     {
       "scale": 0.5,

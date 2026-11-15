@@ -15,12 +15,20 @@ import funky.core.ClientPrefs;
 
 class ConfigState extends FlxState
 {
+	/** Lo pone PlayState.openConfig(): al salir de la config se vuelve a cargar el nivel en vez de ir al menu principal. */
+	public static var returnToLevel:Bool = false;
+
 	var menu:ConfigMenu;
 	var leaving:Bool = false;
+	var backToLevel:Bool = false;
 
 	override public function create():Void
 	{
 		super.create();
+
+		// Se consume aqui: si desde la config se va a otro lado (modo avanzado, convertidor) la marca no queda colgada.
+		backToLevel = returnToLevel;
+		returnToLevel = false;
 
 		var bg = new FlxSprite();
 		if (OpenFlAssets.exists(Paths.image("menus/menuBGBlue")))
@@ -63,6 +71,7 @@ class ConfigState extends FlxState
 	{
 		if (leaving) return;
 		leaving = true;
-		TransitionHandler.switchState(new MainMenuState());
+		var next:FlxState = backToLevel ? new LoadingLevelState() : new MainMenuState();
+		TransitionHandler.switchState(next);
 	}
 }

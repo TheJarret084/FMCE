@@ -163,7 +163,7 @@ class UIImageExplorer extends UIFileExplorer
 	static function animsFromAseprite(text:String):Array<String>
 	{
 		var out:Array<String> = [];
-		var data:Dynamic = Json.parse(text);
+		var data:Dynamic = funky.backend.SpriteSheet.parse(text);
 		var tags:Array<Dynamic> = (data != null && data.meta != null) ? data.meta.frameTags : null;
 		if (tags != null)
 			for (t in tags)

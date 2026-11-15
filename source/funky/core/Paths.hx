@@ -246,7 +246,7 @@ class Paths
 				graphic = FlxG.bitmap.add(openfl.display.BitmapData.fromFile(png), false, key);
 			if (graphic == null) return null;
 			graphic.persist = true;
-			var content = sys.io.File.getContent(json);
+			var content = funky.backend.SpriteSheet.expandText(sys.io.File.getContent(json));
 			var atlas = FlxAtlasFrames.fromAseprite(graphic, content);
 
 			if (atlas != null && !Std.isOfType(haxe.Json.parse(content).frames, Array))

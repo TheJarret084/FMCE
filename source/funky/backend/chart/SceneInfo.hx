@@ -121,7 +121,7 @@ class SceneInfo
 		}
 		else
 		{
-			var sheet = readJson(Path.join([dir, "sprite.json"]));
+			var sheet = funky.backend.SpriteSheet.expand(readJson(Path.join([dir, "sprite.json"])));
 			var tags:Dynamic = sheet == null ? null : Reflect.field(Reflect.field(sheet, "meta"), "frameTags");
 			if (Std.isOfType(tags, Array))
 				for (t in (tags : Array<Dynamic>))

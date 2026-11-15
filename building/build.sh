@@ -30,10 +30,16 @@ fi
 
 # ── Librerias ───────────────────────────────────────────────────
 echo "==> Dependencias (building/libs.txt)"
+HAXELIB_REPO="$(haxelib config 2>/dev/null | head -n1)"
+HAXELIB_REPO="${HAXELIB_REPO:-$HOME/haxelib}"
 while read -r name ver url ref; do
 	case "$name" in ""|\#*) continue;; esac
 	if [ "$ver" = "git" ]; then
-		haxelib list "$name" 2>/dev/null </dev/null | grep -q "\\[git:$url" && continue
+		# haxelib 4.1.1 imprime "[git]" sin la URL. Verificamos el remoto del clon local.
+		if haxelib list "$name" 2>/dev/null </dev/null | grep -q '\[git\]' \
+			&& git -C "$HAXELIB_REPO/$name/git" remote get-url origin 2>/dev/null | grep -qxF "$url"; then
+			continue
+		fi
 		echo "   instalando $name (git)"
 		haxelib git "$name" "$url" ${ref:+"$ref"} --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name (git)" >&2; exit 1; }
 	elif [ -n "$ver" ]; then
@@ -93,6 +99,18 @@ fi
 echo "==> FMCE $KIND $MODE ($PLATFORM)"
 # Rich Presence (Discord Social SDK): las .so del .aar para el enlace de hxcpp
 [ "$KIND" = android ] && bash building/discord-android.sh
+
+# Android: hxcpp reutiliza export/<modo>/android/obj entre arquitecturas. Si un build viejo dejo
+# Options.txt/HxcppConfig-v7.h de armv7, el siguiente intento arm64 arrastra HXCPP_ARMV7 y acaba
+# enlazando libvlc-v7.so contra un binario aarch64 (ld.lld: "incompatible with aarch64linux").
+# Se borra solo la configuracion generada: haxe/hxcpp la rehacen con la arquitectura correcta.
+if [ "$KIND" = android ]; then
+	OBJ="export/$EFFECTIVE/android/obj"
+	if [ -d "$OBJ" ]; then
+		rm -f "$OBJ/Options.txt" "$OBJ"/HxcppConfig*.h
+	fi
+fi
+
 haxelib run lime "${ARGS[@]}" "$@"
 
 # ── Empaquetar ──────────────────────────────────────────────────

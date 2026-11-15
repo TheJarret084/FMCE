@@ -9,6 +9,7 @@ import lime.media.AudioBuffer;
 import lime.text.Font;
 import lime.utils.AssetLibrary;
 import lime.utils.AssetType;
+import sys.FileSystem;
 import sys.io.File;
 import sys.io.FileInput;
 import sys.io.FileSeek;
@@ -21,6 +22,12 @@ class PackLibrary extends AssetLibrary
 	public var packPath(default, null):String;
 
 	public var count(default, null):Int = 0;
+
+	/** Tamano real del .pack en disco (para saber si quedo cortado). */
+	public var packSize(default, null):Float = 0;
+
+	/** Donde empiezan los datos (justo despues de la cabecera y el indice): ninguna entrada puede caer antes. */
+	public var dataStart(default, null):Int = 0;
 
 	var file:Null<FileInput>;
 	var offsets:Map<String, Int> = new Map();
@@ -56,6 +63,8 @@ class PackLibrary extends AssetLibrary
 
 		count = input.readInt32();
 		var indexSize = input.readInt32();
+		dataStart = 16 + indexSize;
+		packSize = FileSystem.stat(packPath).size;
 		var index = Bytes.alloc(indexSize);
 		input.readFullBytes(index, 0, indexSize);
 
@@ -119,6 +128,69 @@ class PackLibrary extends AssetLibrary
 
 	inline function inPack(id:String):Bool
 		return offsets.exists(id);
+
+	/** Todos los ids que trae el .pack. */
+	public function ids():Array<String>
+		return [for (id in offsets.keys()) id];
+
+	/**
+	 * Revision rapida de una entrada, sin descomprimir nada: que su rango caiga dentro del archivo y, en imagenes y audio,
+	 * que los primeros bytes sean la firma del formato. Devuelve null si esta bien, o el motivo si no.
+	 */
+	public function entryProblem(id:String):Null<String>
+	{
+		var offset = offsets.get(id);
+		var length = lengths.get(id);
+		if (offset == null || length == null) return "no esta en el indice";
+		if (length < 0 || offset < dataStart) return 'rango invalido (offset $offset, $length bytes)';
+		if (((offset : Float) + (length : Float)) > packSize) return "se sale del archivo (el .pack esta cortado)";
+
+		var sig = signatureOf(id);
+		if (sig == null) return null;
+		if (length < sig.length) return 'vacio o truncado ($length bytes)';
+
+		var head = readHead(offset, sig.length);
+		if (head == null) return "no se pudo leer";
+		for (i in 0...sig.length)
+			if (head.get(i) != sig[i]) return "la firma del archivo no coincide con su extension";
+		return null;
+	}
+
+	static function signatureOf(id:String):Null<Array<Int>>
+	{
+		return switch (Path.extension(id).toLowerCase())
+		{
+			case "png": [0x89, 0x50, 0x4E, 0x47];
+			case "ogg": [0x4F, 0x67, 0x67, 0x53];
+			case "jpg" | "jpeg": [0xFF, 0xD8];
+			default: null;
+		}
+	}
+
+	function readHead(offset:Int, size:Int):Null<Bytes>
+	{
+		var bytes:Null<Bytes> = null;
+
+		#if target.threaded
+		mutex.acquire();
+		#end
+		try
+		{
+			var input = open();
+			input.seek(offset, SeekBegin);
+			bytes = Bytes.alloc(size);
+			input.readFullBytes(bytes, 0, size);
+		}
+		catch (e:Dynamic)
+		{
+			bytes = null;
+		}
+		#if target.threaded
+		mutex.release();
+		#end
+
+		return bytes;
+	}
 
 	override public function exists(id:String, type:String):Bool
 	{

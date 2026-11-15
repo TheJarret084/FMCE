@@ -205,7 +205,7 @@ class FunkinVideoSprite extends VideoBase
 			if (!sys.FileSystem.exists(path)) continue;
 			try
 			{
-				var json:Dynamic = funky.core.JsonLoose.parse(sys.io.File.getContent(path));
+				var json:Dynamic = funky.backend.SpriteSheet.expand(funky.core.JsonLoose.parse(sys.io.File.getContent(path)));
 				var video:Dynamic = json?.meta?.fmce?.video;
 				if (video == null) break;
 				var count = Std.parseInt(Std.string(video.count));

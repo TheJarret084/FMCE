@@ -75,8 +75,12 @@
 	     OJO: definir permisos reemplaza la lista por defecto de lime, por eso van tambien los 4 de siempre. -->
 	<section if="android">
 		<java path="source/java" />
-		<!-- Solo arm64: la mitad de tiempo de C++ y un APK mas chico. Quita esta linea si necesitas armv7 (telefonos de 32 bits). -->
-		<architecture name="arm64" />
+		<!-- Solo arm64: la mitad de tiempo de C++ y un APK mas chico. Quita esta linea si necesitas armv7 (telefonos de 32 bits).
+		     `exclude="armv7"` es obligatorio en lime 8.1.2: AndroidPlatform arranca con [armv7, arm64] por defecto y
+		     el merge SUMA las arquitecturas del proyecto, no las reemplaza. Sin el exclude se compila tambien armv7,
+		     y en un host aarch64 (Termux) hxcpp mete HXCPP_ARM64 junto a HXCPP_ARMV7 -> enlaza libvlc-v7.so en un
+		     binario aarch64 ("incompatible with aarch64linux"). -->
+		<architecture name="arm64" exclude="armv7" />
 		<config:android permission="android.permission.WAKE_LOCK" />
 		<config:android permission="android.permission.INTERNET" />
 		<config:android permission="android.permission.VIBRATE" />
@@ -130,8 +134,14 @@
 
 	<!-- Iconos para Android (por tamaño) -->
 	<icon path="art/icon-android32.png" size="32" if="android" />
+	<icon path="art/icon-android36.png" size="36" if="android" />
+	<icon path="art/icon-android48.png" size="48" if="android" />
 	<icon path="art/icon-android64.png" size="64" if="android" />
+	<icon path="art/icon-android72.png" size="72" if="android" />
+	<icon path="art/icon-android96.png" size="96" if="android" />
 	<icon path="art/icon-android128.png" size="128" if="android" />
+	<icon path="art/icon-android144.png" size="144" if="android" />
+	<icon path="art/icon-android192.png" size="192" if="android" />
 	<icon path="art/icon-android512.png" size="512" if="android" />
    <icon path="art/icon-androidOG.png" if="android" />
 

@@ -57,6 +57,7 @@ class SpriteEditorState extends UIState
 	var ghostCheck:UICheckbox;
 	var animWidgets:Array<UISprite> = [];
 	var deleteButton:UIButton;
+	var deleteSpriteButton:UIButton;
 
 	var deleteArmed:Null<Dynamic> = null;
 	var deleteArmedAt:Float = 0;
@@ -87,6 +88,14 @@ class SpriteEditorState extends UIState
 	var ghostEntries:Array<Dynamic> = [];
 	var dragStart:FlxPoint = FlxPoint.get();
 	var dragPivot:FlxPoint = FlxPoint.get();
+
+	// Optimizacion: orden solo si hubo arrastre, info solo si cambia, debug apagado (F3).
+	var orderDirty:Bool = false;
+	var showDebug:Bool = false;
+	var infoK1:Int = -1;
+	var infoK2:Int = -1;
+	var infoK3:Int = -1;
+	var barRect:Array<Float> = [0, 0, -1, -1];
 
 	public function new(levelName:String)
 	{
@@ -142,6 +151,7 @@ class SpriteEditorState extends UIState
 		infoText = ui(new UIText(LEFT_W + 12, FlxG.height - 44, canvasW - 24, "", 12));
 		debugText = ui(new UIText(LEFT_W + 12, TOP + 6, canvasW - 24, "", 12));
 		infoText.alpha = 0.8;
+		debugText.exists = false;
 
 		sprites = SpriteBuilder.listSprites(levelDir);
 		for (name in sprites) addSpriteButton(name);
@@ -186,7 +196,9 @@ class SpriteEditorState extends UIState
 				label: AdvLang.t("spriteEditor.sprite", null, "Sprite"),
 				childs: [
 					{label: AdvLang.t("spriteEditor.previous", null, "Anterior"), keybind: [Q], onSelect: function(_) selectSprite(spriteIdx - 1)},
-					{label: AdvLang.t("spriteEditor.next", null, "Siguiente"), keybind: [E], onSelect: function(_) selectSprite(spriteIdx + 1)}
+					{label: AdvLang.t("spriteEditor.next", null, "Siguiente"), keybind: [E], onSelect: function(_) selectSprite(spriteIdx + 1)},
+					null,
+					{label: AdvLang.t("spriteEditor.deleteSprite", null, "Borrar sprite completo..."), onSelect: function(_) requestDeleteCurrentSprite()}
 				]
 			},
 			{
@@ -204,7 +216,9 @@ class SpriteEditorState extends UIState
 					{label: AdvLang.t("spriteEditor.menu.zoomReset", null, "Zoom 100%"), onSelect: function(_) setZoom(1)},
 					null,
 					{label: AdvLang.t("spriteEditor.menu.ghostCurrent", null, "Ghost de la animacion actual"), keybind: [G], onSelect: function(_) setGhost(entry(), !isGhost(entry()))},
-					{label: AdvLang.t("spriteEditor.menu.clearGhosts", null, "Quitar todos los ghosts"), onSelect: function(_) clearGhosts()}
+					{label: AdvLang.t("spriteEditor.menu.clearGhosts", null, "Quitar todos los ghosts"), onSelect: function(_) clearGhosts()},
+					null,
+					{label: AdvLang.t("spriteEditor.menu.toggleDebug", null, "Mostrar debug"), keybind: [F3], onSelect: function(_) toggleDebug()}
 				]
 			}
 		];
@@ -219,11 +233,13 @@ class SpriteEditorState extends UIState
 		spriteList = new UIButtonList<EditorListButton>(0, TOP, LEFT_W, listH, AdvLang.t("spriteEditor.sprites", null, "Sprites"), FlxPoint.get(LEFT_W - 30, 28), null, 4);
 		spriteList.cameras = [uiCamera];
 		spriteList.addButton.callback = importSprites;
+		spriteList.dragCallback = function(_a, _b, _c) orderDirty = true;
 		add(spriteList);
 
 		animList = new UIButtonList<EditorListButton>(0, TOP + listH, LEFT_W, FlxG.height - TOP - listH, AdvLang.t("spriteEditor.animations", null, "Animaciones"), FlxPoint.get(LEFT_W - 30, 28), null, 4);
 		animList.cameras = [uiCamera];
 		animList.addButton.callback = newAnim;
+		animList.dragCallback = function(_a, _b, _c) orderDirty = true;
 		add(animList);
 	}
 
@@ -245,6 +261,9 @@ class SpriteEditorState extends UIState
 			Reflect.setField(cfg, "bilinear", b);
 			touch();
 		};
+
+		deleteSpriteButton = ui(new UIButton(x0 + 156, y0 + 106, AdvLang.t("spriteEditor.deleteSpriteBtn", null, "Borrar sprite"), requestDeleteCurrentSprite, RIGHT_W - 156 - 20, 28));
+		deleteSpriteButton.color = 0xFFFF8A8A;
 
 		var y1 = y0 + 160;
 		ui(new UIWindow(x0, y1, RIGHT_W, 514, AdvLang.t("spriteEditor.animation", null, "Animacion")));
@@ -301,6 +320,7 @@ class SpriteEditorState extends UIState
 		var b:EditorListButton = null;
 		b = new EditorListButton(0, 0, name, function() selectSprite(sprites.indexOf(b.item)), LEFT_W - 30, 28);
 		b.item = name;
+		b.setDelete(function() requestDeleteSprite(name));
 		spriteList.add(b);
 	}
 
@@ -368,6 +388,90 @@ class SpriteEditorState extends UIState
 		#end
 	}
 
+	function requestDeleteCurrentSprite():Void
+	{
+		if (sprites.length == 0) return;
+		requestDeleteSprite(sprites[spriteIdx]);
+	}
+
+	// Cuantos objetos de scene.json usan este sprite (para avisar antes de borrar).
+	function sceneUses(name:String):Int
+	{
+		var scene:Dynamic = JsonFile.read(Path.join([levelDir, "scene.json"]));
+		if (scene == null || !Std.isOfType(scene.objects, Array)) return 0;
+		var count = 0;
+		for (o in (scene.objects : Array<Dynamic>)) if (Std.string(Reflect.field(o, "spr")) == name) count++;
+		return count;
+	}
+
+	function requestDeleteSprite(name:String):Void
+	{
+		if (name == null || name == "") return;
+		var used = sceneUses(name);
+		var body = AdvLang.t("spriteEditor.deleteSpriteBody", [name], "Se borra la carpeta completa de \"{0}\" del disco (imagen, json, atlas y videos). No se puede deshacer.");
+		if (used > 0) body += "\n" + AdvLang.t("spriteEditor.deleteSpriteUsed", [used], "{0} objetos del scene.json lo usan y se van a ver vacios.");
+		openSubState(new UIWarningSubstate(AdvLang.t("spriteEditor.deleteSpriteTitle", null, "Borrar sprite"), body, [
+			{label: AdvLang.t("spriteEditor.cancel", null, "Cancelar"), color: 0x969533, onClick: function(_) {}},
+			{label: AdvLang.t("spriteEditor.deleteSpriteConfirm", null, "Borrar todo"), color: 0xFFFF4444, onClick: function(_) deleteSpriteNow(name)}
+		], true));
+	}
+
+	function deleteSpriteNow(name:String):Void
+	{
+		var current = sprites.length > 0 ? sprites[spriteIdx] : null;
+		var wasCurrent = current == name;
+
+		if (wasCurrent)
+		{
+			// Soltar el sprite y el video antes de borrar sus archivos.
+			if (sprite != null)
+			{
+				remove(sprite, true);
+				sprite.destroy();
+				sprite = null;
+			}
+			clearVideo();
+			isVideo = false;
+		}
+
+		if (!SpriteImporter.deleteSprite(levelDir, name))
+		{
+			notify(AdvLang.t("spriteEditor.deleteSpriteFailed", [name], "No se pudo borrar {0}."));
+			if (wasCurrent && sprites.length > 0) loadCurrent(animIdx);
+			return;
+		}
+
+		var at = spriteIdx;
+		sprites = SpriteBuilder.listSprites(levelDir);
+		rebuildSpriteList();
+
+		if (!wasCurrent)
+		{
+			spriteIdx = Std.int(Math.max(0, sprites.indexOf(current)));
+			markSprites();
+		}
+		else
+		{
+			dirty = false;
+			SaveWarning.showWarning = false;
+			if (sprites.length > 0) selectSprite(Std.int(Math.min(at, sprites.length - 1)));
+			else
+			{
+				spriteIdx = 0;
+				cfg = {};
+				cfgPath = "";
+				entries = [];
+				animIdx = 0;
+				ghostNames = [];
+				refreshAnimList();
+				syncAnimWidgets();
+				rebuildGhosts();
+				place();
+			}
+		}
+		notify(AdvLang.t("spriteEditor.deleteSpriteDone", [name], "Sprite borrado: {0}"));
+	}
+
 	function markSprites():Void
 	{
 		for (b in spriteList.buttons.members)
@@ -401,6 +505,8 @@ class SpriteEditorState extends UIState
 
 	function syncOrders():Void
 	{
+		if (!orderDirty) return;
+		orderDirty = false;
 		var order = [for (b in spriteList.buttons.members) if (b != null) Std.string(b.item)];
 		if (order.length == sprites.length)
 		{
@@ -528,6 +634,7 @@ class SpriteEditorState extends UIState
 		var e = entry();
 		var has = e != null;
 		for (w in animWidgets) w.selectable = has;
+		deleteSpriteButton.selectable = sprites.length > 0;
 		if (!has)
 		{
 			nameBox.label.text = tagBox.label.text = "";
@@ -868,18 +975,37 @@ class SpriteEditorState extends UIState
 			g.setPosition(ax - pivotXOf(ge) * gs, ay - pivotYOf(ge) * gs);
 		}
 
-		var rects = [[sprite.x, sprite.y, sprite.width, 1.0], [sprite.x, sprite.y + sprite.height - 1, sprite.width, 1.0], [sprite.x, sprite.y, 1.0, sprite.height], [sprite.x + sprite.width - 1, sprite.y, 1.0, sprite.height]];
-		for (i in 0...4)
-		{
-			frameBars[i].visible = true;
-			frameBars[i].scale.set(Math.max(1, rects[i][2]), Math.max(1, rects[i][3]));
-			frameBars[i].updateHitbox();
-			frameBars[i].setPosition(rects[i][0], rects[i][1]);
-		}
+		drawFrameBars(sprite.x, sprite.y, sprite.width, sprite.height);
 
 		crossH.visible = crossV.visible = true;
 		crossH.setPosition(ax - 13, ay - 1);
 		crossV.setPosition(ax - 1, ay - 13);
+	}
+
+	// Solo recoloca las 4 barras del marco si el rectangulo cambio.
+	function drawFrameBars(x:Float, y:Float, w:Float, h:Float):Void
+	{
+		if (barRect[0] != x || barRect[1] != y || barRect[2] != w || barRect[3] != h)
+		{
+			barRect[0] = x;
+			barRect[1] = y;
+			barRect[2] = w;
+			barRect[3] = h;
+			var rects = [[x, y, w, 1.0], [x, y + h - 1, w, 1.0], [x, y, 1.0, h], [x + w - 1, y, 1.0, h]];
+			for (i in 0...4)
+			{
+				frameBars[i].scale.set(Math.max(1, rects[i][2]), Math.max(1, rects[i][3]));
+				frameBars[i].updateHitbox();
+				frameBars[i].setPosition(rects[i][0], rects[i][1]);
+			}
+		}
+		for (b in frameBars) b.visible = true;
+	}
+
+	function toggleDebug():Void
+	{
+		showDebug = !showDebug;
+		debugText.exists = showDebug;
 	}
 
 	function placeVideo():Void
@@ -900,14 +1026,7 @@ class SpriteEditorState extends UIState
 		video.setPosition(ax - pivotXOf(e) * s, ay - pivotYOf(e) * s);
 		video.antialiasing = Reflect.field(cfg, "bilinear") == true;
 
-		var rects = [[video.x, video.y, video.width, 1.0], [video.x, video.y + video.height - 1, video.width, 1.0], [video.x, video.y, 1.0, video.height], [video.x + video.width - 1, video.y, 1.0, video.height]];
-		for (i in 0...4)
-		{
-			frameBars[i].visible = true;
-			frameBars[i].scale.set(Math.max(1, rects[i][2]), Math.max(1, rects[i][3]));
-			frameBars[i].updateHitbox();
-			frameBars[i].setPosition(rects[i][0], rects[i][1]);
-		}
+		drawFrameBars(video.x, video.y, video.width, video.height);
 		crossH.visible = crossV.visible = true;
 		crossH.setPosition(ax - 13, ay - 1);
 		crossV.setPosition(ax - 1, ay - 13);
@@ -997,7 +1116,7 @@ class SpriteEditorState extends UIState
 			}
 		}
 
-		if (debugText != null)
+		if (showDebug && debugText != null)
 			debugText.text = 'DEBUG mouse screen=${FlxG.mouse.screenX},${FlxG.mouse.screenY} ui=${Std.int(mx)},${Std.int(my)} juego=${FlxG.width}x${FlxG.height} camUI=${uiCamera.width}x${uiCamera.height}\n'
 				+ 'lienzo=${LEFT_W}..${FlxG.width - RIGHT_W} dentro=$inCanvas presionado=$pressedNow borde=$pressEdge menu=${topMenuSpr.anyMenuOpened} ctx=${curContextMenu != null} anim=${entry() != null}';
 
@@ -1014,7 +1133,34 @@ class SpriteEditorState extends UIState
 
 	function refreshInfo():Void
 	{
-		var frame = isVideo ? (video != null ? Std.int(video.frameWidth) + " x " + Std.int(video.frameHeight) : "-") : (sprite != null && sprite.loaded ? Std.int(sprite.frameWidth) + " x " + Std.int(sprite.frameHeight) : "-");
+		var fw = 0;
+		var fh = 0;
+		var ok = false;
+		if (isVideo)
+		{
+			if (video != null)
+			{
+				fw = Std.int(video.frameWidth);
+				fh = Std.int(video.frameHeight);
+				ok = true;
+			}
+		}
+		else if (sprite != null && sprite.loaded)
+		{
+			fw = Std.int(sprite.frameWidth);
+			fh = Std.int(sprite.frameHeight);
+			ok = true;
+		}
+
+		var k1 = Std.int(zoom * 100) * 4 + (dirty ? 1 : 0) + (ok ? 2 : 0);
+		var k2 = fw * 100000 + fh;
+		var k3 = isVideo ? (videoMissing != null ? 3 : 2) : (sprite != null && !sprite.loaded ? 1 : 0);
+		if (k1 == infoK1 && k2 == infoK2 && k3 == infoK3) return;
+		infoK1 = k1;
+		infoK2 = k2;
+		infoK3 = k3;
+
+		var frame = ok ? fw + " x " + fh : "-";
 		infoText.text = AdvLang.t("spriteEditor.info.zoom", [Std.int(zoom * 100)], "Zoom {0}%") + "   " + AdvLang.t("spriteEditor.info.frame", [frame], "Frame {0}") + (dirty ? "   " + AdvLang.t("spriteEditor.info.unsaved", null, "* sin guardar") : "") + (isVideo ? (videoMissing != null ? "   " + AdvLang.t("spriteEditor.info.videoMissing", [videoMissing], "(falta el video: {0})") : "") : (sprite != null && !sprite.loaded ? "   " + AdvLang.t("spriteEditor.info.spriteFailed", null, "(el sprite no cargo: revisa sprite.png y sprite.json)") : ""))
 			+ "\n" + AdvLang.t("spriteEditor.info.help", null, "Arrastra el sprite o usa las flechas (SHIFT x10) para mover el pivote (la cruz). G: ghost de esta animacion. Rueda: zoom. Q/E sprite, A/D animacion.");
 	}

@@ -190,7 +190,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						addLabel();
 
 						var packs = CharterActionPacksScreen.editing != null ? CharterActionPacksScreen.editing : (PlayState.SONG.actionPacks == null ? [] : PlayState.SONG.actionPacks);
-						var options = [for (i => p in packs) '#$i ' + (p.name != null ? p.name + ' ' : '') + '(${p.actions.length})'];
+						var options = [for (i => p in packs) '#${i + 1} ' + (p.name != null ? p.name + ' ' : '') + '(${p.actions.length})'];
 						if (options.length == 0) options = [TU.translate("charterActionPacks.none")];
 						var dropdown = new UIDropDown(eventName.x+6, winHeight, 320, 32, options, cast CoolUtil.bound(Std.int(value), 0, options.length - 1));
 						paramsPanel.add(dropdown); paramsFields.push(dropdown);

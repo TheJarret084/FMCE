@@ -1,6 +1,5 @@
 package funky.backend.converter;
 
-import haxe.Json;
 
 typedef AsepriteConversion = {
 
@@ -215,7 +214,7 @@ class SparrowToAseprite
 			}
 		};
 
-		return {json: Json.stringify(out, null, "\t"), frames: frames.length, tags: tags.length, warnings: warnings};
+		return {json: funky.backend.SpriteSheet.stringify(out), frames: frames.length, tags: tags.length, warnings: warnings};
 	}
 
 	public static function prefixes(xmlText:String):Array<String>

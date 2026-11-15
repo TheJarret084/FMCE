@@ -24,3 +24,4 @@ building/android.keystore
 # certificados
 make-keys.sh
 .keys/
+building/jarretTools/

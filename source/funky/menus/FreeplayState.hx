@@ -26,7 +26,6 @@ import funky.game.HealthIcon;
 import funky.game.PlayState;
 import funky.menus.options.BackButton;
 import funkin.backend.utils.TranslationUtil as TU;
-import haxe.io.Path;
 import openfl.utils.Assets as OpenFlAssets;
 
 using StringTools;

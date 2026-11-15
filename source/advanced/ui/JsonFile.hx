@@ -50,6 +50,8 @@ class JsonFile
 	public static function num(value:Dynamic, fallback:Float):Float
 	{
 		if (value == null) return fallback;
+		// Camino rapido: evita convertir a texto en cada llamada (se usa por frame).
+		if (Std.isOfType(value, Float)) return cast value;
 		var parsed = Std.parseFloat(Std.string(value));
 		return Math.isNaN(parsed) ? fallback : parsed;
 	}

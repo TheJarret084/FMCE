@@ -11,7 +11,6 @@ import funky.core.TouchNav;
 import funky.core.TransitionHandler;
 import flixel.util.FlxColor;
 
-import funky.core.Log;
 import funkin.backend.utils.TranslationUtil as TU;
 
 typedef CreditEntry =

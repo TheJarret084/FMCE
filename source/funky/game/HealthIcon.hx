@@ -41,7 +41,7 @@ class HealthIcon extends LevelSprite
 		else
 		{
 
-			makeGraphic(Std.int(FIT), Std.int(FIT), isPlayer ? 0xFF64DDAA : 0xFFE0505A);
+			makeGraphic(Std.int(FIT), Std.int(FIT), 0x00000000); // icon transparente
 			baseScale = 1;
 		}
 

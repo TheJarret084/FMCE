@@ -99,6 +99,7 @@ class SpriteImporter
 				else if (FileSystem.exists(json))
 				{
 					File.copy(json, Path.join([dest, "sprite.json"]));
+					funky.backend.SpriteSheet.migrateFile(Path.join([dest, "sprite.json"]));
 					used.push(json);
 				}
 				else if (!SpriteFolderConverter.mapFnfIcon(dest))
@@ -171,7 +172,10 @@ class SpriteImporter
 				if (!converted.ok) throw Std.string(converted.error);
 			}
 			else if (dataKind == "json" && dataText != null)
+			{
 				File.saveContent(Path.join([dest, "sprite.json"]), dataText);
+				funky.backend.SpriteSheet.migrateFile(Path.join([dest, "sprite.json"]));
+			}
 			else if (!SpriteFolderConverter.mapFnfIcon(dest))
 				writeSingleFrame(dest);
 
@@ -213,7 +217,7 @@ class SpriteImporter
 		var tags:Array<String> = [];
 		try
 		{
-			var data = Json.parse(File.getContent(Path.join([dest, "sprite.json"])));
+			var data = funky.backend.SpriteSheet.parse(File.getContent(Path.join([dest, "sprite.json"])));
 			var meta:Dynamic = Reflect.field(data, "meta");
 			var frameTags:Dynamic = meta == null ? null : Reflect.field(meta, "frameTags");
 			if (Std.isOfType(frameTags, Array))
@@ -286,7 +290,7 @@ class SpriteImporter
 			}
 		};
 
-		File.saveContent(Path.join([dest, "sprite.json"]), Json.stringify(out, null, "\t"));
+		File.saveContent(Path.join([dest, "sprite.json"]), funky.backend.SpriteSheet.stringify(out));
 	}
 
 	static function removeDir(dir:String):Void
@@ -294,10 +298,29 @@ class SpriteImporter
 		try
 		{
 			if (!FileSystem.exists(dir)) return;
-			for (f in FileSystem.readDirectory(dir)) FileSystem.deleteFile(Path.join([dir, f]));
+			for (f in FileSystem.readDirectory(dir))
+			{
+				var path = Path.join([dir, f]);
+				if (FileSystem.isDirectory(path)) removeDir(path);
+				else FileSystem.deleteFile(path);
+			}
 			FileSystem.deleteDirectory(dir);
 		}
 		catch (e:Dynamic) {}
 	}
 	#end
+
+	// Borra la carpeta entera del sprite (png, json, atlas, videos). Devuelve false si no pudo.
+	public static function deleteSprite(levelDir:String, name:String):Bool
+	{
+		#if sys
+		if (name == null || name == "" || name == "." || name == ".." || name.indexOf("/") >= 0 || name.indexOf("\\") >= 0) return false;
+		var dir = SpriteBuilder.spriteDir(levelDir, name);
+		if (!FileSystem.exists(dir) || !FileSystem.isDirectory(dir)) return false;
+		removeDir(dir);
+		return !FileSystem.exists(dir);
+		#else
+		return false;
+		#end
+	}
 }

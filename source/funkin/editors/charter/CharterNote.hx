@@ -24,12 +24,13 @@ class CharterNote extends UISprite implements ICharterSelectable {
 	public var tempSusLength:Float = 0;
 	public var sustainDraggable:Bool = false;
 
-	public var typeText:UIText;
+	/** Texto "P/M" que se dibuja encima de la nota: P = onPress, M = onMiss. 0 = sin pack, N = pack #N (1-based). */
+	public var packText:UIText;
 
 	public var selected:Bool = false;
 	public var draggable:Bool = true;
 
-	static var noteTypeTexts:Array<UIText> = [];
+	static var packTexts:Map<String, UIText> = new Map<String, UIText>();
 
 	public function new() {
 		super();
@@ -47,7 +48,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 		sustainSpr.scale.set(10, 0);
 		members.push(sustainSpr);
 
-		this.type = 0;
+		refreshPackText();
 
 		cursor = sustainSpr.cursor = CLICK;
 		moves = false;
@@ -72,25 +73,36 @@ class CharterNote extends UISprite implements ICharterSelectable {
 	public var id:Int;
 	public var susLength:Float;
 
-	public var onPress:Int = -1;
-	public var onMiss:Int = -1;
+	public var onPress(default, set):Int = -1;
+	public var onMiss(default, set):Int = -1;
 
-	static var packBadge:FlxSprite;
-	public var type(default, set):Null<Int> = null;
-	public var typeVisible:Bool = true;
-	public var typeAlpha:Float = 1;
+	public var packVisible:Bool = true;
+	public var packAlpha:Float = 1;
 
-	function set_type(v:Null<Int>) {
-		if(v != this.type) {
-			if(noteTypeTexts[v] == null || noteTypeTexts[v].graphic.isDestroyed) {
-				noteTypeTexts[v] = new UIText(x, y, 0, Std.string(v));
-				noteTypeTexts[v].exists = v != 0;
+	function set_onPress(v:Int):Int {
+		onPress = v < -1 ? -1 : v;
+		refreshPackText();
+		return onPress;
+	}
 
-			}
+	function set_onMiss(v:Int):Int {
+		onMiss = v < -1 ? -1 : v;
+		refreshPackText();
+		return onMiss;
+	}
 
-			typeText = noteTypeTexts[v];
+	/** Los packs se guardan 0-based (-1 = ninguno) pero en el charter se ven 1-based para que "ninguno" sea 0: 0/0 = sin press ni miss. */
+	public static inline function packLabel(press:Int, miss:Int):String
+		return (press + 1) + "/" + (miss + 1);
+
+	function refreshPackText():Void {
+		var label = packLabel(onPress, onMiss);
+		var cached = packTexts.get(label);
+		if (cached == null || cached.graphic == null || cached.graphic.isDestroyed) {
+			cached = new UIText(x, y, 0, label, 12);
+			packTexts.set(label, cached);
 		}
-		return this.type = v;
+		packText = cached;
 	}
 
 	public var strumLine:CharterStrumline;
@@ -104,11 +116,10 @@ class CharterNote extends UISprite implements ICharterSelectable {
 	public function get_fullID():Int
 		return strumLine.startingID + id;
 
-	public function updatePos(step:Float, id:Int, susLength:Float = 0, ?type:Int = 0, ?strumLine:CharterStrumline = null) {
+	public function updatePos(step:Float, id:Int, susLength:Float = 0, ?strumLine:CharterStrumline = null) {
 		this.step = step;
 		this.id = id;
 		this.susLength = Math.max(susLength, 0);
-		this.type = type;
 		if (strumLine != null) this.strumLine = strumLine;
 
 		sustainSpr.exists = susLength != 0;
@@ -186,7 +197,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 		if (strumLine != null) {
 			var isVisible = strumLine.strumLine.visible;
 			sustainSpr.alpha = alpha = !isVisible ? (__passed ? 0.2 : 0.4) : (__passed ? 0.6 : 1);
-			typeAlpha = !isVisible ? (__passed ? 0.4 : 0.6) : (__passed ? 0.8 : 1);
+			packAlpha = !isVisible ? (__passed ? 0.4 : 0.6) : (__passed ? 0.8 : 1);
 		}
 
 		colorTransform.redMultiplier = colorTransform.greenMultiplier = colorTransform.blueMultiplier = selected ? 0.75 : 1;
@@ -210,7 +221,7 @@ class CharterNote extends UISprite implements ICharterSelectable {
 		var newID:Int = Std.int(FlxMath.bound(fullID + Std.int(change.y), 0, Charter.instance.strumLines.totalKeyCount-1));
 		var newStrumLine = Charter.instance.strumLines.getStrumlineFromID(newID);
 
-		updatePos(newStep, (newID - newStrumLine.startingID) % newStrumLine.keyCount, susLength, type, newStrumLine);
+		updatePos(newStep, (newID - newStrumLine.startingID) % newStrumLine.keyCount, susLength, newStrumLine);
 	}
 
 	public override function draw() {
@@ -219,26 +230,14 @@ class CharterNote extends UISprite implements ICharterSelectable {
 
 		drawMembers();
 		drawSuper();
-		drawNoteTypeText();
-		drawPackBadge();
+		drawPackText();
 	}
 
-	function drawPackBadge() {
-		if (onPress < 0 && onMiss < 0) return;
-		if (packBadge == null || packBadge.graphic == null || packBadge.graphic.isDestroyed)
-			packBadge = new FlxSprite().makeGraphic(8, 8, FlxColor.WHITE);
-		packBadge.color = onPress >= 0 ? 0xFFFF8A00 : 0xFF3FA9FF;
-		packBadge.alpha = typeAlpha;
-		packBadge.cameras = cameras;
-		packBadge.setPosition(x + 29, y + 3);
-		packBadge.draw();
-	}
-
-	public inline function drawNoteTypeText() {
-		if(typeText.exists && typeText.visible && typeVisible) {
-			typeText.alpha = typeAlpha;
-			typeText.follow(this, 20 - (typeText.frameWidth/2), 20 - (typeText.frameHeight/2));
-			typeText.draw();
+	public inline function drawPackText() {
+		if (packText != null && packText.exists && packText.visible && packVisible) {
+			packText.alpha = packAlpha;
+			packText.follow(this, 20 - (packText.frameWidth / 2), -packText.frameHeight - 1);
+			packText.draw();
 		}
 	}
 }

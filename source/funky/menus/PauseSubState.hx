@@ -23,7 +23,6 @@ import funky.core.NavPad;
 import funky.core.TouchNav;
 import funky.game.PlayState;
 import funky.menus.options.BackButton;
-import funky.menus.options.ConfigSubState;
 import funkin.backend.utils.TranslationUtil as TU;
 
 private enum Page
@@ -74,9 +73,6 @@ class PauseSubState extends FlxSubState
 	var viewing:Bool = false;
 	var chosen:Bool = false;
 	var pending:String = null;
-	var grace:Int = 0;
-
-	var pendingRestart:Bool = false;
 
 	var seekTarget:Float = 0;
 	var timeInfo:FlxText;
@@ -295,20 +291,7 @@ class PauseSubState extends FlxSubState
 			label.alpha = alphas[i] * uiAlpha;
 		}
 
-		if (pendingRestart && !chosen && subState == null)
-		{
-			pendingRestart = false;
-			chosen = true;
-			playState.restartSong();
-			return;
-		}
-
 		if (chosen) return;
-		if (grace > 0)
-		{
-			grace--;
-			return;
-		}
 
 		var peekToggled = false;
 		#if desktop
@@ -363,7 +346,7 @@ class PauseSubState extends FlxSubState
 
 	function navigate(by:Int):Void
 	{
-		if (chosen || grace > 0 || viewing) return;
+		if (chosen || viewing) return;
 		changeSelection(by);
 	}
 
@@ -399,7 +382,8 @@ class PauseSubState extends FlxSubState
 			case "forward" | "backward":
 				moveSeek(action == "forward" ? PlayState.SEEK_STEP_MS : -PlayState.SEEK_STEP_MS);
 			case "options":
-				openOptions();
+				chosen = true;
+				playState.openConfig();
 			case "no":
 				pending = null;
 				openPage(MAIN);
@@ -441,42 +425,6 @@ class PauseSubState extends FlxSubState
 
 		var diff = Math.round((seekTarget - playState.songTime) / 1000);
 		timeInfo.text = clock(playState.songTime) + "  >  " + clock(seekTarget) + " / " + total + "  (" + (diff > 0 ? "+" : "") + diff + "S)";
-	}
-
-	function openOptions():Void
-	{
-
-		setPauseVisible(false);
-		var before = restartSignature();
-		var options = new ConfigSubState();
-		options.closeCallback = () ->
-		{
-			setPauseVisible(true);
-			grace = 2;
-
-			if (restartSignature() != before) pendingRestart = true;
-		};
-		options.cameras = cameras;
-		openSubState(options);
-	}
-
-	static function restartSignature():String
-		return ClientPrefs.isDownScroll() + "|" + ClientPrefs.isMiddleScroll() + "|" + ClientPrefs.isBotplay() + "|" + ClientPrefs.getNoteSkin();
-
-	function setPauseVisible(value:Bool):Void
-	{
-		bg.visible = value;
-		strip.visible = value;
-		if (banner != null) banner.visible = value;
-		if (bannerFrame != null) bannerFrame.visible = value;
-		infoTitle.visible = value;
-		infoSub.visible = value;
-		timeInfo.visible = value;
-		peekButton.visible = value;
-		if (dancer != null) dancer.visible = value;
-		if (backIcon != null) backIcon.visible = value;
-		if (navPad != null) navPad.visible = value;
-		for (label in labels) label.visible = value;
 	}
 
 	function leave(action:String):Void

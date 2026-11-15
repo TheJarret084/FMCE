@@ -157,7 +157,7 @@ class FNMMSpriteExport
 
 		var jsonPath = Path.join([dir, "sprite.json"]);
 		if (!FileSystem.exists(jsonPath)) throw "no tiene sprite.json";
-		var atlas:Dynamic = JsonLoose.parse(File.getContent(jsonPath));
+		var atlas:Dynamic = funky.backend.SpriteSheet.expand(JsonLoose.parse(File.getContent(jsonPath)));
 		frames = framesOf(atlas);
 		if (frames.length == 0) throw "el atlas no tiene frames";
 

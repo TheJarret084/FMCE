@@ -94,7 +94,7 @@ class CharterActionPacksScreen extends UISubstateWindow {
 
 		var uses = countReferences(index);
 		if (uses > 0) {
-			Logs.trace('No se puede borrar el pack #$index: $uses accion(es) RunActionPack apuntan a el o a uno posterior. Cambialas antes.', WARNING);
+			Logs.trace('No se puede borrar el pack #${index + 1}: $uses accion(es) RunActionPack apuntan a el o a uno posterior. Cambialas antes.', WARNING);
 			return;
 		}
 		packs.splice(index, 1);
@@ -124,7 +124,7 @@ class CharterActionPacksScreen extends UISubstateWindow {
 		PlayState.SONG.actionPacks = neu;
 		Charter.undos.addToUndo(CEditActionPacks(old, [for (p in neu) copyPack(p)]));
 		Charter.instance.buildEvents();
-		Charter.instance.buildNoteTypesUI();
+		Charter.instance.buildNoteUI();
 	}
 
 	public override function destroy() {
@@ -163,7 +163,7 @@ class ActionPackButton extends UIButton {
 
 	public function refreshLabel(index:Int):Void {
 		var name = pack.name != null && pack.name != "" ? ' ${pack.name}' : "";
-		field.text = TU.translate("charterActionPacks.packLabel", ["" + index, "" + pack.actions.length]) + name;
+		field.text = TU.translate("charterActionPacks.packLabel", ["" + (index + 1), "" + pack.actions.length]) + name;
 	}
 
 	override function update(elapsed:Float) {
