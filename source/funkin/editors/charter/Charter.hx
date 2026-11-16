@@ -1330,6 +1330,41 @@ class Charter extends UIState {
 	var __crochet:Float;
 	var __firstFrame:Bool = true;
 	var __timer:Float = 0;
+	var __barIconPos:Float = -1;
+	var __barIconTimer:Float = 1;
+
+	/**
+	 * Mira los eventos BarIconChange que ya pasaron en el chart y le dice a cada strumline que icono tendria la barra en ese momento.
+	 * target 1 (jugador) -> strumline 0, target 0 (oponente) -> strumline 1. Sin eventos queda el icono del meta.
+	 */
+	function updateBarIcons(elapsed:Float) {
+		__barIconTimer += elapsed;
+		var pos = Conductor.songPosition - Conductor.songOffset;
+		if (pos == __barIconPos && __barIconTimer < 0.25) return;
+		__barIconPos = pos;
+		__barIconTimer = 0;
+
+		var bestTime:Array<Float> = [-1, -1];
+		var best:Array<String> = [null, null];
+		for (ce in eventsGroup.members) {
+			if (ce == null) continue;
+			for (e in ce.events) {
+				if (e.name != "BarIconChange" || e.time > pos) continue;
+				var target:Int = e.params.length > 0 && e.params[0] != null ? Std.int(e.params[0]) : 1;
+				var sprite:String = e.params.length > 1 && e.params[1] != null ? Std.string(e.params[1]) : "";
+				if (target < 0 || target > 1 || sprite == "") continue;
+				if (e.time >= bestTime[target]) {
+					bestTime[target] = e.time;
+					best[target] = sprite;
+				}
+			}
+		}
+
+		for (i => strumLine in strumLines.members)
+			if (strumLine != null)
+				strumLine.barIcon = i == 0 ? best[1] : (i == 1 ? best[0] : null);
+	}
+
 	public override function update(elapsed:Float) {
 		preview.update(elapsed);
 
@@ -1341,6 +1376,7 @@ class Charter extends UIState {
 
 		updateNoteLogic(elapsed);
 		updateAutoSaving(elapsed);
+		updateBarIcons(elapsed);
 
 		for (bs in __bookmarkObjects)
 		{
@@ -1803,7 +1839,7 @@ class Charter extends UIState {
 	}
 
 	/** Cicla el oscurecimiento del escenario (0% -> 20% -> ... -> 80%). */
-	function _view_stagedim(t) {
+	function _view_stagedim(t:UIContextMenuOption) {
 		preview.setDim(CharterPreview.nextDim());
 		if (t.button != null && t.button.label != null)
 			t.button.label.text = TU.exists("view.dimStage")

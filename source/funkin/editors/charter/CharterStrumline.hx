@@ -11,6 +11,24 @@ import funkin.game.Character;
 import funkin.game.HealthIcon;
 
 class CharterStrumline extends UISprite {
+	/**
+	 * Icono de las strumlines extra (la 2, 3...). "" = bloque de color.
+	 * Pon aqui el nombre de un sprite del nivel para que todas las extra lo usen.
+	 * La strumline 0 usa meta.iconPlayer y la 1 meta.iconOpponent.
+	 */
+	public static var extraIcon:String = "";
+	/** Color del bloque que se muestra cuando una strumline no tiene icono. */
+	public static var blockColor:FlxColor = 0xFF8C8C8C;
+	/** Lado (en px) con el que se ajusta el icono de cada strumline. */
+	public static var iconSize:Float = 82;
+
+	/**
+	 * Sprite que puso el ultimo evento BarIconChange antes de la posicion actual del chart.
+	 * null = el icono del meta. Lo actualiza Charter.updateBarIcons.
+	 */
+	public var barIcon:Null<String> = null;
+	var __iconKey:Null<String> = null;
+
 	public var strumLine:ChartStrumLine;
 
 	public var draggingSprite:UISprite;
@@ -65,23 +83,10 @@ class CharterStrumline extends UISprite {
 
 		if(strumLine.visible == null) strumLine.visible = true;
 
-		var icons = strumLine.characters != null ? strumLine.characters : [];
-
 		keyCount = strumLine.keyCount != null ? strumLine.keyCount : 4;
 
 		healthIcons = new FlxSpriteGroup(x, y);
-
-		var maxCol = icons.length < 4 ? icons.length : 4;
-		var maxRow = Math.floor((icons.length-1) / 4) + 1;
-		for (i=>icon in icons) {
-			var healthIcon = new HealthIcon(Character.getIconFromCharName(icon));
-			healthIcon.scale.x = healthIcon.scale.y = Math.max((0.6 - (icons.length / 20)), 0.35);
-			healthIcon.updateHitbox();
-			healthIcon.x = FlxMath.lerp(0, Math.min(icons.length * 20, 120), (maxCol-1 != 0 ? (i % 4) / (maxCol-1) : 0));
-			healthIcon.y = (draggable ? 29 : 7) + FlxMath.lerp(0, Math.min(maxRow * 15, 60), (maxRow-1 != 0 ? Math.floor(i / 4) / (maxRow-1) : 0));
-			healthIcon.alpha = strumLine.visible ? 1 : 0.4;
-			healthIcons.add(healthIcon);
-		}
+		// Los iconos se arman en syncIcons(): necesita saber en que posicion quedo la strumline dentro del Charter.
 
 		members.push(healthIcons);
 
@@ -107,6 +112,8 @@ class CharterStrumline extends UISprite {
 	public override function update(elapsed:Float) {
 		if (FlxG.keys.justPressed.K) draggable = !draggable;
 
+		syncIcons();
+
 		healthIcons.follow(this, ((40 * keyCount) - healthIcons.width) / 2, 7 + (__healthYOffset = FlxMath.lerp(__healthYOffset, draggable ? 8 : 0, 1/20)));
 
 		draggingSprite.selectable = draggable;
@@ -124,24 +131,57 @@ class CharterStrumline extends UISprite {
 		super.update(elapsed);
 	}
 
+	/** Posicion de esta strumline en el Charter (0 = jugador, 1 = oponente, 2+ = extra). -1 si todavia no esta en el grupo. */
+	public function iconSlot():Int {
+		var charter = Charter.instance;
+		if (charter == null || charter.strumLines == null) return -1;
+		return charter.strumLines.members.indexOf(this);
+	}
+
+	/** Sprite del nivel que le toca a la strumline en esa posicion. "" = bloque. */
+	function iconSprite(slot:Int):String {
+		var meta = PlayState.SONG != null ? PlayState.SONG.meta : null;
+		var name:Null<String> = switch (slot) {
+			case 0: barIcon != null ? barIcon : (meta != null ? meta.iconPlayer : null);
+			case 1: barIcon != null ? barIcon : (meta != null ? meta.iconOpponent : null);
+			default: extraIcon;
+		};
+		return name == null ? "" : name;
+	}
+
+	/**
+	 * Arma el icono de la strumline: sprite del nivel (strumline 0 = jugador, 1 = oponente) o bloque (el resto).
+	 * Solo reconstruye cuando algo cambio, asi que es barato llamarlo cada frame.
+	 */
+	public function syncIcons():Void {
+		var slot = iconSlot();
+		if (slot < 0) return;
+
+		var sprite = iconSprite(slot);
+		var key = slot + ":" + sprite + ":" + (strumLine.visible ? 1 : 0) + ":" + (blockColor : Int) + ":" + iconSize;
+		if (key == __iconKey) return;
+		__iconKey = key;
+
+		healthIcons.clear();
+
+		var icon = new CharterIcon();
+		var levelDir = funkin.backend.chart.Chart.levelDir;
+		var shown = sprite != "" && levelDir != null && icon.setLevelIcon(levelDir, sprite, iconSize);
+		if (!shown) icon.setBlock(Std.int(iconSize), blockColor);
+
+		icon.x = 0;
+		icon.y = draggable ? 14 : 7;
+		icon.alpha = strumLine.visible ? 1 : 0.4;
+		healthIcons.add(icon);
+	}
+
 	public function updateInfo() {
 		var icons = strumLine.characters != null ? strumLine.characters : [];
 
 		keyCount = strumLine.keyCount != null ? strumLine.keyCount : 4;
 
-		healthIcons.clear();
-
-		var maxCol = icons.length < 4 ? icons.length : 4;
-		var maxRow = Math.floor((icons.length-1) / 4) + 1;
-		for (i=>icon in icons) {
-			var healthIcon = new HealthIcon(Character.getIconFromCharName(icon));
-			healthIcon.scale.x = healthIcon.scale.y = Math.max((0.6 - (icons.length / 20)), 0.35) * (150 / Math.max(healthIcon.frameWidth, healthIcon.frameHeight));
-			healthIcon.updateHitbox();
-			healthIcon.x = FlxMath.lerp(0, Math.min(icons.length * 20, 120), (maxCol-1 != 0 ? (i % 4) / (maxCol-1) : 0));
-			healthIcon.y = (draggable ? 14 : 7) + FlxMath.lerp(0, Math.min(maxRow * 15, 60), (maxRow-1 != 0 ? Math.floor(i / 4) / (maxRow-1) : 0));
-			healthIcon.alpha = strumLine.visible ? 1 : 0.4;
-			healthIcons.add(healthIcon);
-		}
+		__iconKey = null;
+		syncIcons();
 
 		if (strumLine.vocalsSuffix == null) strumLine.vocalsSuffix = "";
 
@@ -262,5 +302,36 @@ class CharterStrumlineOptions extends UITopMenuButton {
 		var point = CoolUtil.worldToScreenPosition(this, cam);
 		curMenu = UIState.state.openContextMenu(contextMenu, null, point.x, point.y + (bHeight*cam.zoom), Std.int(bWidth * cam.zoom));
 		point.put();
+	}
+}
+
+/** Icono de una strumline dentro del Charter: un sprite del nivel (el mismo que usa el HUD) o, si no hay, un bloque de color. */
+class CharterIcon extends funky.game.LevelSprite {
+	public var isBlock(default, null):Bool = true;
+
+	public function new() {
+		super();
+	}
+
+	/** Carga el sprite del nivel y lo ajusta a `size` px. false si no existe o no se pudo leer. */
+	public function setLevelIcon(levelDir:String, name:String, size:Float):Bool {
+		if (levelDir == null || name == null || name == "") return false;
+		if (!load(levelDir, name)) return false;
+
+		var normal:Null<String> = hasAnim("anim0") ? "anim0" : firstAnim;
+		if (normal != null) playAnim(normal, true);
+
+		setSpriteScale(size / Math.max(1, Math.max(frameWidth, frameHeight)));
+		antialiasing = true;
+		isBlock = false;
+		return true;
+	}
+
+	/** Cuadrado liso de `size` x `size`. */
+	public function setBlock(size:Int, color:FlxColor):Void {
+		makeGraphic(size, size, color);
+		scale.set(1, 1);
+		updateHitbox();
+		isBlock = true;
 	}
 }

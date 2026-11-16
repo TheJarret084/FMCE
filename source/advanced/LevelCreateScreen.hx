@@ -225,7 +225,7 @@ class LevelCreateScreen extends UISubstateWindow
 
 		var denominator = Std.int(Math.max(1, denominatorStepper.value));
 		var stepsPerBeat = Std.int(Math.max(1, Math.min(16, Math.round(16 / denominator))));
-		var options:LevelCreator.CreateOptions = {
+		var options:CreateOptions = {
 			songName: StringTools.trim(songNameBox.label.text),
 			displayName: StringTools.trim(displayNameBox.label.text),
 			bpm: bpmStepper.value,
