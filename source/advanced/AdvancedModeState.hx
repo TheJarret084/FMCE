@@ -41,6 +41,7 @@ class AdvancedModeState extends FlxState
 	var arrow:Null<BoldText>;
 	var importButton:Null<FlxText>;
 	var newButton:Null<FlxText>;
+	var newIcon:Null<FlxSprite>;
 	var pendingImport:Null<String>;
 	var selected:Int = 0;
 	var scrollPos:Float = 0;
@@ -123,9 +124,28 @@ class AdvancedModeState extends FlxState
 		add(importButton);
 
 		newButton = new FlxText(FlxG.width - 660, 14, 310, AdvLang.t("modeMenu.newButton", null, "NUEVO NIVEL  [N]"), 20);
-		newButton.color = ACTIVE;
-		newButton.alignment = FlxTextAlign.RIGHT;
+		newButton.alignment = FlxTextAlign.LEFT;
+		newButton.color = 0xFF5FE36B;
+		newButton.x += 34; // deja el hueco del "+" a la izquierda
 		add(newButton);
+
+		// Como en Codename: el "+" verde pegado al texto. Abre la ventana completa de opciones de la cancion.
+		newIcon = new FlxSprite();
+		try
+		{
+			newIcon.loadGraphic(Paths.image("editors/new"));
+			newIcon.setGraphicSize(28, 28);
+			newIcon.updateHitbox();
+			newIcon.color = 0xFF5FE36B;
+			newIcon.antialiasing = true;
+			newIcon.x = Math.max(8, newButton.x - 34);
+			newIcon.y = newButton.y + (newButton.height - newIcon.height) / 2;
+			add(newIcon);
+		}
+		catch (e:Dynamic)
+		{
+			newIcon = null;
+		}
 
 		DiscordClient.customPresence(AdvLang.t("modeMenu.presenceTitle", null, "Modo Avanzado"), AdvLang.t("modeMenu.presenceSelecting", null, "Seleccionando nivel"), "fmce", "", false);
 		scrollPos = selected;
@@ -336,7 +356,7 @@ class AdvancedModeState extends FlxState
 			importPicked(path);
 		}
 
-		if (FlxG.keys.justPressed.N || (FlxG.mouse.justPressed && newButton != null && FlxG.mouse.overlaps(newButton)))
+		if (FlxG.keys.justPressed.N || (FlxG.mouse.justPressed && ((newButton != null && FlxG.mouse.overlaps(newButton)) || (newIcon != null && FlxG.mouse.overlaps(newIcon)))))
 		{
 			createLevel();
 			return;

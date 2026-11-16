@@ -224,6 +224,8 @@
 
 				<str id="topBar.view">View</str>
 				<group name="ViewMenu" prefix="view.">
+					<str id="showStage">Show live stage</str>
+					<str id="dimStage">Dim stage ({0}%)</str>
 					<str id="zoomIn">Zoom in</str>
 					<str id="zoomOut">Zoom out</str>
 					<str id="resetZoom">Reset Zoom</str>

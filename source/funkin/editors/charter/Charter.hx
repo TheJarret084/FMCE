@@ -280,6 +280,15 @@ class Charter extends UIState {
 						icon: CharterPreview.enabled ? 1 : 0
 					},
 					{
+						label: TU.exists("view.dimStage") ? TU.translate("view.dimStage", [Std.int(CharterPreview.dim * 100)]) : "Oscurecer fondo: " + Std.int(CharterPreview.dim * 100) + "%",
+						onCreate: function(button:UIContextMenuOptionSpr) {
+							button.label.text = TU.exists("view.dimStage")
+								? TU.translate("view.dimStage", [Std.int(CharterPreview.dim * 100)])
+								: "Oscurecer fondo: " + Std.int(CharterPreview.dim * 100) + "%";
+						},
+						onSelect: _view_stagedim
+					},
+					{
 						label: TU.exists("view.hideUI") ? translate("view.hideUI") : "Ocultar / mostrar interfaz",
 						keybind: [TAB],
 						onSelect: _view_toggleui
@@ -1791,6 +1800,15 @@ class Charter extends UIState {
 	function _view_showstage(t) {
 		preview.setEnabled(!CharterPreview.enabled);
 		t.icon = CharterPreview.enabled ? 1 : 0;
+	}
+
+	/** Cicla el oscurecimiento del escenario (0% -> 20% -> ... -> 80%). */
+	function _view_stagedim(t) {
+		preview.setDim(CharterPreview.nextDim());
+		if (t.button != null && t.button.label != null)
+			t.button.label.text = TU.exists("view.dimStage")
+				? TU.translate("view.dimStage", [Std.int(CharterPreview.dim * 100)])
+				: "Oscurecer fondo: " + Std.int(CharterPreview.dim * 100) + "%";
 	}
 
 	function _view_toggleui(_) {

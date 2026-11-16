@@ -18,7 +18,11 @@
 		<str id="modeMenu.created">Level created: {0}</str>
 		<str id="levelCreate.title">New level</str>
 		<str id="levelCreate.nameLabel">Level name</str>
-		<str id="levelCreate.hint">This is the name shown in the menus.</str>
+		<str id="levelCreate.bpm">BPM</str>
+		<str id="levelCreate.lanes">Lanes</str>
+		<str id="levelCreate.stage">Stage</str>
+		<str id="levelCreate.sprites">Copy example level (stage and sprites)</str>
+		<str id="levelCreate.hint">The name is what the menus show. Everything can be changed later.</str>
 		<str id="levelCreate.create">Create</str>
 		<str id="levelCreate.cancel">Cancel</str>
 

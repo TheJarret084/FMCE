@@ -38,10 +38,12 @@ class LevelLoader
 		chart = ChartNormalizer.ensure(dir, chartPath, chart, meta);
 
 		var name = text(Reflect.field(chart, "name"), "");
+		if (name == "") name = text(Reflect.field(meta, "songName"), "");
 		if (name == "") name = text(Reflect.field(meta, "displayName"), "");
 		if (name == "") name = text(Reflect.field(meta, "levelName"), "");
-		if (name == "") name = text(Reflect.field(meta, "songName"), "");
 		if (name == "") name = Path.withoutDirectory(Path.removeTrailingSlashes(dir));
+		var displayName = text(Reflect.field(meta, "displayName"), "");
+		if (displayName == "") displayName = name;
 
 		var bpm:Float = number(Reflect.field(chart, "bpm"), number(Reflect.field(meta, "bpm"), 120));
 		if (bpm <= 0) bpm = 120;
@@ -90,6 +92,8 @@ class LevelLoader
 
 		var stepsPerBeat = number(Reflect.field(meta, "stepsPerBeat"), number(Reflect.field(chart, "npb"), 4));
 		if (stepsPerBeat <= 0) stepsPerBeat = 4;
+		var beatsPerMeasure = number(Reflect.field(meta, "beatsPerMeasure"), number(Reflect.field(chart, "beatsPerMeasure"), 4));
+		if (beatsPerMeasure <= 0) beatsPerMeasure = 4;
 
 		for (converted in funky.backend.converter.SpriteFolderConverter.convertTree(Path.join([dir, "sprites"]), false))
 			if (!converted.ok) Log.warn('[LevelLoader] sprite ' + converted.xml + ': ' + converted.error);
@@ -97,6 +101,7 @@ class LevelLoader
 		Log.info('[LevelLoader] ' + name + ' ' + notes.length + ' notes, ' + laneCount + ' lanes, ' + bpm + ' bpm' + (music == null ? ' (silent)' : ''));
 		return {
 			name: name,
+			displayName: displayName,
 			bpm: bpm,
 			notes: notes,
 			events: events,
@@ -107,6 +112,7 @@ class LevelLoader
 			iconPlayer: iconPlayer,
 			iconOpponent: iconOpponent,
 			stepsPerBeat: stepsPerBeat,
+			beatsPerMeasure: beatsPerMeasure,
 			actionPacks: actionPacks,
 			stage: nullableText(Reflect.field(meta, "stage")),
 			color: nullableText(Reflect.field(meta, "color"))

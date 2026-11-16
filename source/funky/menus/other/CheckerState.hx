@@ -7,6 +7,7 @@ import flixel.text.FlxText.FlxTextAlign;
 import flixel.ui.FlxBar;
 import flixel.ui.FlxBar.FlxBarFillDirection;
 import flixel.util.FlxColor;
+import funky.backend.LevelVideoMigrator;
 import funky.backend.Mp4Info;
 import funky.backend.MusicBeatState;
 import funky.backend.system.framerate.Framerate;
@@ -14,6 +15,7 @@ import funky.core.Addons;
 import funky.core.AssetPack;
 import funky.core.ClientPrefs;
 import funky.core.Log;
+import funky.core.Paths;
 import funky.core.Storage;
 import funky.core.other.AddonsDownloader;
 import funky.menus.SplashState;
@@ -29,6 +31,7 @@ enum CheckStage
 	ScanPack;
 	ReadSol;
 	ReadFps;
+	ScanLevelVideos;
 	ScanAddons;
 	Downloading;
 	Finished;
@@ -155,6 +158,9 @@ class CheckerState extends MusicBeatState
 				stage = ReadFps;
 			case ReadFps:
 				checkFps();
+				stage = ScanLevelVideos;
+			case ScanLevelVideos:
+				checkLevelVideos();
 				stage = ScanAddons;
 			case ScanAddons:
 				checkAddons();
@@ -177,6 +183,7 @@ class CheckerState extends MusicBeatState
 			case ScanPack: 0.05 + 0.35 * (packIds.length == 0 ? 0 : packIdx / packIds.length);
 			case ReadSol: 0.42;
 			case ReadFps: 0.48;
+			case ScanLevelVideos: 0.52;
 			case ScanAddons: 0.55;
 			case Downloading: 0.55 + 0.45 * (queue.length == 0 ? 0 : (index + subProgress) / queue.length);
 			case Finished: 1;
@@ -342,7 +349,47 @@ class CheckerState extends MusicBeatState
 			Log.info('[Checker] FPS ok (contador ' + (Framerate.debugMode > 0 ? "visible" : "oculto") + ', objetivo ${FlxG.drawFramerate})');
 	}
 
-	// ------------------------------------------------------------------ 4. Addons
+	// ------------------------------------------------------------------ 4. Videos de los niveles
+
+	/**
+	 * Migra/normaliza los videos de los niveles (`LevelVideoMigrator`) y valida cada .mp4 con `Mp4Info`.
+	 * Los niveles que ya estan bien no se tocan; solo se avisa de videos rotos o configs que no se pudieron arreglar.
+	 */
+	function checkLevelVideos():Void
+	{
+		say("Revisando videos de los niveles...");
+
+		#if sys
+		var reports = LevelVideoMigrator.scanAll(Paths.levelsRoot());
+		var total = 0;
+		var repaired = 0;
+
+		for (report in reports)
+		{
+			total += report.videos;
+
+			for (line in report.fixed)
+			{
+				repaired++;
+				Log.info('[Checker] video arreglado: $line');
+				fixed.push(line);
+			}
+
+			for (line in report.problems)
+			{
+				Log.warn('[Checker] video: $line');
+				problems.push(line);
+			}
+		}
+
+		if (repaired > 0)
+			Log.info('[Checker] videos de niveles: $total revisados, $repaired arreglados');
+		else
+			Log.info('[Checker] videos de niveles: $total revisados');
+		#end
+	}
+
+	// ------------------------------------------------------------------ 5. Addons
 
 	function checkAddons():Void
 	{

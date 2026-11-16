@@ -45,3 +45,18 @@ En Android viene activado (el splash lo usa); para apagarlo compila con `-DFMCE_
 
 ## assets.pack
 `pack-assets.py` compila `assets/` en `building/_pack/assets.pack` (los scripts de build lo corren solos; necesita Python 3). Ver `DOCS/addons-y-pack.md`.
+
+
+## Builds locales con jarretTools
+
+`building/jarretTools/` permite iterar rápidamente en tu máquina con targets Linux y Web:
+
+```bash
+bash building/jarretTools/build.sh linux debug
+bash building/jarretTools/build.sh web debug
+```
+
+Esto **no reemplaza ni modifica los workflows de GitHub Actions**. El workflow
+`build.yml` conserva su matriz original Linux + Windows, y `android-release.yml`
+sigue compilando Android. Los builds locales son una vía adicional para detectar
+errores antes de subir cambios.

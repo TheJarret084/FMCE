@@ -1,23 +1,49 @@
 package advanced;
 
+import flixel.group.FlxGroup;
 import advanced.AdvLang;
 import funkin.editors.ui.*;
 import funky.backend.LevelCreator;
 
 /**
- * NUEVO NIVEL (como en Codename): primero se pide el nombre, que queda en meta.json como displayName.
- * La carpeta se crea con un identificador (base64 del timestamp de creacion), asi el nombre se puede repetir o cambiar.
+ * Asistente NUEVO NIVEL inspirado en el flujo original de Codename:
+ * 1) datos de la cancion y seleccion de audio;
+ * 2) metadatos del menu, icono, modos, dificultades y color.
+ * Los datos se guardan en el formato nativo de FMCE (meta.json + chart.json).
  */
 class LevelCreateScreen extends UISubstateWindow
 {
 	var onCreated:String->Void;
 
-	var nameLabel:UIText;
-	var nameBox:UITextBox;
-	var hint:UIText;
+	var songPage:FlxGroup;
+	var menuPage:FlxGroup;
+	var pageTitle:UIText;
 	var error:UIText;
-	var createButton:UIButton;
+
+	var songNameBox:UITextBox;
+	var bpmStepper:UINumericStepper;
+	var beatsPerMeasureStepper:UINumericStepper;
+	var denominatorStepper:UINumericStepper;
+	var instrumentalExplorer:UIFileExplorer;
+	var voicesExplorer:UIFileExplorer;
+	var instrumentalInfo:UIText;
+	var voicesInfo:UIText;
+
+	var displayNameBox:UITextBox;
+	var iconBox:UITextBox;
+	var opponentModeCheck:UICheckbox;
+	var coopCheck:UICheckbox;
+	var stageBox:UITextBox;
+	var lanesStepper:UINumericStepper;
+	var difficultiesBox:UITextBox;
+	var colorWheel:UIColorwheel;
+	var spritesCheck:UICheckbox;
+
 	var cancelButton:UIButton;
+	var nextButton:UIButton;
+	var backButton:UIButton;
+	var createButton:UIButton;
+	var currentPage:Int = 0;
 
 	public function new(onCreated:String->Void)
 	{
@@ -28,43 +54,204 @@ class LevelCreateScreen extends UISubstateWindow
 	public override function create():Void
 	{
 		winTitle = AdvLang.t("levelCreate.title", null, "Nuevo nivel");
-		winWidth = 380;
-		winHeight = 210;
+		winWidth = 760;
+		winHeight = 560;
 		super.create();
 
-		var wx = windowSpr.x;
-		var wy = windowSpr.y;
+		var x = windowSpr.x + 22;
+		var y = windowSpr.y + 62;
+		var right = windowSpr.x + windowSpr.bWidth - 22;
 
-		nameLabel = new UIText(wx + 20, wy + 46, 0, AdvLang.t("levelCreate.nameLabel", null, "Nombre del nivel"));
-		add(nameLabel);
+		songPage = new FlxGroup();
+		menuPage = new FlxGroup();
+		add(songPage);
+		add(menuPage);
 
-		nameBox = new UITextBox(wx + 20, wy + 66, "", 340, 32);
-		add(nameBox);
+		// PAGINA 1 — Datos principales y archivos de audio.
+		pageTitle = new UIText(x, y, 700, "Datos de la canción  ·  1/2", 25, 0xFF5FE36B);
+		songPage.add(pageTitle);
 
-		hint = new UIText(wx + 20, wy + 104, 0, AdvLang.t("levelCreate.hint", null, "Este nombre es el que se ve en los menus."));
-		hint.alpha = 0.6;
-		add(hint);
+		songPage.add(new UIText(x, y + 54, 0, "Nombre interno de la canción", 14));
+		songNameBox = new UITextBox(x, y + 77, "", 365, 34);
+		songPage.add(songNameBox);
 
-		error = new UIText(wx + 20, wy + 124, 0, "");
+		var bpmX = x + 390;
+		songPage.add(new UIText(bpmX, y + 54, 0, "BPM", 14));
+		bpmStepper = new UINumericStepper(bpmX, y + 77, LevelCreator.DEFAULT_BPM, 1, 2, 1, 1000, 125, 34);
+		songPage.add(bpmStepper);
+
+		var signatureX = x + 535;
+		songPage.add(new UIText(signatureX, y + 54, 0, "Compás", 14));
+		beatsPerMeasureStepper = new UINumericStepper(signatureX, y + 77, 4, 1, 0, 1, 32, 74, 34);
+		songPage.add(beatsPerMeasureStepper);
+		songPage.add(new UIText(signatureX + 48, y + 82, 0, "/", 21));
+		denominatorStepper = new UINumericStepper(signatureX + 67, y + 77, 4, 1, 0, 1, 16, 74, 34);
+		songPage.add(denominatorStepper);
+
+		var audioY = y + 166;
+		songPage.add(new UIText(x, audioY, 330, "Instrumental  ·  obligatorio", 17));
+		songPage.add(new UIText(x + 360, audioY, 330, "Voces  ·  opcional", 17));
+
+		instrumentalExplorer = new UIFileExplorer(x, audioY + 30, 330, 66, "ogg;mp3;wav;m4a", function(path:String, bytes:haxe.io.Bytes)
+		{
+			instrumentalInfo.text = path == null ? "Sin instrumental seleccionado" : "Seleccionado: " + haxe.io.Path.withoutDirectory(path);
+		});
+		songPage.add(instrumentalExplorer);
+		voicesExplorer = new UIFileExplorer(x + 360, audioY + 30, 330, 66, "ogg;mp3;wav;m4a", function(path:String, bytes:haxe.io.Bytes)
+		{
+			voicesInfo.text = path == null ? "Sin voces (opcional)" : "Seleccionado: " + haxe.io.Path.withoutDirectory(path);
+		});
+		songPage.add(voicesExplorer);
+
+		instrumentalInfo = new UIText(x, audioY + 105, 330, "Sin instrumental seleccionado", 12);
+		instrumentalInfo.alpha = 0.72;
+		songPage.add(instrumentalInfo);
+		voicesInfo = new UIText(x + 360, audioY + 105, 330, "Sin voces (opcional)", 12);
+		voicesInfo.alpha = 0.72;
+		songPage.add(voicesInfo);
+
+		songPage.add(new UIText(x, audioY + 153, 700,
+			"Los archivos se copian dentro de music/ como Inst y Voices. Puedes cambiar el audio después desde el nivel.", 13));
+
+		// PAGINA 2 — Metadatos y opciones que aparecen en los menus.
+		menuPage.add(new UIText(x, y, 700, "Opciones del menú  ·  2/2", 25, 0xFF5FE36B));
+
+		menuPage.add(new UIText(x, y + 54, 0, "Nombre visible", 14));
+		displayNameBox = new UITextBox(x, y + 77, "", 335, 34);
+		menuPage.add(displayNameBox);
+
+		var iconX = x + 365;
+		menuPage.add(new UIText(iconX, y + 54, 0, "Icono de salud (P2)", 14));
+		iconBox = new UITextBox(iconX, y + 77, "face", 300, 34);
+		menuPage.add(iconBox);
+
+		opponentModeCheck = new UICheckbox(x, y + 132, "Permitir modo oponente", false, 310);
+		menuPage.add(opponentModeCheck);
+		coopCheck = new UICheckbox(iconX, y + 132, "Permitir modo cooperativo", false, 310);
+		menuPage.add(coopCheck);
+
+		menuPage.add(new UIText(x, y + 179, 0, "Escenario", 14));
+		stageBox = new UITextBox(x, y + 202, LevelCreator.DEFAULT_STAGE, 335, 34);
+		menuPage.add(stageBox);
+		menuPage.add(new UIText(iconX, y + 179, 0, "Carriles", 14));
+		lanesStepper = new UINumericStepper(iconX, y + 202, LevelCreator.DEFAULT_LANES, 1, 0, 1, 9, 105, 34);
+		menuPage.add(lanesStepper);
+
+		menuPage.add(new UIText(x, y + 258, 0, "Dificultades (separadas por coma)", 14));
+		difficultiesBox = new UITextBox(x, y + 282, "normal", 335, 34);
+		menuPage.add(difficultiesBox);
+		spritesCheck = new UICheckbox(x, y + 333, "Copiar la plantilla de ejemplo (escenario y sprites)", true, 360);
+		menuPage.add(spritesCheck);
+
+		menuPage.add(new UIText(iconX, y + 258, 0, "Color del nivel", 14));
+		colorWheel = new UIColorwheel(iconX, y + 282, funkin.backend.system.Flags.DEFAULT_COLOR);
+		menuPage.add(colorWheel);
+
+		error = new UIText(x, windowSpr.y + winHeight - 76, 710, "", 13);
 		error.color = 0xFFFF8A8A;
 		add(error);
 
-		createButton = new UIButton(wx + windowSpr.bWidth - 20 - 125, wy + winHeight - 14 - 32, AdvLang.t("levelCreate.create", null, "Crear"), doCreate, 125);
-		add(createButton);
-
-		cancelButton = new UIButton(createButton.x - 20 - 125, createButton.y, AdvLang.t("levelCreate.cancel", null, "Cancelar"), function() close(), 125);
+		var buttonY = windowSpr.y + winHeight - 18 - 34;
+		cancelButton = new UIButton(right - 280, buttonY, "Cancelar", function() close(), 130, 34);
 		cancelButton.color = 0xFFFF0000;
 		add(cancelButton);
+		nextButton = new UIButton(right - 140, buttonY, "Continuar  →", goToMenuPage, 140, 34);
+		add(nextButton);
+		backButton = new UIButton(right - 280, buttonY, "←  Atrás", goToSongPage, 130, 34);
+		add(backButton);
+		createButton = new UIButton(right - 140, buttonY, "Crear nivel", doCreate, 140, 34);
+		createButton.color = 0xFF5FE36B;
+		add(createButton);
+
+		showPage(0);
+	}
+
+	function confirmSelections():Void
+	{
+		// Las paginas son FlxGroups: confirmUISelections(this) no entra automaticamente en ellos.
+		// Confirmarlas por separado asegura que los UINumericStepper apliquen el texto recien escrito.
+		if (songPage != null) UIUtil.confirmUISelections(songPage);
+		if (menuPage != null) UIUtil.confirmUISelections(menuPage);
+		// No dejes el foco apuntando a un campo de la pagina que acabamos de ocultar.
+		UIState.state.currentFocus = null;
+	}
+
+	function showPage(page:Int):Void
+	{
+		currentPage = page;
+		songPage.visible = songPage.active = page == 0;
+		menuPage.visible = menuPage.active = page == 1;
+		cancelButton.visible = cancelButton.active = page == 0;
+		nextButton.visible = nextButton.active = page == 0;
+		backButton.visible = backButton.active = page == 1;
+		createButton.visible = createButton.active = page == 1;
+		error.text = "";
+	}
+
+	function goToMenuPage():Void
+	{
+		confirmSelections();
+		if (songNameBox.label.text == null || StringTools.trim(songNameBox.label.text) == "")
+		{
+			error.text = "Escribe el nombre interno de la canción.";
+			return;
+		}
+		if (instrumentalExplorer.file == null)
+		{
+			error.text = "Selecciona el audio instrumental para continuar.";
+			return;
+		}
+		if (StringTools.trim(displayNameBox.label.text) == "")
+			displayNameBox.label.text = StringTools.trim(songNameBox.label.text);
+		showPage(1);
+	}
+
+	function goToSongPage():Void
+	{
+		confirmSelections();
+		showPage(0);
 	}
 
 	function doCreate():Void
 	{
-		var result = LevelCreator.create(nameBox.label.text);
+		confirmSelections();
+
+		var difficulties:Array<String> = [];
+		for (part in difficultiesBox.label.text.split(","))
+		{
+			var value = StringTools.trim(part);
+			if (value != "" && difficulties.indexOf(value) < 0) difficulties.push(value);
+		}
+
+		var denominator = Std.int(Math.max(1, denominatorStepper.value));
+		var stepsPerBeat = Std.int(Math.max(1, Math.min(16, Math.round(16 / denominator))));
+		var options:LevelCreator.CreateOptions = {
+			songName: StringTools.trim(songNameBox.label.text),
+			displayName: StringTools.trim(displayNameBox.label.text),
+			bpm: bpmStepper.value,
+			beatsPerMeasure: Std.int(beatsPerMeasureStepper.value),
+			stepsPerBeat: stepsPerBeat,
+			lanes: Std.int(lanesStepper.value),
+			stage: stageBox.label.text,
+			withSprites: spritesCheck.checked,
+			icon: iconBox.label.text,
+			color: colorWheel.curColorString,
+			difficulties: difficulties,
+			opponentModeAllowed: opponentModeCheck.checked,
+			coopAllowed: coopCheck.checked,
+			instrumentalBytes: instrumentalExplorer.file,
+			instrumentalPath: instrumentalExplorer.filePath,
+			voicesBytes: voicesExplorer.file,
+			voicesPath: voicesExplorer.filePath
+		};
+
+		var result = LevelCreator.createWithOptions(options);
 		if (!result.ok)
 		{
 			error.text = result.error;
 			return;
 		}
+
 		var folder = result.folder;
 		close();
 		if (onCreated != null) onCreated(folder);

@@ -95,9 +95,9 @@ class Chart {
 		var spb:Int = lv.stepsPerBeat != null && lv.stepsPerBeat > 0 ? Std.int(Math.round(lv.stepsPerBeat)) : 4;
 		var chartMeta:ChartMetaData = {
 			name: Path.withoutDirectory(Path.removeTrailingSlashes(dir)),
-			displayName: lv.name,
+			displayName: lv.displayName != null && lv.displayName != "" ? lv.displayName : lv.name,
 			bpm: bpm,
-			beatsPerMeasure: 4,
+			beatsPerMeasure: lv.beatsPerMeasure != null && lv.beatsPerMeasure > 0 ? lv.beatsPerMeasure : 4,
 			stepsPerBeat: spb,
 			needsVoices: voicesPath != null,
 			instSuffix: "",
@@ -283,6 +283,7 @@ class Chart {
 		var meta = song.meta;
 		if (meta != null) {
 			if (meta.bpm != null) Reflect.setField(fresh, "bpm", meta.bpm);
+			if (meta.beatsPerMeasure != null) Reflect.setField(fresh, "beatsPerMeasure", meta.beatsPerMeasure);
 			if (meta.stepsPerBeat != null) Reflect.setField(fresh, "stepsPerBeat", meta.stepsPerBeat);
 			if (meta.displayName != null) Reflect.setField(fresh, "displayName", meta.displayName);
 			if (meta.color != null) Reflect.setField(fresh, "color", "#" + StringTools.hex(((meta.color : Int) & 0xFFFFFF), 6));

@@ -2,6 +2,7 @@ package funky.backend.chart;
 
 typedef FNMMChart = {
 	var name:String;
+	@:optional var displayName:String;
 	var bpm:Float;
 	var notes:Array<FNMMNote>;
 	var events:Array<Dynamic>;
@@ -17,6 +18,7 @@ typedef FNMMChart = {
 	@:optional var iconOpponent:Null<String>;
 
 	@:optional var stepsPerBeat:Float;
+	@:optional var beatsPerMeasure:Float;
 
 	@:optional var actionPacks:Array<Array<Dynamic>>;
 

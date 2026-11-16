@@ -26,7 +26,8 @@
         "b": 255,
         "g": 255
       },
-      "opacity": 1
+      "opacity": 1,
+      "video": 0
     }
   ],
   "cameras": [

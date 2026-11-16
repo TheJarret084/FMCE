@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 # FMCE - build para Linux / macOS (y Android, via android-build.sh).
 #
-#   bash building/build.sh <hl|cpp|android> <debug|release> [args extra para lime]
+#   bash building/build.sh <hl|cpp|android|web> <debug|release> [args extra para lime]
 #
 # Hace todo: instala las libs de building/libs.txt, compila con lime y deja el resultado en
 #   building/artifacts/FMCE-<OS>-x64-<target>-<type>.zip   (hl / cpp)
-#   building/artifacts/FMCE-Android-<type>.apk             (android)
+#   building/artifacts/FMCE-Web-html5-<type>.zip            (web)
+#   building/artifacts/FMCE-Android-<type>.apk              (android)
 # El CI depende de esos nombres.
 set -euo pipefail
 
 KIND="${1:-cpp}"; MODE="${2:-release}"
 shift $(( $# > 2 ? 2 : $# )) || true
 
-case "$KIND" in hl|cpp|android) ;; *) echo "build.sh: target '$KIND' no valido (hl, cpp, android)" >&2; exit 2;; esac
+case "$KIND" in hl|cpp|android|web) ;; *) echo "build.sh: target '$KIND' no valido (hl, cpp, android, web)" >&2; exit 2;; esac
 case "$MODE" in debug|release) ;; *) echo "build.sh: modo '$MODE' no valido (debug, release)" >&2; exit 2;; esac
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -68,6 +69,7 @@ fi
 # ── Compilar ────────────────────────────────────────────────────
 case "$KIND" in
 	android) PLATFORM=android;;
+	web) PLATFORM=html5;;
 	*) case "$(uname -s)" in Darwin) PLATFORM=mac;; *) PLATFORM=linux;; esac;;
 esac
 
@@ -131,6 +133,10 @@ if [ "$KIND" = android ]; then
 	fi
 	OUT="$ART/FMCE-Android-$MODE.apk"
 	cp "$APK" "$OUT"
+elif [ "$KIND" = web ]; then
+	OUT="$PWD/$ART/FMCE-Web-html5-$MODE.zip"
+	rm -f "$OUT"
+	( cd "$BIN" && zip -r -q "$OUT" . )
 else
 	case "$(uname -s)" in Darwin) OS=MacOS;; *) OS=Linux;; esac
 	OUT="$PWD/$ART/FMCE-$OS-x64-$KIND-$MODE.zip"

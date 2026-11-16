@@ -566,7 +566,7 @@ class PlayState extends MusicBeatState
 			song.endTime = musicSound.length;
 
 		// HUD
-		hud = new PlayHUD(song.name, song.endTime, song.levelDir, song.iconPlayer, song.iconOpponent, song.laneCount);
+		hud = new PlayHUD(song.displayName, song.endTime, song.levelDir, song.iconPlayer, song.iconOpponent, song.laneCount);
 
 		hud.cameras = [camHUD];
 		add(hud);
@@ -1497,7 +1497,7 @@ class PlayState extends MusicBeatState
 
 	public function songLabel():String
 	{
-		return song == null ? "UNKNOWN" : song.name.toUpperCase();
+		return song == null ? "UNKNOWN" : song.displayName.toUpperCase();
 	}
 
 	// PAUSA

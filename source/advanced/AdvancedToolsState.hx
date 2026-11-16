@@ -9,6 +9,7 @@ import flixel.math.FlxMath;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
 import funky.backend.LevelArchive;
+import funky.backend.LevelVideoMigrator;
 import funky.core.KeyBinds;
 import funky.core.Paths;
 import funky.core.TransitionHandler;
@@ -47,6 +48,22 @@ class AdvancedToolsState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+
+		// Niveles importados despues de arrancar: el checker solo corre al inicio, asi que aqui se revisan/migran sus videos.
+		#if sys
+		try
+		{
+			var report = LevelVideoMigrator.scanLevel(Paths.levelsRoot() + levelName);
+			for (line in report.fixed)
+				funky.core.Log.info('[AdvancedTools] video arreglado: $line');
+			for (line in report.problems)
+				funky.core.Log.warn('[AdvancedTools] video: $line');
+		}
+		catch (e:Dynamic)
+		{
+			funky.core.Log.warn('[AdvancedTools] no se pudieron revisar los videos: ' + Std.string(e));
+		}
+		#end
 
 		funky.core.CoolUtil.playEditorSong();
 

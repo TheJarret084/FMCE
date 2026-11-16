@@ -224,6 +224,8 @@
 
 				<str id="topBar.view">View</str>
 				<group name="ViewMenu" prefix="view.">
+					<str id="showStage">Mostrar escenario en vivo</str>
+					<str id="dimStage">Oscurecer escenario ({0}%)</str>
 					<str id="zoomIn">Acercar</str>
 					<str id="zoomOut">Alejar</str>
 					<str id="resetZoom">Reiniciar Zoom</str>

@@ -12,6 +12,7 @@ class SongData
 
 	public var path:Null<String>;
 	public var name:String;
+	public var displayName:String;
 	public var bpm:Float;
 	public var levelDir:Null<String>;
 	public var musicPath:Null<String>;
@@ -59,6 +60,7 @@ class SongData
 	{
 		path = chart.levelDir;
 		name = chart.name;
+		displayName = chart.displayName != null && chart.displayName != "" ? chart.displayName : chart.name;
 		bpm = chart.bpm;
 		levelDir = chart.levelDir;
 		musicPath = chart.musicPath;

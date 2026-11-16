@@ -22,6 +22,11 @@ class CharterPreview {
 	/** Se recuerda mientras el juego este abierto. */
 	public static var enabled:Bool = true;
 
+	/** Opacidad del fondo negro que va encima del escenario (0 = escenario a full, 0.8 = casi negro). */
+	public static var dim:Float = 0.5;
+
+	static final DIMS:Array<Float> = [0, 0.2, 0.35, 0.5, 0.65, 0.8];
+
 	/** Segundos sin moverse hacia atras antes de reconstruir el escenario (un salto atras obliga a reiniciar los eventos). */
 	static inline var REBUILD_DELAY:Float = 0.3;
 
@@ -60,9 +65,9 @@ class CharterPreview {
 	public function create():Void {
 		camera = new FlxCamera();
 		camera.bgColor = 0xFF000000;
-		FlxG.cameras.add(camera, false);
-		FlxG.cameras.list.remove(camera);
-		FlxG.cameras.list.insert(0, camera);
+		// insert() tambien reordena el flashSprite en el display list de OpenFL. Cambiar solo
+		// FlxG.cameras.list deja la capa visual encima del charter aunque la lista diga lo contrario.
+		FlxG.cameras.insert(camera, 0, false);
 		camera.antialiasing = true;
 
 		applyVisibility();
@@ -76,12 +81,30 @@ class CharterPreview {
 		if (enabled && stage == null && phase == 0) startLoading();
 	}
 
+	/** Cambia cuanto se oscurece el escenario detras de la grilla. */
+	public function setDim(value:Float):Void {
+		dim = value < 0 ? 0 : (value > 1 ? 1 : value);
+		applyVisibility();
+	}
+
+	/** Siguiente valor de oscurecimiento (menu Ver). Devuelve el nuevo valor. */
+	public static function nextDim():Float {
+		var index = -1;
+		for (i in 0...DIMS.length)
+			if (Math.abs(DIMS[i] - dim) < 0.001) {
+				index = i;
+				break;
+			}
+		dim = DIMS[(index + 1) % DIMS.length];
+		return dim;
+	}
+
 	function applyVisibility():Void {
 		camera.visible = enabled;
 		// Con escenario: la grilla se ve sobre el escenario oscurecido; sin escenario: el fondo de siempre.
 		charter.charterCamera.bgColor = enabled ? 0x00000000 : 0xFF000000;
 		charter.charterBG.color = enabled ? 0xFF000000 : 0xFF181818;
-		charter.charterBG.alpha = enabled ? 0.5 : 1;
+		charter.charterBG.alpha = enabled ? dim : 1;
 	}
 
 	// CARGA (repartida en frames para que la pantalla de carga alcance a dibujarse)
@@ -139,7 +162,10 @@ class CharterPreview {
 		}
 		built.cameras = [camera];
 		stage = built;
-		charter.add(stage);
+		// Detras de la grilla: el charter BG es el miembro 0, asi que el escenario entra en 1. Aunque algun objeto
+		// termine dibujandose en la camara del charter (por ejemplo un sprite agregado por un evento), queda debajo
+		// de las notas/eventos y no tapa la zona de chartear.
+		charter.insert(1, stage);
 		eventos = new Eventos(song, stage);
 	}
 
@@ -298,8 +324,15 @@ class CharterPreview {
 	}
 
 	public function destroy():Void {
-		if (eventos != null) eventos.destroy();
-		eventos = null;
-		stage = null;
+		if (overlay != null) {
+			charter.remove(overlay, true);
+			overlay.destroy();
+			overlay = null;
+		}
+		destroyStage();
+		if (camera != null) {
+			FlxG.cameras.remove(camera);
+			camera = null;
+		}
 	}
 }
