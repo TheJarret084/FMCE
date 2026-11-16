@@ -69,7 +69,10 @@ class ConversionJob
 		this.archivePath = archivePath;
 		this.outputDir = outputDir;
 		this.id = name;
-		this.target = Path.join([outputDir, name]);
+		// La carpeta lleva un id (base64 del timestamp de creacion); si habia una conversion a medias se retoma con la misma carpeta.
+		var folder = funky.backend.LevelId.findInProgress(outputDir, name, ConversionProgress.FILE_NAME);
+		if (folder == null) folder = funky.backend.LevelId.freshFolder(outputDir, name);
+		this.target = Path.join([outputDir, folder]);
 		#else
 		result.error = "necesita una build con sistema de archivos (sys)";
 		done = true;
@@ -346,6 +349,8 @@ class ConversionJob
 		if (icons == null) icons = sceneIcons;
 		if (icons != null) Reflect.setField(out, "icons", icons);
 		File.saveContent(Path.join([target, FNMMToFMCEConverter.META_FILE]), Json.stringify(out, null, "  "));
+		var stamp = funky.backend.LevelId.stampOf(target);
+		if (stamp != null) funky.backend.LevelId.stampMeta(target, songName, stamp);
 
 		finishStage("chart");
 		enter("finish");

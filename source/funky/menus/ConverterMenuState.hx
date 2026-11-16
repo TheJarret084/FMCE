@@ -184,7 +184,7 @@ class ConverterMenuState extends UIState
 		}
 		else if (exportMode)
 		{
-			for (level in FMCEToFNMMExporter.listLevels()) rows.push({label: level, kind: 4, path: level});
+			for (level in FMCEToFNMMExporter.listLevels()) rows.push({label: funky.backend.LevelId.displayName(Paths.levelsRoot(), level), kind: 4, path: level});
 			listTitle.text = "Niveles de FMCE";
 			modeButton.field.text = "Modo: exportar";
 			statusText.text = statusNote != null ? statusNote : rows.length + (rows.length == 1 ? " nivel" : " niveles");

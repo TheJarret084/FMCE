@@ -16,6 +16,8 @@ import funkin.editors.ui.*;
 import funkin.editors.ui.UIContextMenu.UIContextMenuOption;
 import funkin.editors.ui.notifications.UIBaseNotification;
 import funky.backend.FunkinVideoSprite;
+import funky.backend.converter.VideoSheet;
+import funky.backend.converter.VideoSheet.VideoSheetJob;
 import funky.game.LevelSprite;
 import funky.game.SpriteBuilder;
 import haxe.io.Path;
@@ -58,6 +60,10 @@ class SpriteEditorState extends UIState
 	var animWidgets:Array<UISprite> = [];
 	var deleteButton:UIButton;
 	var deleteSpriteButton:UIButton;
+
+	// Conversion de video -> spritesheet en curso (null si no hay ninguna).
+	var sheetJob:Null<VideoSheetJob> = null;
+	var sheetLabel:UIText;
 
 	var deleteArmed:Null<Dynamic> = null;
 	var deleteArmedAt:Float = 0;
@@ -198,6 +204,8 @@ class SpriteEditorState extends UIState
 					{label: AdvLang.t("spriteEditor.previous", null, "Anterior"), keybind: [Q], onSelect: function(_) selectSprite(spriteIdx - 1)},
 					{label: AdvLang.t("spriteEditor.next", null, "Siguiente"), keybind: [E], onSelect: function(_) selectSprite(spriteIdx + 1)},
 					null,
+					{label: AdvLang.t("spriteEditor.menu.videoToSheet", null, "Convertir video a spritesheet..."), onSelect: function(_) convertVideoToSheet()},
+					null,
 					{label: AdvLang.t("spriteEditor.deleteSprite", null, "Borrar sprite completo..."), onSelect: function(_) requestDeleteCurrentSprite()}
 				]
 			},
@@ -264,6 +272,7 @@ class SpriteEditorState extends UIState
 
 		deleteSpriteButton = ui(new UIButton(x0 + 156, y0 + 106, AdvLang.t("spriteEditor.deleteSpriteBtn", null, "Borrar sprite"), requestDeleteCurrentSprite, RIGHT_W - 156 - 20, 28));
 		deleteSpriteButton.color = 0xFFFF8A8A;
+		sheetLabel = label(x0 + 20, y0 + 132, "");
 
 		var y1 = y0 + 160;
 		ui(new UIWindow(x0, y1, RIGHT_W, 514, AdvLang.t("spriteEditor.animation", null, "Animacion")));
@@ -814,6 +823,11 @@ class SpriteEditorState extends UIState
 	function playVideo():Void
 	{
 		clearVideo();
+		if (sheetJob != null)
+		{
+			place();
+			return;
+		}
 		var e = entry();
 		if (e == null)
 		{
@@ -845,6 +859,58 @@ class SpriteEditorState extends UIState
 			videoMissing = AdvLang.t("spriteEditor.videoCantOpen", [anim + FunkinVideoSprite.EXTENSION], "{0} (no se pudo abrir)");
 		}
 		place();
+	}
+
+	/** Convierte los .mp4 del sprite actual en un spritesheet normal (sprite.json + paginas). Los .mp4 pasan a source/. */
+	function convertVideoToSheet():Void
+	{
+		#if sys
+		if (sheetJob != null)
+		{
+			notify(AdvLang.t("spriteEditor.sheetBusy", null, "Ya hay una conversion en curso."));
+			return;
+		}
+		if (sprites.length == 0) return;
+		var dir = SpriteBuilder.spriteDir(levelDir, sprites[spriteIdx]);
+		if (!VideoSheet.canConvert(dir))
+		{
+			notify(AdvLang.t("spriteEditor.sheetNotVideo", null, "Este sprite no tiene videos .mp4 sueltos para convertir."));
+			return;
+		}
+		if (dirty)
+		{
+			notify(AdvLang.t("spriteEditor.sheetSaveFirst", null, "Guarda primero (Ctrl+S): la conversion reescribe el config.json."));
+			return;
+		}
+		// Soltar el .mp4 antes de moverlo (en Windows un archivo abierto no se puede mover).
+		clearVideo();
+		sheetJob = VideoSheet.start(dir);
+		notify(AdvLang.t("spriteEditor.sheetStart", null, "Convirtiendo video a spritesheet..."));
+		#else
+		notify(AdvLang.t("spriteEditor.importNeedsSys", null, "Importar necesita un target sys."));
+		#end
+	}
+
+	function stepSheetJob():Void
+	{
+		var job = sheetJob;
+		if (job == null) return;
+		if (job.step())
+		{
+			sheetLabel.text = AdvLang.t("spriteEditor.sheetProgress", [Std.int(job.fraction * 100), job.label], "Video a spritesheet: {0}% {1}");
+			return;
+		}
+		sheetJob = null;
+		sheetLabel.text = "";
+		if (!job.ok)
+		{
+			notify(AdvLang.t("spriteEditor.sheetFailed", [job.error], "No se pudo convertir: {0}"));
+			loadCurrent(animIdx);
+			return;
+		}
+		for (w in job.warnings) funky.core.Log.info('[SpriteEditor] ' + w);
+		notify(AdvLang.t("spriteEditor.sheetDone", [job.summary], "Listo: {0}"));
+		loadCurrent(0);
 	}
 
 	function applyLive():Void
@@ -1075,6 +1141,7 @@ class SpriteEditorState extends UIState
 	{
 		super.update(elapsed);
 		syncOrders();
+		stepSheetJob();
 
 		var typing = currentFocus != null;
 		if (FlxG.keys.justPressed.ANY && !typing && curContextMenu == null && !topMenuSpr.anyMenuOpened) UIUtil.processShortcuts(topMenu);

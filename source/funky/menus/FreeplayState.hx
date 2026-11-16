@@ -405,7 +405,7 @@ class FreeplayState extends FlxState
 		for (id in Paths.listLevels())
 		{
 			var path = Paths.levelsRoot() + id;
-			found.push({label: id, path: path});
+			found.push({label: funky.backend.LevelId.displayName(Paths.levelsRoot(), id), path: path});
 		}
 		#end
 		return found;
@@ -485,7 +485,7 @@ class FreeplayState extends FlxState
 
 		if (!advanced.AdvancedModeState.antiGay && FlxG.keys.justPressed.SEVEN && entries.length > 0)
 		{
-			leave(new advanced.AdvancedModeState(entries[selected].label));
+			leave(new advanced.AdvancedModeState(entries[selected].path.substr(Paths.levelsRoot().length)));
 			return;
 		}
 		if (FlxG.keys.justPressed.R)

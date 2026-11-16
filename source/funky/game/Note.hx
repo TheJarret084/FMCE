@@ -78,6 +78,7 @@ class Note extends FlxSprite
 	public var holdHeight(default, null):Float = 0;
 
 	var baseScaleY:Float = 1;
+	var lastVisible:Float = -1;
 	var animLane:Int = -1;
 	var usingAtlas:Bool = false;
 	var skinId:String = "";
@@ -203,6 +204,7 @@ class Note extends FlxSprite
 		}
 
 		baseScaleY = scale.y;
+		lastVisible = -1;
 		updateHitbox();
 
 		if (isSustainNote)
@@ -240,14 +242,20 @@ class Note extends FlxSprite
 			? Math.max(0, holdHeight + distance * PX_PER_MS)
 			: holdHeight;
 
-		flipY = scrollDirection < 0;
+		// Recalcular escala y hitbox solo si cambio algo (antes se hacia en cada frame para cada pieza del hold).
+		var down = scrollDirection < 0;
+		if (visible != lastVisible || down != flipY)
+		{
+			lastVisible = visible;
+			flipY = down;
 
-		scale.y = Math.max(
-			0.0001,
-			baseScaleY * visible / Math.max(1, holdHeight)
-		);
+			scale.y = Math.max(
+				0.0001,
+				baseScaleY * visible / Math.max(1, holdHeight)
+			);
 
-		updateHitbox();
+			updateHitbox();
+		}
 
 		x = cx;
 

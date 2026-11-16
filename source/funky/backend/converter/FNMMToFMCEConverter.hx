@@ -125,7 +125,7 @@ class FNMMToFMCEConverter
 	{
 		#if sys
 		var id = Path.withoutExtension(Path.withoutDirectory(archivePath));
-		return FileSystem.exists(Path.join([outputDir, id, ConversionProgress.FILE_NAME]));
+		return funky.backend.LevelId.findInProgress(outputDir, id, ConversionProgress.FILE_NAME) != null;
 		#else
 		return false;
 		#end

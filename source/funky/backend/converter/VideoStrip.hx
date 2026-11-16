@@ -12,6 +12,9 @@ import sys.io.File;
 #if sys
 import funkfmpeg.FrameScale;
 import funkfmpeg.FunkFMPEG;
+import funkfmpeg.Sheet;
+import funkfmpeg.SheetOptions;
+import funkfmpeg.SheetResult;
 import funkfmpeg.TapeOptions;
 import funky.core.Storage;
 #if !android
@@ -122,6 +125,28 @@ class VideoStrip
 		#end
 		o.colors = 256;
 		o.compression = 9;
+		o.refine = 4;
+		o.keepAlpha = false;
+		o.background = 0x000000;
+		return o;
+	}
+
+	/**
+	 * Opciones para armar un video como SPRITESHEET (paginas de hasta SpritePages.maxPage, frames repetidos guardados una sola vez),
+	 * en vez de la tira unica de arriba. El tamano de los frames se ajusta solo para que quepan en `maxPages` paginas.
+	 */
+	public static function sheetOptions(baseName:String, maxPages:Int):SheetOptions
+	{
+		var o = new SheetOptions();
+		o.scaleDivisor = 0;
+		o.maxPage = funky.backend.SpritePages.maxPage;
+		o.maxPages = maxPages < 1 ? 1 : maxPages;
+		o.padding = 2;
+		o.dedup = true;
+		o.paletteSample = 64;
+		o.baseName = baseName;
+		o.colors = 256;
+		o.compression = 6;
 		o.refine = 4;
 		o.keepAlpha = false;
 		o.background = 0x000000;
@@ -246,6 +271,11 @@ class VideoStripTask
 	var percent:Int = 0;
 	var options:TapeOptions;
 	var tapePath:String;
+
+	var sheetDir:Null<String> = null;
+	var sheetOptions:Null<SheetOptions> = null;
+
+	public var sheetResult(default, null):Null<SheetResult> = null;
 	#if target.threaded
 	var inbox:Deque<Dynamic> = new Deque<Dynamic>();
 	#end
@@ -262,6 +292,23 @@ class VideoStripTask
 
 	function get_fraction():Float
 		return done ? 1.0 : percent / 100;
+
+	/**
+	 * Modo spritesheet: en vez de la tira, deja las paginas del spritesheet en `outDir` (fuera de la carpeta de trabajo, que se borra al final).
+	 * Hay que llamarlo antes del primer `step()`. El resultado queda en `sheetResult`.
+	 */
+	public function useSheet(outDir:String, baseName:String, maxPages:Int):Void
+	{
+		sheetDir = outDir;
+		sheetOptions = VideoStrip.sheetOptions(baseName, maxPages);
+		sheetOptions.onProgress = function(value:Int) percent = 35 + Std.int(value * 0.65);
+	}
+
+	function fitTarget(w:Int, h:Int, count:Int):Array<Int>
+	{
+		if (sheetOptions != null) return Sheet.frameSize(w, h, count, sheetOptions, sheetOptions.padding);
+		return FrameScale.fit(w, h, count, options);
+	}
 
 	public function step():Bool
 	{
@@ -341,7 +388,7 @@ class VideoStripTask
 					fps = Math.min(FMCEToFNMMExporter.VIDEO_MAX_FPS, Math.max(FMCEToFNMMExporter.VIDEO_MIN_FPS, info.fps));
 					resampled = Math.abs(fps - info.fps) > 0.01;
 					total = Std.int(Math.max(1, Math.round(info.seconds * fps)));
-					target = FrameScale.fit(info.w, info.h, total, options);
+					target = fitTarget(info.w, info.h, total);
 					label = "sacando frames " + target[0] + "x" + target[1];
 					FMCEToFNMMExporter.ensureDir(Path.directory(work));
 					VideoStrip.wipe(work);
@@ -418,7 +465,7 @@ class VideoStripTask
 		if (info.seconds > 0) count = Std.int(Math.ceil(info.seconds * fps)) + 1;
 		else warnings.push("no se pudo leer la duracion de " + Path.withoutDirectory(path) + ": el tamano de los frames puede salir mas chico de lo posible");
 
-		var target = FrameScale.fit(info.w, info.h, count, options);
+		var target = fitTarget(info.w, info.h, count);
 		label = "sacando frames " + target[0] + "x" + target[1];
 		extract(info, target);
 		if (cancelled) throw "cancelado";
@@ -463,6 +510,19 @@ class VideoStripTask
 		names.sort(Reflect.compare);
 		if (names.length == 0) throw "el video no dio ningun frame";
 		var files = [for (n in names) Path.join([work, n])];
+
+		if (sheetDir != null)
+		{
+			label = "armando el spritesheet (" + files.length + " frames)";
+			var sheet = FunkFMPEG.createSheet(files, sheetDir, sheetOptions);
+			sheetResult = sheet;
+			frameWidth = sheet.frameWidth;
+			frameHeight = sheet.frameHeight;
+			frames = sheet.frameCount;
+			paletteSize = sheet.paletteSize;
+			percent = 100;
+			return;
+		}
 
 		label = "armando la tira (" + files.length + " frames)";
 		var result = FunkFMPEG.create(files, tapePath, options);

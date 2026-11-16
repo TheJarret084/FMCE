@@ -189,19 +189,20 @@ class SpritePages
 	{
 		var frames:Array<Dynamic> = field(data, "frames");
 
-		var last = 0;
+		// Los frames pueden venir en cualquier orden de pagina (un video con frames repetidos reusa la celda de una pagina anterior).
+		// Se arma cada pagina por separado y al final se acomodan en el orden ORIGINAL de frames, que es el que usan los indices.
 		for (frame in frames)
 		{
 			var page = pageOf(frame);
-			if (page < last || page >= pages.length)
+			if (page < 0 || page >= pages.length)
 			{
-				Log.warn('[SpritePages] ' + baseDir + ': los frames no vienen ordenados por pagina, se carga sin paginas');
+				Log.warn('[SpritePages] ' + baseDir + ': un frame apunta a la pagina ' + page + ' y solo hay ' + pages.length + ', se carga sin paginas');
 				return null;
 			}
-			last = page;
 		}
 
-		var atlas:Null<FlxAtlasFrames> = null;
+		var parts:Array<FlxAtlasFrames> = [];
+		var counts:Array<Int> = [];
 		for (k in 0...pages.length)
 		{
 			var image = Std.string(field(pages[k], "image"));
@@ -209,12 +210,19 @@ class SpritePages
 			if (graphic == null) return null;
 
 			var own = [for (frame in frames) if (pageOf(frame) == k) frame];
-			var part = FlxAtlasFrames.fromAseprite(graphic, Json.stringify({frames: own, meta: {image: image}}));
-			if (part == null) return null;
+			var part = own.length == 0 ? null : FlxAtlasFrames.fromAseprite(graphic, Json.stringify({frames: own, meta: {image: image}}));
+			if (own.length > 0 && part == null) return null;
+			parts.push(part);
+			counts.push(0);
+		}
 
-			if (atlas == null) atlas = part;
-			else
-				for (frame in part.frames) atlas.pushFrame(frame);
+		var atlas:Null<FlxAtlasFrames> = null;
+		for (frame in frames)
+		{
+			var k = pageOf(frame);
+			var piece = parts[k].frames[counts[k]++];
+			if (atlas == null) atlas = new FlxAtlasFrames(parts[k].parent);
+			atlas.pushFrame(piece);
 		}
 		return atlas;
 	}

@@ -14,6 +14,13 @@
 		<str id="modeMenu.importedItem">{0} ({1} files)</str>
 		<str id="modeMenu.imported">Imported: {0}</str>
 		<str id="modeMenu.gay">GAY!</str>
+		<str id="modeMenu.newButton">NEW LEVEL  [N]</str>
+		<str id="modeMenu.created">Level created: {0}</str>
+		<str id="levelCreate.title">New level</str>
+		<str id="levelCreate.nameLabel">Level name</str>
+		<str id="levelCreate.hint">This is the name shown in the menus.</str>
+		<str id="levelCreate.create">Create</str>
+		<str id="levelCreate.cancel">Cancel</str>
 
 		<str id="tools.title">ADVANCED MODE</str>
 		<str id="tools.back">&lt; BACK</str>

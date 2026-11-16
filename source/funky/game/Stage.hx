@@ -165,6 +165,9 @@ class Stage extends FlxGroup
 
 	var singUntil:Map<Int, Float> = new Map<Int, Float>();
 	var singing:Map<Int, Bool> = new Map<Int, Bool>();
+
+	/** Falso = nadie esta cantando, el update se salta el recorrido del Map. */
+	var singingAny:Bool = false;
 	var singLaneOf:Map<Int, Int> = new Map<Int, Int>();
 	var holdMs:Float = 500;
 
@@ -451,6 +454,7 @@ class Stage extends FlxGroup
 		}
 
 		singing.set(strumLine, true);
+		singingAny = true;
 		singLaneOf.set(strumLine, lane);
 		singUntil.set(strumLine, songTime + holdMs);
 	}
@@ -490,6 +494,7 @@ class Stage extends FlxGroup
 		}
 
 		singing.set(strumLine, true);
+		singingAny = true;
 		singUntil.set(strumLine, songTime + holdMs);
 	}
 
@@ -518,12 +523,17 @@ class Stage extends FlxGroup
 
 	override public function update(elapsed:Float):Void
 	{
-		if (loaded)
+		if (loaded && singingAny)
 		{
+			var stillSinging = false;
 			for (line in singing.keys())
 			{
-				if (!singing.get(line) || songTime < singUntil.get(line))
+				if (!singing.get(line)) continue;
+				if (songTime < singUntil.get(line))
+				{
+					stillSinging = true;
 					continue;
+				}
 
 				singing.set(line, false);
 				singLaneOf.set(line, -1);
@@ -539,6 +549,7 @@ class Stage extends FlxGroup
 						object.sprite.playIndex(0, true);
 				}
 			}
+			singingAny = stillSinging;
 		}
 
 		if (loaded)
@@ -578,6 +589,8 @@ class Stage extends FlxGroup
 			/ (VIEW_WORLD_WIDTH * Math.max(0.001, camScale * zoomMul));
 	}
 
+	var placementScratch:StagePlacement = {x: 0, y: 0, scaleX: 1, scaleY: 1};
+
 	function placementFor(
 		object:StageObject,
 		animScale:Float
@@ -612,12 +625,12 @@ class Stage extends FlxGroup
 				totalY = object.scaleY * animScale * ppu;
 		}
 
-		return {
-			x: px,
-			y: py,
-			scaleX: totalX,
-			scaleY: totalY
-		};
+		// Se reusa el mismo objeto: antes se creaba uno nuevo por objeto y por frame (basura para el GC).
+		placementScratch.x = px;
+		placementScratch.y = py;
+		placementScratch.scaleX = totalX;
+		placementScratch.scaleY = totalY;
+		return placementScratch;
 	}
 
 	function playVideo(object:StageObject):Void
@@ -772,6 +785,7 @@ class Stage extends FlxGroup
 			}
 
 			singing.set(strumLine, true);
+		singingAny = true;
 			singLaneOf.set(strumLine, -1);
 			singUntil.set(strumLine, songTime + holdMs);
 		}
@@ -825,8 +839,14 @@ class Stage extends FlxGroup
 
 		var placement = placementFor(object, animScale);
 
-		sprite.scale.set(placement.scaleX, placement.scaleY);
-		sprite.updateHitbox();
+		// updateHitbox solo si cambio la escala o el frame (antes en cada objeto, cada frame).
+		var sx = placement.scaleX;
+		var sy = placement.scaleY;
+		if (sprite.scale.x != sx || sprite.scale.y != sy || sprite.width != sprite.frameWidth * Math.abs(sx) || sprite.height != sprite.frameHeight * Math.abs(sy))
+		{
+			sprite.scale.set(sx, sy);
+			sprite.updateHitbox();
+		}
 
 		sprite.antialiasing = Math.min(Math.abs(placement.scaleX), Math.abs(placement.scaleY)) < 1
 			|| sprite.antialiasing;

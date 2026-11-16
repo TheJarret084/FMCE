@@ -42,6 +42,9 @@ class Charter extends UIState {
 		return FlxG.state is Charter ? cast FlxG.state : null;
 
 	public var charterBG:FunkinSprite;
+
+	/** Escenario, personajes y eventos en vivo detras de la grilla (reemplaza el cambio a PlayState para ver como queda). */
+	public var preview:CharterPreview;
 	public var charterBookmarksGroup:FlxTypedGroup<FlxSprite> = new FlxTypedGroup<FlxSprite>();
 	public var uiGroup:FlxTypedGroup<FlxSprite> = new FlxTypedGroup<FlxSprite>();
 
@@ -207,13 +210,24 @@ class Charter extends UIState {
 				label: translate("topBar.chart"),
 				childs: [
 					{
-						label: translate("chart.playtest"),
+						label: TU.exists("chart.preview") ? translate("chart.preview") : "Vista previa (desde el inicio)",
 						keybind: [ENTER],
+						onSelect: _chart_preview
+					},
+					{
+						label: TU.exists("chart.previewHere") ? translate("chart.previewHere") : "Vista previa (desde aqui)",
+						keybind: [SHIFT, ENTER],
+						onSelect: _chart_preview_here
+					},
+					null,
+					{
+						label: translate("chart.playtest"),
+						keybind: [ALT, ENTER],
 						onSelect: _chart_playtest
 					},
 					{
 						label: translate("chart.playtestHere"),
-						keybind: [SHIFT, ENTER],
+						keybind: [ALT, SHIFT, ENTER],
 						onSelect: _chart_playtest_here
 					},
 					null,
@@ -260,6 +274,17 @@ class Charter extends UIState {
 			{
 				label: translate("topBar.view"),
 				childs: [
+					{
+						label: TU.exists("view.showStage") ? translate("view.showStage") : "Mostrar escenario en vivo",
+						onSelect: _view_showstage,
+						icon: CharterPreview.enabled ? 1 : 0
+					},
+					{
+						label: TU.exists("view.hideUI") ? translate("view.hideUI") : "Ocultar / mostrar interfaz",
+						keybind: [TAB],
+						onSelect: _view_toggleui
+					},
+					null,
 					{
 						label: translate("view.zoomIn"),
 						keybind: [CONTROL, NUMPADPLUS],
@@ -410,6 +435,9 @@ class Charter extends UIState {
 		charterBG.scrollFactor.set();
 		add(charterBG);
 
+		preview = new CharterPreview(this);
+		preview.create();
+
 		gridBackdrops = new CharterBackdropGroup(strumLines);
 		gridBackdrops.notesGroup = this.notesGroup;
 
@@ -537,6 +565,7 @@ class Charter extends UIState {
 	}
 
 	override function destroy() {
+		if (preview != null) preview.destroy();
 		Conductor.active = false;
 		FlxG.sound.muteKeys = [flixel.input.keyboard.FlxKey.ZERO, flixel.input.keyboard.FlxKey.NUMPADZERO];
 		FlxG.sound.volumeUpKeys = [flixel.input.keyboard.FlxKey.PLUS, flixel.input.keyboard.FlxKey.NUMPADPLUS];
@@ -1293,6 +1322,8 @@ class Charter extends UIState {
 	var __firstFrame:Bool = true;
 	var __timer:Float = 0;
 	public override function update(elapsed:Float) {
+		preview.update(elapsed);
+
 		if (Options.charterRainbowWaveforms) {
 			__timer += elapsed/8;
 			for (shader in waveformHandler.waveShaders)
@@ -1738,6 +1769,34 @@ class Charter extends UIState {
 
 		selection = [];
 		_redo(undos.redo());
+	}
+
+	/** Vista previa interna: sin cambiar de pantalla ni recargar nada. Va al inicio (o a donde estas) y reproduce. */
+	function _chart_preview(_)
+		startPreview(false);
+	function _chart_preview_here(_)
+		startPreview(true);
+
+	function startPreview(here:Bool):Void {
+		if (!CharterPreview.enabled) preview.setEnabled(true);
+		if (FlxG.sound.music.playing) {
+			FlxG.sound.music.pause();
+			vocals.pause();
+			for (strumLine in strumLines.members) strumLine.vocals.pause();
+		}
+		if (!here) Conductor.songPosition = Conductor.getTimeForStep(0) + Conductor.songOffset;
+		_playback_play(null);
+	}
+
+	function _view_showstage(t) {
+		preview.setEnabled(!CharterPreview.enabled);
+		t.icon = CharterPreview.enabled ? 1 : 0;
+	}
+
+	function _view_toggleui(_) {
+		var show = !uiCamera.visible;
+		uiCamera.visible = show;
+		charterCamera.visible = show;
 	}
 
 	inline function _chart_playtest(_)

@@ -760,10 +760,12 @@ class PlayState extends MusicBeatState
 			if (line == playerLine)
 				line.updateInput(laneHeld, lanePressed);
 			else
-				line.updateInput(function(_) return false, function(_) return false);
+				line.updateInput(noInput, noInput);
 		}
 
 		scrollDirection = ClientPrefs.isDownScroll() ? -1 : 1;
+
+		refreshHeld();
 
 		for (line in logicLines)
 			updateNotes(line);
@@ -994,7 +996,7 @@ class PlayState extends MusicBeatState
 
 		var state = note.tailState;
 		var cpu = line.cpu;
-		var held = cpu || laneHeld(note.noteData);
+		var held = cpu || (note.noteData < heldNow.length ? heldNow[note.noteData] : laneHeld(note.noteData));
 		var consuming = note.isSustainNote && !state.missed && (cpu || state.hit) && held;
 		var delta = note.updatePosition(receptor, songTime, scrollDirection, consuming);
 
@@ -1335,6 +1337,19 @@ class PlayState extends MusicBeatState
 		return line.index;
 
 	// INPUT
+
+	/** Una sola consulta de teclas/botones por carril y por frame (antes era una por nota activa). */
+	var heldNow:Array<Bool> = [];
+
+	static function noInput(_:Int):Bool
+		return false;
+
+	function refreshHeld():Void
+	{
+		var count = song.laneCount;
+		while (heldNow.length < count) heldNow.push(false);
+		for (lane in 0...count) heldNow[lane] = laneHeld(lane);
+	}
 
 	function lanePressed(lane:Int):Bool
 	{

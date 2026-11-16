@@ -47,21 +47,30 @@ class LogOverlay extends Sprite
 
 	public static var enabled:Bool = true;
 
-	static inline var MAX_VISIBLE:Int = 6;
-	static inline var MAX_PER_FRAME:Int = 4;
-	static inline var MAX_QUEUE:Int = 60;
-	static inline var MAX_CHARS:Int = 240;
+	/**
+	 * Que se ve en pantalla (todo sigue yendo a latest.log y a la consola):
+	 * 0 = solo errores, 1 = errores, avisos y notas (por defecto), 2 = todo, incluidos los [LOG] normales.
+	 * F2 cambia entre 1 -> 2 -> apagado -> 1.
+	 */
+	public static var level:Int = 1;
+
+	static inline var MAX_VISIBLE:Int = 3;
+	static inline var MAX_PER_FRAME:Int = 2;
+	static inline var MAX_QUEUE:Int = 40;
+	static inline var MAX_CHARS:Int = 150;
+	/** Segundos minimos entre dos logs nuevos en pantalla (los errores no esperan). */
+	static inline var SPACING:Float = 0.35;
 	static inline var MARGIN:Float = 10;
 	static inline var GAP:Float = 4;
 	static inline var PAD:Float = 7;
 	static inline var BAR_W:Float = 4;
 	static inline var IN_TIME:Float = 0.38;
 	static inline var OUT_TIME:Float = 0.32;
-	static inline var HOLD_NORMAL:Float = 3.2;
-	static inline var HOLD_ERROR:Float = 6.5;
+	static inline var HOLD_NORMAL:Float = 2.4;
+	static inline var HOLD_ERROR:Float = 6;
 	static inline var FONT_SIZE:Int = 12;
 
-	static var queue:Array<{severity:Severity, text:String}> = [];
+	static var queue:Array<{severity:Severity, text:String, repeats:Int}> = [];
 	#if target.threaded
 	static var lock:sys.thread.Mutex = new sys.thread.Mutex();
 	#end
@@ -83,10 +92,17 @@ class LogOverlay extends Sprite
 	public static function push(severity:Severity, text:String):Void
 	{
 		if (!enabled) return;
+		// Los [LOG] normales no se muestran (salvo level 2): antes llenaban la cola y empujaban fuera a los errores.
+		if (severity == PRINT && level < 2) return;
+		if (level < 1 && severity != ERROR) return;
 		#if target.threaded
 		lock.acquire();
 		#end
-		queue.push({severity: severity, text: text});
+		var tail = queue.length > 0 ? queue[queue.length - 1] : null;
+		if (tail != null && tail.text == text && tail.severity == severity)
+			tail.repeats++;
+		else
+			queue.push({severity: severity, text: text, repeats: 1});
 		if (queue.length > MAX_QUEUE) queue.shift();
 		#if target.threaded
 		lock.release();
@@ -98,7 +114,16 @@ class LogOverlay extends Sprite
 		removeEventListener(Event.ADDED_TO_STAGE, onAdded);
 		stage.addEventListener(KeyboardEvent.KEY_DOWN, function(e:KeyboardEvent)
 		{
-			if (e.keyCode == Keyboard.F2) enabled = !enabled;
+			if (e.keyCode != Keyboard.F2) return;
+			if (!enabled)
+			{
+				enabled = true;
+				level = 1;
+			}
+			else if (level < 2)
+				level = 2;
+			else
+				enabled = false;
 		});
 	}
 
@@ -116,24 +141,48 @@ class LogOverlay extends Sprite
 			return;
 		}
 
-		drain();
+		drain(dt);
 		layout(dt);
 		for (item in items.copy()) animate(item, dt);
 	}
 
-	function drain():Void
+	var wait:Float = 0;
+
+	function drain(dt:Float):Void
 	{
+		wait -= dt;
 		#if target.threaded
 		lock.acquire();
 		#end
-		var incoming = queue.splice(0, MAX_PER_FRAME);
-		var skipped = queue.length;
-		queue = [];
+		var incoming:Array<{severity:Severity, text:String, repeats:Int}> = [];
+		var skipped = 0;
+		while (queue.length > 0 && incoming.length < MAX_PER_FRAME)
+		{
+			// Un log normal espera su turno; un error pasa siempre.
+			if (queue[0].severity != ERROR && wait > 0) break;
+			incoming.push(queue.shift());
+			if (incoming[incoming.length - 1].severity != ERROR) wait = SPACING;
+		}
+		// Si se acumulo demasiado, se tira lo viejo que no es error y se avisa una sola vez.
+		if (queue.length > 12)
+		{
+			var keep = [for (q in queue) if (q.severity == ERROR) q];
+			skipped = queue.length - keep.length;
+			queue = keep;
+		}
 		#if target.threaded
 		lock.release();
 		#end
 
-		for (entry in incoming) add(entry.severity, entry.text);
+		for (entry in incoming)
+		{
+			add(entry.severity, entry.text);
+			if (entry.repeats > 1)
+			{
+				var newest = items[items.length - 1];
+				if (newest != null && newest.text == entry.text) newest.count += entry.repeats - 1;
+			}
+		}
 		if (skipped > 0) add(NOTICE, "(" + skipped + " logs mas, mira latest.log)");
 	}
 
@@ -141,13 +190,13 @@ class LogOverlay extends Sprite
 	{
 		var text = raw.length > MAX_CHARS ? raw.substr(0, MAX_CHARS - 1) + "…" : raw;
 
-		var newest = items.length > 0 ? items[items.length - 1] : null;
-		if (newest != null && newest.phase != OUT && newest.text == text && newest.severity == severity)
+		for (existing in items)
 		{
-			newest.count++;
-			newest.phase = HOLD;
-			newest.t = 0;
-			render(newest);
+			if (existing.phase == OUT || existing.text != text || existing.severity != severity) continue;
+			existing.count++;
+			existing.phase = HOLD;
+			existing.t = 0;
+			render(existing);
 			return;
 		}
 

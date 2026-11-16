@@ -64,7 +64,7 @@ class AdvancedToolsState extends FlxState
 		title.alignment = FlxTextAlign.CENTER;
 		add(title);
 
-		var sub = new FlxText(0, 112, FlxG.width, levelName, 20);
+		var sub = new FlxText(0, 112, FlxG.width, funky.backend.LevelId.displayName(funky.core.Paths.levelsRoot(), levelName), 20);
 		sub.color = MUTED;
 		sub.alignment = FlxTextAlign.CENTER;
 		add(sub);

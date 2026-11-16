@@ -160,7 +160,7 @@ class Chart {
 		return e;
 	}
 
-	static function eventToAction(e:ChartEvent):Dynamic {
+	public static function eventToAction(e:ChartEvent):Dynamic {
 		if (!EventsData.isKnown(e.name)) return e.raw;
 		var props:Dynamic = {};
 		for (i => info in EventsData.getEventParams(e.name)) {

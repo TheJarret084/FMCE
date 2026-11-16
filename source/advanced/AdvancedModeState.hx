@@ -9,6 +9,7 @@ import advanced.AdvLang;
 import advanced.ui.EditorBackdrop;
 import funky.api.DiscordClient;
 import funky.backend.LevelArchive;
+import funky.backend.LevelId;
 import funky.backend.chart.LevelLoader;
 import funky.core.CoolUtil;
 import funky.core.KeyBinds;
@@ -39,6 +40,7 @@ class AdvancedModeState extends FlxState
 	var iconTried:Array<Bool> = [];
 	var arrow:Null<BoldText>;
 	var importButton:Null<FlxText>;
+	var newButton:Null<FlxText>;
 	var pendingImport:Null<String>;
 	var selected:Int = 0;
 	var scrollPos:Float = 0;
@@ -92,7 +94,7 @@ class AdvancedModeState extends FlxState
 		{
 			for (i in 0...levels.length)
 			{
-				var row = new BoldText(ROW_X, ANCHOR_Y + i * ROW_H, levels[i], 0.95);
+				var row = new BoldText(ROW_X, ANCHOR_Y + i * ROW_H, labelOf(levels[i]), 0.95);
 				add(row);
 				rows.push(row);
 				icons.push(null);
@@ -119,6 +121,11 @@ class AdvancedModeState extends FlxState
 		importButton.color = ACTIVE;
 		importButton.alignment = FlxTextAlign.RIGHT;
 		add(importButton);
+
+		newButton = new FlxText(FlxG.width - 660, 14, 310, AdvLang.t("modeMenu.newButton", null, "NUEVO NIVEL  [N]"), 20);
+		newButton.color = ACTIVE;
+		newButton.alignment = FlxTextAlign.RIGHT;
+		add(newButton);
 
 		DiscordClient.customPresence(AdvLang.t("modeMenu.presenceTitle", null, "Modo Avanzado"), AdvLang.t("modeMenu.presenceSelecting", null, "Seleccionando nivel"), "fmce", "", false);
 		scrollPos = selected;
@@ -257,7 +264,7 @@ class AdvancedModeState extends FlxState
 		levels = Paths.listLevels();
 		for (i in 0...levels.length)
 		{
-			var row = new BoldText(ROW_X, ANCHOR_Y + i * ROW_H, levels[i], 0.95);
+			var row = new BoldText(ROW_X, ANCHOR_Y + i * ROW_H, labelOf(levels[i]), 0.95);
 			add(row);
 			rows.push(row);
 			icons.push(null);
@@ -271,6 +278,29 @@ class AdvancedModeState extends FlxState
 		selected = Std.int(Math.min(selected, Math.max(0, levels.length - 1)));
 		scrollPos = selected;
 		layoutRows(1);
+	}
+
+	/** Lo que se ve en la lista: el displayName de meta.json (la carpeta lleva un id y no es para mostrar). */
+	function labelOf(folder:String):String
+	{
+		#if sys
+		return LevelId.displayName(Paths.levelsRoot(), folder);
+		#else
+		return folder;
+		#end
+	}
+
+	function createLevel():Void
+	{
+		openSubState(new LevelCreateScreen(function(folder:String)
+		{
+			reloadLevels();
+			var idx = levels.indexOf(folder);
+			if (idx >= 0) selected = idx;
+			scrollPos = selected;
+			layoutRows(1);
+			setInfo(AdvLang.t("modeMenu.created", [labelOf(folder)], "Nivel creado: {0}"), true);
+		}));
 	}
 
 	function openSelected():Void
@@ -304,6 +334,12 @@ class AdvancedModeState extends FlxState
 			var path = pendingImport;
 			pendingImport = null;
 			importPicked(path);
+		}
+
+		if (FlxG.keys.justPressed.N || (FlxG.mouse.justPressed && newButton != null && FlxG.mouse.overlaps(newButton)))
+		{
+			createLevel();
+			return;
 		}
 
 		if (FlxG.keys.justPressed.I || (FlxG.mouse.justPressed && importButton != null && FlxG.mouse.overlaps(importButton)))

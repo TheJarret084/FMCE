@@ -139,9 +139,9 @@ class LevelArchive
 		#if sys
 		if (archivePath == null || !FileSystem.exists(archivePath)) return fail('No existe ' + archivePath);
 
-		var level = Path.withoutExtension(Path.withoutDirectory(archivePath));
+		var archiveName = Path.withoutExtension(Path.withoutDirectory(archivePath));
+		var level = archiveName;
 		var target = Paths.levelsRoot() + level;
-		if (FileSystem.exists(target)) return fail('Ya existe el nivel ' + level + ' (borralo o renombralo para importar otra vez)');
 
 		var entries:List<haxe.zip.Entry>;
 		try
@@ -167,6 +167,33 @@ class LevelArchive
 		var prefix = commonFolder(items.map(i -> i.name));
 		var written = 0;
 		var hasLevel = false;
+
+		// Nombre que se ve: el de meta.json del .FMCE; si no trae, el del archivo sin su id.
+		var shownName = LevelId.stripId(archiveName);
+		for (item in items)
+		{
+			var relName = prefix == "" ? item.name : item.name.substr(prefix.length);
+			if (relName.toLowerCase() != "meta.json") continue;
+			try
+			{
+				var metaText = Reader.unzip(item.entry).toString();
+				var metaData:Dynamic = funky.core.JsonLoose.parse(metaText);
+				var shown:Dynamic = metaData == null ? null : Reflect.field(metaData, "displayName");
+				if (shown != null && StringTools.trim(Std.string(shown)) != "") shownName = StringTools.trim(Std.string(shown));
+			}
+			catch (e:Dynamic) {}
+			break;
+		}
+
+		// La carpeta lleva un id (base64 del timestamp de creacion). Un .FMCE exportado desde un nivel con id lo conserva
+		// (es el mismo nivel); si ya existe o no tiene id, se le da uno nuevo (nunca se pisa un nivel).
+		var stamp = LevelId.stampOf(archiveName);
+		if (stamp == null || FileSystem.exists(Paths.levelsRoot() + archiveName))
+		{
+			level = LevelId.freshFolder(Paths.levelsRoot(), shownName);
+			stamp = LevelId.stampOf(level);
+		}
+		target = Paths.levelsRoot() + level;
 
 		try
 		{
@@ -194,6 +221,15 @@ class LevelArchive
 		{
 			removeDir(target);
 			return fail('Ese .FMCE no parece un nivel (no trae meta.json ni chart.json)');
+		}
+
+		try
+		{
+			LevelId.stampMeta(target, shownName, stamp);
+		}
+		catch (e:Dynamic)
+		{
+			Log.warn('[LevelArchive] no se pudo escribir el meta.json de ' + level + ': ' + e);
 		}
 
 		Log.info('[LevelArchive] importado ' + archivePath + ' -> ' + target + ' (' + written + ' archivos)');
