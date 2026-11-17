@@ -169,7 +169,7 @@ class Stage extends FlxGroup
 		viewH = h;
 		if (flash != null)
 		{
-			flash.setGraphicSize(vw(), vh());
+			flash.setGraphicSize(Std.int(vw()), Std.int(vh()));
 			flash.updateHitbox();
 		}
 	}
@@ -347,7 +347,7 @@ class Stage extends FlxGroup
 		}
 
 		flash = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
-		flash.setGraphicSize(vw(), vh());
+		flash.setGraphicSize(Std.int(vw()), Std.int(vh()));
 		flash.updateHitbox();
 		flash.scrollFactor.set();
 		flash.alpha = 0;
