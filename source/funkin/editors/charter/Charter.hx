@@ -49,6 +49,13 @@ class Charter extends MusicBeatSubstate {
 	inline function get_currentFocus():IUIFocusable return ui.currentFocus;
 	inline function set_currentFocus(v:IUIFocusable):IUIFocusable return ui.currentFocus = v;
 
+	public var curContextMenu(get, never):UIContextMenu;
+	inline function get_curContextMenu():UIContextMenu return ui.curContextMenu;
+
+	public var currentCursor(get, set):funkin.backend.utils.NativeAPI.CodeCursor;
+	inline function get_currentCursor():funkin.backend.utils.NativeAPI.CodeCursor return ui.currentCursor;
+	inline function set_currentCursor(v:funkin.backend.utils.NativeAPI.CodeCursor):funkin.backend.utils.NativeAPI.CodeCursor return ui.currentCursor = v;
+
 	inline function closeCurrentContextMenu():Void ui.closeCurrentContextMenu();
 	inline function openContextMenu(options:Array<UIContextMenuOption>, ?callback:funkin.editors.ui.UIContextMenu.UIContextMenuCallback, ?x:Float, ?y:Float, ?w:Int)
 		return ui.openContextMenu(options, callback, x, y, w);

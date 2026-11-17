@@ -5,6 +5,8 @@ export/
 building/artifacts/
 # assets.pack + assets.id (los arma building/pack-assets.py en cada build)
 building/_pack/
+# .so de Discord extraidas del .aar (building/discord-android.sh)
+building/_discord/
 
 # Release signing key - never commit this, see building/README.md
 building/android.keystore
