@@ -50,7 +50,7 @@ class Eventos
 	public var song(default, null):SongData;
 	public var cargado(default, null):Bool = false;
 
-	static inline var FNMM_MAX_HEALTH:Float = 30;
+	public static inline var FNMM_MAX_HEALTH:Float = 30;
 
 	public var hud:Null<PlayHUD> = null;
 
@@ -91,6 +91,17 @@ class Eventos
 		}
 		atrasado = false;
 		avanzar(songTime);
+	}
+
+	/**
+	 * Salta (sin ejecutar) todos los eventos hasta `songTime` ms. Sirve para cambiar los eventos que faltan por venir sin repetir
+	 * los que ya pasaron sobre un escenario que ya los aplico.
+	 */
+	public function skipTo(songTime:Float):Void
+	{
+		siguiente = 0;
+		while (siguiente < lista.length && lista[siguiente].time * 1000 <= songTime)
+			siguiente++;
 	}
 
 	public function destroy():Void

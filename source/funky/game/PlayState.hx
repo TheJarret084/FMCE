@@ -76,6 +76,12 @@ class PlayState extends MusicBeatState
 	static var seeking:Bool = false;
 
 	/**
+	 * true cuando el charter abrio el juego con "Jugar ya" (Shift+Enter): sin pantalla de carga, sin countdown si se parte de un punto,
+	 * sin transicion de entrada y con salida directa al charter (ESC o fin de cancion). Lo pone el charter en cada arranque.
+	 */
+	public static var quickReturn:Bool = false;
+
+	/**
 	 * true tras continuar con un salto de la pausa: el create siguiente arranca sin countdown.
 	 */
 	static var skipCountdown:Bool = false;
@@ -105,6 +111,29 @@ class PlayState extends MusicBeatState
 			return new FreeplayState();
 
 		return funkin.editors.charter.CharterLauncher.open(returnToEditor);
+	}
+
+	/**
+	 * Sale del juego. Si se abrio desde el charter deja vivo el cache de sprites (el charter lo reutiliza sin recargar el escenario);
+	 * con `quickReturn` ademas cambia de state directo, sin la transicion.
+	 */
+	public function goToMenu():Void
+	{
+		if (returnToEditor != null)
+		{
+			SpriteCache.keepAlive();
+			SpriteCache.detach();
+			SpriteCache.keepForNextState();
+		}
+
+		if (quickReturn && returnToEditor != null)
+		{
+			transitioning = true;
+			FlxG.switchState(menuState());
+			return;
+		}
+
+		transitionTo(menuState());
 	}
 
 	// CONSTANTES DE JUEGO
@@ -624,6 +653,9 @@ class PlayState extends MusicBeatState
 				voices.time = startFromMs;
 		}
 
+		if (quickReturn && startFromMs > 0)
+			skipCountdown = true;
+
 		if (skipCountdown)
 		{
 			skipCountdown = false;
@@ -642,7 +674,9 @@ class PlayState extends MusicBeatState
 		prevHeld = [for (_ in 0...song.laneCount) false];
 
 		Scripts.call("onCreatePost");
-		transitionIn();
+
+		if (!quickReturn)
+			transitionIn();
 	}
 
 	override public function update(elapsed:Float):Void
@@ -675,7 +709,7 @@ class PlayState extends MusicBeatState
 				FlxG.sound.music.stop();
 
 			stopVoices();
-			transitionTo(menuState());
+			goToMenu();
 			return;
 		}
 
@@ -848,7 +882,7 @@ class PlayState extends MusicBeatState
 
 		stopVoices();
 		saveScore();
-		transitionTo(menuState());
+		goToMenu();
 	}
 
 	/**
@@ -1492,7 +1526,7 @@ class PlayState extends MusicBeatState
 	function exitToMenu():Void
 	{
 		leaveSong();
-		transitionTo(PlayState.menuState());
+		goToMenu();
 	}
 
 	public function songLabel():String

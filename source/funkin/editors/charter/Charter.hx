@@ -45,6 +45,8 @@ class Charter extends UIState {
 
 	/** Escenario, personajes y eventos en vivo detras de la grilla (reemplaza el cambio a PlayState para ver como queda). */
 	public var preview:CharterPreview;
+	/** Mini barra de vida (solo la FlxBar) que sigue a los eventos PlayerHealth. */
+	public var healthBar:CharterHealthBar;
 	public var charterBookmarksGroup:FlxTypedGroup<FlxSprite> = new FlxTypedGroup<FlxSprite>();
 	public var uiGroup:FlxTypedGroup<FlxSprite> = new FlxTypedGroup<FlxSprite>();
 
@@ -215,8 +217,12 @@ class Charter extends UIState {
 						onSelect: _chart_preview
 					},
 					{
-						label: TU.exists("chart.previewHere") ? translate("chart.previewHere") : "Vista previa (desde aqui)",
+						label: TU.exists("chart.playNow") ? translate("chart.playNow") : "Jugar ya (desde aqui)",
 						keybind: [SHIFT, ENTER],
+						onSelect: _chart_play_now
+					},
+					{
+						label: TU.exists("chart.previewHere") ? translate("chart.previewHere") : "Vista previa (desde aqui)",
 						onSelect: _chart_preview_here
 					},
 					null,
@@ -287,6 +293,16 @@ class Charter extends UIState {
 								: "Oscurecer fondo: " + Std.int(CharterPreview.dim * 100) + "%";
 						},
 						onSelect: _view_stagedim
+					},
+					{
+						label: TU.exists("view.letterbox") ? translate("view.letterbox") : "Barras negras (encuadre del juego)",
+						onSelect: _view_letterbox,
+						icon: CharterPreview.letterbox ? 1 : 0
+					},
+					{
+						label: TU.exists("view.healthBar") ? translate("view.healthBar") : "Mini barra de vida",
+						onSelect: _view_healthbar,
+						icon: CharterHealthBar.enabled ? 1 : 0
 					},
 					{
 						label: TU.exists("view.hideUI") ? translate("view.hideUI") : "Ocultar / mostrar interfaz",
@@ -446,6 +462,9 @@ class Charter extends UIState {
 
 		preview = new CharterPreview(this);
 		preview.create();
+
+		healthBar = new CharterHealthBar(this);
+		healthBar.create();
 
 		gridBackdrops = new CharterBackdropGroup(strumLines);
 		gridBackdrops.notesGroup = this.notesGroup;
@@ -1330,39 +1349,144 @@ class Charter extends UIState {
 	var __crochet:Float;
 	var __firstFrame:Bool = true;
 	var __timer:Float = 0;
-	var __barIconPos:Float = -1;
-	var __barIconTimer:Float = 1;
+	// EVENTOS DE LA BARRA (BarIconChange / PlayerHealth), con cache: se ordenan una vez y cada frame es una busqueda binaria.
 
-	/**
-	 * Mira los eventos BarIconChange que ya pasaron en el chart y le dice a cada strumline que icono tendria la barra en ese momento.
-	 * target 1 (jugador) -> strumline 0, target 0 (oponente) -> strumline 1. Sin eventos queda el icono del meta.
-	 */
-	function updateBarIcons(elapsed:Float) {
-		__barIconTimer += elapsed;
-		var pos = Conductor.songPosition - Conductor.songOffset;
-		if (pos == __barIconPos && __barIconTimer < 0.25) return;
-		__barIconPos = pos;
-		__barIconTimer = 0;
+	/** Steps y sprites de los BarIconChange, por target (0 oponente, 1 jugador), ordenados por step. */
+	var __iconSteps:Array<Array<Float>> = [[], []];
+	var __iconSprites:Array<Array<String>> = [[], []];
 
-		var bestTime:Array<Float> = [-1, -1];
-		var best:Array<String> = [null, null];
+	/** Steps de los PlayerHealth y la vida que queda despues de aplicar cada uno (en orden). */
+	var __healthSteps:Array<Float> = [];
+	var __healthAfter:Array<Float> = [];
+
+	var __barSig:Int = -1;
+	var __barSigTimer:Float = 1;
+	var __barStep:Float = -1;
+
+	static inline function barMix(h:Int, v:Int):Int
+		return (h * 31 + v) | 0;
+
+	static function barHash(h:Int, text:String):Int {
+		for (i in 0...text.length) h = barMix(h, text.charCodeAt(i));
+		return h;
+	}
+
+	/** Firma barata de los eventos de la barra: cambia si se agrega, mueve, borra o edita alguno. */
+	function barEventsSignature():Int {
+		var h = 7;
 		for (ce in eventsGroup.members) {
 			if (ce == null) continue;
 			for (e in ce.events) {
-				if (e.name != "BarIconChange" || e.time > pos) continue;
-				var target:Int = e.params.length > 0 && e.params[0] != null ? Std.int(e.params[0]) : 1;
-				var sprite:String = e.params.length > 1 && e.params[1] != null ? Std.string(e.params[1]) : "";
-				if (target < 0 || target > 1 || sprite == "") continue;
-				if (e.time >= bestTime[target]) {
-					bestTime[target] = e.time;
-					best[target] = sprite;
+				if (e.name != "BarIconChange" && e.name != "PlayerHealth") continue;
+				h = barMix(h, Std.int(ce.step * 64));
+				h = barHash(h, e.name);
+				if (e.params != null) for (p in e.params) h = barHash(h, Std.string(p));
+			}
+		}
+		return h;
+	}
+
+	/** Cuantos elementos de `steps` (ordenado) son <= `value`. */
+	static function countUpTo(steps:Array<Float>, value:Float):Int {
+		var lo = 0;
+		var hi = steps.length;
+		while (lo < hi) {
+			var mid = (lo + hi) >> 1;
+			if (steps[mid] <= value) lo = mid + 1;
+			else hi = mid;
+		}
+		return lo;
+	}
+
+	/** Junta y ordena los eventos de la barra del chart, y calcula la vida acumulada despues de cada PlayerHealth. */
+	function collectBarEvents():Void {
+		var icons:Array<Array<{s:Float, n:Int, v:String}>> = [[], []];
+		var health:Array<{s:Float, n:Int, p:Array<Dynamic>}> = [];
+		var n = 0;
+		for (ce in eventsGroup.members) {
+			if (ce == null) continue;
+			for (e in ce.events) {
+				if (e.name == "PlayerHealth") {
+					health.push({s: ce.step, n: n++, p: e.params == null ? [] : e.params});
+				} else if (e.name == "BarIconChange" && e.params != null) {
+					var target:Int = e.params.length > 0 && e.params[0] != null ? Std.int(e.params[0]) : 1;
+					var sprite:String = e.params.length > 1 && e.params[1] != null ? Std.string(e.params[1]) : "";
+					if (target < 0 || target > 1 || sprite == "") continue;
+					icons[target].push({s: ce.step, n: n++, v: sprite});
 				}
 			}
+		}
+
+		for (t in 0...2) {
+			icons[t].sort((a, b) -> a.s < b.s ? -1 : (a.s > b.s ? 1 : a.n - b.n));
+			__iconSteps[t] = [for (i in icons[t]) i.s];
+			__iconSprites[t] = [for (i in icons[t]) i.v];
+		}
+
+		health.sort((a, b) -> a.s < b.s ? -1 : (a.s > b.s ? 1 : a.n - b.n));
+		var maxHealth = funky.game.PlayHUD.MAX_HEALTH;
+		var scale = maxHealth / funky.game.Eventos.FNMM_MAX_HEALTH;
+		var current:Float = funky.game.PlayHUD.START_HEALTH;
+		__healthSteps = [];
+		__healthAfter = [];
+		for (ev in health) {
+			var op = ev.p.length > 0 && ev.p[0] != null ? Std.string(ev.p[0]).toLowerCase() : "set";
+			var value = ev.p.length > 1 && ev.p[1] != null ? Std.parseFloat(Std.string(ev.p[1])) : 0;
+			var minimum = ev.p.length > 2 && ev.p[2] != null ? Std.parseFloat(Std.string(ev.p[2])) : 0;
+			if (Math.isNaN(value)) value = 0;
+			if (Math.isNaN(minimum)) minimum = 0;
+			value *= scale;
+			minimum *= scale;
+
+			// Mismas reglas que Eventos.vidaJugador en el juego.
+			switch (op) {
+				case "set": current = value;
+				case "add": current += value;
+				case "remove", "sub", "subtract": if (current > minimum) current = Math.max(minimum, current - value);
+				default:
+			}
+			current = current < 0 ? 0 : (current > maxHealth ? maxHealth : current);
+			__healthSteps.push(ev.s);
+			__healthAfter.push(current);
+		}
+	}
+
+	/**
+	 * Le dice a cada strumline que icono tendria la barra en la posicion actual y a la mini barra de vida cuanta vida.
+	 * target 1 (jugador) -> strumline 0, target 0 (oponente) -> strumline 1. Sin eventos queda el icono del meta.
+	 * Los eventos solo se vuelven a leer si cambiaron (se revisa 4 veces por segundo); cada frame es una busqueda binaria.
+	 */
+	function updateBarIcons(elapsed:Float) {
+		__barSigTimer += elapsed;
+		var changed = false;
+		if (__barSigTimer >= 0.25) {
+			__barSigTimer = 0;
+			var sig = barEventsSignature();
+			if (sig != __barSig) {
+				__barSig = sig;
+				collectBarEvents();
+				changed = true;
+			}
+		}
+
+		var step = Conductor.curStepFloat;
+		if (!changed && step == __barStep) return;
+		__barStep = step;
+
+		var best:Array<String> = [null, null];
+		for (t in 0...2) {
+			var count = countUpTo(__iconSteps[t], step);
+			if (count > 0) best[t] = __iconSprites[t][count - 1];
 		}
 
 		for (i => strumLine in strumLines.members)
 			if (strumLine != null)
 				strumLine.barIcon = i == 0 ? best[1] : (i == 1 ? best[0] : null);
+
+		if (healthBar != null && CharterHealthBar.enabled) {
+			var count = countUpTo(__healthSteps, step);
+			healthBar.setHealth(count > 0 ? __healthAfter[count - 1] : funky.game.PlayHUD.START_HEALTH);
+		}
 	}
 
 	public override function update(elapsed:Float) {
@@ -1377,6 +1501,7 @@ class Charter extends UIState {
 		updateNoteLogic(elapsed);
 		updateAutoSaving(elapsed);
 		updateBarIcons(elapsed);
+		if (healthBar != null) healthBar.update(elapsed);
 
 		for (bs in __bookmarkObjects)
 		{
@@ -1822,6 +1947,10 @@ class Charter extends UIState {
 	function _chart_preview_here(_)
 		startPreview(true);
 
+	/** Shift+Enter: abre el juego ya, desde donde esta el cursor, sin pantalla de carga ni transiciones (ESC vuelve directo al charter). */
+	function _chart_play_now(_)
+		playtestChart(Conductor.songPosition, false, true, true);
+
 	function startPreview(here:Bool):Void {
 		if (!CharterPreview.enabled) preview.setEnabled(true);
 		if (FlxG.sound.music.playing) {
@@ -1845,6 +1974,17 @@ class Charter extends UIState {
 			t.button.label.text = TU.exists("view.dimStage")
 				? TU.translate("view.dimStage", [Std.int(CharterPreview.dim * 100)])
 				: "Oscurecer fondo: " + Std.int(CharterPreview.dim * 100) + "%";
+	}
+
+	function _view_letterbox(t) {
+		preview.setLetterbox(!CharterPreview.letterbox);
+		t.icon = CharterPreview.letterbox ? 1 : 0;
+	}
+
+	function _view_healthbar(t) {
+		healthBar.setEnabled(!CharterHealthBar.enabled);
+		__barStep = -1;
+		t.icon = CharterHealthBar.enabled ? 1 : 0;
 	}
 
 	function _view_toggleui(_) {
@@ -2375,16 +2515,31 @@ class Charter extends UIState {
 		return newChilds;
 	}
 
-	public function playtestChart(time:Float = 0, opponentMode = false, here = false) {
-		buildChart();
+	/**
+	 * Abre el nivel en el juego.
+	 * @param fast "Jugar ya": sin LoadingLevelState (el cache de sprites del preview ya esta armado) ni transiciones, y solo guarda el
+	 *             chart si hay cambios sin guardar. La salida del juego vuelve directo al charter.
+	 */
+	public function playtestChart(time:Float = 0, opponentMode = false, here = false, fast = false) {
 		startHere = here;
 		startTime = Conductor.songPosition;
-		saveEverything(false);
+		if (!fast || undos == null || undos.unsaved) {
+			buildChart();
+			saveEverything(false);
+		}
 		__playtesting = true;
 		if (FlxG.sound.music != null) FlxG.sound.music.stop();
 		funky.game.PlayState.archivePath = Chart.levelDir;
 		funky.game.PlayState.startFromMs = here ? Conductor.songPosition : 0;
 		funky.game.PlayState.returnToEditor = Chart.levelName;
+		funky.game.PlayState.quickReturn = fast;
+
+		if (fast) {
+			funky.game.SpriteCache.keepAlive();
+			funky.game.SpriteCache.detach();
+			FlxG.switchState(new funky.game.PlayState());
+			return;
+		}
 		funky.core.TransitionHandler.switchState(new funky.menus.LoadingLevelState());
 	}
 

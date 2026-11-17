@@ -212,7 +212,7 @@ class CheckerState extends MusicBeatState
 		}
 		if (accessWait < ACCESS_TIMEOUT)
 		{
-			say("Concede el permiso de archivos para continuar...");
+			say("Revisando permisos, un momento...");
 			return false;
 		}
 		Log.warn("[Checker] sin permiso de archivos, se sigue con la carpeta de respaldo");

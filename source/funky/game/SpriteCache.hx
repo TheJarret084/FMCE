@@ -13,6 +13,7 @@ class SpriteCache
 	public static var frames(default, null):Map<String, FlxAtlasFrames> = new Map();
 
 	static var hooked:Bool = false;
+	static var keepNext:Bool = false;
 	static var levelDir:Null<String> = null;
 	static var pool:Map<String, Array<LevelSprite>> = new Map();
 	static var graphics:Array<FlxGraphic> = [];
@@ -25,6 +26,11 @@ class SpriteCache
 			hooked = true;
 			FlxG.signals.preStateCreate.add(function(state:flixel.FlxState):Void
 			{
+				if (keepNext)
+				{
+					keepNext = false;
+					return;
+				}
 				if (!Std.isOfType(state, funky.menus.LoadingLevelState) && !Std.isOfType(state, PlayState)) clear();
 			});
 		}
@@ -33,6 +39,18 @@ class SpriteCache
 		levelDir = dir;
 		active = true;
 	}
+
+	/**
+	 * true si el cache ya esta armado para este nivel (por ejemplo al volver del juego al charter): no hace falta precargar de nuevo.
+	 */
+	public static function isWarm(dir:Null<String>):Bool
+		return active && dir != null && dir == levelDir;
+
+	/**
+	 * El proximo state que se cree (el charter al volver del juego) NO limpia el cache. Solo vale para un cambio de state.
+	 */
+	public static function keepForNextState():Void
+		keepNext = true;
 
 	public static function clear():Void
 	{

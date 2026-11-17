@@ -151,6 +151,29 @@ class Stage extends FlxGroup
 	public var camPoints:Array<{x:Float, y:Float, scale:Float}> = [];
 	public var flash:FlxSprite;
 
+	/**
+	 * Tamano (px) del area donde se dibuja el escenario. -1 = toda la pantalla (FlxG.width / FlxG.height).
+	 * El Charter lo usa para encuadrar el escenario igual que en el juego (setView).
+	 */
+	public var viewW:Float = -1;
+	public var viewH:Float = -1;
+
+	inline function vw():Float return viewW > 0 ? viewW : FlxG.width;
+
+	inline function vh():Float return viewH > 0 ? viewH : FlxG.height;
+
+	/** Cambia el area de dibujo (ancho y alto en px). Con valores <= 0 vuelve a toda la pantalla. */
+	public function setView(w:Float, h:Float):Void
+	{
+		viewW = w;
+		viewH = h;
+		if (flash != null)
+		{
+			flash.setGraphicSize(vw(), vh());
+			flash.updateHitbox();
+		}
+	}
+
 	public var camX:Float = 0;
 	public var camY:Float = 0;
 	public var camScale:Float = 1;
@@ -324,7 +347,7 @@ class Stage extends FlxGroup
 		}
 
 		flash = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
-		flash.setGraphicSize(FlxG.width, FlxG.height);
+		flash.setGraphicSize(vw(), vh());
 		flash.updateHitbox();
 		flash.scrollFactor.set();
 		flash.alpha = 0;
@@ -580,12 +603,12 @@ class Stage extends FlxGroup
 
 	inline function fixedPixelsPerUnit():Float
 	{
-		return FlxG.width / HUD_REF_WIDTH * defaultHudZoom;
+		return vw() / HUD_REF_WIDTH * defaultHudZoom;
 	}
 
 	inline function pixelsPerUnit():Float
 	{
-		return CAM_PRESET * FlxG.width
+		return CAM_PRESET * vw()
 			/ (VIEW_WORLD_WIDTH * Math.max(0.001, camScale * zoomMul));
 	}
 
@@ -605,8 +628,8 @@ class Stage extends FlxGroup
 		{
 			case true:
 
-				px = object.x * FlxG.width;
-				py = object.y * FlxG.height;
+				px = object.x * vw();
+				py = object.y * vh();
 
 				var unit = animScale * fixedPixelsPerUnit();
 				totalX = object.scale * unit;
@@ -615,8 +638,8 @@ class Stage extends FlxGroup
 			case false:
 
 				var ppu = pixelsPerUnit();
-				var halfViewX = FlxG.width / 2 / ppu;
-				var halfViewY = FlxG.height / 2 / ppu;
+				var halfViewX = vw() / 2 / ppu;
+				var halfViewY = vh() / 2 / ppu;
 
 				px = (object.x - (camX + camOffsetX - halfViewX) * object.scrollX) * ppu;
 				py = (object.y - (camY + camOffsetY - halfViewY) * object.scrollY) * ppu;

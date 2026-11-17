@@ -7,7 +7,10 @@ import funkin.backend.system.Conductor;
 import funky.core.Log;
 import funky.game.Eventos;
 import funky.game.SongData;
+import funky.game.SpriteBuilder;
+import funky.game.SpriteCache;
 import funky.game.Stage;
+import haxe.ds.ObjectMap;
 import funky.menus.LoadingOverlay;
 
 /**
@@ -26,6 +29,15 @@ class CharterPreview {
 	public static var dim:Float = 0.5;
 
 	static final DIMS:Array<Float> = [0, 0.2, 0.35, 0.5, 0.65, 0.8];
+
+	/**
+	 * true = el escenario se dibuja en un area con la misma proporcion que el juego (centrada, con barras negras a los lados, como en el PlayState).
+	 * false = ocupa toda la pantalla del charter.
+	 */
+	public static var letterbox:Bool = true;
+
+	/** Proporcion (ancho / alto) que se usa si no se puede leer la del juego. */
+	public static var fallbackAspect:Float = 16 / 9;
 
 	/** Segundos sin moverse hacia atras antes de reconstruir el escenario (un salto atras obliga a reiniciar los eventos). */
 	static inline var REBUILD_DELAY:Float = 0.3;
@@ -54,8 +66,15 @@ class CharterPreview {
 	var lastStep:Float = 0;
 	var rebuildIn:Float = -1;
 	var checkIn:Float = CHECK_EVERY;
-	var signature:String = "";
+	var notesSig:Int = 0;
+	var groupHash:ObjectMap<CharterEvent, Int> = new ObjectMap();
+	var groupStep:ObjectMap<CharterEvent, Float> = new ObjectMap();
+	var warmNames:Array<String> = [];
+	var warmNext:Int = 0;
+	var warmDir:String = "";
 	var builtOnce:Bool = false;
+	var fitW:Int = -1;
+	var fitH:Int = -1;
 
 	public function new(charter:Charter) {
 		this.charter = charter;
@@ -67,8 +86,11 @@ class CharterPreview {
 		camera.bgColor = 0xFF000000;
 		// insert() tambien reordena el flashSprite en el display list de OpenFL. Cambiar solo
 		// FlxG.cameras.list deja la capa visual encima del charter aunque la lista diga lo contrario.
+		// Si se vuelve del juego, el cache de sprites del nivel sigue vivo: se vuelve a enganchar al cache de bitmaps.
+		SpriteCache.attach();
 		FlxG.cameras.insert(camera, 0, false);
 		camera.antialiasing = true;
+		fitView();
 
 		applyVisibility();
 		if (enabled) startLoading();
@@ -97,6 +119,49 @@ class CharterPreview {
 			}
 		dim = DIMS[(index + 1) % DIMS.length];
 		return dim;
+	}
+
+	/** Prende o apaga las barras negras (menu Ver). */
+	public function setLetterbox(value:Bool):Void {
+		letterbox = value;
+		fitView();
+	}
+
+	/** Proporcion del juego (ancho / alto): la del modo de escala del juego si se conoce, si no 16:9. */
+	static function gameAspect():Float {
+		var mode = funkin.backend.system.Main.scaleMode;
+		if (mode != null && !Std.isOfType(mode, funkin.editors.ui.UIScaleMode) && mode.gameSize != null && mode.gameSize.y > 0) {
+			var aspect = mode.gameSize.x / mode.gameSize.y;
+			if (aspect >= 1 && aspect <= 3) return aspect;
+		}
+		return fallbackAspect;
+	}
+
+	/** Acomoda la camara del escenario: toda la pantalla, o un rectangulo centrado con la proporcion del juego. */
+	function fitView():Void {
+		if (camera == null) return;
+		fitW = FlxG.width;
+		fitH = FlxG.height;
+
+		if (!letterbox) {
+			camera.x = 0;
+			camera.y = 0;
+			camera.setSize(FlxG.width, FlxG.height);
+			if (stage != null) stage.setView(-1, -1);
+			return;
+		}
+
+		var aspect = gameAspect();
+		var w = FlxG.width;
+		var h = Math.round(w / aspect);
+		if (h > FlxG.height) {
+			h = FlxG.height;
+			w = Math.round(h * aspect);
+		}
+		camera.x = Math.round((FlxG.width - w) / 2);
+		camera.y = Math.round((FlxG.height - h) / 2);
+		camera.setSize(w, h);
+		if (stage != null) stage.setView(w, h);
 	}
 
 	function applyVisibility():Void {
@@ -129,7 +194,23 @@ class CharterPreview {
 					Log.warn('[CharterPreview] no se pudo leer el nivel: ' + e);
 					song = null;
 				}
-				overlay.setProgress(0.45, "armando el escenario");
+				prepareWarmup();
+				overlay.setProgress(0.3, warmNames.length > 0 ? "sprites" : "armando el escenario");
+				phase = warmNames.length > 0 ? 20 : 3;
+			case 20:
+				// Precarga de sprites repartida en frames (lo que hacia la pantalla de carga del juego): despues "Jugar ya" no carga nada.
+				var start = haxe.Timer.stamp();
+				while (warmNext < warmNames.length) {
+					var name = warmNames[warmNext++];
+					try {
+						if (SpriteBuilder.videoCount(warmDir, name) == 0) SpriteCache.preload(warmDir, name);
+					} catch (e:Dynamic) {
+						Log.warn('[CharterPreview] fallo precargando "' + name + '": ' + e);
+					}
+					overlay.setProgress(0.3 + 0.5 * (warmNext / warmNames.length), "sprites");
+					if (haxe.Timer.stamp() - start >= 0.012) return;
+				}
+				overlay.setProgress(0.8, "armando el escenario");
 				phase = 3;
 			case 3:
 				buildStage();
@@ -152,6 +233,21 @@ class CharterPreview {
 		}
 	}
 
+	/** Arma el cache de sprites del nivel (si no estaba ya armado, por ejemplo al volver del juego) y lista lo que hay que precargar. */
+	function prepareWarmup():Void {
+		warmNames = [];
+		warmNext = 0;
+		if (song == null) return;
+
+		// Se usa el mismo texto de ruta que usan el Stage y el juego (song.levelDir), para que el cache los reconozca.
+		warmDir = song.levelDir != null ? song.levelDir : Chart.levelDir;
+		if (SpriteCache.isWarm(warmDir)) return;
+
+		SpriteCache.begin(warmDir);
+		var present = SpriteBuilder.listSprites(warmDir);
+		warmNames = [for (name in SpriteCache.referenced(song)) if (present.indexOf(name) >= 0) name];
+	}
+
 	function buildStage():Void {
 		if (song == null) return;
 		var built = new Stage(song, camera);
@@ -162,6 +258,7 @@ class CharterPreview {
 		}
 		built.cameras = [camera];
 		stage = built;
+		fitView();
 		// Detras de la grilla: el charter BG es el miembro 0, asi que el escenario entra en 1. Aunque algun objeto
 		// termine dibujandose en la camara del charter (por ejemplo un sprite agregado por un evento), queda debajo
 		// de las notas/eventos y no tapa la zona de chartear.
@@ -191,16 +288,69 @@ class CharterPreview {
 	function currentTime():Float
 		return Conductor.getTimeForStep(Conductor.curStepFloat);
 
-	function chartSignature():String {
-		var h:Int = charter.notesGroup.members.length * 31 + charter.eventsGroup.members.length;
-		for (n in charter.notesGroup.members) h = (h * 33) ^ Std.int(n.step * 64 + n.id * 7 + n.strumLineID + n.susLength * 13);
-		for (e in charter.eventsGroup.members) h = (h * 33) ^ Std.int(e.step * 64 + e.events.length);
-		return Std.string(h);
+	static inline function mix(h:Int, v:Int):Int
+		return (h * 31 + v) | 0;
+
+	static function hashText(h:Int, text:String):Int {
+		for (i in 0...text.length) h = mix(h, text.charCodeAt(i));
+		return h;
+	}
+
+	/** Firma de las notas (posicion, lane, strumline, sustain): cambia si se agrega, mueve o borra alguna. */
+	function notesSignature():Int {
+		var h = charter.notesGroup.members.length;
+		for (n in charter.notesGroup.members) h = mix(h, Std.int(n.step * 64 + n.id * 7 + n.strumLineID + n.susLength * 13));
+		return h;
+	}
+
+	/**
+	 * Compara los eventos del charter con la ultima revision y devuelve el step mas temprano donde cambio algo
+	 * (Math.POSITIVE_INFINITY si no cambio nada). Un evento movido cuenta tanto en su lugar viejo como en el nuevo.
+	 */
+	function earliestEventChange():Float {
+		var earliest = Math.POSITIVE_INFINITY;
+		var hashes = new ObjectMap<CharterEvent, Int>();
+		var steps = new ObjectMap<CharterEvent, Float>();
+
+		for (g in charter.eventsGroup.members) {
+			if (g == null) continue;
+			var h = mix(Std.int(g.step * 64), g.events.length);
+			for (e in g.events) {
+				h = hashText(h, e.name);
+				if (e.params != null) for (p in e.params) h = hashText(h, Std.string(p));
+			}
+			hashes.set(g, h);
+			steps.set(g, g.step);
+
+			var before = groupHash.get(g);
+			if (before == null || before != h) {
+				earliest = Math.min(earliest, g.step);
+				var oldStep = groupStep.get(g);
+				if (oldStep != null) earliest = Math.min(earliest, oldStep);
+			}
+		}
+
+		for (g in groupHash.keys())
+			if (!hashes.exists(g)) earliest = Math.min(earliest, groupStep.get(g));
+
+		groupHash = hashes;
+		groupStep = steps;
+		return earliest;
+	}
+
+	/** Hay algun evento entre from (sin incluir) y to (incluido)? Sirve para saber si un salto hacia atras obliga a reiniciar el escenario. */
+	function eventsBetween(from:Float, to:Float):Bool {
+		for (g in charter.eventsGroup.members)
+			if (g != null && g.step > from && g.step <= to) return true;
+		return false;
 	}
 
 	/** Reconstruye la lista de eventos para `Eventos` desde lo que hay en el charter, y la lista de notas ordenada. */
 	function syncToChart(full:Bool):Void {
-		signature = chartSignature();
+		if (full) {
+			notesSig = notesSignature();
+			earliestEventChange();
+		}
 
 		notes = charter.notesGroup.members.copy();
 		notes.sort((a, b) -> a.step < b.step ? -1 : (a.step > b.step ? 1 : 0));
@@ -251,6 +401,8 @@ class CharterPreview {
 	// UPDATE
 
 	public function update(elapsed:Float):Void {
+		if (camera != null && (FlxG.width != fitW || FlxG.height != fitH)) fitView();
+
 		if (phase > 0) {
 			stepLoading(elapsed);
 			return;
@@ -260,22 +412,37 @@ class CharterPreview {
 		var playing = FlxG.sound.music != null && FlxG.sound.music.playing;
 		var step = Conductor.curStepFloat;
 
-		// Cambios en notas o eventos (solo en pausa, cada medio segundo).
-		if (!playing) {
+		// Cambios en notas o eventos (solo en pausa, cada medio segundo). Reconstruir el escenario es lo caro, asi que solo se hace
+		// si cambio un evento que YA paso (no se puede deshacer). Notas o eventos que faltan por venir solo refrescan las listas.
+		if (!playing && rebuildIn < 0) {
 			checkIn -= elapsed;
 			if (checkIn <= 0) {
 				checkIn = CHECK_EVERY;
-				if (chartSignature() != signature) {
-					signature = "";
-					rebuildIn = REBUILD_DELAY;
+
+				var notesChanged = false;
+				var sigNow = notesSignature();
+				if (sigNow != notesSig) {
+					notesSig = sigNow;
+					notesChanged = true;
+				}
+
+				var earliest = earliestEventChange();
+				if (earliest <= step + 0.001) rebuildIn = REBUILD_DELAY;
+				else if (earliest != Math.POSITIVE_INFINITY || notesChanged) {
+					syncToChart(false);
+					if (earliest != Math.POSITIVE_INFINITY && stage != null) {
+						if (eventos != null) eventos.destroy();
+						eventos = new Eventos(song, stage);
+						eventos.skipTo(currentTime());
+					}
 				}
 			}
 		}
 
-		// Salto hacia atras: los eventos ya ejecutados no se pueden deshacer, hay que reiniciar (con espera, para no
-		// reconstruir en cada frame mientras se arrastra la barra).
+		// Salto hacia atras: los eventos ya ejecutados no se pueden deshacer, asi que solo se reinicia el escenario si entre
+		// la posicion nueva y la vieja habia eventos (con espera, para no reconstruir en cada frame mientras se arrastra la barra).
 		if (step < lastStep - 0.01) {
-			rebuildIn = REBUILD_DELAY;
+			if (eventsBetween(step, lastStep)) rebuildIn = REBUILD_DELAY;
 			seekNotes(step);
 		}
 		lastStep = step;

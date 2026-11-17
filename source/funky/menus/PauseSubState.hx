@@ -441,7 +441,7 @@ class PauseSubState extends FlxSubState
 			case "freeplay":
 				FlxG.sound.music?.stop();
 		playState.stopVoices();
-				playState.transitionTo(PlayState.menuState());
+				playState.goToMenu();
 			case "quit":
 				#if sys
 				ClientPrefs.save();
