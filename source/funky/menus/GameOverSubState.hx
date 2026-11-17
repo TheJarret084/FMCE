@@ -198,7 +198,7 @@ class GameOverSubState extends FlxSubState
 
 		new FlxTimer().start(1.6, function(_)
 		{
-			playState.transitionTo(new LoadingLevelState());
+			playState.retryLevel();
 		});
 	}
 
@@ -207,7 +207,7 @@ class GameOverSubState extends FlxSubState
 		leaving = true;
 		FlxG.sound.music?.stop();
 		playState.stopVoices();
-		playState.transitionTo(new FreeplayState());
+		playState.exitFromGameOver();
 	}
 
 	override public function destroy():Void

@@ -20,7 +20,7 @@ class CharterEventAdd extends UISliceSprite {
 
 	public override function onHovered() {
 		super.onHovered();
-		if (FlxG.mouse.justReleased && FlxG.state.subState == null) {
+		if (FlxG.mouse.justReleased && Charter.instance.subState == null) {
 			if (curCharterEvent != null)
 				Charter.instance.openSubState(new CharterEventScreenNew(curCharterEvent));
 			else {
@@ -39,14 +39,14 @@ class CharterEventAdd extends UISliceSprite {
 	public override function update(elapsed:Float) {
 		super.update(elapsed);
 
-		if (FlxG.state.subState != null) return;
+		if (Charter.instance.subState != null) return;
 		text.follow(this, bWidth - text.width - (text.text == TU.translate("charter.addEvent") ? 15 : 20), (bHeight - text.height) / 2);
 		alpha = sprAlpha * 0.75;
 		text.alpha = sprAlpha;
 	}
 
 	public function updatePos(step:Float) {
-		if (FlxG.state.subState != null) return;
+		if (Charter.instance.subState != null) return;
 		curCharterEvent = null;
 		this.step = step;
 		this.y = (step * 40) - (bHeight / 2);
@@ -61,7 +61,7 @@ class CharterEventAdd extends UISliceSprite {
 	}
 
 	public function updateEdit(event:CharterEvent) {
-		if (FlxG.state.subState != null) return;
+		if (Charter.instance.subState != null) return;
 		curCharterEvent = event;
 		this.y = event.y;
 		text.text = TU.translate("charter.editEvent");

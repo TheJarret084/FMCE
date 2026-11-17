@@ -87,6 +87,38 @@ class PlayState extends MusicBeatState
 	static var skipCountdown:Bool = false;
 
 	/**
+	 * true = el PlayState es la BASE del charter: solo sostiene la escena y el charter vive encima como substate.
+	 * El nivel (escenario, strums, notas, HUD, audio) se arma recien con "Probar" (`beginPlaytest`) y se descarga al volver
+	 * (`returnToCharter`), asi mientras se edita no hay nada del juego cargado ni actualizandose. Lo pone `CharterLauncher.open`.
+	 */
+	public static var editorHost:Bool = false;
+
+	/**
+	 * Nivel que edita el charter cuando `editorHost` es true.
+	 */
+	public static var hostLevel:Null<String> = null;
+
+	/**
+	 * true mientras el nivel esta armado dentro del charter (probando).
+	 */
+	public var playtestLive(default, null):Bool = false;
+
+	/**
+	 * El charter se abre en el primer update (el create no puede abrir substates todavia).
+	 */
+	var pendingCharter:Bool = false;
+
+	/**
+	 * Se esta volviendo al charter: el juego queda congelado mientras el HUD se desvanece.
+	 */
+	var leavingToCharter:Bool = false;
+
+	/**
+	 * Duracion (s) del fade del HUD al probar / al volver al charter.
+	 */
+	static inline var PLAYTEST_FADE:Float = 0.4;
+
+	/**
 	 * Estado de cada lane en el frame anterior, para `onKeyRelease`.
 	 */
 	var prevHeld:Array<Bool> = [];
@@ -119,6 +151,12 @@ class PlayState extends MusicBeatState
 	 */
 	public function goToMenu():Void
 	{
+		if (editorHost && playtestLive)
+		{
+			returnToCharter();
+			return;
+		}
+
 		if (returnToEditor != null)
 		{
 			SpriteCache.keepAlive();
@@ -438,6 +476,23 @@ class PlayState extends MusicBeatState
 		instance = this;
 		SpriteCache.attach();
 
+		if (editorHost)
+		{
+			// Base del charter: escena vacia (nada cargado). El charter se abre en el primer update.
+			camGame = FlxG.camera;
+			pendingCharter = true;
+			return;
+		}
+
+		buildLevel();
+	}
+
+	/**
+	 * Arma el nivel completo: camaras, scripts, escenario, eventos, strums, notas, HUD, audio y countdown.
+	 * Es lo que antes hacia `create`; el charter lo vuelve a llamar con "Probar" sin cambiar de state.
+	 */
+	function buildLevel():Void
+	{
 		if (!seeking)
 			launchStartMs = startFromMs;
 
@@ -675,12 +730,261 @@ class PlayState extends MusicBeatState
 
 		Scripts.call("onCreatePost");
 
-		if (!quickReturn)
+		if (!quickReturn && !editorHost)
 			transitionIn();
+	}
+
+	// CHARTER COMO SUBSTATE
+
+	/**
+	 * Abre el charter encima de la escena vacia.
+	 */
+	function openCharter():Void
+	{
+		var charter = new funkin.editors.charter.Charter(hostLevel, true);
+		persistentDraw = true;
+		openSubState(charter);
+	}
+
+	/**
+	 * Deja todos los campos de una partida como al crear el state, para poder armar el nivel de nuevo en el mismo state.
+	 */
+	function resetRun():Void
+	{
+		song = null;
+		playerLine = null;
+		opponentLine = null;
+		mobileControls = null;
+		songTime = 0;
+		hud = null;
+		stage = null;
+		eventos = null;
+		camHUD = null;
+		camSub = null;
+		extraLines = new Map<Int, StrumLine>();
+		hudLines = [];
+		logicLines = [];
+		guiGroups = [];
+		guiFade = 1;
+		guiFadeTween = null;
+		guiBaseAlpha = new haxe.ds.ObjectMap();
+		started = false;
+		score = 0;
+		combo = 0;
+		misses = 0;
+		totalPlayed = 0;
+		totalNotesHit = 0;
+		precisionSum = 0;
+		pressCount = 0;
+		lastPress = null;
+		endBlocked = false;
+		songEnded = false;
+		musicEnded = false;
+		voices = null;
+		countdownTimers = [];
+		pendingError = null;
+		pendingScriptError = null;
+		warningInstanced = false;
+		transitioning = false;
+		heldNow = [];
+		prevHeld = [];
+	}
+
+	/**
+	 * "Probar" del charter: arma el nivel ahora (el HUD y las strums nacen invisibles) y los muestra con un fade.
+	 * El charter se desliza hacia la derecha por su cuenta y deja ver este juego.
+	 */
+	public function beginPlaytest():Void
+	{
+		resetRun();
+		playtestLive = true;
+		leavingToCharter = false;
+		buildLevel();
+
+		if (camHUD != null)
+		{
+			camHUD.alpha = 0;
+			FlxTween.tween(camHUD, {alpha: 1}, PLAYTEST_FADE, {ease: FlxEase.quadOut});
+		}
+	}
+
+	/**
+	 * Descarga el nivel entero (escenario, strums, notas, HUD, controles, audio, scripts y camaras) y deja la escena vacia otra vez.
+	 */
+	function teardownLevel():Void
+	{
+		Scripts.call("onDestroy");
+		Scripts.clear();
+
+		FlxG.signals.preUpdate.remove(releaseGuiFade);
+		FlxG.signals.postUpdate.remove(applyGuiFade);
+
+		if (guiFadeTween != null)
+			guiFadeTween.cancel();
+
+		releaseGuiFade();
+		cancelCountdown();
+
+		if (eventos != null)
+			eventos.destroy();
+
+		eventos = null;
+
+		if (FlxG.sound.music != null)
+		{
+			FlxG.sound.music.onComplete = null;
+			FlxG.sound.music.stop();
+		}
+
+		stopVoices();
+
+		for (member in members.copy())
+		{
+			if (member == null)
+				continue;
+
+			remove(member, true);
+			member.destroy();
+		}
+
+		if (camSub != null)
+		{
+			FlxG.cameras.remove(camSub);
+			camSub = null;
+		}
+
+		if (camHUD != null)
+		{
+			FlxG.cameras.remove(camHUD);
+			camHUD = null;
+		}
+
+		stage = null;
+		hud = null;
+		song = null;
+		Conductor.reset();
+	}
+
+	/**
+	 * Reinicia / salta dentro del charter: se cierra la pausa (o el game over), se descarga el nivel y se arma de nuevo, sin cambiar de state.
+	 */
+	function reloadInPlace():Void
+	{
+		if (subState != null)
+			closeSubState();
+
+		teardownLevel();
+		resetRun();
+		leavingToCharter = false;
+		buildLevel();
+
+		if (camHUD != null)
+			camHUD.alpha = 1;
+	}
+
+	/**
+	 * Reintento del game over: en el charter se arma el nivel de nuevo; fuera se pasa por la pantalla de carga.
+	 */
+	public function retryLevel():Void
+	{
+		if (editorHost && playtestLive)
+		{
+			reloadInPlace();
+			return;
+		}
+
+		transitionTo(new funky.menus.LoadingLevelState());
+	}
+
+	/**
+	 * Salida del game over: en el charter se vuelve al charter; fuera, a Freeplay.
+	 */
+	public function exitFromGameOver():Void
+	{
+		if (editorHost && playtestLive)
+		{
+			goToMenu();
+			return;
+		}
+
+		transitionTo(new FreeplayState());
+	}
+
+	/**
+	 * Termina la prueba y vuelve al charter: el HUD se desvanece, el charter se desliza de vuelta desde la derecha y,
+	 * cuando ya cubre la pantalla, el nivel se descarga (`finishReturn`).
+	 */
+	public function returnToCharter():Void
+	{
+		if (leavingToCharter)
+			return;
+
+		leavingToCharter = true;
+		transitioning = true;
+		songEnded = true;
+		cancelCountdown();
+
+		if (FlxG.sound.music != null)
+		{
+			FlxG.sound.music.onComplete = null;
+			FlxG.sound.music.stop();
+		}
+
+		stopVoices();
+
+		if (subState != null)
+			closeSubState();
+
+		var charter = funkin.editors.charter.Charter.instance;
+
+		var back = function():Void
+		{
+			if (charter == null)
+			{
+				finishReturn();
+				return;
+			}
+
+			charter.returnFromPlaytest();
+		};
+
+		if (camHUD == null)
+		{
+			back();
+			return;
+		}
+
+		FlxTween.tween(camHUD, {alpha: 0}, PLAYTEST_FADE * 0.6, {ease: FlxEase.quadIn, onComplete: function(_) back()});
+	}
+
+	/**
+	 * Lo llama el charter cuando ya volvio a cubrir la pantalla: se descarga el nivel y se vuelve al estado de edicion.
+	 */
+	public function finishReturn():Void
+	{
+		teardownLevel();
+		resetRun();
+		playtestLive = false;
+		leavingToCharter = false;
 	}
 
 	override public function update(elapsed:Float):Void
 	{
+		// El charter se cuelga y se descuelga del state sin destruirse: `destroySubStates` solo se apaga el instante de descolgarlo.
+		if (!destroySubStates && subState == null)
+			destroySubStates = true;
+
+		if (pendingCharter)
+		{
+			pendingCharter = false;
+			openCharter();
+			return;
+		}
+
+		// Base del charter sin nivel armado, o volviendo al charter: no hay nada que actualizar.
+		if ((editorHost && !playtestLive) || leavingToCharter)
+			return;
+
 		if (pendingError != null)
 		{
 			var message = pendingError;
@@ -827,6 +1131,10 @@ class PlayState extends MusicBeatState
 
 	override public function destroy():Void
 	{
+		// Al salir de la base del charter (o al ir a otro menu) el juego vuelve a ser un state normal.
+		editorHost = false;
+		playtestLive = false;
+
 		Scripts.call("onDestroy");
 		Scripts.clear();
 
@@ -1445,6 +1753,13 @@ class PlayState extends MusicBeatState
 		startFromMs = launchStartMs;
 		seeking = false;
 		skipCountdown = false;
+
+		if (editorHost && playtestLive)
+		{
+			reloadInPlace();
+			return;
+		}
+
 		leaveSong();
 		transitionTo(new funky.menus.LoadingLevelState());
 	}
@@ -1499,6 +1814,13 @@ class PlayState extends MusicBeatState
 		startFromMs = point;
 		seeking = true;
 		skipCountdown = point > 0;
+
+		if (editorHost && playtestLive)
+		{
+			reloadInPlace();
+			return true;
+		}
+
 		leaveSong();
 
 		funky.menus.LoadingLevelState.keep(song);
@@ -1544,6 +1866,13 @@ class PlayState extends MusicBeatState
 
 	override public function openSubState(substate:FlxSubState):Void
 	{
+		// El charter se cuelga tal cual: no usa la camara de pausa ni avisa a los scripts.
+		if (Std.isOfType(substate, funkin.editors.charter.Charter))
+		{
+			super.openSubState(substate);
+			return;
+		}
+
 		if (camSub == null)
 		{
 			camSub = new FlxCamera();
@@ -1559,7 +1888,12 @@ class PlayState extends MusicBeatState
 
 	override public function closeSubState():Void
 	{
+		var closing = subState;
+
 		super.closeSubState();
+
+		if (Std.isOfType(closing, funkin.editors.charter.Charter))
+			return;
 
 		if (camSub != null)
 		{

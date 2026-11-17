@@ -88,12 +88,32 @@ class CharterPreview {
 		// FlxG.cameras.list deja la capa visual encima del charter aunque la lista diga lo contrario.
 		// Si se vuelve del juego, el cache de sprites del nivel sigue vivo: se vuelve a enganchar al cache de bitmaps.
 		SpriteCache.attach();
-		FlxG.cameras.insert(camera, 0, false);
+		FlxG.cameras.insert(camera, FlxG.cameras.list.indexOf(charter.charterCamera), false);
 		camera.antialiasing = true;
 		fitView();
 
 		applyVisibility();
 		if (enabled) startLoading();
+	}
+
+	/** true mientras carga el escenario (no se puede probar todavia). */
+	public function isBusy():Bool
+		return phase > 0;
+
+	/** El juego se queda con la pantalla: se descarga el escenario (el cache de sprites sigue caliente). */
+	public function suspend():Void {
+		destroyStage();
+		camera.visible = false;
+	}
+
+	/** El charter vuelve: se arma el escenario de nuevo en la posicion actual. */
+	public function resume():Void {
+		fitView();
+		applyVisibility();
+		if (enabled && song != null && builtOnce) {
+			buildStage();
+			syncToChart(true);
+		}
 	}
 
 	/** Prende o apaga la vista previa (menu Ver). Apagada no actualiza nada. */
@@ -138,7 +158,7 @@ class CharterPreview {
 	}
 
 	/** Acomoda la camara del escenario: toda la pantalla, o un rectangulo centrado con la proporcion del juego. */
-	function fitView():Void {
+	public function fitView():Void {
 		if (camera == null) return;
 		fitW = FlxG.width;
 		fitH = FlxG.height;

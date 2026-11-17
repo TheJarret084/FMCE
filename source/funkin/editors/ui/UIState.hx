@@ -21,8 +21,31 @@ class UIState extends MusicBeatState {
 
 	public static var fallbackState:UIState = null;
 
+	/**
+	 * UIState "sin pantalla": cuando un editor vive como substate (el charter encima del PlayState), FlxG.state no es un UIState.
+	 * El substate crea uno, lo deja aqui y lo actualiza el mismo (`tryUpdate`), asi los botones, el foco, el texto y los menus
+	 * contextuales funcionan igual que cuando el editor es el state.
+	 */
+	public static var host:UIState = null;
+
+	/**
+	 * Donde se abren los avisos modales (SaveWarning): el substate del editor si hay `host`, si no FlxG.state.
+	 */
+	public static var hostRoot:flixel.FlxState = null;
+
+	/**
+	 * Grupo donde se dibujan las notificaciones (por defecto el propio UIState; un `host` usa el de su substate).
+	 */
+	public var notificationTarget:flixel.group.FlxGroup = null;
+
+	public static inline function root():flixel.FlxState
+		return hostRoot != null ? hostRoot : FlxG.state;
+
+	public static inline function isActive():Bool
+		return host != null || FlxG.state is UIState;
+
 	private inline static function get_state()
-		return FlxG.state is UIState ? cast FlxG.state : getFallback();
+		return host != null ? host : (FlxG.state is UIState ? cast FlxG.state : getFallback());
 
 	static function getFallback():UIState {
 		if (fallbackState == null) {
@@ -36,7 +59,7 @@ class UIState extends MusicBeatState {
 
 	function __headlessTick():Void {
 
-		if (FlxG.state is UIState) {
+		if (FlxG.state is UIState || host != null) {
 			buttonHandler = null;
 			hoveredSprite = null;
 			return;
@@ -225,12 +248,13 @@ class UIState extends MusicBeatState {
 	}
 
 	public function displayNotification(notification:UIBaseNotification) {
+		var target:flixel.group.FlxGroup = notificationTarget != null ? notificationTarget : this;
 		notification.cameras = uiCameras;
 		notification.onRemove = (notif) -> {
 			notification.onRemove = null;
-			remove(notif, true);
+			target.remove(notif, true);
 		};
-		add(notification);
+		target.add(notification);
 		notification.update(0);
 		notification.appearAnimation();
 

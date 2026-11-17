@@ -20,8 +20,8 @@ class SaveWarning {
 	public static function triggerWarning(?closingWindow:Bool = false) {
 		if (warningFunc != null) warningFunc(closingWindow);
 
-		if (FlxG.state != null && FlxG.state is UIState) {
-			FlxG.state.openSubState(new UIWarningSubstate(TU.translate("saveWarning.warningTitle"), TU.translate("saveWarning.warningDesc"),
+		if (FlxG.state != null && UIState.isActive()) {
+			UIState.root().openSubState(new UIWarningSubstate(TU.translate("saveWarning.warningTitle"), TU.translate("saveWarning.warningDesc"),
 			[
 				{
 					label: TU.translate("saveWarning.cancel"),

@@ -14,6 +14,9 @@ class CharterLauncher {
 		}
 		Chart.levelDir = Path.join([funky.core.Paths.levelsRoot(), levelName]);
 		Paths.levelDir = Chart.levelDir;
-		return new Charter(levelName, true);
+		// El juego es la base y el charter se abre encima como substate (ver PlayState.editorHost).
+		funky.game.PlayState.editorHost = true;
+		funky.game.PlayState.hostLevel = levelName;
+		return new funky.game.PlayState();
 	}
 }

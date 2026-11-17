@@ -22,12 +22,13 @@ import haxe.Json;
 import sys.FileSystem;
 #end
 import flixel.util.FlxColor;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
 
-class Charter extends UIState {
+class Charter extends MusicBeatSubstate {
 	public static var __song:String;
 	static var __reload:Bool;
 
-	static var __playtesting:Bool = false;
 
 	var chart(get, never):ChartData;
 	private function get_chart()
@@ -36,10 +37,36 @@ class Charter extends UIState {
 	inline function translate(id:String, ?args:Array<Dynamic>)
 		return TU.translate("charter." + id, args);
 
-	public static var instance(get, never):Charter;
+	public static var instance:Charter;
 
-	private static inline function get_instance()
-		return FlxG.state is Charter ? cast FlxG.state : null;
+	/**
+	 * El charter vive como substate encima del PlayState (la escena del juego). La parte de interfaz que antes heredaba de UIState
+	 * (botones, foco, texto, menus contextuales) la lleva este UIState "sin pantalla", que el charter actualiza el mismo.
+	 */
+	public var ui:UIState;
+
+	public var currentFocus(get, set):IUIFocusable;
+	inline function get_currentFocus():IUIFocusable return ui.currentFocus;
+	inline function set_currentFocus(v:IUIFocusable):IUIFocusable return ui.currentFocus = v;
+
+	inline function closeCurrentContextMenu():Void ui.closeCurrentContextMenu();
+	inline function openContextMenu(options:Array<UIContextMenuOption>, ?callback:funkin.editors.ui.UIContextMenu.UIContextMenuCallback, ?x:Float, ?y:Float, ?w:Int)
+		return ui.openContextMenu(options, callback, x, y, w);
+
+	/**
+	 * true mientras se prueba el nivel (o mientras el charter se desliza de ida y vuelta): el charter no hace caso a nada.
+	 */
+	public var live(default, null):Bool = false;
+
+	/**
+	 * Duracion (s) del deslizamiento del charter al probar / al volver.
+	 */
+	static inline var SLIDE_SECONDS:Float = 0.5;
+
+	var gameCamera:FlxCamera;
+	var savedSongPos:Float = 0;
+	var detaching:Bool = false;
+	var previewBaseX:Float = 0;
 
 	public var charterBG:FunkinSprite;
 
@@ -104,7 +131,6 @@ class Charter extends UIState {
 
 	public static var selection:Selection;
 
-	public static var playtestInfo:PlaytestInfo;
 	public static var undos:UndoList<CharterChange>;
 
 	public static var clipboard:Array<CharterCopyboardObject> = [];
@@ -126,7 +152,14 @@ class Charter extends UIState {
 
 	public override function create() {
 		super.create();
+		instance = this;
 		Conductor.active = true;
+
+		ui = new UIState();
+		ui.notificationTarget = this;
+		UIState.host = ui;
+		UIState.hostRoot = this;
+		ui.create();
 
 		WindowUtils.suffix = " (" + TU.translate("editor.chart.name") + ")";
 		SaveWarning.selectionClass = CharterSelection;
@@ -212,28 +245,13 @@ class Charter extends UIState {
 				label: translate("topBar.chart"),
 				childs: [
 					{
-						label: TU.exists("chart.preview") ? translate("chart.preview") : "Vista previa (desde el inicio)",
-						keybind: [ENTER],
-						onSelect: _chart_preview
-					},
-					{
-						label: TU.exists("chart.playNow") ? translate("chart.playNow") : "Jugar ya (desde aqui)",
-						keybind: [SHIFT, ENTER],
-						onSelect: _chart_play_now
-					},
-					{
-						label: TU.exists("chart.previewHere") ? translate("chart.previewHere") : "Vista previa (desde aqui)",
-						onSelect: _chart_preview_here
-					},
-					null,
-					{
 						label: translate("chart.playtest"),
-						keybind: [ALT, ENTER],
+						keybind: [ENTER],
 						onSelect: _chart_playtest
 					},
 					{
 						label: translate("chart.playtestHere"),
-						keybind: [ALT, SHIFT, ENTER],
+						keybind: [SHIFT, ENTER],
 						onSelect: _chart_playtest_here
 					},
 					null,
@@ -446,12 +464,17 @@ class Charter extends UIState {
 		hitsound = FlxG.sound.load(Paths.sound(Flags.DEFAULT_CHARTER_HITSOUND_SOUND));
 		metronome = FlxG.sound.load(Paths.sound(Flags.DEFAULT_CHARTER_METRONOME_SOUND));
 
-		charterCamera = FlxG.camera;
+		// Camaras propias: la default (FlxG.camera) es la del juego, que esta debajo.
+		gameCamera = FlxG.camera;
+		charterCamera = new FlxCamera();
+		charterCamera.bgColor = 0;
+		FlxG.cameras.add(charterCamera, false);
 		uiCamera = new FlxCamera();
 		uiCamera.bgColor = 0;
-		FlxG.cameras.add(uiCamera);
+		FlxG.cameras.add(uiCamera, false);
+		useEditorCameras(true);
 
-		for (camera in FlxG.cameras.list) camera.antialiasing = false;
+		charterCamera.antialiasing = uiCamera.antialiasing = false;
 
 		charterBG = new FunkinSprite(0, 0, Paths.image('menus/menuDesat'));
 		charterBG.color = 0xFF181818;
@@ -599,16 +622,56 @@ class Charter extends UIState {
 		FlxG.sound.volumeUpKeys = [flixel.input.keyboard.FlxKey.PLUS, flixel.input.keyboard.FlxKey.NUMPADPLUS];
 		FlxG.sound.volumeDownKeys = [flixel.input.keyboard.FlxKey.MINUS, flixel.input.keyboard.FlxKey.NUMPADMINUS];
 		NativeAPI.setCursorIcon(ARROW);
-		__updatePlaytestInfo();
 
 		if(Framerate.isLoaded) {
 			Framerate.fpsCounter.alpha = 1;
 			Framerate.memoryCounter.alpha = 1;
 			Framerate.codenameBuildField.alpha = 1;
 		}
+		if (charterCamera != null) FlxTween.cancelTweensOf(charterCamera);
+		if (uiCamera != null) FlxTween.cancelTweensOf(uiCamera);
+		useEditorCameras(false);
+		if (charterCamera != null) FlxG.cameras.remove(charterCamera);
+		if (uiCamera != null) FlxG.cameras.remove(uiCamera);
+		charterCamera = uiCamera = null;
+
+		if (ui != null) ui.destroy();
+		if (UIState.host == ui) UIState.host = null;
+		if (UIState.hostRoot == this) UIState.hostRoot = null;
+		if (instance == this) instance = null;
+		ui = null;
+
 		super.destroy();
-		if (__playtesting) __playtesting = false;
-		else __clearStatics();
+		__clearStatics();
+	}
+
+	/**
+	 * Camaras por defecto para los objetos sin camara propia: la de la interfaz mientras se edita, la del juego mientras se prueba.
+	 */
+	function useEditorCameras(editing:Bool):Void {
+		if (gameCamera == null) return;
+		FlxG.cameras.setDefaultDrawTarget(editing ? gameCamera : uiCamera, false);
+		FlxG.cameras.setDefaultDrawTarget(editing ? uiCamera : gameCamera, true);
+	}
+
+	public override function tryUpdate(elapsed:Float):Void {
+		super.tryUpdate(elapsed);
+		if (ui != null) ui.tryUpdate(elapsed);
+	}
+
+	public override function onSubstateOpen():Void {
+		super.onSubstateOpen();
+		// Se cuelga del PlayState: la primera vez es el arranque normal, y al volver de probar sigue con el regreso.
+		if (live) beginReturn();
+	}
+
+	public override function onSubstateClose():Void {
+		super.onSubstateClose();
+		// Al descolgarse para probar NO se destruye: el PlayState apaga `destroySubStates` solo este instante.
+		if (detaching) {
+			detaching = false;
+			FlxG.state.destroySubStates = false;
+		}
 	}
 
 	public function loadSong() {
@@ -682,7 +745,6 @@ class Charter extends UIState {
 		try {__relinkUndos();}
 		catch (e) {Logs.trace('Failed to relink undos: ${Std.string(e)}', ERROR);}
 
-		__applyPlaytestInfo();
 	}
 
 	public var __endStep:Float = 0;
@@ -1305,7 +1367,7 @@ class Charter extends UIState {
 	}
 
 	public function createStrumWithUI() {
-		FlxG.state.openSubState(new CharterStrumlineScreen(strumLines.members.length, null, (_) -> {
+		openSubState(new CharterStrumlineScreen(strumLines.members.length, null, (_) -> {
 			if (_ != null) {
 				createStrumline(strumLines.members.length, _);
 
@@ -1322,7 +1384,7 @@ class Charter extends UIState {
 		var strID = getStrumlineID(strL);
 		var oldData:ChartStrumLine = Reflect.copy(strL);
 
-		FlxG.state.openSubState(new CharterStrumlineScreen(strID, strL, (_) -> {
+		openSubState(new CharterStrumlineScreen(strID, strL, (_) -> {
 			strumLines.members[strID].strumLine = _;
 			strumLines.members[strID].updateInfo();
 			strumLines.refreshStrumlineIDs();
@@ -1490,6 +1552,8 @@ class Charter extends UIState {
 	}
 
 	public override function update(elapsed:Float) {
+		if (live) return;
+
 		preview.update(elapsed);
 
 		if (Options.charterRainbowWaveforms) {
@@ -1708,7 +1772,7 @@ class Charter extends UIState {
 	}
 
 	function _file_save_all(_) {saveEverything(); UIState.playEditorSound(Flags.DEFAULT_EDITOR_SAVE_SOUND);}
-	function _file_import_chart(_) FlxG.state.openSubState(new CharterImportScreen());
+	function _file_import_chart(_) openSubState(new CharterImportScreen());
 
 	public function replaceNotes(lines:Array<Array<ChartNote>>):{created:Int, skipped:Int} {
 		var changes:Array<CharterChange> = [];
@@ -1941,27 +2005,6 @@ class Charter extends UIState {
 		_redo(undos.redo());
 	}
 
-	/** Vista previa interna: sin cambiar de pantalla ni recargar nada. Va al inicio (o a donde estas) y reproduce. */
-	function _chart_preview(_)
-		startPreview(false);
-	function _chart_preview_here(_)
-		startPreview(true);
-
-	/** Shift+Enter: abre el juego ya, desde donde esta el cursor, sin pantalla de carga ni transiciones (ESC vuelve directo al charter). */
-	function _chart_play_now(_)
-		playtestChart(Conductor.songPosition, false, true, true);
-
-	function startPreview(here:Bool):Void {
-		if (!CharterPreview.enabled) preview.setEnabled(true);
-		if (FlxG.sound.music.playing) {
-			FlxG.sound.music.pause();
-			vocals.pause();
-			for (strumLine in strumLines.members) strumLine.vocals.pause();
-		}
-		if (!here) Conductor.songPosition = Conductor.getTimeForStep(0) + Conductor.songOffset;
-		_playback_play(null);
-	}
-
 	function _view_showstage(t) {
 		preview.setEnabled(!CharterPreview.enabled);
 		t.icon = CharterPreview.enabled ? 1 : 0;
@@ -2006,11 +2049,11 @@ class Charter extends UIState {
 	}
 
 	function chart_edit_data(_)
-		FlxG.state.openSubState(new ChartDataScreen(PlayState.SONG));
+		openSubState(new ChartDataScreen(PlayState.SONG));
 	function chart_edit_metadata(_)
-		FlxG.state.openSubState(new CharterMetaDataScreen(PlayState.SONG.meta));
+		openSubState(new CharterMetaDataScreen(PlayState.SONG.meta));
 	function chart_edit_actionpacks(_)
-		FlxG.state.openSubState(new CharterActionPacksScreen());
+		openSubState(new CharterActionPacksScreen());
 
 	function _playback_play(_) {
 		if (Conductor.songPosition >= FlxG.sound.music.getDefault(vocals).length - Conductor.songOffset) return;
@@ -2125,7 +2168,7 @@ class Charter extends UIState {
 		if (FlxG.keys.pressed.SHIFT)
 			addBookmarkAt(translate("bookmarks.newBookmarkName"), 0xFF911DD9, curStepFloat);
 		else {
-			FlxG.state.openSubState(new CharterBookmarkCreation(curStepFloat, (success, n, c, s) ->  {
+			openSubState(new CharterBookmarkCreation(curStepFloat, (success, n, c, s) ->  {
 				if (success)
 					addBookmarkAt(n, c, s);
 			}));
@@ -2133,7 +2176,7 @@ class Charter extends UIState {
 	}
 
 	function _bookmarks_edit_list(_)
-		FlxG.state.openSubState(new CharterBookmarkList());
+		openSubState(new CharterBookmarkList());
 
 	public var __bookmarkObjects:Array<Dynamic> = [];
 	public var __scrollbarBookmarks:Array<Dynamic> = [];
@@ -2516,31 +2559,116 @@ class Charter extends UIState {
 	}
 
 	/**
-	 * Abre el nivel en el juego.
-	 * @param fast "Jugar ya": sin LoadingLevelState (el cache de sprites del preview ya esta armado) ni transiciones, y solo guarda el
-	 *             chart si hay cambios sin guardar. La salida del juego vuelve directo al charter.
+	 * "Probar": guarda el chart, arma el nivel en el PlayState que esta debajo y desliza todo el charter hacia la derecha
+	 * mientras el HUD aparece con un fade. Sin cambiar de state ni recargar el charter.
 	 */
-	public function playtestChart(time:Float = 0, opponentMode = false, here = false, fast = false) {
+	public function playtestChart(time:Float = 0, opponentMode = false, here = false) {
+		if (live || preview.isBusy() || FlxG.sound.music == null) return;
+		var game = funky.game.PlayState.instance;
+		if (game == null) return;
+
 		startHere = here;
 		startTime = Conductor.songPosition;
-		if (!fast || undos == null || undos.unsaved) {
+		if (undos == null || undos.unsaved) {
 			buildChart();
 			saveEverything(false);
 		}
-		__playtesting = true;
+		savedSongPos = Conductor.songPosition;
+		live = true;
+		Conductor.active = false;
+
 		if (FlxG.sound.music != null) FlxG.sound.music.stop();
+		if (vocals != null) vocals.stop();
+		for (strumLine in strumLines.members) if (strumLine.vocals != null) strumLine.vocals.stop();
+
 		funky.game.PlayState.archivePath = Chart.levelDir;
 		funky.game.PlayState.startFromMs = here ? Conductor.songPosition : 0;
 		funky.game.PlayState.returnToEditor = Chart.levelName;
-		funky.game.PlayState.quickReturn = fast;
+		funky.game.PlayState.quickReturn = false;
 
-		if (fast) {
-			funky.game.SpriteCache.keepAlive();
-			funky.game.SpriteCache.detach();
-			FlxG.switchState(new funky.game.PlayState());
+		useEditorCameras(false);
+		try {
+			game.beginPlaytest();
+		} catch (e) {
+			// Si el nivel no arma, el charter se queda como estaba en vez de quedar bloqueado.
+			Logs.trace('No se pudo armar el nivel para probar: ${Std.string(e)}', ERROR);
+			live = false;
+			Conductor.active = true;
+			useEditorCameras(true);
+			game.finishReturn();
 			return;
 		}
-		funky.core.TransitionHandler.switchState(new funky.menus.LoadingLevelState());
+		restackCameras();
+		slide(true);
+	}
+
+	/** Deja las camaras del charter por encima de las del juego (que se acaban de crear). */
+	function restackCameras():Void {
+		for (c in [preview.camera, charterCamera, uiCamera]) if (c != null) {
+			FlxG.cameras.remove(c, false);
+			FlxG.cameras.add(c, false);
+		}
+	}
+
+	function slideCameras():Array<FlxCamera> {
+		var cams:Array<FlxCamera> = [charterCamera, uiCamera];
+		if (preview.camera != null) cams.push(preview.camera);
+		return cams;
+	}
+
+	/** out = true: el charter se va a la derecha. out = false: vuelve desde la derecha. */
+	function slide(out:Bool):Void {
+		var cams = slideCameras();
+		var last = cams[cams.length - 1];
+		for (c in cams) {
+			FlxTween.cancelTweensOf(c);
+			var base:Float = c == preview.camera ? previewBaseX : 0;
+			if (out && c == preview.camera) previewBaseX = base = c.x;
+			if (!out) c.x = base + FlxG.width;
+
+			var onDone:Dynamic->Void = null;
+			if (c == last) onDone = function(_) {
+				if (out) slidOut();
+				else slidIn();
+			};
+			FlxTween.tween(c, {x: out ? base + FlxG.width : base}, SLIDE_SECONDS, {ease: FlxEase.cubeInOut, onComplete: onDone});
+		}
+	}
+
+	/** El charter ya salio de la pantalla: se descarga el escenario de fondo y se descuelga del PlayState (sin costo mientras se juega). */
+	function slidOut():Void {
+		for (c in slideCameras()) c.visible = false;
+		preview.suspend();
+		detaching = true;
+		close();
+	}
+
+	/** Lo llama el juego cuando el HUD ya se desvanecio: el charter se vuelve a colgar y entra deslizandose. */
+	public function returnFromPlaytest():Void {
+		var game = funky.game.PlayState.instance;
+		if (game == null) return;
+		game.openSubState(this);
+	}
+
+	function beginReturn():Void {
+		FlxG.mouse.visible = true;
+		if (FlxG.sound.music != null) {
+			FlxG.sound.music.onComplete = null;
+			FlxG.sound.music.stop();
+		}
+		Conductor.songPosition = savedSongPos;
+		useEditorCameras(true);
+		preview.resume();
+		previewBaseX = preview.camera != null ? preview.camera.x : 0;
+		for (c in slideCameras()) c.visible = c == preview.camera ? CharterPreview.enabled : true;
+		slide(false);
+	}
+
+	function slidIn():Void {
+		live = false;
+		Conductor.active = true;
+		var game = funky.game.PlayState.instance;
+		if (game != null) game.finishReturn();
 	}
 
 	public inline function buildNote(note:CharterNote):ChartNote {
@@ -2700,36 +2828,9 @@ class Charter extends UIState {
 	}
 
 	@:noCompletion public function __clearStatics() {
-		selection = null; undos = null; clipboard = null; playtestInfo = null;
+		selection = null; undos = null; clipboard = null;
 		if (waveformHandler != null) waveformHandler.destroy();
 		Charter.waveformHandler = null; autoSaveTimer = 0;
-	}
-
-	@:noCompletion public function __updatePlaytestInfo() {
-		playtestInfo = {
-			songPosition: Conductor.songPosition,
-			playbackSpeed: playBackSlider.value,
-			quantSelected: quant,
-			strumlinesDraggable: strumLines.draggable,
-			hitSounds: [for (strumLine in strumLines.members) strumLine.hitsoundVolume > 0],
-			mutedVocals: [for (strumLine in strumLines.members) !(strumLine.vocals.volume > 0)],
-			waveforms: [for (strumLine in strumLines.members) strumLine.selectedWaveform]
-		}
-	}
-
-	@:noCompletion public function __applyPlaytestInfo() {
-		if (playtestInfo == null) return;
-
-		Conductor.songPosition = playtestInfo.songPosition;
-		playBackSlider.value = playtestInfo.playbackSpeed;
-		quant = playtestInfo.quantSelected;
-		strumLines.draggable = playtestInfo.strumlinesDraggable;
-
-		for (i => strumLine in strumLines.members) {
-			if (i < playtestInfo.hitSounds.length) strumLine.hitsoundVolume = playtestInfo.hitSounds[i] ? 1 : 0;
-			if (i < playtestInfo.mutedVocals.length) strumLine.vocals.volume = playtestInfo.mutedVocals[i] ? 0 : 1;
-			if (i < playtestInfo.waveforms.length) strumLine.selectedWaveform = playtestInfo.waveforms[i];
-		}
 	}
 }
 
@@ -2803,16 +2904,6 @@ enum abstract CharterGridActionType(Int) {
 	var INVALID_DRAG = 3;
 	var SUSTAIN_DRAG = 4;
 	var DELETE_SELECTION = 5;
-}
-
-typedef PlaytestInfo = {
-	var songPosition:Float;
-	var playbackSpeed:Float;
-	var quantSelected:Int;
-	var strumlinesDraggable:Bool;
-	var hitSounds:Array<Bool>;
-	var mutedVocals:Array<Bool>;
-	var waveforms:Array<Int>;
 }
 
 typedef CameraChange = {

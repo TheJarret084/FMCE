@@ -49,7 +49,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 
 		events = chartEvent.events.copy();
 
-		FlxG.state.persistentUpdate = true;
+		Charter.instance.persistentUpdate = true;
 
 		camera = cam = new FlxCamera();
 		cam.bgColor = 0;
@@ -162,7 +162,7 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						numericStepper;
 					case TStrumLine:
 						addLabel();
-						var dropdown = new UIDropDown(eventName.x+6, winHeight, 320, 32, [for(k=>s in cast(FlxG.state, Charter).strumLines.members) 'Strumline #${k+1} (${s.strumLine.characters[0]})'], cast value);
+						var dropdown = new UIDropDown(eventName.x+6, winHeight, 320, 32, [for(k=>s in Charter.instance.strumLines.members) 'Strumline #${k+1} (${s.strumLine.characters[0]})'], cast value);
 						paramsPanel.add(dropdown); paramsFields.push(dropdown);
 						dropdown;
 					case TColorWheel:
