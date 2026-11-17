@@ -1,9 +1,0 @@
-{
-    "params": [
-        {
-            "name": "Numero de Paquete",
-            "type": "Int(0, 99, 1)",
-            "defaultValue": 0
-        }
-    ]
-}
