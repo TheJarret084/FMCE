@@ -222,11 +222,24 @@ class CharterPreview {
 	// CARGA (repartida en frames para que la pantalla de carga alcance a dibujarse)
 
 	function startLoading():Void {
+		makeOverlay();
+		overlay.setProgress(0.05, "preparando");
+		phase = 1;
+	}
+
+	function makeOverlay():Void {
 		overlay = new LoadingOverlay(TU.exists("editor.chart.loadingStage") ? TU.translate("editor.chart.loadingStage") : "Cargando escenario");
 		overlay.cameras = [charter.uiCamera];
 		charter.add(overlay);
-		overlay.setProgress(0.05, "preparando");
-		phase = 1;
+	}
+
+	/** El tamano de la pantalla cambio: la pantalla de carga se arma de nuevo para quedar centrada (se dibuja con el ancho de FlxG). */
+	public function onResized():Void {
+		if (overlay == null) return;
+		charter.remove(overlay, true);
+		overlay.destroy();
+		makeOverlay();
+		overlay.setProgress(0.2, "cargando");
 	}
 
 	function stepLoading(elapsed:Float):Void {

@@ -74,6 +74,8 @@ class Charter extends MusicBeatSubstate {
 	var savedSongPos:Float = 0;
 	var detaching:Bool = false;
 	var fpsOffsetY:Float = 0;
+	var loadPhase:Int = 0;
+	var gameOverlay:Null<funky.menus.LoadingOverlay>;
 
 	public var charterBG:FunkinSprite;
 
@@ -1460,6 +1462,24 @@ class Charter extends MusicBeatSubstate {
 				if (e.params != null) for (p in e.params) h = barHash(h, Std.string(p));
 			}
 		}
+
+		// La vida tambien depende de las notas (posicion, strumline, pack) y del contenido de los action packs.
+		for (note in notesGroup.members) {
+			if (note == null) continue;
+			h = barMix(h, Std.int(note.step * 64));
+			h = barMix(h, note.strumLineID);
+			h = barMix(h, note.onPress);
+		}
+		var packs = PlayState.SONG != null ? PlayState.SONG.actionPacks : null;
+		if (packs != null) for (pack in packs) {
+			if (pack == null || pack.actions == null) continue;
+			h = barMix(h, pack.actions.length);
+			for (a in pack.actions) {
+				if (a == null) continue;
+				h = barHash(h, a.name);
+				if (a.params != null) for (q in a.params) h = barHash(h, Std.string(q));
+			}
+		}
 		return h;
 	}
 
@@ -1475,7 +1495,7 @@ class Charter extends MusicBeatSubstate {
 		return lo;
 	}
 
-	/** Junta y ordena los eventos de la barra del chart, y calcula la vida acumulada despues de cada PlayerHealth. */
+	/** Junta y ordena los eventos de la barra del chart, y calcula la vida acumulada (eventos PlayerHealth + notas). */
 	function collectBarEvents():Void {
 		var icons:Array<Array<{s:Float, n:Int, v:String}>> = [[], []];
 		var health:Array<{s:Float, n:Int, p:Array<Dynamic>}> = [];
@@ -1500,32 +1520,96 @@ class Charter extends MusicBeatSubstate {
 			__iconSprites[t] = [for (i in icons[t]) i.v];
 		}
 
-		health.sort((a, b) -> a.s < b.s ? -1 : (a.s > b.s ? 1 : a.n - b.n));
+		// Vida acumulada: los eventos PlayerHealth y las notas como si TODAS se acertaran, menos las "trampa" del jugador
+		// (su pack resta vida: el jugador no las toca, igual que en el juego). Las notas del oponente / extra no dan vida
+		// por acertarse, pero si corren su pack (asi entran los drain).
+		var items:Array<{s:Float, n:Int, p:Array<Dynamic>, line:Int, pack:Int}> = [];
+		for (hv in health) items.push({s: hv.s, n: hv.n, p: hv.p, line: -1, pack: -1});
+		for (note in notesGroup.members) {
+			if (note == null) continue;
+			items.push({s: note.step, n: n++, p: null, line: note.strumLineID, pack: note.onPress});
+		}
+		items.sort((a, b) -> a.s < b.s ? -1 : (a.s > b.s ? 1 : a.n - b.n));
+
 		var maxHealth = funky.game.PlayHUD.MAX_HEALTH;
-		var scale = maxHealth / funky.game.Eventos.FNMM_MAX_HEALTH;
 		var current:Float = funky.game.PlayHUD.START_HEALTH;
+		__trapCache = new Map();
 		__healthSteps = [];
 		__healthAfter = [];
-		for (ev in health) {
-			var op = ev.p.length > 0 && ev.p[0] != null ? Std.string(ev.p[0]).toLowerCase() : "set";
-			var value = ev.p.length > 1 && ev.p[1] != null ? Std.parseFloat(Std.string(ev.p[1])) : 0;
-			var minimum = ev.p.length > 2 && ev.p[2] != null ? Std.parseFloat(Std.string(ev.p[2])) : 0;
-			if (Math.isNaN(value)) value = 0;
-			if (Math.isNaN(minimum)) minimum = 0;
-			value *= scale;
-			minimum *= scale;
-
-			// Mismas reglas que Eventos.vidaJugador en el juego.
-			switch (op) {
-				case "set": current = value;
-				case "add": current += value;
-				case "remove", "sub", "subtract": if (current > minimum) current = Math.max(minimum, current - value);
-				default:
+		for (it in items) {
+			if (it.p != null) {
+				current = healthOp(current, it.p);
+			} else {
+				var player = it.line == 0;
+				if (player && packDrains(it.pack, 0)) continue;
+				if (player) current = Math.min(maxHealth, current + funky.game.PlayState.HEALTH_HIT);
+				if (it.pack >= 0) current = applyPack(current, it.pack, 0);
 			}
-			current = current < 0 ? 0 : (current > maxHealth ? maxHealth : current);
-			__healthSteps.push(ev.s);
+			__healthSteps.push(it.s);
 			__healthAfter.push(current);
 		}
+	}
+
+	var __trapCache:Map<Int, Bool> = new Map();
+
+	/** Un PlayerHealth: mismas reglas que Eventos.vidaJugador en el juego. `p` = [operacion, valor, vida minima]. */
+	function healthOp(current:Float, p:Array<Dynamic>):Float {
+		var maxHealth = funky.game.PlayHUD.MAX_HEALTH;
+		var scale = maxHealth / funky.game.Eventos.FNMM_MAX_HEALTH;
+		var op = p.length > 0 && p[0] != null ? Std.string(p[0]).toLowerCase() : "set";
+		var value = p.length > 1 && p[1] != null ? Std.parseFloat(Std.string(p[1])) : 0;
+		var minimum = p.length > 2 && p[2] != null ? Std.parseFloat(Std.string(p[2])) : 0;
+		if (Math.isNaN(value)) value = 0;
+		if (Math.isNaN(minimum)) minimum = 0;
+		value *= scale;
+		minimum *= scale;
+
+		switch (op) {
+			case "set": current = value;
+			case "add": current += value;
+			case "remove", "sub", "subtract": if (current > minimum) current = Math.max(minimum, current - value);
+			default:
+		}
+		return current < 0 ? 0 : (current > maxHealth ? maxHealth : current);
+	}
+
+	/** Indice del pack que lanza un RunActionPack (-1 si no se puede leer). */
+	static function runPackIndex(a:ChartEvent):Int {
+		if (a.params == null || a.params.length == 0 || a.params[0] == null) return -1;
+		var v = Std.parseFloat(Std.string(a.params[0]));
+		return Math.isNaN(v) ? -1 : Std.int(v);
+	}
+
+	/** Aplica los PlayerHealth de un action pack (y de los packs que lance, con limite de profundidad). */
+	function applyPack(current:Float, index:Int, depth:Int):Float {
+		var packs = PlayState.SONG != null ? PlayState.SONG.actionPacks : null;
+		if (packs == null || index < 0 || index >= packs.length || depth >= 8 || packs[index].actions == null) return current;
+		for (a in packs[index].actions) {
+			if (a == null) continue;
+			if (a.name == "PlayerHealth") current = healthOp(current, a.params == null ? [] : a.params);
+			else if (a.name == "RunActionPack") current = applyPack(current, runPackIndex(a), depth + 1);
+		}
+		return current;
+	}
+
+	/** true si el pack resta vida al jugador (nota "trampa"): igual que Eventos.restaVida. */
+	function packDrains(index:Int, depth:Int):Bool {
+		var packs = PlayState.SONG != null ? PlayState.SONG.actionPacks : null;
+		if (packs == null || index < 0 || index >= packs.length || depth >= 8 || packs[index].actions == null) return false;
+		if (depth == 0 && __trapCache.exists(index)) return __trapCache.get(index);
+
+		var drains = false;
+		for (a in packs[index].actions) {
+			if (a == null) continue;
+			if (a.name == "PlayerHealth") {
+				var p = a.params == null ? [] : a.params;
+				var op = p.length > 0 && p[0] != null ? Std.string(p[0]).toLowerCase() : "set";
+				var value = p.length > 1 && p[1] != null ? Std.parseFloat(Std.string(p[1])) : 0;
+				if ((op == "remove" || op == "sub" || op == "subtract") && value > 0) drains = true;
+			} else if (a.name == "RunActionPack" && packDrains(runPackIndex(a), depth + 1)) drains = true;
+		}
+		if (depth == 0) __trapCache.set(index, drains);
+		return drains;
 	}
 
 	/**
@@ -1567,7 +1651,10 @@ class Charter extends MusicBeatSubstate {
 	}
 
 	public override function update(elapsed:Float) {
-		if (live) return;
+		if (live) {
+			if (loadPhase > 0) stepGameLoad();
+			return;
+		}
 
 		preview.update(elapsed);
 
@@ -1739,6 +1826,7 @@ class Charter extends MusicBeatSubstate {
 		updateDisplaySprites();
 		updateBookmarks();
 		charterBG.screenCenter();
+		if (preview != null) preview.onResized();
 	}
 
 	var zoom(default, set):Float = 0;
@@ -2601,21 +2689,69 @@ class Charter extends MusicBeatSubstate {
 		funky.game.PlayState.returnToEditor = Chart.levelName;
 		funky.game.PlayState.quickReturn = false;
 
-		useEditorCameras(false);
-		try {
-			preview.enterGame();
-			game.beginPlaytest();
-		} catch (e) {
-			// Si el nivel no arma, el charter se queda como estaba en vez de quedar bloqueado.
-			Logs.trace('No se pudo armar el nivel para probar: ${Std.string(e)}', ERROR);
-			live = false;
-			Conductor.active = true;
-			useEditorCameras(true);
-			game.finishReturn();
-			preview.resume();
-			return;
-		}
+		// Primero se desliza el charter; cuando ya no se ve se arma la HUD y empieza el nivel (`stepGameLoad`).
 		slide(true);
+	}
+
+	/**
+	 * Ya con el charter fuera de pantalla: el juego recupera su resolucion (16:9 con barras a los lados), se muestra "espera un momento"
+	 * y, un frame despues (cuando ya se dibujo), se arma la HUD y arranca el nivel. Despues el charter se descuelga del PlayState.
+	 */
+	function stepGameLoad():Void {
+		var game = funky.game.PlayState.instance;
+		switch (loadPhase) {
+			case 1:
+				UIState.releaseResolutionAware();
+				preview.fitView();
+				gameOverlay = new funky.menus.LoadingOverlay(TU.exists("editor.chart.loadingLevel") ? TU.translate("editor.chart.loadingLevel") : "Preparando la prueba");
+				gameOverlay.cameras = [game.camHUD];
+				game.add(gameOverlay);
+				gameOverlay.setProgress(0.4, "espera un momento");
+				loadPhase = 2;
+			case 2:
+				useEditorCameras(false);
+				try {
+					preview.enterGame();
+					game.beginPlaytest();
+				} catch (e) {
+					removeGameOverlay();
+					abortPlaytest(e);
+					return;
+				}
+				loadPhase = 3;
+			default:
+				removeGameOverlay();
+				loadPhase = 0;
+				detaching = true;
+				close();
+		}
+	}
+
+	function removeGameOverlay():Void {
+		if (gameOverlay == null) return;
+		var game = funky.game.PlayState.instance;
+		if (game != null) game.remove(gameOverlay, true);
+		gameOverlay.destroy();
+		gameOverlay = null;
+	}
+
+	/** Si el nivel no arma, el charter vuelve tal cual estaba en vez de quedar bloqueado. */
+	function abortPlaytest(e:Dynamic):Void {
+		Logs.trace('No se pudo armar el nivel para probar: ${Std.string(e)}', ERROR);
+		loadPhase = 0;
+		if (Options.editorsResizable) UIState.setResolutionAware();
+		useEditorCameras(true);
+		setFramerateEditing(true);
+		var game = funky.game.PlayState.instance;
+		if (game != null) game.finishReturn();
+		preview.resume();
+		for (c in slideCameras()) {
+			FlxTween.cancelTweensOf(c);
+			c.x = 0;
+			c.visible = true;
+		}
+		live = false;
+		Conductor.active = true;
 	}
 
 	function slideCameras():Array<FlxCamera>
@@ -2642,8 +2778,7 @@ class Charter extends MusicBeatSubstate {
 	function slidOut():Void {
 		for (c in slideCameras()) c.visible = false;
 		setFramerateEditing(false);
-		detaching = true;
-		close();
+		loadPhase = 1;
 	}
 
 	/** Lo llama el juego cuando el HUD ya se desvanecio: el charter se vuelve a colgar y entra deslizandose. */
@@ -2662,6 +2797,9 @@ class Charter extends MusicBeatSubstate {
 		Conductor.songPosition = savedSongPos;
 		useEditorCameras(true);
 		setFramerateEditing(true);
+
+		// El editor vuelve a su resolucion (pantalla completa) antes de armar la vista previa.
+		if (Options.editorsResizable) UIState.setResolutionAware();
 
 		// El juego descarga su nivel (la HUD ya se desvanecio) y la vista previa arma el escenario en la posicion del charter, con sus barras.
 		var game = funky.game.PlayState.instance;

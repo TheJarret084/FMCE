@@ -201,15 +201,7 @@ class UIState extends MusicBeatState {
 	}
 
 	public override function destroy() {
-		if (resolutionAware) {
-			resolutionAware = false;
-
-			for (camera in FlxG.cameras.list) {
-				camera.width = FlxG.initialWidth;
-				camera.height = FlxG.initialHeight;
-			}
-			FlxG.scaleMode = Main.scaleMode;
-		}
+		releaseResolutionAware();
 
 		super.destroy();
 		__mousePos.put();
@@ -267,6 +259,20 @@ class UIState extends MusicBeatState {
 		if (!resolutionAware) funkin.backend.system.Main.scaleMode = FlxG.scaleMode;
 		resolutionAware = true;
 		FlxG.scaleMode = uiScaleMode;
+	}
+
+	/**
+	 * Devuelve al juego su resolucion normal (16:9 con barras a los lados) sin cerrar el editor. No hace nada si no estaba activa.
+	 */
+	public static function releaseResolutionAware():Void {
+		if (!resolutionAware) return;
+		resolutionAware = false;
+
+		for (camera in FlxG.cameras.list) {
+			camera.width = FlxG.initialWidth;
+			camera.height = FlxG.initialHeight;
+		}
+		FlxG.scaleMode = funkin.backend.system.Main.scaleMode;
 	}
 
 	public static function playEditorSound(path:String) {

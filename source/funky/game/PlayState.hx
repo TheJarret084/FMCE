@@ -201,8 +201,8 @@ class PlayState extends MusicBeatState
 	 */
 	static inline var MINI_LINE_SCALE:Float = 0.5;
 
-	static inline var HEALTH_HIT:Float = 0.023;
-	static inline var HEALTH_MISS:Float = -0.0475;
+	public static inline var HEALTH_HIT:Float = 0.023;
+	public static inline var HEALTH_MISS:Float = -0.0475;
 
 	/**
 	 * Ventanas de rating (ms), las de Psych.
@@ -746,6 +746,17 @@ class PlayState extends MusicBeatState
 	}
 
 	// CHARTER COMO SUBSTATE
+
+	/**
+	 * El charter es un substate: Flixel solo avisa del cambio de tamano al state, asi que se lo pasamos.
+	 */
+	override public function onResize(width:Int, height:Int):Void
+	{
+		super.onResize(width, height);
+
+		if (subState != null)
+			subState.onResize(width, height);
+	}
 
 	/**
 	 * Abre el charter encima de la escena vacia.
