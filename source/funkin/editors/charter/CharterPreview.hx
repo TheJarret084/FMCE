@@ -48,7 +48,11 @@ class CharterPreview {
 	/** Si el charter avanza mas pasos que esto de un frame, es un salto: no se hace cantar a todas las notas del medio. */
 	static inline var JUMP_STEPS:Float = 16;
 
+	/** Camaras del PlayState (juego) que muestran el escenario: la del mundo y la de los objetos fixed. */
 	public var camera(default, null):FlxCamera;
+	public var hudCamera(default, null):FlxCamera;
+
+	var game:funky.game.PlayState;
 	public var stage(default, null):Null<Stage>;
 
 	var charter:Charter;
@@ -82,14 +86,11 @@ class CharterPreview {
 
 	/** Crea la camara (detras de las del charter) y arranca la carga del escenario. */
 	public function create():Void {
-		camera = new FlxCamera();
-		camera.bgColor = 0xFF000000;
-		// insert() tambien reordena el flashSprite en el display list de OpenFL. Cambiar solo
-		// FlxG.cameras.list deja la capa visual encima del charter aunque la lista diga lo contrario.
-		// Si se vuelve del juego, el cache de sprites del nivel sigue vivo: se vuelve a enganchar al cache de bitmaps.
+		// El escenario es el del PlayState que esta detras del charter: se usan sus camaras y el es quien lo sostiene.
+		game = funky.game.PlayState.instance;
+		camera = game.camGame;
+		hudCamera = game.camHUD;
 		SpriteCache.attach();
-		FlxG.cameras.insert(camera, FlxG.cameras.list.indexOf(charter.charterCamera), false);
-		camera.antialiasing = true;
 		fitView();
 
 		applyVisibility();
@@ -100,13 +101,34 @@ class CharterPreview {
 	public function isBusy():Bool
 		return phase > 0;
 
-	/** El juego se queda con la pantalla: se descarga el escenario (el cache de sprites sigue caliente). */
-	public function suspend():Void {
+	/**
+	 * "Probar": deja un escenario NUEVO (el de la vista previa quedo a medias por los eventos), con sus eventos al inicio,
+	 * a pantalla completa y se lo entrega al PlayState, que lo usa tal cual para el nivel.
+	 */
+	public function enterGame():Void {
+		try {
+			song = SongData.fromPath(Chart.levelDir);
+		} catch (e:Dynamic) {
+			Log.warn('[CharterPreview] no se pudo leer el nivel para probar: ' + e);
+		}
+
 		destroyStage();
-		camera.visible = false;
+		buildStage();
+
+		for (c in [camera, hudCamera]) if (c != null) {
+			c.x = 0;
+			c.y = 0;
+			c.setSize(FlxG.width, FlxG.height);
+			c.visible = true;
+		}
+		if (stage != null) stage.setView(-1, -1);
+
+		// Desde aqui el escenario y los eventos son del juego (el los destruye al terminar).
+		stage = null;
+		eventos = null;
 	}
 
-	/** El charter vuelve: se arma el escenario de nuevo en la posicion actual. */
+	/** El juego termino y descargo su escenario: se arma el de la vista previa en la posicion actual del charter. */
 	public function resume():Void {
 		fitView();
 		applyVisibility();
@@ -164,9 +186,7 @@ class CharterPreview {
 		fitH = FlxG.height;
 
 		if (!letterbox) {
-			camera.x = 0;
-			camera.y = 0;
-			camera.setSize(FlxG.width, FlxG.height);
+			setViewport(0, 0, FlxG.width, FlxG.height);
 			if (stage != null) stage.setView(-1, -1);
 			return;
 		}
@@ -178,14 +198,21 @@ class CharterPreview {
 			h = FlxG.height;
 			w = Math.round(h * aspect);
 		}
-		camera.x = Math.round((FlxG.width - w) / 2);
-		camera.y = Math.round((FlxG.height - h) / 2);
-		camera.setSize(w, h);
+		setViewport(Math.round((FlxG.width - w) / 2), Math.round((FlxG.height - h) / 2), w, h);
 		if (stage != null) stage.setView(w, h);
+	}
+
+	function setViewport(x:Float, y:Float, w:Int, h:Int):Void {
+		for (c in [camera, hudCamera]) if (c != null) {
+			c.x = x;
+			c.y = y;
+			c.setSize(w, h);
+		}
 	}
 
 	function applyVisibility():Void {
 		camera.visible = enabled;
+		if (hudCamera != null) hudCamera.visible = enabled;
 		// Con escenario: la grilla se ve sobre el escenario oscurecido; sin escenario: el fondo de siempre.
 		charter.charterCamera.bgColor = enabled ? 0x00000000 : 0xFF000000;
 		charter.charterBG.color = enabled ? 0xFF000000 : 0xFF181818;
@@ -270,7 +297,7 @@ class CharterPreview {
 
 	function buildStage():Void {
 		if (song == null) return;
-		var built = new Stage(song, camera);
+		var built = new Stage(song, hudCamera);
 		if (!built.loaded) {
 			built.destroy();
 			Log.info('[CharterPreview] el nivel no tiene scene.json con objetos: sin vista previa');
@@ -279,18 +306,24 @@ class CharterPreview {
 		built.cameras = [camera];
 		stage = built;
 		fitView();
-		// Detras de la grilla: el charter BG es el miembro 0, asi que el escenario entra en 1. Aunque algun objeto
-		// termine dibujandose en la camara del charter (por ejemplo un sprite agregado por un evento), queda debajo
-		// de las notas/eventos y no tapa la zona de chartear.
-		charter.insert(1, stage);
+		// Lo sostiene el PlayState (detras del charter): queda en sus camaras, debajo de todo lo del charter.
+		game.insert(0, stage);
+		game.stage = stage;
 		eventos = new Eventos(song, stage);
+		game.eventos = eventos;
 	}
 
 	function destroyStage():Void {
-		if (eventos != null) eventos.destroy();
+		if (eventos != null) {
+			if (game != null && game.eventos == eventos) game.eventos = null;
+			eventos.destroy();
+		}
 		eventos = null;
 		if (stage != null) {
-			charter.remove(stage, true);
+			if (game != null) {
+				game.remove(stage, true);
+				if (game.stage == stage) game.stage = null;
+			}
 			stage.destroy();
 		}
 		stage = null;
@@ -517,9 +550,8 @@ class CharterPreview {
 			overlay = null;
 		}
 		destroyStage();
-		if (camera != null) {
-			FlxG.cameras.remove(camera);
-			camera = null;
-		}
+		camera = null;
+		hudCamera = null;
+		game = null;
 	}
 }

@@ -73,7 +73,7 @@ class Charter extends MusicBeatSubstate {
 	var gameCamera:FlxCamera;
 	var savedSongPos:Float = 0;
 	var detaching:Bool = false;
-	var previewBaseX:Float = 0;
+	var fpsOffsetY:Float = 0;
 
 	public var charterBG:FunkinSprite;
 
@@ -162,6 +162,7 @@ class Charter extends MusicBeatSubstate {
 		instance = this;
 		Conductor.active = true;
 
+		fpsOffsetY = Framerate.isLoaded ? Framerate.offset.y : 0;
 		ui = new UIState();
 		ui.notificationTarget = this;
 		UIState.host = ui;
@@ -609,11 +610,7 @@ class Charter extends MusicBeatSubstate {
 
 		loadSong();
 
-		if (Framerate.isLoaded) {
-			Framerate.fpsCounter.alpha = 0.4;
-			Framerate.memoryCounter.alpha = 0.4;
-			Framerate.codenameBuildField.alpha = 0.4;
-		}
+		setFramerateEditing(true);
 
 		if (Options.editorsResizable)
 			UIState.setResolutionAware();
@@ -630,11 +627,7 @@ class Charter extends MusicBeatSubstate {
 		FlxG.sound.volumeDownKeys = [flixel.input.keyboard.FlxKey.MINUS, flixel.input.keyboard.FlxKey.NUMPADMINUS];
 		NativeAPI.setCursorIcon(ARROW);
 
-		if(Framerate.isLoaded) {
-			Framerate.fpsCounter.alpha = 1;
-			Framerate.memoryCounter.alpha = 1;
-			Framerate.codenameBuildField.alpha = 1;
-		}
+		setFramerateEditing(false);
 		if (charterCamera != null) FlxTween.cancelTweensOf(charterCamera);
 		if (uiCamera != null) FlxTween.cancelTweensOf(uiCamera);
 		useEditorCameras(false);
@@ -650,6 +643,18 @@ class Charter extends MusicBeatSubstate {
 
 		super.destroy();
 		__clearStatics();
+	}
+
+	/**
+	 * El contador de FPS se atenua y baja un poco mientras el charter esta a la vista; al ocultarse o destruirse vuelve a como estaba.
+	 */
+	function setFramerateEditing(editing:Bool):Void {
+		if (!Framerate.isLoaded) return;
+		var a = editing ? 0.4 : 1;
+		Framerate.fpsCounter.alpha = a;
+		Framerate.memoryCounter.alpha = a;
+		Framerate.codenameBuildField.alpha = a;
+		Framerate.offset.y = editing ? 30 : fpsOffsetY;
 	}
 
 	/**
@@ -669,6 +674,9 @@ class Charter extends MusicBeatSubstate {
 	public override function onSubstateOpen():Void {
 		super.onSubstateOpen();
 		// Se cuelga del PlayState: la primera vez es el arranque normal, y al volver de probar sigue con el regreso.
+		// El PlayState sigue actualizandose para animar el escenario que se ve detras.
+		var game = funky.game.PlayState.instance;
+		if (game != null) game.persistentUpdate = true;
 		if (live) beginReturn();
 	}
 
@@ -2595,6 +2603,7 @@ class Charter extends MusicBeatSubstate {
 
 		useEditorCameras(false);
 		try {
+			preview.enterGame();
 			game.beginPlaytest();
 		} catch (e) {
 			// Si el nivel no arma, el charter se queda como estaba en vez de quedar bloqueado.
@@ -2603,49 +2612,36 @@ class Charter extends MusicBeatSubstate {
 			Conductor.active = true;
 			useEditorCameras(true);
 			game.finishReturn();
+			preview.resume();
 			return;
 		}
-		restackCameras();
 		slide(true);
 	}
 
-	/** Deja las camaras del charter por encima de las del juego (que se acaban de crear). */
-	function restackCameras():Void {
-		for (c in [preview.camera, charterCamera, uiCamera]) if (c != null) {
-			FlxG.cameras.remove(c, false);
-			FlxG.cameras.add(c, false);
-		}
-	}
+	function slideCameras():Array<FlxCamera>
+		return [charterCamera, uiCamera];
 
-	function slideCameras():Array<FlxCamera> {
-		var cams:Array<FlxCamera> = [charterCamera, uiCamera];
-		if (preview.camera != null) cams.push(preview.camera);
-		return cams;
-	}
-
-	/** out = true: el charter se va a la derecha. out = false: vuelve desde la derecha. */
+	/** out = true: el charter se va a la derecha (el juego queda detras). out = false: vuelve desde la derecha. */
 	function slide(out:Bool):Void {
 		var cams = slideCameras();
 		var last = cams[cams.length - 1];
 		for (c in cams) {
 			FlxTween.cancelTweensOf(c);
-			var base:Float = c == preview.camera ? previewBaseX : 0;
-			if (out && c == preview.camera) previewBaseX = base = c.x;
-			if (!out) c.x = base + FlxG.width;
+			if (!out) c.x = FlxG.width;
 
 			var onDone:Dynamic->Void = null;
 			if (c == last) onDone = function(_) {
 				if (out) slidOut();
 				else slidIn();
 			};
-			FlxTween.tween(c, {x: out ? base + FlxG.width : base}, SLIDE_SECONDS, {ease: FlxEase.cubeInOut, onComplete: onDone});
+			FlxTween.tween(c, {x: out ? FlxG.width : 0}, SLIDE_SECONDS, {ease: FlxEase.cubeInOut, onComplete: onDone});
 		}
 	}
 
-	/** El charter ya salio de la pantalla: se descarga el escenario de fondo y se descuelga del PlayState (sin costo mientras se juega). */
+	/** El charter ya salio de la pantalla: se descuelga del PlayState (sin costo mientras se juega). */
 	function slidOut():Void {
 		for (c in slideCameras()) c.visible = false;
-		preview.suspend();
+		setFramerateEditing(false);
 		detaching = true;
 		close();
 	}
@@ -2665,17 +2661,20 @@ class Charter extends MusicBeatSubstate {
 		}
 		Conductor.songPosition = savedSongPos;
 		useEditorCameras(true);
+		setFramerateEditing(true);
+
+		// El juego descarga su nivel (la HUD ya se desvanecio) y la vista previa arma el escenario en la posicion del charter, con sus barras.
+		var game = funky.game.PlayState.instance;
+		if (game != null) game.finishReturn();
 		preview.resume();
-		previewBaseX = preview.camera != null ? preview.camera.x : 0;
-		for (c in slideCameras()) c.visible = c == preview.camera ? CharterPreview.enabled : true;
+
+		for (c in slideCameras()) c.visible = true;
 		slide(false);
 	}
 
 	function slidIn():Void {
 		live = false;
 		Conductor.active = true;
-		var game = funky.game.PlayState.instance;
-		if (game != null) game.finishReturn();
 	}
 
 	public inline function buildNote(note:CharterNote):ChartNote {

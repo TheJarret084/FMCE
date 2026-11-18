@@ -114,11 +114,6 @@ class PlayState extends MusicBeatState
 	var leavingToCharter:Bool = false;
 
 	/**
-	 * Duracion (s) del fade del HUD al probar / al volver al charter.
-	 */
-	static inline var PLAYTEST_FADE:Float = 0.4;
-
-	/**
 	 * Estado de cada lane en el frame anterior, para `onKeyRelease`.
 	 */
 	var prevHeld:Array<Bool> = [];
@@ -480,6 +475,14 @@ class PlayState extends MusicBeatState
 		{
 			// Base del charter: escena vacia (nada cargado). El charter se abre en el primer update.
 			camGame = FlxG.camera;
+			camGame.bgColor = FlxColor.BLACK;
+
+			// La camara de la HUD existe desde ya (vacia): el escenario vivo que se ve detras del charter la usa para sus objetos fixed,
+			// igual que en el juego. La HUD de verdad se construye al probar.
+			camHUD = new FlxCamera();
+			camHUD.bgColor = FlxColor.TRANSPARENT;
+			FlxG.cameras.add(camHUD, false);
+
 			pendingCharter = true;
 			return;
 		}
@@ -501,9 +504,13 @@ class PlayState extends MusicBeatState
 		// CAMARAS
 		camGame = FlxG.camera;
 		camGame.bgColor = FlxColor.BLACK;
-		camHUD = new FlxCamera();
-		camHUD.bgColor = FlxColor.TRANSPARENT;
-		FlxG.cameras.add(camHUD, false);
+
+		if (camHUD == null)
+		{
+			camHUD = new FlxCamera();
+			camHUD.bgColor = FlxColor.TRANSPARENT;
+			FlxG.cameras.add(camHUD, false);
+		}
 
 		// NIVEL Y SCRIPTS
 		try
@@ -524,18 +531,22 @@ class PlayState extends MusicBeatState
 		Scripts.load(song.levelDir, ["game" => this, "song" => song, "levelDir" => song.levelDir]);
 		Scripts.call("onLoad");
 
-		// ESCENARIO Y EVENTOS
-		stage = new Stage(song, camHUD);
-
-		if (stage.loaded)
-			add(stage);
-		else
+		// ESCENARIO Y EVENTOS: dentro del charter ya estan armados y visibles detras (los dejo el preview limpios), se reusan tal cual.
+		if (!(editorHost && stage != null && eventos != null))
 		{
-			Log.warn('[PlayState] el stage no cargo ningun objeto (' + song.levelDir + ')');
-			stage = null;
+			stage = new Stage(song, camHUD);
+
+			if (stage.loaded)
+				add(stage);
+			else
+			{
+				Log.warn('[PlayState] el stage no cargo ningun objeto (' + song.levelDir + ')');
+				stage = null;
+			}
+
+			eventos = new Eventos(song, stage);
 		}
 
-		eventos = new Eventos(song, stage);
 		Scripts.set("stage", stage);
 		Scripts.set("eventos", eventos);
 
@@ -757,9 +768,6 @@ class PlayState extends MusicBeatState
 		mobileControls = null;
 		songTime = 0;
 		hud = null;
-		stage = null;
-		eventos = null;
-		camHUD = null;
 		camSub = null;
 		extraLines = new Map<Int, StrumLine>();
 		hudLines = [];
@@ -799,13 +807,12 @@ class PlayState extends MusicBeatState
 		resetRun();
 		playtestLive = true;
 		leavingToCharter = false;
+		persistentUpdate = false;
 		buildLevel();
 
-		if (camHUD != null)
-		{
-			camHUD.alpha = 0;
-			FlxTween.tween(camHUD, {alpha: 1}, PLAYTEST_FADE, {ease: FlxEase.quadOut});
-		}
+		// La HUD nace invisible y aparece con su fade (el escenario ya estaba a la vista).
+		guiFade = 0;
+		setGuiVisible(true);
 	}
 
 	/**
@@ -855,8 +862,14 @@ class PlayState extends MusicBeatState
 
 		if (camHUD != null)
 		{
-			FlxG.cameras.remove(camHUD);
-			camHUD = null;
+			// Dentro del charter la camara de la HUD se queda (la usa el escenario de la vista previa).
+			if (editorHost)
+				camHUD.alpha = 1;
+			else
+			{
+				FlxG.cameras.remove(camHUD);
+				camHUD = null;
+			}
 		}
 
 		stage = null;
@@ -948,13 +961,9 @@ class PlayState extends MusicBeatState
 			charter.returnFromPlaytest();
 		};
 
-		if (camHUD == null)
-		{
-			back();
-			return;
-		}
-
-		FlxTween.tween(camHUD, {alpha: 0}, PLAYTEST_FADE * 0.6, {ease: FlxEase.quadIn, onComplete: function(_) back()});
+		// La HUD se desvanece y, cuando termina, el charter vuelve a entrar.
+		setGuiVisible(false);
+		FlxTween.num(0, 1, GUI_FADE_SECONDS, {onComplete: function(_) back()});
 	}
 
 	/**
@@ -981,8 +990,15 @@ class PlayState extends MusicBeatState
 			return;
 		}
 
-		// Base del charter sin nivel armado, o volviendo al charter: no hay nada que actualizar.
-		if ((editorHost && !playtestLive) || leavingToCharter)
+		// Base del charter sin nivel armado: solo se anima el escenario que se ve detras (el charter lo maneja).
+		if (editorHost && !playtestLive)
+		{
+			super.update(elapsed);
+			return;
+		}
+
+		// Volviendo al charter: el juego queda congelado mientras la HUD se desvanece.
+		if (leavingToCharter)
 			return;
 
 		if (pendingError != null)
