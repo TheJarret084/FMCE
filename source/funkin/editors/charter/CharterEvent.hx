@@ -432,7 +432,7 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		draggable = true;
 
 		bWidth = 37 + (icons.length * 22);
-		x = (snappedToGrid && eventsBackdrop != null ? eventsBackdrop.x - bWidth : 0);
+		x = (snappedToGrid && eventsBackdrop != null ? eventsBackdrop.x : 0);
 	}
 }
 

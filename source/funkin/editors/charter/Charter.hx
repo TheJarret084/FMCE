@@ -1002,7 +1002,7 @@ class Charter extends MusicBeatSubstate {
 						n.cursor = HAND;
 					}, function (e:CharterEvent) {
 						e.snappedToGrid = false;
-						e.setPosition(e.eventsBackdrop.x + (mousePos.x - dragStartPos.x), e.step * 40 + (mousePos.y - dragStartPos.y) - 17);
+						e.setPosition(e.eventsBackdrop.x, e.step * 40 + (mousePos.y - dragStartPos.y) - 17);
 						e.y = CoolUtil.bound(e.y, -17, (__endStep*40)-17);
 						e.cursor = HAND;
 					});

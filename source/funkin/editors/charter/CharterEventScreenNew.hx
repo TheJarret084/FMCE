@@ -328,41 +328,12 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 		return Math.isNaN(n) ? 0 : n;
 	}
 
-	/**
-	 * Posicion en pantalla donde debe salir la ventana: al ladito del pin
-	 * (el boton "Editar/Agregar evento"), a su derecha y a su altura.
-	 * Si a la derecha no cabe, sale a la izquierda del pin.
-	 * Se usa la camara del charter (no FlxG.camera, que es la del juego).
-	 */
-	function pinScreenPosition():FlxPoint {
-		var chCam:FlxCamera = Charter.instance.charterCamera != null ? Charter.instance.charterCamera : FlxG.camera;
-		var pin = Charter.instance.addEventSpr;
-
-		// El evento nuevo todavia no esta en el grupo (x = -100), asi que
-		// el ancla es el pin, no el evento.
-		var pinX:Float = pin != null ? pin.x : chartEvent.x;
-		var pinY:Float = pin != null ? pin.y : chartEvent.y;
-		var pinW:Float = pin != null ? pin.bWidth : chartEvent.bWidth;
-
-		var right = CoolUtil.pointToScreenPosition(FlxPoint.get(pinX + pinW, pinY), chCam);
-		var left = CoolUtil.pointToScreenPosition(FlxPoint.get(pinX, pinY), chCam);
-
-		var pos = FlxPoint.get(right.x + chCam.x + 6, right.y + chCam.y);
-		if (pos.x + bWidth > FlxG.width - 24)
-			pos.x = left.x + chCam.x - bWidth - 6;
-
-		// que no se meta bajo el menu de arriba
-		pos.y = Math.max(pos.y, 40);
-
-		right.put(); left.put();
-		return pos;
-	}
-
 	public function boundWindow() {
 		var screenPos:FlxPoint = onQuit != null
 			? FlxPoint.get(FlxG.width / 2 - bWidth / 2, 70)
-			: pinScreenPosition();
-		if (onQuit != null) screenPos.y += 8;
+			: CoolUtil.pointToScreenPosition(FlxPoint.get(chartEvent.x, chartEvent.y + chartEvent.bHeight));
+		if (onQuit == null) screenPos.x += 8;
+		screenPos.y += 8;
 
 		bg.bWidth = cam.width = cast bWidth-6;
 		bg.bHeight = cam.height = cast winHeight + 10;
