@@ -95,7 +95,7 @@ class UITopMenuButton extends UISliceSprite {
 
 	public function openContextMenu() {
 
-		var screenPos = getScreenPosition(null, __lastDrawCameras[0] == null ? FlxG.camera : __lastDrawCameras[0]);
+		var screenPos = getScreenPosition(null, __lastDrawCameras[0] == null ? UIState.mainCamera() : __lastDrawCameras[0]);
 		curMenu = UIState.state.openContextMenu(contextMenu, null, screenPos.x, screenPos.y + bHeight);
 	}
 }

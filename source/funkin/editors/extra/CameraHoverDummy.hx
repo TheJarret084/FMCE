@@ -5,7 +5,7 @@ class CameraHoverDummy extends UISprite {
 	public function new(?parent:FlxBasic, scroll:FlxPoint) {
 		super();
 		this.parent = parent;
-		cameras = parent == null ? [FlxG.camera] : parent.cameras;
+		cameras = parent == null ? [UIState.mainCamera()] : parent.cameras;
 		scrollFactor.copyFrom(scroll);
 	}
 

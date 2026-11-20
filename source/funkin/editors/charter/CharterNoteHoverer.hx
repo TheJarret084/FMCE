@@ -12,7 +12,7 @@ class CharterNoteHoverer extends CharterNote {
 
 	@:noCompletion var __mousePos:FlxPoint = FlxPoint.get();
 	public override function update(elapsed:Float) @:privateAccess {
-		FlxG.mouse.getWorldPosition(FlxG.camera, __mousePos);
+		FlxG.mouse.getWorldPosition(Charter.instance.charterCamera, __mousePos);
 
 		switch (Charter.instance.gridActionType) {
 			case NONE:

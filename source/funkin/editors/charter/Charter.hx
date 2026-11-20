@@ -483,6 +483,7 @@ class Charter extends MusicBeatSubstate {
 		uiCamera.bgColor = 0;
 		FlxG.cameras.add(uiCamera, false);
 		useEditorCameras(true);
+		UIState.hostCamera = uiCamera;
 
 		charterCamera.antialiasing = uiCamera.antialiasing = false;
 
@@ -640,6 +641,7 @@ class Charter extends MusicBeatSubstate {
 		if (ui != null) ui.destroy();
 		if (UIState.host == ui) UIState.host = null;
 		if (UIState.hostRoot == this) UIState.hostRoot = null;
+		UIState.hostCamera = null;
 		if (instance == this) instance = null;
 		ui = null;
 
@@ -664,8 +666,9 @@ class Charter extends MusicBeatSubstate {
 	 */
 	function useEditorCameras(editing:Bool):Void {
 		if (gameCamera == null) return;
-		FlxG.cameras.setDefaultDrawTarget(editing ? gameCamera : uiCamera, false);
-		FlxG.cameras.setDefaultDrawTarget(editing ? uiCamera : gameCamera, true);
+		// Editando: lo que no tiene camara propia se dibuja en las del charter (como cuando el charter era el state); probando: en la del juego.
+		for (c in [charterCamera, uiCamera]) if (c != null) FlxG.cameras.setDefaultDrawTarget(c, editing);
+		FlxG.cameras.setDefaultDrawTarget(gameCamera, !editing);
 	}
 
 	public override function tryUpdate(elapsed:Float):Void {
@@ -1456,7 +1459,7 @@ class Charter extends MusicBeatSubstate {
 		for (ce in eventsGroup.members) {
 			if (ce == null) continue;
 			for (e in ce.events) {
-				if (e.name != "BarIconChange" && e.name != "PlayerHealth") continue;
+				if (e.name != "BarIconChange" && e.name != "PlayerHealth" && e.name != "RunActionPack") continue;
 				h = barMix(h, Std.int(ce.step * 64));
 				h = barHash(h, e.name);
 				if (e.params != null) for (p in e.params) h = barHash(h, Std.string(p));
@@ -1498,13 +1501,17 @@ class Charter extends MusicBeatSubstate {
 	/** Junta y ordena los eventos de la barra del chart, y calcula la vida acumulada (eventos PlayerHealth + notas). */
 	function collectBarEvents():Void {
 		var icons:Array<Array<{s:Float, n:Int, v:String}>> = [[], []];
-		var health:Array<{s:Float, n:Int, p:Array<Dynamic>}> = [];
+		var health:Array<{s:Float, n:Int, p:Array<Dynamic>, pack:Int}> = [];
 		var n = 0;
 		for (ce in eventsGroup.members) {
 			if (ce == null) continue;
 			for (e in ce.events) {
 				if (e.name == "PlayerHealth") {
-					health.push({s: ce.step, n: n++, p: e.params == null ? [] : e.params});
+					health.push({s: ce.step, n: n++, p: e.params == null ? [] : e.params, pack: -1});
+				} else if (e.name == "RunActionPack") {
+					// Un evento que lanza un action pack: sus PlayerHealth tambien mueven la barra.
+					var idx = runPackIndex(e);
+					if (idx >= 0) health.push({s: ce.step, n: n++, p: null, pack: idx});
 				} else if (e.name == "BarIconChange" && e.params != null) {
 					var target:Int = e.params.length > 0 && e.params[0] != null ? Std.int(e.params[0]) : 1;
 					var sprite:String = e.params.length > 1 && e.params[1] != null ? Std.string(e.params[1]) : "";
@@ -1524,7 +1531,7 @@ class Charter extends MusicBeatSubstate {
 		// (su pack resta vida: el jugador no las toca, igual que en el juego). Las notas del oponente / extra no dan vida
 		// por acertarse, pero si corren su pack (asi entran los drain).
 		var items:Array<{s:Float, n:Int, p:Array<Dynamic>, line:Int, pack:Int}> = [];
-		for (hv in health) items.push({s: hv.s, n: hv.n, p: hv.p, line: -1, pack: -1});
+		for (hv in health) items.push({s: hv.s, n: hv.n, p: hv.p, line: hv.pack >= 0 ? -2 : -1, pack: hv.pack});
 		for (note in notesGroup.members) {
 			if (note == null) continue;
 			items.push({s: note.step, n: n++, p: null, line: note.strumLineID, pack: note.onPress});
@@ -1537,7 +1544,9 @@ class Charter extends MusicBeatSubstate {
 		__healthSteps = [];
 		__healthAfter = [];
 		for (it in items) {
-			if (it.p != null) {
+			if (it.line == -2) {
+				current = applyPack(current, it.pack, 0);
+			} else if (it.p != null) {
 				current = healthOp(current, it.p);
 			} else {
 				var player = it.line == 0;

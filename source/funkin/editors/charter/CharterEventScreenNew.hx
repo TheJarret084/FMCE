@@ -172,7 +172,9 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 						colorWheel;
 					case TDropDown(options):
 						addLabel();
-						var optionIndex = options.indexOf(Std.string(value));
+						var wanted = Std.string(value).toLowerCase();
+						var optionIndex = -1;
+						for (oi => option in options) if (option.toLowerCase() == wanted) { optionIndex = oi; break; }
 						if(optionIndex < 0) {
 							optionIndex = 0;
 						}

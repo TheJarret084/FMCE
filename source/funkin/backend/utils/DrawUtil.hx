@@ -75,13 +75,13 @@ final class DrawUtil {
 		dot.animation.add("default", [0], 0, false);
 		dot.animation.add("hollow", [1], 0, false);
 		dot.animation.play("default");
-		dot.camera = FlxG.camera;
+		dot.camera = funkin.editors.ui.UIState.mainCamera();
 
 		line = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
-		line.camera = FlxG.camera;
+		line.camera = funkin.editors.ui.UIState.mainCamera();
 
 		square = new FlxSprite().makeGraphic(32, 32, FlxColor.WHITE);
-		square.camera = FlxG.camera;
+		square.camera = funkin.editors.ui.UIState.mainCamera();
 	}
 
 	public static function destroyDrawers() {

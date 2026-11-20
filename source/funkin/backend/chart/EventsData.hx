@@ -36,6 +36,9 @@ typedef EventParamInfo = {
 class EventsData {
 	static final UNITS:Array<String> = ["seconds", "beats", "steps"];
 
+	/** Interpolaciones que entiende el juego (Eventos.curva). Sin sufijo: quad, cube, etc. usan inOut (bounce y elastic, out). */
+	static final EASES:Array<String> = ["default", "linear", "quad", "cube", "circ", "sine", "expo", "back", "bounce", "elastic"];
+
 	static inline function p(key:String, name:String, type:EventParamType, def:Dynamic):EventParamInfo
 		return {key: key, name: name, type: type, defValue: def};
 
@@ -43,7 +46,7 @@ class EventsData {
 		return [
 			p("transitionTime", "Duracion", TFloat(0, 9999, 0.25, 3), 0.0),
 			p("transitionTimeUnit", "Unidad", TDropDown(UNITS), "seconds"),
-			p("easingType", "Curva (default, quad, cubeOut...)", TString, "default")
+			p("easingType", "Interpolacion", TDropDown(EASES), "default")
 		];
 
 	static final DISPLAY_NAMES:Map<String, String> = [

@@ -34,6 +34,14 @@ class UIState extends MusicBeatState {
 	public static var hostRoot:flixel.FlxState = null;
 
 	/**
+	 * Camara de la interfaz del `host` (FlxG.camera es la del juego, que esta debajo y tiene otro desplazamiento).
+	 */
+	public static var hostCamera:flixel.FlxCamera = null;
+
+	public static inline function mainCamera():flixel.FlxCamera
+		return hostCamera != null ? hostCamera : FlxG.camera;
+
+	/**
 	 * Grupo donde se dibujan las notificaciones (por defecto el propio UIState; un `host` usa el de su substate).
 	 */
 	public var notificationTarget:flixel.group.FlxGroup = null;
@@ -65,7 +73,7 @@ class UIState extends MusicBeatState {
 			return;
 		}
 
-		FlxG.mouse.getScreenPosition(FlxG.camera, __mousePos);
+		FlxG.mouse.getScreenPosition(mainCamera(), __mousePos);
 
 		if (buttonHandler != null) {
 			buttonHandler();
@@ -165,7 +173,7 @@ class UIState extends MusicBeatState {
 	}
 
 	public override function tryUpdate(elapsed:Float) {
-		FlxG.mouse.getScreenPosition(FlxG.camera, __mousePos);
+		FlxG.mouse.getScreenPosition(mainCamera(), __mousePos);
 
 		super.tryUpdate(elapsed);
 
