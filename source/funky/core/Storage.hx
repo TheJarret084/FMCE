@@ -1,7 +1,8 @@
 package funky.core;
 
 #if (sys && android)
-import lime.system.JNI;
+import extension.androidtools.Permissions as AndroidPermissions;
+import extension.androidtools.Settings as AndroidSettings;
 import sys.FileSystem;
 import sys.io.File;
 #end
@@ -27,8 +28,8 @@ class Storage
 			Log.warn('[Storage] sin permiso para $ANDROID_ROOT: se pide "Acceso a todos los archivos"');
 			try
 			{
-				var request = JNI.createStaticMethod("org/fmce/StorageAccess", "requestAccess", "()V");
-				request();
+				AndroidSettings.requestSetting('MANAGE_APP_ALL_FILES_ACCESS_PERMISSION');
+				AndroidPermissions.requestPermissions(['READ_EXTERNAL_STORAGE', 'WRITE_EXTERNAL_STORAGE']);
 			}
 			catch (e:Dynamic)
 			{
@@ -135,16 +136,8 @@ class Storage
 	#if sys
 	public static function hasAccess():Bool
 	{
-		try
-		{
-			var check = JNI.createStaticMethod("org/fmce/StorageAccess", "hasAccess", "()Z");
-			return check();
-		}
-		catch (e:Dynamic)
-		{
-
-			return ensureWritable(ANDROID_ROOT);
-		}
+		// Sin codigo Java propio: se comprueba escribiendo de verdad en la carpeta publica.
+		return ensureWritable(ANDROID_ROOT);
 	}
 
 	static function ensureWritable(dir:String):Bool

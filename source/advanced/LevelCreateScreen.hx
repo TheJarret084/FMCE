@@ -28,6 +28,9 @@ class LevelCreateScreen extends UISubstateWindow
 	var voicesExplorer:UIFileExplorer;
 	var instrumentalInfo:UIText;
 	var voicesInfo:UIText;
+	var importExplorer:UIFileExplorer;
+	var importInfo:UIText;
+	var importResult:Null<funkin.backend.chart.ChartImporter.ImportResult> = null;
 
 	var displayNameBox:UITextBox;
 	var iconBox:UITextBox;
@@ -55,7 +58,7 @@ class LevelCreateScreen extends UISubstateWindow
 	{
 		winTitle = AdvLang.t("levelCreate.title", null, "Nuevo nivel");
 		winWidth = 760;
-		winHeight = 560;
+		winHeight = 640;
 		super.create();
 
 		var x = windowSpr.x + 22;
@@ -113,6 +116,14 @@ class LevelCreateScreen extends UISubstateWindow
 		songPage.add(new UIText(x, audioY + 153, 700,
 			"Los archivos se copian dentro de music/ como Inst y Voices. Puedes cambiar el audio después desde el nivel.", 13));
 
+		// Importar chart (opcional): .json de FNF / Psych / Codename / FNMM o un .fnfc. Si el paquete trae audio, se usa como Inst y Voices.
+		songPage.add(new UIText(x, audioY + 186, 700, "Importar chart  ·  opcional (.json, .fnfc)", 17));
+		importExplorer = new UIFileExplorer(x, audioY + 216, 330, 50, "json;fnfc", onImportFile);
+		songPage.add(importExplorer);
+		importInfo = new UIText(x + 345, audioY + 216, 350, "Sin chart: el nivel se crea vacío. Un .fnfc trae su audio y se usa solo.", 12);
+		importInfo.alpha = 0.72;
+		songPage.add(importInfo);
+
 		// PAGINA 2 — Metadatos y opciones que aparecen en los menus.
 		menuPage.add(new UIText(x, y, 700, "Opciones del menú  ·  2/2", 25, 0xFF5FE36B));
 
@@ -164,6 +175,72 @@ class LevelCreateScreen extends UISubstateWindow
 		add(createButton);
 
 		showPage(0);
+	}
+
+	function onImportFile(path:String, bytes:haxe.io.Bytes):Void
+	{
+		importResult = null;
+		if (path == null || bytes == null)
+		{
+			importInfo.text = "Sin chart: el nivel se crea vacío. Un .fnfc trae su audio y se usa solo.";
+			return;
+		}
+
+		try
+		{
+			var pack:funkin.backend.chart.FnfcPackage = null;
+			var text:String;
+			if (funkin.backend.chart.FnfcPackage.isFnfc(path))
+			{
+				pack = funkin.backend.chart.FnfcPackage.read(bytes);
+				text = pack.chart;
+			}
+			else
+				text = bytes.toString();
+
+			var res = funkin.backend.chart.ChartImporter.parse(text, Std.int(Math.max(1, lanesStepper.value)));
+			if (pack != null && pack.bpm != null) res.bpm = pack.bpm;
+			importResult = res;
+
+			var lines = [res.notes + " notas, " + res.sustains + " sustains en " + res.lines.length + " strumlines"];
+			if (res.bpm != null && res.bpm > 0)
+			{
+				bpmStepper.value = res.bpm;
+				lines.push("BPM: " + res.bpm);
+			}
+
+			if (StringTools.trim(songNameBox.label.text) == "")
+			{
+				var name = pack != null && pack.songName != null && pack.songName != "" ? pack.songName : haxe.io.Path.withoutExtension(haxe.io.Path.withoutDirectory(path));
+				songNameBox.label.text = name;
+			}
+
+			// Audio del paquete: el "inst" es el instrumental y el primer "voices" las voces (solo si no se eligieron a mano).
+			if (pack != null)
+			{
+				var voices:Null<funkin.backend.chart.FnfcPackage.FnfcAudio> = null;
+				for (a in pack.audio)
+				{
+					if (StringTools.startsWith(a.target, "music."))
+					{
+						if (instrumentalExplorer.file == null) instrumentalExplorer.setFileData(a.name, a.bytes);
+					}
+					else if (voices == null)
+						voices = a;
+				}
+				if (voices != null && voicesExplorer.file == null) voicesExplorer.setFileData(voices.name, voices.bytes);
+				lines.push(pack.audio.length > 0 ? "Audio del paquete cargado (Inst" + (voices != null ? " y Voces" : "") + ")" : "El paquete no trae audio: elige el instrumental.");
+			}
+			else if (instrumentalExplorer.file == null)
+				lines.push("Este formato no trae audio: elige el instrumental para poder escuchar la canción.");
+
+			importInfo.text = lines.join("\n");
+		}
+		catch (e:Dynamic)
+		{
+			importResult = null;
+			importInfo.text = "No se pudo leer el chart: " + Std.string(e);
+		}
 	}
 
 	function confirmSelections():Void
@@ -253,6 +330,7 @@ class LevelCreateScreen extends UISubstateWindow
 		}
 
 		var folder = result.folder;
+		funkin.editors.charter.Charter.importOnStart = importResult;
 		close();
 		if (onCreated != null) onCreated(folder);
 	}

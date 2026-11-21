@@ -11,7 +11,6 @@ import funky.backend.utils.NativeAPI;
 import funky.backend.utils.NativeAPI.MessageBoxIcon;
 
 #if android
-import lime.system.JNI;
 #end
 
 #if sys
@@ -55,7 +54,6 @@ final class CrashHandler
 	public static function init():Void
 	{
 		#if android
-		requestNotifications();
 		#end
 
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(
@@ -126,9 +124,10 @@ final class CrashHandler
 
 		handlingCrash = true;
 
+		var waitingForUser = false;
 		try
 		{
-			handleInner(message, stack, fatal);
+			waitingForUser = handleInner(message, stack, fatal);
 		}
 		catch (e:Dynamic)
 		{
@@ -145,12 +144,16 @@ final class CrashHandler
 			catch (_:Dynamic) {}
 		}
 
+		// La ventana nativa de Android espera al usuario: se cierra desde su boton.
+		if (waitingForUser)
+			return;
+
 		#if sys
 		Sys.exit(1);
 		#end
 	}
 
-	private static function handleInner(message:String, stack:Array<StackItem>, fatal:Bool):Void
+	private static function handleInner(message:String, stack:Array<StackItem>, fatal:Bool):Bool
 	{
 		var stackLabel:String = stackToString(stack);
 		var stateName:String = getStateName();
@@ -179,7 +182,8 @@ final class CrashHandler
 		var savedPath:String = saveCrash(report);
 
 		#if android
-		notifyAndroid(message, savedPath);
+		if (showAndroidDialog(message, stackLabel, report, savedPath, !fatal))
+			return true;
 		#end
 
 		var popupText:String =
@@ -203,7 +207,7 @@ final class CrashHandler
 		if (!fatal && showCrashScreen(message, report, savedPath))
 		{
 			handlingCrash = false;
-			return;
+			return false;
 		}
 
 		if (!popupShown)
@@ -226,6 +230,8 @@ final class CrashHandler
 		#if sys
 		Sys.exit(1);
 		#end
+
+		return false;
 	}
 
 	private static var recentCrashes:Array<Float> = [];
@@ -294,30 +300,61 @@ final class CrashHandler
 	#end
 
 	#if android
-	/** Android 13+: pide el permiso de notificaciones al iniciar (al crashear ya no se puede). */
-	private static function requestNotifications():Void
+	static var pendingContinue:Bool = false;
+	static var pendingMessage:String = "";
+	static var pendingReport:String = "";
+	static var pendingPath:String = "";
+
+	/**
+	 * Ventana nativa de Android (AlertDialog de extension-androidtools). No bloquea: por eso el juego NO se cierra aqui,
+	 * se cierra al tocar "Cerrar". En fallos no fatales hay tambien "Continuar" (abre la pantalla de crash del juego).
+	 * Devuelve false si no se pudo mostrar (entonces el flujo normal cierra el juego).
+	 */
+	private static function showAndroidDialog(message:String, stackLabel:String, report:String, savedPath:String, canContinue:Bool):Bool
 	{
 		try
 		{
-			JNI.createStaticMethod("org/fmce/CrashNotifier", "requestPermission", "()V")();
+			var text = message;
+			if (stackLabel != null && stackLabel != "")
+				text += "\n\n" + (stackLabel.length > 900 ? stackLabel.substr(0, 900) + "..." : stackLabel);
+			text += savedPath != "" ? "\n\nLog: " + savedPath : "\n\n(no se pudo guardar el log)";
+
+			pendingMessage = message;
+			pendingReport = report;
+			pendingPath = savedPath;
+
+			var close = function():Void
+			{
+				try Sys.exit(1) catch (_:Dynamic) {}
+			};
+
+			var keepGoing = function():Void pendingContinue = true;
+
+			extension.androidtools.Tools.showAlertDialog("Funky Maker se cerro por un error", text, {name: "Cerrar", func: close},
+				canContinue ? {name: "Continuar", func: keepGoing} : null);
+
+			// "Continuar" se atiende en el hilo principal (el boton llega desde el hilo de la interfaz de Android).
+			lime.app.Application.current.onUpdate.add(onAndroidContinueTick);
+			return true;
 		}
 		catch (_:Dynamic) {}
+
+		return false;
 	}
 
-	/** Notificacion nativa con el error y la ruta del log. Si falla no pasa nada: el log ya esta guardado. */
-	private static function notifyAndroid(message:String, savedPath:String):Void
+	private static function onAndroidContinueTick(_:Int):Void
 	{
-		try
+		if (!pendingContinue)
+			return;
+
+		pendingContinue = false;
+		lime.app.Application.current.onUpdate.remove(onAndroidContinueTick);
+
+		handlingCrash = false;
+		if (!showCrashScreen(pendingMessage, pendingReport, pendingPath))
 		{
-			var first = message.split("\n")[0];
-			if (first.length > 160) first = first.substr(0, 160) + "...";
-
-			var details = message.length > 800 ? message.substr(0, 800) + "..." : message;
-			details += savedPath != "" ? "\n\nLog: " + savedPath : "\n\n(no se pudo guardar el log)";
-
-			JNI.createStaticMethod("org/fmce/CrashNotifier", "show", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z")("Funky Maker se cerro por un error", first, details);
+			try Sys.exit(1) catch (_:Dynamic) {}
 		}
-		catch (_:Dynamic) {}
 	}
 	#end
 

@@ -68,6 +68,14 @@ class UIFileExplorer extends UISliceSprite {
 		if (this.onFile != null) this.onFile(filePath, file);
 	}
 
+	/** Deja el explorador como si el usuario hubiera elegido ese archivo (por ejemplo, audio sacado de un .fnfc). */
+	public function setFileData(path:String, bytes:Bytes) {
+		file = bytes;
+		filePath = path;
+		deleteButton.visible = deleteButton.selectable = deleteIcon.visible = !(uploadButton.visible = uploadButton.selectable = false);
+		if (this.onFile != null) this.onFile(path, bytes);
+	}
+
 	public function removeFile() {
 		if (!selectable) return;
 		if (uiElement != null) {

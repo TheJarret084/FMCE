@@ -15,3 +15,6 @@ hxvlc git https://github.com/CodenameCrew/cne-hxvlc main
 hxdiscord_rpc git https://github.com/CodenameCrew/cne-hxdiscord_rpc old
 # funkfmpeg: video -> tira de PNG (exportador .FNMM). Necesita la 1.1.0 o mayor (TapeOptions.maxPixels).
 funkfmpeg git https://github.com/TheJarret084/FunkFMPEG
+# android tools: ahora si sin java DIOS
+extension-androidtools 2.2.2
+      

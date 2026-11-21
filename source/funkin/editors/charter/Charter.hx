@@ -39,6 +39,10 @@ class Charter extends MusicBeatSubstate {
 
 	public static var instance:Charter;
 
+	/** El asistente de nuevo nivel deja aqui el chart importado: al abrir el charter se aplica y se guarda. */
+	public static var importOnStart:Null<funkin.backend.chart.ChartImporter.ImportResult> = null;
+	var pendingStartImport:Null<funkin.backend.chart.ChartImporter.ImportResult> = null;
+
 	/**
 	 * El charter vive como substate encima del PlayState (la escena del juego). La parte de interfaz que antes heredaba de UIState
 	 * (botones, foco, texto, menus contextuales) la lleva este UIState "sin pantalla", que el charter actualiza el mismo.
@@ -163,6 +167,8 @@ class Charter extends MusicBeatSubstate {
 		super.create();
 		instance = this;
 		Conductor.active = true;
+		pendingStartImport = importOnStart;
+		importOnStart = null;
 
 		fpsOffsetY = Framerate.isLoaded ? Framerate.offset.y : 0;
 		ui = new UIState();
@@ -1663,6 +1669,18 @@ class Charter extends MusicBeatSubstate {
 		if (live) {
 			if (loadPhase > 0) stepGameLoad();
 			return;
+		}
+
+		if (pendingStartImport != null && subState == null) {
+			var res = pendingStartImport;
+			pendingStartImport = null;
+			try {
+				replaceNotes(res.lines);
+				buildChart();
+				saveEverything(false);
+			} catch (e:Dynamic) {
+				Logs.trace('No se pudo aplicar el chart importado: ${Std.string(e)}', ERROR);
+			}
 		}
 
 		preview.update(elapsed);

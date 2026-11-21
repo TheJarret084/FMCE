@@ -61,6 +61,12 @@ class UIState extends MusicBeatState {
 			fallbackState.__rect = new FlxRect();
 			fallbackState.__mousePos = FlxPoint.get();
 			FlxG.signals.postUpdate.add(fallbackState.__headlessTick);
+			// Sin esto los campos de texto no reciben el teclado en pantallas que no son un UIState (create nunca se llama aqui).
+			// Solo actuan si hay un campo enfocado en este UIState, asi que no chocan con un UIState real.
+			FlxG.stage.window.onKeyDown.add(fallbackState.onKeyDown);
+			FlxG.stage.window.onKeyUp.add(fallbackState.onKeyUp);
+			FlxG.stage.window.onTextInput.add(fallbackState.onTextInput);
+			FlxG.stage.window.onTextEdit.add(fallbackState.onTextEdit);
 		}
 		return fallbackState;
 	}

@@ -4,7 +4,7 @@ import funky.api.RPCState;
 import lime.app.Application;
 import StringTools;
 
-#if (DISCORD_SDK || DISCORD_RPC)
+#if DISCORD_RPC
 import cpp.ConstCharStar;
 #end
 #if DISCORD_RPC
@@ -15,7 +15,7 @@ import hxdiscord_rpc.Types.ActivityType;
 
 class DiscordClient
 {
-	#if (DISCORD_SDK || DISCORD_RPC)
+	#if DISCORD_RPC
 
 	public static var started:Bool = false;
 	public static var clientID:String = "1509746395962409071";
@@ -53,7 +53,7 @@ class DiscordClient
 
 	static function getGameVersion():String
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		try
 		{
 			if (Application.current != null && Application.current.meta != null)
@@ -71,44 +71,10 @@ class DiscordClient
 
 	public static function initialize():Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		if (started)
 			return;
 
-		#if DISCORD_SDK
-		#if android
-
-		try
-		{
-			var init = lime.system.JNI.createStaticMethod("org/fmce/DiscordInit", "init", "()Z");
-			if (!init())
-			{
-				trace("Discord SDK: no se pudo pasar la Activity");
-				return;
-			}
-		}
-		catch (e:Dynamic)
-		{
-			trace("Discord SDK: JNI fallo: " + e);
-			return;
-		}
-		#end
-
-		if (!DiscordSdk.init(ConstCharStar.fromString(clientID), ConstCharStar.fromString(APP_NAME)))
-		{
-			trace("Discord SDK: no inicio: " + DiscordSdk.lastError().toString());
-			return;
-		}
-
-		started = true;
-		startTimestamp = Std.int(Date.now().getTime() / 1000);
-
-		Application.current.onUpdate.add(function(_:Int) if (started) DiscordSdk.tick());
-		Application.current.onExit.add(function(_:Int) shutdown());
-
-		trace("Discord SDK listo.");
-		menuPresence();
-		#else
 		var handlers:DiscordEventHandlers = DiscordEventHandlers.create();
 		handlers.ready = cpp.Function.fromStaticFunction(onRpcReady);
 		handlers.disconnected = cpp.Function.fromStaticFunction(onRpcDisconnected);
@@ -123,7 +89,6 @@ class DiscordClient
 		Application.current.onExit.add(function(_:Int) shutdown());
 
 		menuPresence();
-		#end
 		#end
 	}
 
@@ -146,22 +111,18 @@ class DiscordClient
 
 	public static function shutdown():Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		if (!started)
 			return;
 
 		started = false;
-		#if DISCORD_SDK
-		DiscordSdk.shutdown();
-		#else
 		Discord.Shutdown();
-		#end
 		#end
 	}
 
 	static inline function normalizeText(value:String, fallback:String):String
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		if (value == null)
 			return fallback;
 
@@ -181,7 +142,7 @@ class DiscordClient
 		?endTimestamp:Float = 0
 	):Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		if (!started)
 			return;
 
@@ -207,10 +168,6 @@ class DiscordClient
 			return;
 		lastKey = key;
 
-		#if DISCORD_SDK
-		DiscordSdk.update(ConstCharStar.fromString(details), ConstCharStar.fromString(state), ConstCharStar.fromString(image),
-			ConstCharStar.fromString(largeText), ConstCharStar.fromString(smallImage), ConstCharStar.fromString(smallText), start, end);
-		#else
 		var presence:DiscordRichPresence = DiscordRichPresence.create();
 		presence.activityType = ActivityType.Playing;
 		presence.details = ConstCharStar.fromString(details);
@@ -223,12 +180,11 @@ class DiscordClient
 		presence.endTimestamp = end;
 		Discord.UpdatePresence(cpp.RawConstPointer.addressOf(presence));
 		#end
-		#end
 	}
 
 	public static function setPresence(presence:RPCState):Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		switch (presence)
 		{
 			case Menu:
@@ -327,42 +283,42 @@ class DiscordClient
 
 	public static function menuPresence():Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(Menu);
 		#end
 	}
 
 	public static function freeplayPresence():Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(Freeplay);
 		#end
 	}
 
 	public static function storyPresence():Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(Story);
 		#end
 	}
 
 	public static function settingsPresence():Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(Settings);
 		#end
 	}
 
 	public static function creditsPresence():Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(Credits);
 		#end
 	}
 
 	public static function pausePresence(song:String):Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(Pause(song));
 		#end
 	}
@@ -375,21 +331,21 @@ class DiscordClient
 		?withTime:Bool = true
 	):Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(Playing(song, difficulty, iconRPC == null ? "fmce" : iconRPC, smallIcon == null ? "" : smallIcon, withTime));
 		#end
 	}
 
 	public static function gameOverFadePresence(song:String, misses:Int):Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(GameOverFade(song, misses));
 		#end
 	}
 
 	public static function gameOverPresence(song:String, misses:Int, willRestart:Bool):Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(GameOver(song, misses, willRestart));
 		#end
 	}
@@ -403,7 +359,7 @@ class DiscordClient
 		?endTimestamp:Float = 0
 	):Void
 	{
-		#if (DISCORD_SDK || DISCORD_RPC)
+		#if DISCORD_RPC
 		setPresence(Custom(details, state, icon == null ? "fmce" : icon, smallIcon == null ? "" : smallIcon, withTime, endTimestamp));
 		#end
 	}
