@@ -329,11 +329,9 @@ class CharterEventScreenNew extends MusicBeatSubstate {
 	}
 
 	public function boundWindow() {
-		var screenPos:FlxPoint = onQuit != null
-			? FlxPoint.get(FlxG.width / 2 - bWidth / 2, 70)
-			: CoolUtil.pointToScreenPosition(FlxPoint.get(chartEvent.x, chartEvent.y + chartEvent.bHeight));
-		if (onQuit == null) screenPos.x += 8;
-		screenPos.y += 8;
+		// Siempre centrada en la pantalla: antes seguia la posicion del evento en el chart y a media cancion quedaba fuera de la vista.
+		var totalHeight:Float = Math.min(winHeight + 10, FlxG.height - 16);
+		var screenPos:FlxPoint = FlxPoint.get(FlxG.width / 2 - bWidth / 2, Math.max(8, (FlxG.height - totalHeight) / 2));
 
 		bg.bWidth = cam.width = cast bWidth-6;
 		bg.bHeight = cam.height = cast winHeight + 10;
