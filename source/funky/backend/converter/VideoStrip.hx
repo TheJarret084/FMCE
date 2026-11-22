@@ -310,12 +310,16 @@ class VideoStripTask
 		return FrameScale.fit(w, h, count, options);
 	}
 
+	#if (cpp && !android)
 	var useLegacyFfmpeg:Bool = false;
+	#end
 
 	public function step():Bool
 	{
 		if (done) return false;
-		#if (android || (cpp && !android))
+		#if android
+		return stepNative();
+		#elseif (cpp && !android)
 		if (!useLegacyFfmpeg)
 		{
 			var nativeOk = stepNative();
@@ -388,6 +392,7 @@ class VideoStripTask
 		if (message == null) return true;
 		if (message == "ok") finish();
 		else fail(StringTools.replace(Std.string(message), "error: ", ""));
+		return !done;
 		#else
 		try
 		{
@@ -398,8 +403,8 @@ class VideoStripTask
 		{
 			fail(Std.string(e));
 		}
-		#end
 		return !done;
+		#end
 	}
 
 	public function dispose():Void
