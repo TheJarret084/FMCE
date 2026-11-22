@@ -2,39 +2,53 @@ package funky.backend.converter;
 
 #if android
 /**
- * Antes sacaba los frames del video con una clase Java propia (MediaMetadataRetriever). Se quito todo el codigo Java,
- * asi que en Android esta exportacion no esta disponible: se avisa con un error claro y el resto del exportador sigue igual.
+ * Backend Android para extraer frames de video. Delega en FunkFMPEG (Java: funkfmpeg.VideoFrames),
+ * que usa MediaMetadataRetriever y se incluye via include.xml de la libreria.
  */
 class AndroidFrames
 {
-	public static inline var IDLE:Int = 0;
-	public static inline var RUNNING:Int = 1;
-	public static inline var DONE:Int = 2;
-	public static inline var FAILED:Int = 3;
-	public static inline var CANCELLED:Int = 4;
+	public static inline var IDLE:Int = funkfmpeg.VideoFrames.IDLE;
+	public static inline var RUNNING:Int = funkfmpeg.VideoFrames.RUNNING;
+	public static inline var DONE:Int = funkfmpeg.VideoFrames.DONE;
+	public static inline var FAILED:Int = funkfmpeg.VideoFrames.FAILED;
+	public static inline var CANCELLED:Int = funkfmpeg.VideoFrames.CANCELLED;
 
-	static inline var UNAVAILABLE:String = "extraer frames de video no esta disponible en Android";
-
-	public static var lastError:String = UNAVAILABLE;
+	public static var lastError:String = "";
 
 	public static function probe(path:String):Null<VideoStrip.VideoInfo>
 	{
-		lastError = UNAVAILABLE;
-		return null;
+		lastError = "";
+		var info = funkfmpeg.VideoFrames.probe(path);
+		if (info == null)
+		{
+			lastError = funkfmpeg.VideoFrames.error();
+			if (lastError == null || lastError == "") lastError = "no se pudo leer el video";
+			return null;
+		}
+		return {w: info.w, h: info.h, fps: info.fps, seconds: info.seconds};
 	}
 
 	public static function start(path:String, outDir:String, fps:Float, width:Int, height:Int, count:Int):Bool
-		return false;
+	{
+		lastError = "";
+		var ok = funkfmpeg.VideoFrames.start(path, outDir, Math.round(fps * 1000), width, height, count);
+		if (!ok) lastError = funkfmpeg.VideoFrames.error();
+		return ok;
+	}
 
 	public static function state():Int
-		return FAILED;
+		return funkfmpeg.VideoFrames.state();
 
 	public static function progress():Int
-		return 0;
+		return funkfmpeg.VideoFrames.progress();
 
 	public static function error():String
-		return UNAVAILABLE;
+	{
+		var e = funkfmpeg.VideoFrames.error();
+		return (e == null || e == "") ? lastError : e;
+	}
 
-	public static function cancel():Void {}
+	public static function cancel():Void
+		funkfmpeg.VideoFrames.cancel();
 }
 #end

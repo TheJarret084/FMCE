@@ -20,7 +20,7 @@ class LevelEasterEggs
 	public static inline var CHANCE:Float = 0.05;
 
 	/** Subcarpeta del nivel donde cae la imagen. */
-	public static inline var FOLDER:String = "eastereggs";
+	public static inline var FOLDER:String = "";
 
 	/** Igual que LevelCreator.TEMPLATE_DIR. */
 	public static inline var TEMPLATE_DIR:String = "assets/included/";

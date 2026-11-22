@@ -99,8 +99,6 @@ elif [ "$MODE" = debug ]; then
 fi
 
 echo "==> FMCE $KIND $MODE ($PLATFORM)"
-# Rich Presence (Discord Social SDK): las .so del .aar para el enlace de hxcpp
-[ "$KIND" = android ] && bash building/discord-android.sh
 
 # Android: hxcpp reutiliza export/<modo>/android/obj entre arquitecturas. Si un build viejo dejo
 # Options.txt/HxcppConfig-v7.h de armv7, el siguiente intento arm64 arrastra HXCPP_ARMV7 y acaba

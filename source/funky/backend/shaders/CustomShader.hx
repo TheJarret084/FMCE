@@ -110,7 +110,21 @@ class CustomShader extends FlxRuntimeShader
 		return Std.isOfType(v, Bool) ? (v ? 1 : 0) : Std.int(v);
 
 	static inline function asFloat(v:Dynamic):Float
-		return Std.isOfType(v, Bool) ? (v ? 1.0 : 0.0) : cast v;
+	{
+		if (Std.isOfType(v, Bool)) return v ? 1.0 : 0.0;
+		if (Std.isOfType(v, Int) || Std.isOfType(v, Float)) return cast v;
+		// FlxColor/objetos con .red/.green/.blue/.alpha o valor numérico
+		if (v != null && Reflect.hasField(v, "red") && Reflect.hasField(v, "green") && Reflect.hasField(v, "blue"))
+			return 0; // usar setColor para colores; aqui evitamos crash
+		return Std.parseFloat(Std.string(v));
+	}
+
+	/** Setea un color (vec3/vec4) como floats 0..1. */
+	public function setColor(name:String, color:flixel.util.FlxColor, alpha:Bool = true):Bool
+	{
+		var vals = alpha ? [color.redFloat, color.greenFloat, color.blueFloat, color.alphaFloat] : [color.redFloat, color.greenFloat, color.blueFloat];
+		return set(name, vals);
+	}
 
 	public function get(name:String):Dynamic
 	{

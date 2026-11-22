@@ -3,6 +3,7 @@ package funky.core;
 #if (sys && android)
 import extension.androidtools.Permissions as AndroidPermissions;
 import extension.androidtools.Settings as AndroidSettings;
+import extension.androidtools.os.Environment as AndroidEnvironment;
 import sys.FileSystem;
 import sys.io.File;
 #end
@@ -25,10 +26,19 @@ class Storage
 		if (!hasAccess() && !askedAccess)
 		{
 			askedAccess = true;
+			var allFiles = false;
+			try
+			{
+				allFiles = AndroidEnvironment.isExternalStorageManager();
+			}
+			catch (_:Dynamic) {}
+
 			Log.warn('[Storage] sin permiso para $ANDROID_ROOT: se pide "Acceso a todos los archivos"');
 			try
 			{
-				AndroidSettings.requestSetting('MANAGE_APP_ALL_FILES_ACCESS_PERMISSION');
+				// En Android 11+ el permiso real es MANAGE_EXTERNAL_STORAGE (pantalla de ajustes).
+				if (!allFiles) AndroidSettings.requestSetting('MANAGE_APP_ALL_FILES_ACCESS_PERMISSION');
+				// En Android 10 y anteriores siguen haciendo falta los permisos normales de almacenamiento.
 				AndroidPermissions.requestPermissions(['READ_EXTERNAL_STORAGE', 'WRITE_EXTERNAL_STORAGE']);
 			}
 			catch (e:Dynamic)

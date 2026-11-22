@@ -10,9 +10,6 @@ import openfl.events.UncaughtErrorEvent;
 import funky.backend.utils.NativeAPI;
 import funky.backend.utils.NativeAPI.MessageBoxIcon;
 
-#if android
-#end
-
 #if sys
 import sys.FileSystem;
 import sys.io.File;
@@ -53,9 +50,6 @@ final class CrashHandler
 
 	public static function init():Void
 	{
-		#if android
-		#end
-
 		Lib.current.loaderInfo.uncaughtErrorEvents.addEventListener(
 			UncaughtErrorEvent.UNCAUGHT_ERROR,
 			onUncaughtError
@@ -131,13 +125,24 @@ final class CrashHandler
 		}
 		catch (e:Dynamic)
 		{
+			var fallbackText = "Uncaught Error: " + message
+				+ "\n\n(El CrashHandler falló al armar el reporte: " + Std.string(e) + ")";
+
+			#if android
+			// El fallback tambien debe ser nativo en Android: NativeAPI.showMessageBox solo loguea.
+			try
+			{
+				if (showAndroidDialog(message, "(no se pudo armar el reporte: " + Std.string(e) + ")", fallbackText, "", false))
+					return;
+			}
+			catch (_:Dynamic) {}
+			#end
 
 			try
 			{
 				NativeAPI.showMessageBox(
 					"Funky Maker Crash Handler (fallback)",
-					"Uncaught Error: " + message
-						+ "\n\n(El CrashHandler falló al armar el reporte: " + Std.string(e) + ")",
+					fallbackText,
 					MSG_ERROR
 				);
 			}
@@ -301,19 +306,26 @@ final class CrashHandler
 
 	#if android
 	static var pendingContinue:Bool = false;
+	static var pendingClose:Bool = false;
 	static var pendingMessage:String = "";
 	static var pendingReport:String = "";
 	static var pendingPath:String = "";
+	static var androidTickListening:Bool = false;
 
 	/**
 	 * Ventana nativa de Android (AlertDialog de extension-androidtools). No bloquea: por eso el juego NO se cierra aqui,
-	 * se cierra al tocar "Cerrar". En fallos no fatales hay tambien "Continuar" (abre la pantalla de crash del juego).
+	 * se cierra al tocar "Cerrar" (en el hilo principal, nunca desde el hilo de la interfaz de Android).
+	 * En fallos no fatales hay tambien "Continuar" (abre la pantalla de crash del juego).
 	 * Devuelve false si no se pudo mostrar (entonces el flujo normal cierra el juego).
 	 */
 	private static function showAndroidDialog(message:String, stackLabel:String, report:String, savedPath:String, canContinue:Bool):Bool
 	{
 		try
 		{
+			var app = lime.app.Application.current;
+			if (app == null)
+				return false;
+
 			var text = message;
 			if (stackLabel != null && stackLabel != "")
 				text += "\n\n" + (stackLabel.length > 900 ? stackLabel.substr(0, 900) + "..." : stackLabel);
@@ -322,19 +334,22 @@ final class CrashHandler
 			pendingMessage = message;
 			pendingReport = report;
 			pendingPath = savedPath;
+			pendingContinue = false;
+			pendingClose = false;
 
-			var close = function():Void
-			{
-				try Sys.exit(1) catch (_:Dynamic) {}
-			};
-
+			// Los callbacks del AlertDialog llegan desde el hilo de la interfaz: solo marcan banderas.
+			var close = function():Void pendingClose = true;
 			var keepGoing = function():Void pendingContinue = true;
 
-			extension.androidtools.Tools.showAlertDialog("Funky Maker se cerro por un error", text, {name: "Cerrar", func: close},
-				canContinue ? {name: "Continuar", func: keepGoing} : null);
+			// Registrar primero: asi "Cerrar" siempre tiene quien lo atienda.
+			if (!androidTickListening)
+			{
+				app.onUpdate.add(onAndroidContinueTick);
+				androidTickListening = true;
+			}
 
-			// "Continuar" se atiende en el hilo principal (el boton llega desde el hilo de la interfaz de Android).
-			lime.app.Application.current.onUpdate.add(onAndroidContinueTick);
+			extension.androidtools.Tools.showAlertDialog("Funky Maker se cerro por un error", text,
+				{name: "Cerrar", func: close}, canContinue ? {name: "Continuar", func: keepGoing} : null);
 			return true;
 		}
 		catch (_:Dynamic) {}
@@ -342,13 +357,33 @@ final class CrashHandler
 		return false;
 	}
 
+	private static function stopAndroidTick():Void
+	{
+		try
+		{
+			if (androidTickListening && lime.app.Application.current != null)
+				lime.app.Application.current.onUpdate.remove(onAndroidContinueTick);
+		}
+		catch (_:Dynamic) {}
+		androidTickListening = false;
+	}
+
 	private static function onAndroidContinueTick(_:Int):Void
 	{
+		if (pendingClose)
+		{
+			pendingClose = false;
+			pendingContinue = false;
+			stopAndroidTick();
+			try Sys.exit(1) catch (_:Dynamic) {}
+			return;
+		}
+
 		if (!pendingContinue)
 			return;
 
 		pendingContinue = false;
-		lime.app.Application.current.onUpdate.remove(onAndroidContinueTick);
+		stopAndroidTick();
 
 		handlingCrash = false;
 		if (!showCrashScreen(pendingMessage, pendingReport, pendingPath))

@@ -22,7 +22,7 @@ import funkin.backend.utils.TranslationUtil as TU;
 
 class MainMenuState extends FlxState
 {
-	static final ITEMS:Array<String> = ["freeplay", "options", "credits"];
+	var items:Array<String> = [];
 
 	var curSelected:Int = 0;
 	var selectedSomething:Bool = false;
@@ -61,12 +61,15 @@ class MainMenuState extends FlxState
 			layer.antialiasing = true;
 		}
 
+		items = ["freeplay", "options", "credits"];
+		if (!AdvancedModeState.antiGay) items.push("advanced");
+
 		menuItems = new FlxTypedGroup<FlxSprite>();
 		add(menuItems);
 
-		for (i in 0...ITEMS.length)
+		for (i in 0...items.length)
 		{
-			var option = ITEMS[i];
+			var option = items[i];
 			var item:FlxSprite;
 			var frames = Paths.getSparrowAtlas("menus/mainmenu/" + option);
 			if (frames != null)
@@ -95,7 +98,7 @@ class MainMenuState extends FlxState
 		versionText = new FlxText(5, 0, 0, "V" + lime.app.Application.current.meta.get("version") + "\n"
 			+ (TouchNav.MOBILE ? TU.translate("mainMenu.hintMobile", null, "toca una opcion")
 				: TU.translate("mainMenu.hint", [KeyBinds.label(KeyBinds.ACCEPT), KeyBinds.label(KeyBinds.BACK)],
-					"{0} elegir  |  {1} volver") + (AdvancedModeState.antiGay ? "" : TU.translate("mainMenu.hintAdvanced", null, "  |  7 avanzado"))), 16);
+					"{0} elegir  |  {1} volver")), 16);
 		versionText.setBorderStyle(OUTLINE, 0xFF000000, 1.5);
 		versionText.y = FlxG.height - versionText.height - 4;
 		versionText.scrollFactor.set();
@@ -200,18 +203,19 @@ class MainMenuState extends FlxState
 		FlxFlicker.flicker(magenta, 1.1, 0.15, false);
 		FlxFlicker.flicker(menuItems.members[curSelected], 1, 0.06, false, false, function(_)
 		{
-			switch (ITEMS[curSelected])
+			switch (items[curSelected])
 			{
 				case "freeplay": TransitionHandler.switchState(new FreeplayState());
 				case "options": TransitionHandler.switchState(new ConfigState());
 				case "credits": TransitionHandler.switchState(new CreditsState());
+				case "advanced": TransitionHandler.switchState(new AdvancedModeState());
 			}
 		});
 	}
 
 	function changeItem(step:Int = 0):Void
 	{
-		curSelected = Std.int(FlxMath.wrap(curSelected + step, 0, ITEMS.length - 1));
+		curSelected = Std.int(FlxMath.wrap(curSelected + step, 0, items.length - 1));
 		if (step != 0) CoolUtil.playMenuSound("scroll", 0.7);
 
 		menuItems.forEach(function(spr:FlxSprite)

@@ -89,29 +89,29 @@
 
 (23 oct):
 - [X] Rich presence para mobile LEST GOOOO
-- [ ] Pulida a la pausa
+- [X] Pulida a la pausa
 - [X] parte de herramientas mejor trabajada
 
 
 (11 nov):
 - [X] exportar videos para que la mierda esta los agarre
-- [ ] cuando el video no tenga header bonito igual exportarlo a la verga
+- [X] cuando el video no tenga header bonito igual exportarlo a la verga
 - [X] poner público el repositorio 
-- [ ] arreglar el puto readme que no sale el maldito desgraciado banner
-- [ ] addons parte 1: agregar noteSkins con esto su propio sistema y scripts para las notas
-- [ ] addons parte 2: scripting en chartEditor (ojalá nunca pidan esto wei porfavor)
+- [X] arreglar el puto readme que no sale el maldito desgraciado banner
+- [X] addons parte 1: agregar noteSkins con esto su propio sistema y scripts para las notas
+- [ ] addons parte 2: scripting en chartEditor (ojalá nunca pidan esto wei porfavor) [No urgente]
 - [ ] ganarle a fénix sisisis
 - [ ] ser revisor (imposible al parecer, pero creo en mi mismo)
-- [ ] corregir crashHandler con la ventanita nativa de mobile ✅✅✅✅✅✅✅✅✅✅
-- [ ] terminar los assets que faltan, y con esto relimpiar/rehacer states como 
-     [ ] titleScreen  
-     [ ] mainMenu 
-     [ ] Freeplay o levelList 
-     [ ] loadingScreen A y B aunque B está perfecto 
-     [ ] Opciones 
-     [ ] creditos 
-     [ ] agregar a donigay a los betatesters de desktop junto a pecela
-- [ ] arreglar la api de shaders
-- [ ] traducir avanced mode
-- [ ] hacer más simple la navegación entre estados (creo que eso molestó a abelito)
-- [ ] revisar el spritecache ya que pecela empieza a laguearle demaciado
+- [X] corregir crashHandler con la ventanita nativa de mobile ✅✅✅✅✅✅✅✅✅✅
+- [X] terminar los assets que faltan, y con esto relimpiar/rehacer states como 
+     [X] titleScreen  
+     [X] mainMenu 
+     [X] Freeplay o levelList 
+     [X] loadingScreen A y B aunque B está perfecto 
+     [X] Opciones 
+     [X] creditos 
+     [X] agregar a donigay a los betatesters de desktop junto a pecela
+- [X] arreglar la api de shaders
+- [X] traducir avanced mode
+- [X] hacer más simple la navegación entre estados (creo que eso molestó a abelito)
+- [X] revisar el spritecache ya que pecela empieza a laguearle demaciado

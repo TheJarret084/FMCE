@@ -310,11 +310,59 @@ class VideoStripTask
 		return FrameScale.fit(w, h, count, options);
 	}
 
+	var useLegacyFfmpeg:Bool = false;
+
 	public function step():Bool
 	{
 		if (done) return false;
-		#if android
-		return stepAndroid();
+		#if (android || (cpp && !android))
+		if (!useLegacyFfmpeg)
+		{
+			var nativeOk = stepNative();
+			if (done && error != "" && ffmpeg != null)
+			{
+				// Si el decoder nativo no pudo (header raro/formato no soportado), intentar ffmpeg si existe.
+				Log.warn('[VideoStrip] decoder nativo fallo para $path: $error; intentando ffmpeg');
+				done = false;
+				error = "";
+				started = false;
+				stage = 0;
+				percent = 0;
+				useLegacyFfmpeg = true;
+				try VideoStrip.wipe(work) catch (_:Dynamic) {}
+			}
+			else return nativeOk || !done;
+		}
+		#if target.threaded
+		if (!started)
+		{
+			started = true;
+			label = "leyendo " + Path.withoutDirectory(path);
+			var box = inbox;
+			Thread.create(function()
+			{
+				try
+				{
+					run();
+					box.add("ok");
+				}
+				catch (e:Dynamic)
+				{
+					box.add("error: " + Std.string(e));
+				}
+				if (cancelled) try VideoStrip.wipe(work) catch (_:Dynamic) {}
+			});
+			return true;
+		}
+		var message:Null<Dynamic> = inbox.pop(false);
+		if (message == null) return true;
+		if (message == "ok") finish();
+		else fail(StringTools.replace(Std.string(message), "error: ", ""));
+		return !done;
+		#else
+		try { run(); finish(); } catch (e:Dynamic) { fail(Std.string(e)); }
+		return !done;
+		#end
 		#elseif target.threaded
 		if (!started)
 		{
@@ -357,8 +405,8 @@ class VideoStripTask
 	public function dispose():Void
 	{
 		cancelled = true;
-		#if android
-		if (stage == 1) AndroidFrames.cancel();
+		#if (android || (cpp && !android))
+		if (stage == 1) funkfmpeg.VideoFrames.cancel();
 		if (stage == 2 && !done) return;
 		#else
 		if (started && !done) return;
@@ -366,12 +414,12 @@ class VideoStripTask
 		try VideoStrip.wipe(work) catch (_:Dynamic) {}
 	}
 
-	#if android
+	#if (android || (cpp && !android))
 	var stage:Int = 0;
 	var total:Int = 0;
 	var target:Array<Int> = [0, 0];
 
-	function stepAndroid():Bool
+	function stepNative():Bool
 	{
 		try
 		{
@@ -380,8 +428,8 @@ class VideoStripTask
 				case 0:
 					started = true;
 					label = "leyendo " + Path.withoutDirectory(path);
-					var info = AndroidFrames.probe(path);
-					if (info == null) throw "no se pudo leer el video (MediaMetadataRetriever): " + (AndroidFrames.lastError == "" ? "sin detalle" : AndroidFrames.lastError);
+					var info = funkfmpeg.VideoFrames.probe(path);
+					if (info == null) throw "no se pudo leer el video (decoder nativo): " + (funkfmpeg.VideoFrames.error() == "" ? "sin detalle" : funkfmpeg.VideoFrames.error());
 					if (info.seconds <= 0) throw "no se pudo leer la duracion del video";
 					sourceWidth = info.w;
 					sourceHeight = info.h;
@@ -393,16 +441,16 @@ class VideoStripTask
 					FMCEToFNMMExporter.ensureDir(Path.directory(work));
 					VideoStrip.wipe(work);
 					FileSystem.createDirectory(work);
-					if (!AndroidFrames.start(path, work, fps, target[0], target[1], total)) throw AndroidFrames.error();
+					if (!funkfmpeg.VideoFrames.start(path, work, Math.round(fps * 1000), target[0], target[1], total)) throw funkfmpeg.VideoFrames.error();
 					percent = 2;
 					stage = 1;
 				case 1:
-					var state = AndroidFrames.state();
-					var count = AndroidFrames.progress();
+					var state = funkfmpeg.VideoFrames.state();
+					var count = funkfmpeg.VideoFrames.progress();
 					percent = 2 + Std.int(33 * Math.min(1, count / total));
 					label = "sacando frames " + target[0] + "x" + target[1] + " (" + count + "/" + total + ")";
-					if (state == AndroidFrames.RUNNING) return true;
-					if (state != AndroidFrames.DONE) throw state == AndroidFrames.CANCELLED ? "cancelado" : AndroidFrames.error();
+					if (state == funkfmpeg.VideoFrames.RUNNING) return true;
+					if (state != funkfmpeg.VideoFrames.DONE) throw state == funkfmpeg.VideoFrames.CANCELLED ? "cancelado" : funkfmpeg.VideoFrames.error();
 					percent = 35;
 					label = "armando la tira (" + count + " frames)";
 					var box = inbox;

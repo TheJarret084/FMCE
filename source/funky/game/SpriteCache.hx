@@ -93,9 +93,8 @@ class SpriteCache
 		{
 			if (graphics.indexOf(graphic) >= 0) continue;
 			graphics.push(graphic);
-
 			graphic.persist = true;
-			upload(graphic);
+			graphic.destroyOnNoUse = false;
 		}
 
 		if (list == null)

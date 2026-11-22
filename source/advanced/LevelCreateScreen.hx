@@ -302,7 +302,8 @@ class LevelCreateScreen extends UISubstateWindow
 
 		var denominator = Std.int(Math.max(1, denominatorStepper.value));
 		var stepsPerBeat = Std.int(Math.max(1, Math.min(16, Math.round(16 / denominator))));
-		var options:CreateOptions = {
+		// Sin anotacion: se unifica con LevelCreator.CreateOptions al llamar a createWithOptions.
+		var options = {
 			songName: StringTools.trim(songNameBox.label.text),
 			displayName: StringTools.trim(displayNameBox.label.text),
 			bpm: bpmStepper.value,
@@ -330,7 +331,9 @@ class LevelCreateScreen extends UISubstateWindow
 		}
 
 		var folder = result.folder;
+		// El chart importado se aplica al abrir el charter DE ESTE nivel (no de otro).
 		funkin.editors.charter.Charter.importOnStart = importResult;
+		funkin.editors.charter.Charter.importOnStartFolder = importResult != null ? folder : null;
 		close();
 		if (onCreated != null) onCreated(folder);
 	}

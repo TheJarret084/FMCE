@@ -92,6 +92,14 @@ class UIState extends MusicBeatState {
 		if (FlxG.mouse.justReleased)
 			currentFocus = (hoveredSprite is IUIFocusable) ? (cast hoveredSprite) : null;
 
+		// Igual que en tryUpdate: sin esto el teclado no manda texto a los UITextBox cuando la pantalla que los abre no es un UIState
+		// (por ejemplo la ventana de nuevo nivel abierta desde el modo avanzado).
+		var wantsText = currentFocus != null && (currentFocus is UITextBox);
+		if (wantsText != __textInputOn) {
+			__textInputOn = wantsText;
+			FlxG.stage.window.textInputEnabled = wantsText;
+		}
+
 		if (hoveredSprite != null && hoveredSprite.cursor != null)
 			NativeAPI.setCursorIcon(hoveredSprite.cursor);
 		else

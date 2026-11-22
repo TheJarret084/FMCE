@@ -8,6 +8,9 @@ import flixel.ui.FlxBar;
 import flixel.ui.FlxBar.FlxBarFillDirection;
 import flixel.util.FlxColor;
 import funky.backend.LevelVideoMigrator;
+import funky.backend.converter.VideoSheet;
+import funky.backend.converter.VideoSheet.VideoSheetJob;
+import funky.backend.FunkinVideoSprite;
 import funky.backend.Mp4Info;
 import funky.backend.MusicBeatState;
 import funky.backend.system.framerate.Framerate;
@@ -125,6 +128,13 @@ class CheckerState extends MusicBeatState
 	var accessWait:Float = 0;
 	var accessPoll:Float = 0;
 
+	// Conversion de video -> spritesheet (paso a paso para no congelar el checker).
+	var videoDirs:Array<String> = [];
+	var videoIdx:Int = 0;
+	var videoJob:Null<VideoSheetJob> = null;
+	var videoConverted:Int = 0;
+	var videoTotal:Int = 0;
+
 	override public function create():Void
 	{
 		super.create();
@@ -161,7 +171,6 @@ class CheckerState extends MusicBeatState
 				stage = ScanLevelVideos;
 			case ScanLevelVideos:
 				checkLevelVideos();
-				stage = ScanAddons;
 			case ScanAddons:
 				checkAddons();
 			case Downloading:
@@ -183,7 +192,7 @@ class CheckerState extends MusicBeatState
 			case ScanPack: 0.05 + 0.35 * (packIds.length == 0 ? 0 : packIdx / packIds.length);
 			case ReadSol: 0.42;
 			case ReadFps: 0.48;
-			case ScanLevelVideos: 0.52;
+			case ScanLevelVideos: 0.52 + 0.03 * (videoTotal <= 0 ? 1 : (videoIdx + (videoJob != null ? videoJob.fraction : 0)) / videoTotal);
 			case ScanAddons: 0.55;
 			case Downloading: 0.55 + 0.45 * (queue.length == 0 ? 0 : (index + subProgress) / queue.length);
 			case Finished: 1;
@@ -352,42 +361,121 @@ class CheckerState extends MusicBeatState
 	// ------------------------------------------------------------------ 4. Videos de los niveles
 
 	/**
-	 * Migra/normaliza los videos de los niveles (`LevelVideoMigrator`) y valida cada .mp4 con `Mp4Info`.
-	 * Los niveles que ya estan bien no se tocan; solo se avisa de videos rotos o configs que no se pudieron arreglar.
+	 * Convierte videos de niveles a spritesheets (sprite.json + paginas). Paso a paso para no congelar el checker.
+	 * Si no se puede convertir, se normaliza el config de video como fallback.
 	 */
 	function checkLevelVideos():Void
 	{
-		say("Revisando videos de los niveles...");
-
 		#if sys
-		var reports = LevelVideoMigrator.scanAll(Paths.levelsRoot());
-		var total = 0;
-		var repaired = 0;
-
-		for (report in reports)
+		if (videoDirs.length == 0 && videoJob == null && videoIdx == 0 && videoTotal == 0)
 		{
-			total += report.videos;
-
-			for (line in report.fixed)
+			say("Revisando videos de los niveles...");
+			var levelsRoot = Paths.levelsRoot();
+			levelsRoot = Path.removeTrailingSlashes(levelsRoot);
+			if (FileSystem.exists(levelsRoot) && FileSystem.isDirectory(levelsRoot))
 			{
-				repaired++;
-				Log.info('[Checker] video arreglado: $line');
-				fixed.push(line);
+				for (entry in FileSystem.readDirectory(levelsRoot))
+				{
+					if (entry == null || entry == "" || entry.charAt(0) == ".") continue;
+					var levelDir = Path.join([levelsRoot, entry]);
+					if (!FileSystem.exists(levelDir) || !FileSystem.isDirectory(levelDir)) continue;
+					var spritesRoot = Path.join([levelDir, "sprites"]);
+					if (!FileSystem.exists(spritesRoot) || !FileSystem.isDirectory(spritesRoot)) continue;
+					for (spr in FileSystem.readDirectory(spritesRoot))
+					{
+						var dir = Path.join([spritesRoot, spr]);
+						if (!FileSystem.exists(dir) || !FileSystem.isDirectory(dir)) continue;
+						if (FunkinVideoSprite.videoFiles(dir).length > 0) videoDirs.push(dir);
+					}
+				}
 			}
-
-			for (line in report.problems)
+			videoTotal = videoDirs.length;
+			if (videoTotal == 0)
 			{
-				Log.warn('[Checker] video: $line');
-				problems.push(line);
+				Log.info('[Checker] videos de niveles: nada que convertir');
+				stage = ScanAddons;
+				return;
 			}
 		}
 
-		if (repaired > 0)
-			Log.info('[Checker] videos de niveles: $total revisados, $repaired arreglados');
+		if (videoJob == null)
+		{
+			if (videoIdx >= videoDirs.length)
+			{
+				Log.info('[Checker] videos de niveles: $videoTotal carpetas revisadas, $videoConverted convertidas a spritesheet');
+				stage = ScanAddons;
+				return;
+			}
+
+			var dir = videoDirs[videoIdx];
+			var label = videoLabel(dir);
+			if (VideoSheet.canConvert(dir))
+			{
+				say('Convirtiendo video a spritesheet (${videoIdx + 1}/$videoTotal): $label');
+				videoJob = VideoSheet.start(dir);
+			}
+			else
+			{
+				// Tiene .mp4 pero no se puede convertir como sheet (ej. ya tiene sprite.png raro): normalizar fallback solo este dir.
+				var files = FunkinVideoSprite.videoFiles(dir);
+				var fallback = {dir: Path.directory(Path.directory(dir)), videos: files.length, fixed: [], problems: []};
+				LevelVideoMigrator.normalizeVideoConfig(dir, files, label, fallback);
+				for (line in fallback.fixed) fixed.push(line);
+				for (line in fallback.problems) problems.push(line);
+				videoIdx++;
+				return;
+			}
+		}
+
+		var job = videoJob;
+		if (job == null) return;
+		if (job.step())
+		{
+			say('Video a spritesheet (${videoIdx + 1}/$videoTotal): ${videoLabel(videoDirs[videoIdx])} ${Std.int(job.fraction * 100)}%');
+			return;
+		}
+
+		var dir = videoDirs[videoIdx];
+		var label = videoLabel(dir);
+		videoJob = null;
+		videoIdx++;
+
+		if (job.ok)
+		{
+			videoConverted++;
+			for (w in job.warnings)
+			{
+				Log.warn('[Checker] video: $label: $w');
+				problems.push('$label: $w');
+			}
+			Log.info('[Checker] video -> spritesheet: $label (${job.summary})');
+			fixed.push('$label (video -> spritesheet)');
+		}
 		else
-			Log.info('[Checker] videos de niveles: $total revisados');
+		{
+			var err = job.error == null ? "sin detalle" : job.error;
+			Log.warn('[Checker] video no convertido $label: $err');
+			// Fallback: dejarlo como video normalizado para que el nivel siga funcionando.
+			var files = FunkinVideoSprite.videoFiles(dir);
+			var fallback = {dir: Path.directory(Path.directory(dir)), videos: files.length, fixed: [], problems: []};
+			LevelVideoMigrator.normalizeVideoConfig(dir, files, label, fallback);
+			for (line in fallback.fixed) fixed.push(line);
+			for (line in fallback.problems) problems.push(line);
+			if (fallback.fixed.length == 0) problems.push('$label: no se pudo convertir a spritesheet ($err)');
+		}
+		#else
+		stage = ScanAddons;
 		#end
 	}
+
+	#if sys
+	function videoLabel(dir:String):String
+	{
+		var spr = Path.withoutDirectory(dir);
+		var levelDir = Path.directory(Path.directory(dir));
+		return Path.withoutDirectory(levelDir) + "/sprites/" + spr;
+	}
+	#end
 
 	// ------------------------------------------------------------------ 5. Addons
 

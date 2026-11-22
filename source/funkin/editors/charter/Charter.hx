@@ -41,6 +41,8 @@ class Charter extends MusicBeatSubstate {
 
 	/** El asistente de nuevo nivel deja aqui el chart importado: al abrir el charter se aplica y se guarda. */
 	public static var importOnStart:Null<funkin.backend.chart.ChartImporter.ImportResult> = null;
+	/** Carpeta del nivel al que pertenece `importOnStart` (para no aplicarlo al abrir otro nivel). */
+	public static var importOnStartFolder:Null<String> = null;
 	var pendingStartImport:Null<funkin.backend.chart.ChartImporter.ImportResult> = null;
 
 	/**
@@ -167,8 +169,9 @@ class Charter extends MusicBeatSubstate {
 		super.create();
 		instance = this;
 		Conductor.active = true;
-		pendingStartImport = importOnStart;
+		pendingStartImport = importOnStartFolder == null || importOnStartFolder == __song ? importOnStart : null;
 		importOnStart = null;
+		importOnStartFolder = null;
 
 		fpsOffsetY = Framerate.isLoaded ? Framerate.offset.y : 0;
 		ui = new UIState();

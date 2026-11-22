@@ -4,6 +4,7 @@ import haxe.Json;
 import haxe.io.Path;
 import funky.core.JsonLoose;
 import funky.core.Log;
+import funky.backend.converter.VideoSheet;
 #if sys
 import sys.FileSystem;
 import sys.io.File;
@@ -22,15 +23,13 @@ typedef LevelVideoReport =
 }
 
 /**
- * Migra los niveles viejos al sistema de video actual (`sprites/<nombre>/` con `config.json` `type: "video"` y una
- * entrada `data[]` por video, `anim` = nombre del .mp4 sin extension).
+ * Convierte videos de niveles al formato de spritesheet (`sprite.json` + paginas + `config.json` `type: "item"`),
+ * usando VideoSheet/FunkFMPEG. Los .mp4 originales se mueven a `source/` dentro del sprite.
  *
- * - Empareja cada entrada de `config.json` con un .mp4 real (arregla nombres cambiados, por ejemplo `tungazo` -> `tungaso`).
- * - Agrega las entradas que falten para los .mp4 que no esten en `data`.
- * - Deja explicito el indice `video` de los objetos de `scene.json` que usan un sprite de video.
- * - Revisa cada .mp4 con `Mp4Info` (igual que el checker de addons): si no tiene header valido, lo reporta como problema.
+ * Si la conversion no es posible (ej. sin ffmpeg/extractor de frames), se normaliza el config como
+ * `type: "video"` para que el nivel siga funcionando.
  *
- * Es idempotente: si el nivel ya esta bien no escribe nada. No borra videos ni cambia offsets/escalas/loops existentes.
+ * Es idempotente: si el sprite ya esta convertido no toca nada. No borra videos originales.
  */
 class LevelVideoMigrator
 {
@@ -87,6 +86,58 @@ class LevelVideoMigrator
 
 		var name = Path.withoutDirectory(dir);
 		var label = levelLabel + "/sprites/" + name;
+		report.videos += files.length;
+
+		// Nuevo formato: video -> spritesheet (sprite.json + paginas). Los .mp4 originales se mueven a source/.
+		// Esto elimina la dependencia de hxvlc en el juego y sincroniza el video con el BPM.
+		if (VideoSheet.canConvert(dir))
+		{
+			var job = VideoSheet.start(dir);
+			try
+			{
+				while (job.step()) {}
+			}
+			catch (e:Dynamic)
+			{
+				try job.dispose() catch (_:Dynamic) {}
+				report.problems.push(label + ": no se pudo convertir a spritesheet (" + Std.string(e) + ")");
+				return normalizeVideoConfig(dir, files, label, report);
+			}
+
+			if (job.ok)
+			{
+				for (w in job.warnings) report.problems.push(label + ": " + w);
+				report.fixed.push(label + " (video -> spritesheet: " + job.summary + ")");
+				return countDataEntries(dir);
+			}
+
+			var err = job.error == null ? "sin detalle" : job.error;
+			report.problems.push(label + ": no se pudo convertir a spritesheet (" + err + ")");
+			// Si no se pudo convertir (ej. sin ffmpeg/frame extractor), se deja como video normalizado para que siga funcionando.
+			return normalizeVideoConfig(dir, files, label, report);
+		}
+
+		// Ya es spritesheet o no se puede convertir: normalizar config de video por compatibilidad.
+		return normalizeVideoConfig(dir, files, label, report);
+	}
+
+	static function countDataEntries(dir:String):Int
+	{
+		var configPath = Path.join([dir, "config.json"]);
+		if (!FileSystem.exists(configPath)) return 0;
+		try
+		{
+			var config:Dynamic = JsonLoose.parse(File.getContent(configPath));
+			var data:Dynamic = config == null ? null : Reflect.field(config, "data");
+			if (Std.isOfType(data, Array)) return (cast data:Array<Dynamic>).length;
+		}
+		catch (_:Dynamic) {}
+		return 0;
+	}
+
+	/** Fallback: mantiene el sprite como `type: "video"` (formato viejo) para que el nivel siga funcionando. */
+	public static function normalizeVideoConfig(dir:String, files:Array<String>, label:String, report:LevelVideoReport):Int
+	{
 		var configPath = Path.join([dir, "config.json"]);
 		var config:Dynamic = null;
 
@@ -128,7 +179,6 @@ class LevelVideoMigrator
 		var used = new Map<Int, Bool>();
 		var assigned:Array<Int> = [for (_ in data) -1];
 
-		// 1) Lo que ya apunta a un .mp4 existente se respeta (aunque el nombre tenga distinta capitalizacion o .mp4).
 		for (i in 0...data.length)
 		{
 			var entry = data[i];
@@ -147,7 +197,6 @@ class LevelVideoMigrator
 			}
 		}
 
-		// 2) Entradas sin video: se les asigna el primer .mp4 libre. Si el archivo se llamaba distinto se corrige `anim`.
 		for (i in 0...data.length)
 		{
 			if (assigned[i] < 0)
@@ -174,7 +223,6 @@ class LevelVideoMigrator
 			}
 		}
 
-		// 3) .mp4 que no estaban en data: se agregan al final, copiando loop/escala/offset de la primera animacion.
 		var template:Dynamic = data.length > 0 ? data[0] : null;
 		for (f in 0...files.length)
 		{
@@ -206,13 +254,11 @@ class LevelVideoMigrator
 			}
 		}
 
-		// 4) Validacion de los .mp4 (header/moov) con el mismo lector que usa el checker de addons.
 		for (file in files)
 		{
 			var path = Path.join([dir, file]);
 			Mp4Info.forget(path);
 			var size = Mp4Info.size(path);
-			report.videos++;
 			if (size == null) report.problems.push(label + "/" + file + ": el video esta corrupto o incompleto");
 		}
 

@@ -20,8 +20,8 @@ cada archivo buscando primero en la carpeta externa y luego en lo que trae el bu
 El `<atlas path="..."/>` de un `noteSkin.xml` es el nombre del atlas dentro de **su** carpeta `images/`.
 
 ## source/
-`java/` y `libs/` ahora estan en `source/java/` y `source/libs/` (Project.xml, `DiscordBuild.hx` y `discord-android.sh` ya apuntan ahi).
-Recuerda copiar `discord_partner_sdk.aar` a `source/libs/discord/android/`.
+No hay codigo Java propio: lo nativo de Android (permisos, ajustes, dialogos) lo da el haxelib
+`extension-androidtools` (ver `building/libs.txt`). No hace falta copiar `.aar`, `.jar` ni nada al repo.
 
 ## Tipos de noteskin (`type` en `<noteSkin>`)
 - `sparrow`: atlas completo y ya pintado (notas de colores, colas, receptores). Se dibuja tal cual. Ej: `codename`.

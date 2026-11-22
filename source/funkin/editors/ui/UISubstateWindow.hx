@@ -131,6 +131,17 @@ class UISubstateWindow extends MusicBeatSubstate {
 	}
 
 	public override function destroy() {
+		// Al cerrar la ventana no puede quedar enfocado un campo que ya no existe (seguiria robando el teclado).
+		try
+		{
+			// No crear el fallback solo para cerrar: solo se limpia si ya existe un UIState activo.
+			if (UIState.host != null || UIState.fallbackState != null || FlxG.state is UIState)
+			{
+				var uiState = UIState.state;
+				if (uiState != null && uiState.currentFocus != null) uiState.currentFocus = null;
+			}
+		}
+		catch (_:Dynamic) {}
 		try UIState.playEditorSound(Flags.DEFAULT_EDITOR_WINDOWCLOSE_SOUND) catch(_:Dynamic) {}
 		super.destroy();
 		removeBlur();

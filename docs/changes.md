@@ -1,3 +1,10 @@
+# Input en ventanas de UI y Android sin Java propio
+- `UIState`: el tick "headless" (pantallas que no son un UIState, como la ventana de NUEVO NIVEL del modo avanzado) ahora activa `textInputEnabled` al enfocar un `UITextBox`/`UINumericStepper`. Antes se podia hacer clic pero el teclado no escribia nada.
+- `UISubstateWindow.destroy`: limpia el foco al cerrar para que un campo destruido no siga robando el teclado.
+- `funky/core/Storage.hx`: usa `extension.androidtools` (`Permissions`, `Settings`, `os.Environment.isExternalStorageManager`) para pedir "Acceso a todos los archivos" en Android 11+ y los permisos normales en versiones viejas.
+- Android ya no lleva Java propio en el repo: `extension-androidtools 2.2.2` (ver `building/libs.txt`). Se borraron `building/discord-android.sh` y las referencias al Discord Social SDK de Android.
+- `LevelCreator`/`LevelCreateScreen`: el chart importado se asocia a la carpeta del nivel nuevo y solo se aplica al abrir ese nivel en el charter.
+
 # Videos de niveles, easter eggs y ventana de nuevo nivel
 - `funky/backend/LevelVideoMigrator.hx` (nuevo): normaliza `sprites/<nombre>/config.json` (`type: "video"` y una entrada `data[]` por `.mp4`, con `anim` = nombre del archivo) y deja explicito el indice `video` de los objetos de `scene.json`. Es idempotente y valida cada `.mp4` con `Mp4Info`.
 - `CheckerState`: nueva etapa `ScanLevelVideos` que migra/revisa los videos de `levels/` al arrancar. `AdvancedToolsState` tambien revisa el nivel al abrirlo (para niveles importados despues del arranque).
