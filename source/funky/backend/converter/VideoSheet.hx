@@ -25,21 +25,14 @@ import sys.io.File;
  */
 class VideoSheet
 {
-	/** Tope de paginas de 4096x4096 por sprite (4 = 64 Mpx = 256 MB de textura). */
-	public static inline var MAX_PAGES:Int = 4;
-
-	/** Lo mismo en Android. */
-	public static inline var MAX_PAGES_MOBILE:Int = 2;
+	/** Sin tope artificial de paginas: usa las que necesite. El límite real lo pone la GPU/memoria al cargar. */
+	public static inline var MAX_PAGES:Int = 0x7FFFFFFF;
 
 	public static inline var SOURCE_DIR:String = "source";
 
 	public static inline function maxPages():Int
 	{
-		#if android
-		return MAX_PAGES_MOBILE;
-		#else
 		return MAX_PAGES;
-		#end
 	}
 
 	/** ¿La carpeta tiene videos .mp4 sueltos y todavia no es un spritesheet? */
