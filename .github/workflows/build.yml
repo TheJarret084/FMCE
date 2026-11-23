@@ -50,12 +50,12 @@ jobs:
           echo "target=$target" >> "$GITHUB_OUTPUT"
           echo "type=$type" >> "$GITHUB_OUTPUT"
 
-      # hxvlc compila contra libVLC: sin estos paquetes falla con "vlc/vlc.h: No such file or directory".
+      # hxvlc compila contra libVLC (solo headers; el paquete `vlc` completo son 169 paquetes y ~15 min): sin estos falla con "vlc/vlc.h: No such file or directory".
       - name: Instalar libVLC (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get update
-          sudo apt-get install -y vlc libvlc-dev libvlccore-dev vlc-bin
+          sudo apt-get update -o Acquire::Languages=none
+          sudo apt-get install -y --no-install-recommends libvlc-dev libvlccore-dev
 
       - name: Build (Linux)
         if: runner.os == 'Linux'

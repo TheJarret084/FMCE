@@ -21,31 +21,34 @@ if not defined PY (python --version >nul 2>nul && set "PY=python")
 if not defined PY (echo build.bat: falta Python 3 ^(necesario para leer building\libs.json^) & exit /b 127)
 for /f "delims=" %%i in ('haxelib config 2^>nul') do if not defined HAXELIB_REPO set "HAXELIB_REPO=%%i"
 if not defined HAXELIB_REPO set "HAXELIB_REPO=%USERPROFILE%\haxelib"
-for /f "usebackq tokens=1,2,3,4,5 delims=|" %%a in (`%PY% -c "import json; d=json.load(open('building/libs.json')); [print('|'.join([x.get('type',''),x.get('name',''),x.get('version','') or '',x.get('url','') or '',x.get('ref','') or ''])) for x in d.get('dependencies',[])]"`) do (
-	if /i "%%a"=="git" (
-		haxelib list %%b 2>nul | findstr /c:"[git]" >nul && git -C "%HAXELIB_REPO%\%%b\git" remote get-url origin 2>nul | findstr /x /c:"%%d" >nul && (
+for /f "usebackq tokens=1,2,3,4,5 delims=|" %%a in (`%PY% -c "import json; d=json.load(open('building/libs.json')); [print('|'.join([x.get('type','') or '-',x.get('name','') or '-',x.get('version','') or '-',x.get('url','') or '-',x.get('ref','') or '-'])) for x in d.get('dependencies',[])]"`) do (
+	set "T=%%a" & set "N=%%b" & set "V=%%c" & set "U=%%d" & set "R=%%e"
+	if "!V!"=="-" set "V="
+	if "!R!"=="-" set "R="
+	if /i "!T!"=="git" (
+		haxelib list !N! 2>nul | findstr /c:"[git]" >nul && git -C "%HAXELIB_REPO%\!N!\git" remote get-url origin 2>nul | findstr /x /c:"!U!" >nul && (
 			rem ya instalado
 		) || (
-			echo    instalando %%b ^(git^)
-			if "%%e"=="" (haxelib git %%b %%d --always) else (haxelib git %%b %%d %%e --always)
+			echo    instalando !N! ^(git^)
+			if "!R!"=="" (haxelib git !N! !U! --always) else (haxelib git !N! !U! !R! --always)
 			if errorlevel 1 (
 				echo    haxelib git fallo, intentando clone manual...
-				if exist "%HAXELIB_REPO%\%%b\git" rmdir /s /q "%HAXELIB_REPO%\%%b\git"
-				if not exist "%HAXELIB_REPO%\%%b" mkdir "%HAXELIB_REPO%\%%b"
+				if exist "%HAXELIB_REPO%\!N!\git" rmdir /s /q "%HAXELIB_REPO%\!N!\git"
+				if not exist "%HAXELIB_REPO%\!N!" mkdir "%HAXELIB_REPO%\!N!"
 				set "GIT_TERMINAL_PROMPT=0"
-				if "%%e"=="" (git clone --recursive --depth 1 %%d "%HAXELIB_REPO%\%%b\git" || exit /b 1) else (git clone --recursive --depth 1 --branch %%e %%d "%HAXELIB_REPO%\%%b\git" || exit /b 1)
-				echo git> "%HAXELIB_REPO%\%%b\.current"
+				if "!R!"=="" (git clone --recursive --depth 1 !U! "%HAXELIB_REPO%\!N!\git" || exit /b 1) else (git clone --recursive --depth 1 --branch !R! !U! "%HAXELIB_REPO%\!N!\git" || exit /b 1)
+				echo git> "%HAXELIB_REPO%\!N!\.current"
 			)
 		)
-	) else if /i "%%a"=="haxelib" (
-		if not "%%c"=="" (
-			haxelib list %%b 2>nul | findstr /c:"[%%c]" >nul || (
-				echo    instalando %%b %%c
-				haxelib install %%b %%c --always || haxelib install %%b --always || exit /b 1
-				haxelib set %%b %%c >nul 2>nul
+	) else if /i "!T!"=="haxelib" (
+		if not "!V!"=="" (
+			haxelib list !N! 2>nul | findstr /c:"[!V!]" >nul || (
+				echo    instalando !N! !V!
+				haxelib install !N! !V! --always || haxelib install !N! --always || exit /b 1
+				haxelib set !N! !V! >nul 2>nul
 			)
 		) else (
-			haxelib path %%b >nul 2>nul || (echo    instalando %%b & haxelib install %%b --always || exit /b 1)
+			haxelib path !N! >nul 2>nul || (echo    instalando !N! & haxelib install !N! --always || exit /b 1)
 		)
 	)
 )

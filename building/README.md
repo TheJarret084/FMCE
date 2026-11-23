@@ -40,7 +40,7 @@ no hay `FlxG.switchState(X.new)` (usa `new X()`), el mouse/touch usa `screenX/sc
 
 `FunkinVideoSprite` usa hxvlc (el fork de Codename: https://github.com/CodenameCrew/cne-hxvlc, ya esta en `building/libs.json`), que solo existe
 en C++: HashLink usa un stub. En **Linux** hay que instalar libVLC (headers incluidos) antes de compilar, el CI ya lo hace:
-`sudo apt-get install vlc libvlc-dev libvlccore-dev vlc-bin` (Windows y macOS no piden nada).
+`sudo apt-get install -y --no-install-recommends libvlc-dev libvlccore-dev` (solo headers, ~1 min; el paquete `vlc` completo son 169 paquetes y 15 min) (Windows y macOS no piden nada).
 En Android viene activado (el splash lo usa); para apagarlo compila con `-DFMCE_NO_VIDEO_ANDROID`.
 
 ## assets.pack

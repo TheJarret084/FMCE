@@ -36,7 +36,9 @@ PY="$(command -v python3 || command -v python || true)"
 HAXELIB_REPO="$(haxelib config 2>/dev/null | head -n1)"
 HAXELIB_REPO="${HAXELIB_REPO:-$HOME/haxelib}"
 while IFS=$'\t' read -r type name ver url ref; do
-	case "$name" in ""|\#*) continue;; esac
+	# '-' marca campos vacios (el tab es whitespace en IFS y read los colapsaria, corriendo version/url/ref)
+	[ "$ver" = "-" ] && ver=""; [ "$url" = "-" ] && url=""; [ "$ref" = "-" ] && ref=""
+	case "$name" in ""|-|\#*) continue;; esac
 	if [ "$type" = "git" ]; then
 		if haxelib list "$name" 2>/dev/null </dev/null | grep -q '\[git\]' \
 			&& git -C "$HAXELIB_REPO/$name/git" remote get-url origin 2>/dev/null | grep -qxF "$url"; then
@@ -66,7 +68,7 @@ while IFS=$'\t' read -r type name ver url ref; do
 			haxelib install "$name" --always </dev/null || { echo "build.sh: no se pudo instalar $name" >&2; exit 1; }
 		fi
 	fi
-done < <("$PY" -c "import json,sys; d=json.load(open('building/libs.json')); [print('\t'.join([x.get('type',''),x.get('name',''),x.get('version','') or '',x.get('url','') or '',x.get('ref','') or ''])) for x in d.get('dependencies',[])]")
+done < <("$PY" -c "import json,sys; d=json.load(open('building/libs.json')); [print('\t'.join([x.get('type','') or '-',x.get('name','') or '-',x.get('version','') or '-',x.get('url','') or '-',x.get('ref','') or '-'])) for x in d.get('dependencies',[])]")
 
 # ── Assets -> assets.pack ───────────────────────────────────────
 # assets/ se compila en building/_pack/assets.pack (Project.xml lo mete en el build). -DFMCE_LOOSE_ASSETS lo salta.
