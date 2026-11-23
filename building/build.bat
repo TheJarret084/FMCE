@@ -27,17 +27,17 @@ for /f "usebackq tokens=1,2,3,4,5 delims=|" %%a in (`%PY% -c "import json; d=jso
 			rem ya instalado
 		) || (
 			echo    instalando %%b ^(git^)
-			if "%%e"=="" (haxelib git %%b %%d --always >nul || exit /b 1) else (haxelib git %%b %%d %%e --always >nul || exit /b 1)
+			if "%%e"=="" (haxelib git %%b %%d --always || exit /b 1) else (haxelib git %%b %%d %%e --always || exit /b 1)
 		)
 	) else if /i "%%a"=="haxelib" (
 		if not "%%c"=="" (
 			haxelib list %%b 2>nul | findstr /c:"[%%c]" >nul || (
 				echo    instalando %%b %%c
-				haxelib install %%b %%c --always >nul 2>nul || haxelib install %%b --always >nul
+				haxelib install %%b %%c --always || haxelib install %%b --always || exit /b 1
 				haxelib set %%b %%c >nul 2>nul
 			)
 		) else (
-			haxelib path %%b >nul 2>nul || (echo    instalando %%b & haxelib install %%b --always >nul || exit /b 1)
+			haxelib path %%b >nul 2>nul || (echo    instalando %%b & haxelib install %%b --always || exit /b 1)
 		)
 	)
 )

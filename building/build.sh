@@ -43,17 +43,17 @@ while IFS=$'\t' read -r type name ver url ref; do
 			continue
 		fi
 		echo "   instalando $name (git)"
-		haxelib git "$name" "$url" ${ref:+"$ref"} --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name (git)" >&2; exit 1; }
+		haxelib git "$name" "$url" ${ref:+"$ref"} --always </dev/null || { echo "build.sh: no se pudo instalar $name (git)" >&2; exit 1; }
 	elif [ "$type" = "haxelib" ]; then
 		if [ -n "$ver" ]; then
 			haxelib list "$name" 2>/dev/null </dev/null | grep -q "\[$ver\]" && continue
 			echo "   instalando $name $ver"
-			haxelib install "$name" "$ver" --always >/dev/null 2>&1 </dev/null || haxelib install "$name" --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name $ver" >&2; exit 1; }
+			haxelib install "$name" "$ver" --always </dev/null || haxelib install "$name" --always </dev/null || { echo "build.sh: no se pudo instalar $name $ver" >&2; exit 1; }
 			haxelib set "$name" "$ver" >/dev/null 2>&1 </dev/null || true
 		else
 			haxelib path "$name" >/dev/null 2>&1 </dev/null && continue
 			echo "   instalando $name"
-			haxelib install "$name" --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name" >&2; exit 1; }
+			haxelib install "$name" --always </dev/null || { echo "build.sh: no se pudo instalar $name" >&2; exit 1; }
 		fi
 	fi
 done < <("$PY" -c "import json,sys; d=json.load(open('building/libs.json')); [print('\t'.join([x.get('type',''),x.get('name',''),x.get('version','') or '',x.get('url','') or '',x.get('ref','') or ''])) for x in d.get('dependencies',[])]")
