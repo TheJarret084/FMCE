@@ -9,7 +9,7 @@ log una sola vez y el juego sigue.
 FMCE usa **hscript-improved** (el fork de Codename, con clases, `import` y `using`), no el `hscript` normal.
 Ya viene puesto en:
 
-- `building/libs.txt`: `hscript-improved git https://github.com/CodenameCrew/hscript-improved.git codename-dev`
+- `building/libs.json`: `hscript-improved` (git, rama `codename-dev`)
   (`build.sh` y `build.bat` saben instalar lineas `git`).
 - `Project.xml`: `<haxelib name="hscript-improved" />`, `<define name="CUSTOM_CLASSES" />` y `<haxedef name="hscriptPos" />`.
 - `source/hscript/Config.hx`: que clases del juego se pueden extender desde un script.

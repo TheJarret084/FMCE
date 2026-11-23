@@ -25,7 +25,7 @@ Requirements
 - Haxe 4.3.7
 - HaxeFlixel and OpenFL dependencies
 - A supported Lime build toolchain
-- other dependencies is descrited in /building/libs.txt
+- other dependencies are described in /building/libs.json
 
 Quick start
 

@@ -63,7 +63,7 @@
 ---
 
 (13 oct):
-- [X] CI Android: faltaba `flixel-addons` (FlxBackdrop / FlxRuntimeShader) en `building/libs.txt` y `Project.xml`.
+- [X] CI Android: faltaba `flixel-addons` (FlxBackdrop / FlxRuntimeShader) en `building/libs.json` y `Project.xml`.
 - [X] Preferencia `SALTAR INTRO` (Opciones > Apariencia): va directo al TITLE; si no, el splash se salta tocando la pantalla / click / tecla.
 - [X] Menu principal y Freeplay con la vista de Codename (`BoldText` = fuente bold del atlas).
 - [X] Botones arriba/abajo del movil (`NavPad`) rehechos con sprites propios + `TouchNav.hit` (antes `FlxVirtualPad` no respondia). Tocar una fila: la primera vez la selecciona, la segunda entra; el espacio vacio no hace nada.

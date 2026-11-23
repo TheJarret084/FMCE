@@ -67,7 +67,7 @@
 	<haxelib name="flixel" />
 	<haxelib name="flixel-addons" />
 	<haxelib name="flixel-animate" />
-	<!-- hscript-improved (fork de Codename): clases, import, using. Es un git, ver building/libs.txt.
+	<!-- hscript-improved (fork de Codename): clases, import, using. Es un git, ver building/libs.json.
 	     NO lo mezcles con el `hscript` normal de haxelib: comparten paquete y chocan. -->
 	<haxelib name="hscript-improved" />
 

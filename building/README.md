@@ -5,7 +5,7 @@
 | `build.sh` | Linux/macOS: `bash building/build.sh <hl\|cpp\|android> <debug\|release> [args de lime]` |
 | `build.bat` | Windows: `building\build.bat <hl\|cpp> <debug\|release> [args de lime]` |
 | `android-build.sh` | Android: prepara SDK/NDK y llama a `build.sh android` |
-| `libs.txt` | Dependencias (`nombre [version]`). Los scripts las instalan solos |
+| `libs.json` | Dependencias (formato hmm.json). Los scripts las instalan solos |
 | `alsoft.txt` | Config de OpenAL que `Project.xml` copia al build (si falta, no compila) |
 | `jarretTools/` | Build desde el celular (Termux): setup, keystore, build, install. Ignorada por git, ver su README |
 
@@ -31,14 +31,14 @@ uno ya hecho). Comprueba que sea solo `arm64-v8a` y que ninguna `.so` sea armv7/
 
 ## Flixel / OpenFL (forks de Codename)
 
-`libs.txt` instala `cne-flixel` (Flixel **5.3.x**), `cne-flixel-addons`, `cne-openfl` y `cne-flixel-animate` (rama `old`), igual que Codename Engine:
+`building/libs.json` instala `cne-flixel` (Flixel **5.3.x**), `cne-flixel-addons`, `cne-openfl` y `cne-flixel-animate` (rama `old`), igual que Codename Engine:
 la UI de los editores (charter, hover, seleccion) esta portada de ahi. Si ya tenias flixel/openfl de haxelib, los scripts los reemplazan por el fork
 (haxelib los marca como `git`; vuelve al normal con `haxelib install flixel`). Como ese Flixel es mas viejo que el 6.x:
 no hay `FlxG.switchState(X.new)` (usa `new X()`), el mouse/touch usa `screenX/screenY` (no `viewX/viewY`) y `FlxRuntimeShader` va vendido en `source/flixel/addons/display/`.
 
 ## Video (hxvlc)
 
-`FunkinVideoSprite` usa hxvlc (el fork de Codename: https://github.com/CodenameCrew/cne-hxvlc, ya esta en `libs.txt`), que solo existe
+`FunkinVideoSprite` usa hxvlc (el fork de Codename: https://github.com/CodenameCrew/cne-hxvlc, ya esta en `building/libs.json`), que solo existe
 en C++: HashLink usa un stub. En **Linux** hay que instalar libVLC (headers incluidos) antes de compilar, el CI ya lo hace:
 `sudo apt-get install vlc libvlc-dev libvlccore-dev vlc-bin` (Windows y macOS no piden nada).
 En Android viene activado (el splash lo usa); para apagarlo compila con `-DFMCE_NO_VIDEO_ANDROID`.

@@ -3,7 +3,7 @@
 #
 #   bash building/build.sh <hl|cpp|android|web> <debug|release> [args extra para lime]
 #
-# Hace todo: instala las libs de building/libs.txt, compila con lime y deja el resultado en
+# Hace todo: instala las libs de building/libs.json, compila con lime y deja el resultado en
 #   building/artifacts/FMCE-<OS>-x64-<target>-<type>.zip   (hl / cpp)
 #   building/artifacts/FMCE-Web-html5-<type>.zip            (web)
 #   building/artifacts/FMCE-Android-<type>.apk              (android)
@@ -30,30 +30,33 @@ if [ "${FMCE_ALLOW_ANY_HAXE:-0}" != "1" ] && [ "$FOUND" != "4.3.7" ]; then
 fi
 
 # ── Librerias ───────────────────────────────────────────────────
-echo "==> Dependencias (building/libs.txt)"
+echo "==> Dependencias (building/libs.json)"
+PY="$(command -v python3 || command -v python || true)"
+[ -n "$PY" ] || { echo "build.sh: falta python3 (necesario para leer building/libs.json)" >&2; exit 127; }
 HAXELIB_REPO="$(haxelib config 2>/dev/null | head -n1)"
 HAXELIB_REPO="${HAXELIB_REPO:-$HOME/haxelib}"
-while read -r name ver url ref; do
+while IFS=$'\t' read -r type name ver url ref; do
 	case "$name" in ""|\#*) continue;; esac
-	if [ "$ver" = "git" ]; then
-		# haxelib 4.1.1 imprime "[git]" sin la URL. Verificamos el remoto del clon local.
+	if [ "$type" = "git" ]; then
 		if haxelib list "$name" 2>/dev/null </dev/null | grep -q '\[git\]' \
 			&& git -C "$HAXELIB_REPO/$name/git" remote get-url origin 2>/dev/null | grep -qxF "$url"; then
 			continue
 		fi
 		echo "   instalando $name (git)"
 		haxelib git "$name" "$url" ${ref:+"$ref"} --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name (git)" >&2; exit 1; }
-	elif [ -n "$ver" ]; then
-		haxelib list "$name" 2>/dev/null </dev/null | grep -q "\[$ver\]" && continue
-		echo "   instalando $name $ver"
-		haxelib install "$name" "$ver" --always >/dev/null 2>&1 </dev/null || haxelib install "$name" --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name $ver" >&2; exit 1; }
-		haxelib set "$name" "$ver" >/dev/null 2>&1 </dev/null || true
-	else
-		haxelib path "$name" >/dev/null 2>&1 </dev/null && continue
-		echo "   instalando $name"
-		haxelib install "$name" --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name" >&2; exit 1; }
+	elif [ "$type" = "haxelib" ]; then
+		if [ -n "$ver" ]; then
+			haxelib list "$name" 2>/dev/null </dev/null | grep -q "\[$ver\]" && continue
+			echo "   instalando $name $ver"
+			haxelib install "$name" "$ver" --always >/dev/null 2>&1 </dev/null || haxelib install "$name" --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name $ver" >&2; exit 1; }
+			haxelib set "$name" "$ver" >/dev/null 2>&1 </dev/null || true
+		else
+			haxelib path "$name" >/dev/null 2>&1 </dev/null && continue
+			echo "   instalando $name"
+			haxelib install "$name" --always >/dev/null </dev/null || { echo "build.sh: no se pudo instalar $name" >&2; exit 1; }
+		fi
 	fi
-done < building/libs.txt
+done < <("$PY" -c "import json,sys; d=json.load(open('building/libs.json')); [print('\t'.join([x.get('type',''),x.get('name',''),x.get('version','') or '',x.get('url','') or '',x.get('ref','') or ''])) for x in d.get('dependencies',[])]")
 
 # ── Assets -> assets.pack ───────────────────────────────────────
 # assets/ se compila en building/_pack/assets.pack (Project.xml lo mete en el build). -DFMCE_LOOSE_ASSETS lo salta.
