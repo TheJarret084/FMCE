@@ -11,11 +11,11 @@ NEXT="$(printf '%s' "$CUR" | awk -F. 'BEGIN{OFS="."} {$NF=$NF+1; print}')"
 
 git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ] && echo "Nada que commitear." && exit 0
 
+printf '%s\n' "$NEXT" > "$CURFILE"
 git add .
 git commit -m "${1:-Update $NEXT}"
 git tag "$NEXT"
 git push
 git push origin "$NEXT"
-printf '%s\n' "$NEXT" > "$CURFILE"
 
 echo "Listo: $CUR -> $NEXT"
