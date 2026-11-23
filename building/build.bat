@@ -71,7 +71,7 @@ set "EXTRA=%1 %2 %3 %4 %5 %6 %7 %8 %9"
 rem funkfmpeg: ndll nativo para cpp desktop (no viene precompilado en el repo git)
 if /i "%KIND%"=="cpp" (
 	echo =^> Recompilando ndll funkfmpeg ^(windows^)
-	haxelib run lime rebuild funkfmpeg windows || exit /b 1
+	haxelib run lime rebuild funkfmpeg windows -64 || exit /b 1
 )
 
 echo =^> FMCE %KIND% %MODE% ^(windows^)

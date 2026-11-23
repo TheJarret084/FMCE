@@ -118,7 +118,7 @@ echo "==> FMCE $KIND $MODE ($PLATFORM)"
 # funkfmpeg: ndll nativo para cpp desktop (no viene precompilado en el repo git).
 if [ "$KIND" = "cpp" ]; then
 	echo "==> Recompilando ndll funkfmpeg ($PLATFORM)"
-	haxelib run lime rebuild funkfmpeg "$PLATFORM" || { echo "build.sh: fallo al recompilar funkfmpeg ndll" >&2; exit 1; }
+	haxelib run lime rebuild funkfmpeg "$PLATFORM" -64 || { echo "build.sh: fallo al recompilar funkfmpeg ndll" >&2; exit 1; }
 fi
 
 # Android: hxcpp reutiliza export/<modo>/android/obj entre arquitecturas. Si un build viejo dejo
