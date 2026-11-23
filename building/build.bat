@@ -27,7 +27,15 @@ for /f "usebackq tokens=1,2,3,4,5 delims=|" %%a in (`%PY% -c "import json; d=jso
 			rem ya instalado
 		) || (
 			echo    instalando %%b ^(git^)
-			if "%%e"=="" (haxelib git %%b %%d --always || exit /b 1) else (haxelib git %%b %%d %%e --always || exit /b 1)
+			if "%%e"=="" (haxelib git %%b %%d --always) else (haxelib git %%b %%d %%e --always)
+			if errorlevel 1 (
+				echo    haxelib git fallo, intentando clone manual...
+				if exist "%HAXELIB_REPO%\%%b\git" rmdir /s /q "%HAXELIB_REPO%\%%b\git"
+				if not exist "%HAXELIB_REPO%\%%b" mkdir "%HAXELIB_REPO%\%%b"
+				set "GIT_TERMINAL_PROMPT=0"
+				if "%%e"=="" (git clone --recursive --depth 1 %%d "%HAXELIB_REPO%\%%b\git" || exit /b 1) else (git clone --recursive --depth 1 --branch %%e %%d "%HAXELIB_REPO%\%%b\git" || exit /b 1)
+				echo git> "%HAXELIB_REPO%\%%b\.current"
+			)
 		)
 	) else if /i "%%a"=="haxelib" (
 		if not "%%c"=="" (

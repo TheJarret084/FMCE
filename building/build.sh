@@ -43,7 +43,17 @@ while IFS=$'\t' read -r type name ver url ref; do
 			continue
 		fi
 		echo "   instalando $name (git)"
-		haxelib git "$name" "$url" ${ref:+"$ref"} --always </dev/null || { echo "build.sh: no se pudo instalar $name (git)" >&2; exit 1; }
+		if ! haxelib git "$name" "$url" ${ref:+"$ref"} --always </dev/null; then
+			echo "   haxelib git falló, intentando clone manual..."
+			rm -rf "$HAXELIB_REPO/$name/git"
+			mkdir -p "$HAXELIB_REPO/$name"
+			if [ -n "$ref" ]; then
+				GIT_TERMINAL_PROMPT=0 git clone --recursive --depth 1 --branch "$ref" "$url" "$HAXELIB_REPO/$name/git" </dev/null || { echo "build.sh: no se pudo instalar $name (git)" >&2; exit 1; }
+			else
+				GIT_TERMINAL_PROMPT=0 git clone --recursive --depth 1 "$url" "$HAXELIB_REPO/$name/git" </dev/null || { echo "build.sh: no se pudo instalar $name (git)" >&2; exit 1; }
+			fi
+			echo "git" > "$HAXELIB_REPO/$name/.current"
+		fi
 	elif [ "$type" = "haxelib" ]; then
 		if [ -n "$ver" ]; then
 			haxelib list "$name" 2>/dev/null </dev/null | grep -q "\[$ver\]" && continue
