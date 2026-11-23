@@ -100,6 +100,12 @@ fi
 
 echo "==> FMCE $KIND $MODE ($PLATFORM)"
 
+# funkfmpeg: ndll nativo para cpp desktop (no viene precompilado en el repo git).
+if [ "$KIND" = "cpp" ]; then
+	echo "==> Recompilando ndll funkfmpeg ($PLATFORM)"
+	haxelib run lime rebuild funkfmpeg "$PLATFORM" || { echo "build.sh: fallo al recompilar funkfmpeg ndll" >&2; exit 1; }
+fi
+
 # Android: hxcpp reutiliza export/<modo>/android/obj entre arquitecturas. Si un build viejo dejo
 # Options.txt/HxcppConfig-v7.h de armv7, el siguiente intento arm64 arrastra HXCPP_ARMV7 y acaba
 # enlazando libvlc-v7.so contra un binario aarch64 (ld.lld: "incompatible with aarch64linux").
