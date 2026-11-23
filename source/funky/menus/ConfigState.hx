@@ -10,7 +10,7 @@ import funky.menus.options.ConfigMenu;
 import funky.menus.options.ConfigScreens;
 import openfl.Assets as OpenFlAssets;
 
-import advanced.AdvancedModeState;
+import funky.advanced.AdvancedModeState;
 import funky.core.ClientPrefs;
 
 class ConfigState extends FlxState

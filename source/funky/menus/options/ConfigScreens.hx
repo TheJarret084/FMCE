@@ -1,6 +1,6 @@
 package funky.menus.options;
 
-import advanced.AdvancedModeState;
+import funky.advanced.AdvancedModeState;
 import flixel.FlxG;
 import funky.backend.system.LogOverlay;
 import funky.backend.system.framerate.Framerate;
@@ -11,7 +11,7 @@ import funky.core.TouchNav;
 import funky.core.TransitionHandler;
 import flixel.util.FlxColor;
 
-import funkin.backend.utils.TranslationUtil as TU;
+import funky.backend.utils.TranslationUtil as TU;
 
 typedef CreditEntry =
 {
@@ -194,8 +194,8 @@ class ConfigScreens
 		];
 		if (!AdvancedModeState.antiGay)
 		{
-			items.push(ConfigItem.action(TU.translate("options.misc.advanced.name", null, "MODO AVANZADO"),
-				TU.translate("options.misc.advanced.desc", null, "Editores y Code Studio (atajo: tecla 7 en el menu principal)"), () ->
+			items.push(ConfigItem.action(TU.translate("options.misc.funky.advanced.name", null, "MODO AVANZADO"),
+				TU.translate("options.misc.funky.advanced.desc", null, "Editores y Code Studio (atajo: tecla 7 en el menu principal)"), () ->
 			{
 				ClientPrefs.save();
 				TransitionHandler.switchState(new AdvancedModeState());

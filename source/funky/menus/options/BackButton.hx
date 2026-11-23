@@ -5,7 +5,7 @@ import flixel.FlxSprite;
 import funky.core.MenuButton;
 import funky.core.Paths;
 import funky.core.TouchNav;
-import funkin.backend.utils.TranslationUtil as TU;
+import funky.backend.utils.TranslationUtil as TU;
 
 class BackButton extends FlxSprite
 {

@@ -438,7 +438,8 @@ class VideoStripTask
 					if (info.seconds <= 0) throw "no se pudo leer la duracion del video";
 					sourceWidth = info.w;
 					sourceHeight = info.h;
-					fps = Math.min(FMCEToFNMMExporter.VIDEO_MAX_FPS, Math.max(FMCEToFNMMExporter.VIDEO_MIN_FPS, info.fps));
+					fps = (info.seconds >= 10) ? 12.0 : 24.0;
+					fps = Math.min(FMCEToFNMMExporter.VIDEO_MAX_FPS, Math.max(FMCEToFNMMExporter.VIDEO_MIN_FPS, fps));
 					resampled = Math.abs(fps - info.fps) > 0.01;
 					total = Std.int(Math.max(1, Math.round(info.seconds * fps)));
 					target = fitTarget(info.w, info.h, total);
@@ -510,7 +511,8 @@ class VideoStripTask
 		if (info == null) throw "no se pudo leer el video (ni con ffmpeg, ni su cabecera, ni decodificando un frame)";
 		sourceWidth = info.w;
 		sourceHeight = info.h;
-		fps = Math.min(FMCEToFNMMExporter.VIDEO_MAX_FPS, Math.max(FMCEToFNMMExporter.VIDEO_MIN_FPS, info.fps));
+		fps = (info.seconds >= 10) ? 12.0 : 24.0;
+		fps = Math.min(FMCEToFNMMExporter.VIDEO_MAX_FPS, Math.max(FMCEToFNMMExporter.VIDEO_MIN_FPS, fps));
 		resampled = Math.abs(fps - info.fps) > 0.01;
 		percent = 2;
 

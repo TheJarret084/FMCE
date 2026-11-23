@@ -16,7 +16,7 @@ import funky.core.Paths;
 import funky.core.ClientPrefs;
 import funky.core.Conductor;
 import funky.core.NoteSkin;
-import funkin.backend.utils.TranslationUtil as TU;
+import funky.backend.utils.TranslationUtil as TU;
 import openfl.utils.Assets;
 
 typedef PressScore =

@@ -14,7 +14,7 @@ import funky.core.Paths;
 import funky.core.Log;
 import funky.core.TouchNav;
 import funky.core.TransitionHandler;
-import funkin.backend.utils.TranslationUtil as TU;
+import funky.backend.utils.TranslationUtil as TU;
 
 class TitleState extends FlxState
 {

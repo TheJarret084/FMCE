@@ -1,0 +1,128 @@
+package funky.editors.charter;
+
+import flixel.util.FlxSort;
+import funky.backend.system.Conductor;
+import funky.editors.charter.CharterBackdropGroup.EventBackdrop;
+
+class CharterEventGroup extends FlxTypedGroup<CharterEvent> {
+	public static var stopThisFuckingShitDudeIstg = false;
+	public var eventsBackdrop:EventBackdrop;
+	public var eventsRowText:UIText;
+
+	public var autoSort:Bool = true;
+	var __lastSort:Int = 0;
+
+	static inline var FULL_FILTER_EVERY:Int = 60;
+	var __framesSinceFullFilter:Int = 0;
+
+	var __begin:Int = 0;
+	var __end:Int = 0;
+
+	function updateRange() {
+		var zoom:Float = camera != null ? camera.zoom : 1;
+		var max:Float = FlxG.height / 70 / zoom + 2;
+
+		var curStep:Float = Conductor.curStepFloat;
+		if (!FlxG.sound.music.playing)
+			curStep = Charter.instance.gridBackdrops.conductorSprY / 40;
+
+		__begin = SortedArrayUtil.binarySearch(members, curStep - max, getStep);
+		__end = SortedArrayUtil.binarySearch(members, curStep + max, getStep);
+		if (__end < members.length) __end++;
+	}
+
+	function forEachVisible(func:CharterEvent->Void) {
+		updateRange();
+
+		for (i in __begin...__end) {
+			var e = members[i];
+			if (e != null) func(e);
+		}
+
+		for (s in Charter.selection.copy())
+			if (s != null && s is CharterEvent) {
+				var e:CharterEvent = cast s;
+				if (e.ID < __begin || e.ID >= __end) func(e);
+			}
+	}
+
+	public override function update(elapsed:Float) {
+		if (!CharterEventGroup.stopThisFuckingShitDudeIstg) {
+			filterVisible();
+			if (++__framesSinceFullFilter >= FULL_FILTER_EVERY) {
+				__framesSinceFullFilter = 0;
+				filterEvents();
+			}
+		}
+		if (autoSort && members.length != __lastSort)
+			sortEvents();
+
+		forEachVisible(function(e:CharterEvent) {
+			e.eventsBackdrop = eventsBackdrop;
+			e.snappedToGrid = true;
+			e.cameras = cameras;
+			if (e.exists && e.active) e.update(elapsed);
+		});
+
+		eventsRowText.y = FlxMath.lerp(eventsRowText.y, -40 + (members[0] != null ? Math.min(members[0].y, 0) : 0), 1/10);
+	}
+
+	public override function remove(v:CharterEvent, force:Bool = true):CharterEvent {
+		v.ID = -1;
+		return super.remove(v, force);
+	}
+
+	public override function draw() {
+		forEachVisible(function(e:CharterEvent) {
+			e.eventsBackdrop = eventsBackdrop;
+			e.snappedToGrid = true;
+			e.cameras = cameras;
+			if (e.exists && e.visible) e.draw();
+		});
+	}
+
+	public inline function sortEvents() {
+		__lastSort = members.length;
+		this.sort(sortEventsFilter);
+		updateEventsIDs();
+		updateEventsBackdrop();
+	}
+
+	public inline function updateEventsIDs()
+		for (i => n in members) n.ID = i;
+
+	public inline function updateEventsBackdrop()
+		for (event in members)
+			event.eventsBackdrop = eventsBackdrop;
+
+	public function filterEvents() {
+		var i = members.length - 1;
+		while (i >= 0) {
+			var event = members[i];
+			if (event != null && event.events.length == 0) {
+				remove(event, true);
+				event.kill();
+			}
+			i--;
+		}
+	}
+
+	function filterVisible() {
+		updateRange();
+		var i = __end - 1;
+		while (i >= __begin) {
+			var event = members[i];
+			if (event != null && event.events.length == 0) {
+				remove(event, true);
+				event.kill();
+			}
+			i--;
+		}
+	}
+
+	static function getStep(e:CharterEvent):Float
+		return e.step;
+
+	public dynamic function sortEventsFilter(i:Int, e1:CharterEvent, e2:CharterEvent)
+		return FlxSort.byValues(FlxSort.ASCENDING, e1.step, e2.step);
+}

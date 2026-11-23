@@ -383,11 +383,11 @@ class ClientPrefs
 		var editor = firstChild(root, "editor");
 		if (editor != null)
 		{
-			funkin.options.Options.editorSFX = parseXmlBool(editor.get("sfx"), funkin.options.Options.editorSFX);
-			funkin.options.Options.intensiveBlur = parseXmlBool(editor.get("intensiveBlur"), funkin.options.Options.intensiveBlur);
-			funkin.options.Options.maxUndos = Std.int(Math.max(1, parseXmlFloat(editor.get("maxUndos"), funkin.options.Options.maxUndos)));
-			funkin.options.Options.charterAutoSaves = parseXmlBool(editor.get("autoSaves"), funkin.options.Options.charterAutoSaves);
-			funkin.options.Options.charterAutoSaveTime = Math.max(10, parseXmlFloat(editor.get("autoSaveTime"), funkin.options.Options.charterAutoSaveTime));
+			funky.options.Options.editorSFX = parseXmlBool(editor.get("sfx"), funky.options.Options.editorSFX);
+			funky.options.Options.intensiveBlur = parseXmlBool(editor.get("intensiveBlur"), funky.options.Options.intensiveBlur);
+			funky.options.Options.maxUndos = Std.int(Math.max(1, parseXmlFloat(editor.get("maxUndos"), funky.options.Options.maxUndos)));
+			funky.options.Options.charterAutoSaves = parseXmlBool(editor.get("autoSaves"), funky.options.Options.charterAutoSaves);
+			funky.options.Options.charterAutoSaveTime = Math.max(10, parseXmlFloat(editor.get("autoSaveTime"), funky.options.Options.charterAutoSaveTime));
 		}
 
 		var lanes = firstChild(root, "lanes");
@@ -676,11 +676,11 @@ class ClientPrefs
 			root.addChild(display);
 
 			var editor = Xml.createElement("editor");
-			editor.set("sfx", Std.string(funkin.options.Options.editorSFX));
-			editor.set("intensiveBlur", Std.string(funkin.options.Options.intensiveBlur));
-			editor.set("maxUndos", Std.string(funkin.options.Options.maxUndos));
-			editor.set("autoSaves", Std.string(funkin.options.Options.charterAutoSaves));
-			editor.set("autoSaveTime", Std.string(funkin.options.Options.charterAutoSaveTime));
+			editor.set("sfx", Std.string(funky.options.Options.editorSFX));
+			editor.set("intensiveBlur", Std.string(funky.options.Options.intensiveBlur));
+			editor.set("maxUndos", Std.string(funky.options.Options.maxUndos));
+			editor.set("autoSaves", Std.string(funky.options.Options.charterAutoSaves));
+			editor.set("autoSaveTime", Std.string(funky.options.Options.charterAutoSaveTime));
 			root.addChild(editor);
 
 			writeSol('<?xml version="1.0" encoding="UTF-8"?>\n' + root.toString());

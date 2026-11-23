@@ -10,7 +10,7 @@ import funky.core.WindowUtils;
 import funky.core.Paths;
 import funky.core.AssetPack;
 import funky.core.ClientPrefs;
-import funkin.backend.utils.TranslationUtil;
+import funky.backend.utils.TranslationUtil;
 import funky.api.DiscordClient;
 import funky.backend.system.framerate.Framerate;
 import funky.backend.system.LogOverlay;

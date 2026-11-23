@@ -111,7 +111,7 @@
 	<!-- Scripts: clases propias en hscript (`class Boss extends FunkinSprite`) y lineas de error. -->
 	<define name="CUSTOM_CLASSES" />
 	<haxedef name="hscriptPos" />
-	<!-- El charter portado de Codename (source/funkin/) envuelve codigo en `#if REGION`. -->
+	<!-- El charter portado de Codename (ahora en source/funky/) envuelve codigo en `#if REGION`. -->
 	<haxedef name="REGION" />
 	<!-- Opcional (compila MUCHO mas lento): permite `import` de CUALQUIER clase de Flixel/OpenFL desde los scripts.
 	     Sin esto solo funcionan las clases que ya vienen en `Scripts.baseGlobals` o que el juego usa por su cuenta. -->

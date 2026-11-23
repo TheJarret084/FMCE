@@ -114,9 +114,9 @@ class Framerate extends Sprite
 	static function onPostStateSwitch():Void
 	{
 		var name = FlxG.state != null ? Type.getClassName(Type.getClass(FlxG.state)) : "";
-		inEditor = StringTools.startsWith(name, "funkin.editors.")
-			|| StringTools.startsWith(name, "advanced.editors.")
-			|| name == "advanced.AdvancedEditorState";
+		inEditor = StringTools.startsWith(name, "funky.editors.")
+			|| StringTools.startsWith(name, "funky.advanced.editors.")
+			|| name == "funky.advanced.AdvancedEditorState";
 	}
 
 	static function onPreStateSwitch():Void

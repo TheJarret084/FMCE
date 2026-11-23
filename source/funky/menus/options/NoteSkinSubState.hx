@@ -14,7 +14,7 @@ import funky.core.KeyBinds;
 import funky.core.NoteSkin;
 import funky.core.Paths;
 import funky.core.TouchNav;
-import funkin.backend.utils.TranslationUtil as TU;
+import funky.backend.utils.TranslationUtil as TU;
 
 using StringTools;
 

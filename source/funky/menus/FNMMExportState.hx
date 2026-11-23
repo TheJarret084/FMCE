@@ -1,12 +1,12 @@
 package funky.menus;
 
-import advanced.AdvancedToolsState;
-import advanced.ui.EditorBackdrop;
+import funky.advanced.AdvancedToolsState;
+import funky.advanced.ui.EditorBackdrop;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
-import funkin.editors.ui.*;
-import funkin.editors.ui.UIWarningSubstate.WarningButton;
+import funky.editors.ui.*;
+import funky.editors.ui.UIWarningSubstate.WarningButton;
 import funky.backend.converter.FMCEToFNMMExporter;
 import funky.backend.converter.FNMMExportJob;
 import funky.backend.converter.FMCEToFNMMExporter.FNMMExportPlan;

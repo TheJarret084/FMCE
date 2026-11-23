@@ -25,7 +25,7 @@ import funky.core.TransitionHandler;
 import funky.game.HealthIcon;
 import funky.game.PlayState;
 import funky.menus.options.BackButton;
-import funkin.backend.utils.TranslationUtil as TU;
+import funky.backend.utils.TranslationUtil as TU;
 import openfl.utils.Assets as OpenFlAssets;
 
 using StringTools;
@@ -483,9 +483,9 @@ class FreeplayState extends FlxState
 
 		if (FlxG.keys.justPressed.C) leave(new ConverterMenuState());
 
-		if (!advanced.AdvancedModeState.antiGay && FlxG.keys.justPressed.SEVEN && entries.length > 0)
+		if (!funky.advanced.AdvancedModeState.antiGay && FlxG.keys.justPressed.SEVEN && entries.length > 0)
 		{
-			leave(new advanced.AdvancedModeState(entries[selected].path.substr(Paths.levelsRoot().length)));
+			leave(new funky.advanced.AdvancedModeState(entries[selected].path.substr(Paths.levelsRoot().length)));
 			return;
 		}
 		if (FlxG.keys.justPressed.R)

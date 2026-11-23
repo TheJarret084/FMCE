@@ -1,6 +1,6 @@
 package funky.backend.chart;
 
-import funkin.backend.chart.ChartImporter;
+import funky.backend.chart.ChartImporter;
 import funky.core.Log;
 import haxe.Json;
 import haxe.io.Path;

@@ -16,7 +16,7 @@ import funky.core.CoolUtil;
 import funky.core.KeyBinds;
 import funky.core.Log;
 import funky.core.Paths;
-import funkin.backend.utils.TranslationUtil as TU;
+import funky.backend.utils.TranslationUtil as TU;
 import funky.core.TouchNav;
 import funky.game.PlayState;
 import funky.menus.options.BackButton;

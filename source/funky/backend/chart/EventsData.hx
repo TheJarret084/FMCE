@@ -1,0 +1,153 @@
+package funky.backend.chart;
+
+enum EventParamType {
+	TString;
+	TBool;
+	TInt(?min:Int, ?max:Int, ?step:Float);
+	TFloat(?min:Float, ?max:Float, ?step:Float, ?precision:Int);
+	TStrumLine;
+	TColorWheel;
+	TDropDown(options:Array<String>);
+	TCharacter;
+	TStage;
+
+	TActionPack;
+
+	TObject;
+
+	TObjectTransform;
+
+	TObjectAnim;
+
+	TSpriteName;
+
+	TCameraPoint;
+}
+
+typedef EventParamInfo = {
+	var name:String;
+	var type:EventParamType;
+	var defValue:Dynamic;
+
+	var key:String;
+	var ?saveIfDefault:Bool;
+}
+
+class EventsData {
+	static final UNITS:Array<String> = ["seconds", "beats", "steps"];
+
+	/** Interpolaciones que entiende el juego (Eventos.curva). Sin sufijo: quad, cube, etc. usan inOut (bounce y elastic, out). */
+	static final EASES:Array<String> = ["default", "linear", "quad", "cube", "circ", "sine", "expo", "back", "bounce", "elastic"];
+
+	static inline function p(key:String, name:String, type:EventParamType, def:Dynamic):EventParamInfo
+		return {key: key, name: name, type: type, defValue: def};
+
+	static inline function transition():Array<EventParamInfo>
+		return [
+			p("transitionTime", "Duracion", TFloat(0, 9999, 0.25, 3), 0.0),
+			p("transitionTimeUnit", "Unidad", TDropDown(UNITS), "seconds"),
+			p("easingType", "Interpolacion", TDropDown(EASES), "default")
+		];
+
+	static final DISPLAY_NAMES:Map<String, String> = [
+		"CameraSet" => "Definir cámara",
+		"CameraZoom" => "Definir zoom de cámara",
+		"CameraShake" => "Sacudir cámara",
+		"ObjectPositionSet" => "Definir posición de objeto",
+		"ObjectVisibilitySet" => "Definir visibilidad de objeto",
+		"ObjectOpacitySet" => "Definir opacidad de objeto",
+		"ObjectAnimationSet" => "Definir animación de objeto",
+		"ObjectSpriteSet" => "Definir sprite de objeto",
+		"ObjectChartChange" => "Definir strumline de objeto",
+		"BarIconChange" => "Cambiar icono de la barra",
+		"ScreenFlash" => "Destello de pantalla",
+		"RunActionPack" => "Ejecutar action pack",
+		"PlayerHealth" => "Modificar vida del jugador",
+		"GUI" => "Mostrar / ocultar GUI"
+	];
+
+	public static function displayName(id:String):String {
+		var tuId = "charter.events." + TU.raw2Id(id);
+		if (TU.exists(tuId)) return TU.translate(tuId);
+		var name = DISPLAY_NAMES.get(id);
+		return name != null ? name : id;
+	}
+
+	public static var eventsList:Array<String> = [];
+	static var defs:Map<String, Array<EventParamInfo>> = new Map();
+
+	public static function reloadEvents():Void {
+		defs = new Map();
+		eventsList = [];
+		function add(name:String, params:Array<EventParamInfo>) {
+			defs.set(name, params);
+			eventsList.push(name);
+		}
+		add("CameraSet", [
+			p("mode", "Modo", TDropDown(["auto", "focus"]), "auto"),
+			p("target", "Punto de camara", TCameraPoint, 0)
+		].concat(transition()));
+		add("CameraZoom", [p("value", "Zoom", TFloat(0.05, 10, 0.05, 3), 1.0)].concat(transition()));
+		add("CameraShake", [
+			p("shakes", "Sacudidas", TInt(1, 99, 1), 4),
+			p("delay", "Retraso entre sacudidas", TFloat(0, 9999, 0.05, 3), 0.1),
+			p("timeUnit", "Unidad", TDropDown(UNITS), "seconds"),
+			p("strength", "Fuerza (px)", TFloat(0, 999, 1, 1), 10.0)
+		]);
+		add("ObjectPositionSet", [
+			p("object", "Objeto", TObject, 0),
+			p("transform", "Posicion del objeto", TObjectTransform, 0)
+		].concat(transition()));
+		add("ObjectVisibilitySet", [
+			p("object", "Objeto", TObject, 0),
+			p("value", "Visible", TBool, true)
+		]);
+		add("ObjectOpacitySet", [
+			p("object", "Objeto", TObject, 0),
+			p("value", "Opacidad (0 a 1)", TFloat(0, 1, 0.05, 2), 1.0)
+		].concat(transition()));
+		add("ObjectAnimationSet", [
+			p("object", "Objeto", TObject, 0),
+			p("anim", "Animacion", TObjectAnim, 0)
+		]);
+		add("ObjectSpriteSet", [
+			p("object", "Objeto", TObject, 0),
+			p("sprite", "Sprite", TSpriteName, "")
+		]);
+		add("ObjectChartChange", [
+			p("object", "Objeto", TObject, 0),
+			p("strumLine", "Strumline (-1 ninguna, 0 jugador, 1 oponente)", TInt(-1, 99, 1), 0)
+		]);
+		add("BarIconChange", [
+			p("target", "Icono (0 oponente, 1 jugador)", TInt(0, 1, 1), 1),
+			p("sprite", "Sprite del icono", TSpriteName, "")
+		]);
+		add("ScreenFlash", [
+			p("color_r", "Rojo", TInt(0, 255, 1), 255),
+			p("color_g", "Verde", TInt(0, 255, 1), 255),
+			p("color_b", "Azul", TInt(0, 255, 1), 255),
+			p("alpha", "Opacidad (0 a 1)", TFloat(0, 1, 0.05, 2), 1.0),
+			p("duration", "Duracion", TFloat(0, 9999, 0.25, 3), 0.5),
+			p("timeUnit", "Unidad", TDropDown(UNITS), "seconds")
+		]);
+		add("RunActionPack", [p("actionPack", "Action pack", TActionPack, 0)]);
+
+		add("PlayerHealth", [
+			p("operation", "Operacion (set, add, remove)", TDropDown(["set", "add", "remove"]), "set"),
+			p("value", "Valor", TFloat(0, 9999, 0.5, 3), 0.0),
+			p("minHealth", "Vida minima (solo remove)", TFloat(0, 9999, 0.5, 3), 0.0)
+		]);
+		add("GUI", [p("visible", "Visible", TBool, true)]);
+	}
+
+	public static function getEventParams(name:String):Array<EventParamInfo> {
+		if (eventsList.length == 0) reloadEvents();
+		var d = defs.get(name);
+		return d == null ? [] : d;
+	}
+
+	public static function isKnown(name:String):Bool {
+		if (eventsList.length == 0) reloadEvents();
+		return defs.exists(name);
+	}
+}

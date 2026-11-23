@@ -23,7 +23,7 @@ import funky.core.NavPad;
 import funky.core.TouchNav;
 import funky.game.PlayState;
 import funky.menus.options.BackButton;
-import funkin.backend.utils.TranslationUtil as TU;
+import funky.backend.utils.TranslationUtil as TU;
 
 private enum Page
 {

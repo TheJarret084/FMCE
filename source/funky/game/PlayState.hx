@@ -33,7 +33,7 @@ import funky.menus.FreeplayState;
 import funky.menus.GameOverSubState;
 import funky.menus.PauseSubState;
 import funky.scripting.Scripts;
-import funkin.editors.ui.UIWarningSubstate;
+import funky.editors.ui.UIWarningSubstate;
 
 /**
  * Juego: HUD, notas, escenario, eventos y scripts.
@@ -137,7 +137,7 @@ class PlayState extends MusicBeatState
 		if (returnToEditor == null)
 			return new FreeplayState();
 
-		return funkin.editors.charter.CharterLauncher.open(returnToEditor);
+		return funky.editors.charter.CharterLauncher.open(returnToEditor);
 	}
 
 	/**
@@ -763,7 +763,7 @@ class PlayState extends MusicBeatState
 	 */
 	function openCharter():Void
 	{
-		var charter = new funkin.editors.charter.Charter(hostLevel, true);
+		var charter = new funky.editors.charter.Charter(hostLevel, true);
 		persistentDraw = true;
 		openSubState(charter);
 	}
@@ -959,7 +959,7 @@ class PlayState extends MusicBeatState
 		if (subState != null)
 			closeSubState();
 
-		var charter = funkin.editors.charter.Charter.instance;
+		var charter = funky.editors.charter.Charter.instance;
 
 		var back = function():Void
 		{
@@ -1894,7 +1894,7 @@ class PlayState extends MusicBeatState
 	override public function openSubState(substate:FlxSubState):Void
 	{
 		// El charter se cuelga tal cual: no usa la camara de pausa ni avisa a los scripts.
-		if (Std.isOfType(substate, funkin.editors.charter.Charter))
+		if (Std.isOfType(substate, funky.editors.charter.Charter))
 		{
 			super.openSubState(substate);
 			return;
@@ -1919,7 +1919,7 @@ class PlayState extends MusicBeatState
 
 		super.closeSubState();
 
-		if (Std.isOfType(closing, funkin.editors.charter.Charter))
+		if (Std.isOfType(closing, funky.editors.charter.Charter))
 			return;
 
 		if (camSub != null)

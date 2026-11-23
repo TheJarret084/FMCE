@@ -1,6 +1,6 @@
 package funky.menus;
 
-import advanced.AdvancedModeState;
+import funky.advanced.AdvancedModeState;
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxSprite;
@@ -18,7 +18,7 @@ import funky.core.Paths;
 import funky.core.TouchNav;
 import funky.core.TransitionHandler;
 import funky.menus.options.BackButton;
-import funkin.backend.utils.TranslationUtil as TU;
+import funky.backend.utils.TranslationUtil as TU;
 
 class MainMenuState extends FlxState
 {
