@@ -30,7 +30,7 @@ for /f "usebackq tokens=1,2,3,4,5 delims=|" %%a in (`%PY% -c "import json; d=jso
 			rem ya instalado
 		) || (
 			echo    instalando !N! ^(git^)
-			if "!R!"=="" (haxelib git !N! !U! --always) else (haxelib git !N! !U! !R! --always)
+			if "!R!"=="" (haxelib git !N! !U! --always --quiet) else (haxelib git !N! !U! !R! --always --quiet)
 			if errorlevel 1 (
 				echo    haxelib git fallo, intentando clone manual...
 				if exist "%HAXELIB_REPO%\!N!\git" rmdir /s /q "%HAXELIB_REPO%\!N!\git"
@@ -44,11 +44,11 @@ for /f "usebackq tokens=1,2,3,4,5 delims=|" %%a in (`%PY% -c "import json; d=jso
 		if not "!V!"=="" (
 			haxelib list !N! 2>nul | findstr /c:"[!V!]" >nul || (
 				echo    instalando !N! !V!
-				haxelib install !N! !V! --always || haxelib install !N! --always || exit /b 1
+				haxelib install !N! !V! --always --quiet || haxelib install !N! --always --quiet || exit /b 1
 				haxelib set !N! !V! >nul 2>nul
 			)
 		) else (
-			haxelib path !N! >nul 2>nul || (echo    instalando !N! & haxelib install !N! --always || exit /b 1)
+			haxelib path !N! >nul 2>nul || (echo    instalando !N! & haxelib install !N! --always --quiet || exit /b 1)
 		)
 	)
 )
