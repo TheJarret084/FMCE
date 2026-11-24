@@ -6,9 +6,9 @@ import openfl.Lib;
 import openfl.display.Sprite;
 import openfl.events.Event;
 import openfl.text.TextFormat;
-import funky.core.Paths;
+import funky.backend.core.Paths;
 import flixel.util.FlxColor;
-import funky.core.Log;
+import funky.backend.system.Log;
 import openfl.utils.Assets as OpenFlAssets;
 
 class Framerate extends Sprite

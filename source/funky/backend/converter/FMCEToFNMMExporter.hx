@@ -4,8 +4,8 @@ import haxe.io.Bytes;
 import haxe.io.Path;
 import funky.backend.LevelArchive;
 import funky.backend.chart.LevelLoader;
-import funky.core.JsonLoose;
-import funky.core.Paths;
+import funky.backend.core.JsonLoose;
+import funky.backend.core.Paths;
 
 #if sys
 import openfl.display.BitmapData;

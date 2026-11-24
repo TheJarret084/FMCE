@@ -8,12 +8,12 @@ import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
 import flixel.text.FlxText.FlxTextBorderStyle;
 import flixel.util.FlxColor;
-import funky.core.ClientPrefs;
-import funky.core.CoolUtil;
-import funky.core.KeyBinds;
-import funky.core.NoteSkin;
-import funky.core.Paths;
-import funky.core.TouchNav;
+import funky.backend.core.ClientPrefs;
+import funky.backend.utils.CoolUtil;
+import funky.backend.core.KeyBinds;
+import funky.backend.core.NoteSkin;
+import funky.backend.core.Paths;
+import funky.backend.core.TouchNav;
 import funky.backend.utils.TranslationUtil as TU;
 
 using StringTools;

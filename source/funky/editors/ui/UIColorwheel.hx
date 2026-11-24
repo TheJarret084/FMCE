@@ -100,7 +100,7 @@ class UIColorwheel extends UISliceSprite {
 		try {
 			return new CustomShader("engine/colorPicker");
 		} catch (e:Dynamic) {
-			funky.core.Log.warn('[UIColorwheel] no se pudo crear el shader, se dibuja por CPU: ' + Std.string(e));
+			funky.backend.system.Log.warn('[UIColorwheel] no se pudo crear el shader, se dibuja por CPU: ' + Std.string(e));
 			return null;
 		}
 		#end

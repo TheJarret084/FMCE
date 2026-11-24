@@ -7,7 +7,7 @@ import funky.backend.converter.FNMMToFMCEConverter.ArchiveFile;
 import funky.backend.converter.FNMMToFMCEConverter.ConversionResult;
 import funky.backend.converter.FNMMSpriteImporter.SpriteImportTask;
 import funky.backend.converter.FNMMToFMCEConverter.FoundChart;
-import funky.core.Log;
+import funky.backend.system.Log;
 
 #if sys
 import sys.FileSystem;

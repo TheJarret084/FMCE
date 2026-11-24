@@ -1,8 +1,8 @@
-package funky.core;
+package funky.backend.core;
 
 import flixel.FlxG;
 import flixel.graphics.frames.FlxAtlasFrames;
-import funky.core.Paths;
+import funky.backend.core.Paths;
 import funky.game.PlayState;
 
 class CursorManager

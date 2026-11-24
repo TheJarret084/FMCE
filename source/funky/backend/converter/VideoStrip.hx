@@ -3,8 +3,8 @@ package funky.backend.converter;
 import haxe.io.Bytes;
 import haxe.io.Path;
 import funky.backend.FunkinVideoSprite;
-import funky.core.JsonLoose;
-import funky.core.Log;
+import funky.backend.core.JsonLoose;
+import funky.backend.system.Log;
 #if sys
 import sys.FileSystem;
 import sys.io.File;
@@ -16,7 +16,7 @@ import funkfmpeg.Sheet;
 import funkfmpeg.SheetOptions;
 import funkfmpeg.SheetResult;
 import funkfmpeg.TapeOptions;
-import funky.core.Storage;
+import funky.backend.core.Storage;
 #if !android
 import sys.io.Process;
 #end

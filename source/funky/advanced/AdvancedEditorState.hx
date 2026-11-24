@@ -8,10 +8,10 @@ import flixel.text.FlxText.FlxTextAlign;
 import haxe.Json;
 import haxe.io.Path;
 import funky.api.DiscordClient;
-import funky.core.KeyBinds;
-import funky.core.Log;
-import funky.core.Paths;
-import funky.core.TransitionHandler;
+import funky.backend.core.KeyBinds;
+import funky.backend.system.Log;
+import funky.backend.core.Paths;
+import funky.backend.core.TransitionHandler;
 import funky.scripting.Scripts;
 import funky.advanced.ui.code.CodeLang;
 import funky.advanced.ui.code.CodeStudio;
@@ -37,7 +37,7 @@ class AdvancedEditorState extends FlxState
 	override public function create():Void
 	{
 		super.create();
-		funky.core.CoolUtil.playEditorSong();
+		funky.backend.utils.CoolUtil.playEditorSong();
 		prepareLevel();
 
 		studio = new CodeStudio(loadFiles(), saveFile, prepareRun, openSpritePreview, createScript, levelName);

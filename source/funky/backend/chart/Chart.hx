@@ -40,13 +40,13 @@ class Chart {
 	public static function load(dir:String):ChartData {
 		levelDir = dir;
 		Paths.levelDir = dir;
-		funky.core.Paths.currentLevel = dir;
+		funky.backend.core.Paths.currentLevel = dir;
 
 		var chartFile = Path.join([dir, LevelLoader.CHART_FILE]);
 		if (FileSystem.exists(dir) && FileSystem.isDirectory(dir) && !FileSystem.exists(chartFile)) {
-			funky.core.Log.warn('[Chart] ' + dir + ' no tiene chart.json: se crea uno vacio');
+			funky.backend.system.Log.warn('[Chart] ' + dir + ' no tiene chart.json: se crea uno vacio');
 			try File.saveContent(chartFile, Json.stringify({fmceChart: true, timeUnit: "seconds", strumLines: [[], []]}, null, "\t"))
-			catch (e:Dynamic) funky.core.Log.error('[Chart] no se pudo crear ' + chartFile + ': ' + Std.string(e));
+			catch (e:Dynamic) funky.backend.system.Log.error('[Chart] no se pudo crear ' + chartFile + ': ' + Std.string(e));
 		}
 		var lv = LevelLoader.loadFolder(dir);
 		var meta:Dynamic = readJson(Path.join([dir, "meta.json"]));

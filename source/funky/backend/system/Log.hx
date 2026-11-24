@@ -1,4 +1,4 @@
-package funky.core;
+package funky.backend.system;
 
 import haxe.PosInfos;
 

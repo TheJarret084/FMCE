@@ -25,7 +25,7 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		return TU.translate("charterMetaDataScreen." + id);
 
 	public override function create() {
-		funky.core.Log.info('[CharterMetaDataScreen] create: inicio');
+		funky.backend.system.Log.info('[CharterMetaDataScreen] create: inicio');
 		winTitle = translate("title");
 		winWidth = 700;
 		winHeight = 470;
@@ -68,7 +68,7 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		addLabelOn(colorWheel, translate("color"));
 
 		var row3:Float = row2 + 130;
-		var sprites = funky.core.Paths.levelSprites(funky.backend.chart.Chart.levelDir);
+		var sprites = funky.backend.core.Paths.levelSprites(funky.backend.chart.Chart.levelDir);
 
 		playerIconDropDown = new UIDropDown(title.x, row3, 258, 32, iconItems(sprites, metadata.iconPlayer), iconIndex(sprites, metadata.iconPlayer));
 		add(playerIconDropDown);
@@ -94,7 +94,7 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		closeButton.x -= closeButton.bWidth;
 		add(closeButton);
 		add(saveButton);
-		funky.core.Log.info('[CharterMetaDataScreen] create: listo');
+		funky.backend.system.Log.info('[CharterMetaDataScreen] create: listo');
 	}
 
 	function iconItems(sprites:Array<String>, current:Null<String>):Array<String> {

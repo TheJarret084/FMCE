@@ -4,7 +4,7 @@ import flixel.FlxCamera;
 import flixel.FlxG;
 import funky.backend.chart.Chart;
 import funky.backend.system.Conductor;
-import funky.core.Log;
+import funky.backend.system.Log;
 import funky.game.Eventos;
 import funky.game.SongData;
 import funky.game.SpriteBuilder;

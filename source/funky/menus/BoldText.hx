@@ -4,7 +4,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.text.FlxText;
-import funky.core.Paths;
+import funky.backend.core.Paths;
 
 class BoldText extends FlxSpriteGroup
 {

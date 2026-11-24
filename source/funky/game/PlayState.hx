@@ -19,14 +19,14 @@ import funky.backend.JarretVideo;
 import funky.backend.MusicBeatState;
 import funky.backend.chart.FNMMNote;
 import funky.backend.chart.LevelLoader;
-import funky.core.ClientPrefs;
-import funky.core.Conductor;
-import funky.core.ControlsCheck;
-import funky.core.Difficulty;
-import funky.core.KeyBinds;
-import funky.core.Log;
-import funky.core.NoteSkin;
-import funky.core.Paths;
+import funky.backend.core.ClientPrefs;
+import funky.backend.system.Conductor;
+import funky.backend.core.ControlsCheck;
+import funky.backend.core.Difficulty;
+import funky.backend.core.KeyBinds;
+import funky.backend.system.Log;
+import funky.backend.core.NoteSkin;
+import funky.backend.core.Paths;
 import funky.game.Note.NoteSharedTailState;
 import funky.game.PlayHUD.PressScore;
 import funky.menus.FreeplayState;
@@ -532,7 +532,7 @@ class PlayState extends MusicBeatState
 			return;
 		}
 
-		funky.core.Paths.currentLevel = song.levelDir;
+		funky.backend.core.Paths.currentLevel = song.levelDir;
 		DiscordClient.playingPresence(songLabel(), Difficulty.name());
 		Scripts.load(song.levelDir, ["game" => this, "song" => song, "levelDir" => song.levelDir]);
 		Scripts.call("onLoad");
@@ -1269,7 +1269,7 @@ class PlayState extends MusicBeatState
 			return;
 
 		var accuracy = totalPlayed == 0 ? 0 : totalNotesHit / totalPlayed * 100;
-		funky.core.Scores.submit(funky.core.Scores.levelId(archivePath), Difficulty.current, score, accuracy, misses);
+		funky.backend.core.Scores.submit(funky.backend.core.Scores.levelId(archivePath), Difficulty.current, score, accuracy, misses);
 	}
 
 	// NOTAS
@@ -1626,7 +1626,7 @@ class PlayState extends MusicBeatState
 
 		try
 		{
-			funky.core.CoolUtil.playSound("missSFX" + Std.string(FlxG.random.int(0, 4)), FlxG.random.float(0.2, 0.8));
+			funky.backend.utils.CoolUtil.playSound("missSFX" + Std.string(FlxG.random.int(0, 4)), FlxG.random.float(0.2, 0.8));
 		}
 		catch (e:Dynamic) {}
 	}
@@ -1803,7 +1803,7 @@ class PlayState extends MusicBeatState
 	 */
 	public function openConfig():Void
 	{
-		funky.core.ClientPrefs.save();
+		funky.backend.core.ClientPrefs.save();
 		startFromMs = launchStartMs;
 		seeking = false;
 		skipCountdown = false;

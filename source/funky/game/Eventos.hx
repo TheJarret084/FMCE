@@ -4,7 +4,7 @@ import flixel.FlxG;
 import flixel.tweens.FlxEase;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
-import funky.core.Log;
+import funky.backend.system.Log;
 import funky.game.Stage.StageObject;
 import funky.scripting.Scripts;
 

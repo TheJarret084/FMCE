@@ -41,7 +41,7 @@ class AudioAnalyzer {
 				for (i in 0...peaks.length) peaks[i] = Math.sqrt(peaks[i] / maxPeak);
 		} catch (e:Dynamic) {
 			peaks = [];
-			funky.core.Log.warn('[AudioAnalyzer] waveform no disponible: ' + Std.string(e));
+			funky.backend.system.Log.warn('[AudioAnalyzer] waveform no disponible: ' + Std.string(e));
 		}
 	}
 

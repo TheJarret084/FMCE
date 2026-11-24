@@ -1,9 +1,9 @@
 package funky.game;
 
 import funky.backend.FunkinSprite;
-import funky.core.Conductor;
-import funky.core.Log;
-import funky.core.Paths;
+import funky.backend.system.Conductor;
+import funky.backend.system.Log;
+import funky.backend.core.Paths;
 import funky.game.SpriteBuilder;
 
 class LevelSprite extends FunkinSprite

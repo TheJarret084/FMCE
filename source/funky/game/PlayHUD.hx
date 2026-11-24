@@ -12,10 +12,10 @@ import flixel.ui.FlxBar;
 import flixel.ui.FlxBar.FlxBarFillDirection;
 import flixel.util.FlxColor;
 import flixel.util.FlxStringUtil;
-import funky.core.Paths;
-import funky.core.ClientPrefs;
-import funky.core.Conductor;
-import funky.core.NoteSkin;
+import funky.backend.core.Paths;
+import funky.backend.core.ClientPrefs;
+import funky.backend.system.Conductor;
+import funky.backend.core.NoteSkin;
 import funky.backend.utils.TranslationUtil as TU;
 import openfl.utils.Assets;
 

@@ -2,9 +2,9 @@ package funky.game;
 
 import flixel.FlxG;
 import flixel.FlxSprite;
-import funky.core.ClientPrefs;
-import funky.core.NoteRGBShader;
-import funky.core.NoteSkin;
+import funky.backend.core.ClientPrefs;
+import funky.backend.core.NoteRGBShader;
+import funky.backend.core.NoteSkin;
 
 class Strum extends FlxSprite
 {

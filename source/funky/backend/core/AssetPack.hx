@@ -1,4 +1,4 @@
-package funky.core;
+package funky.backend.core;
 
 #if sys
 import haxe.io.Path;

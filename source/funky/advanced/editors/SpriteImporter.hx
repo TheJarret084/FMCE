@@ -3,7 +3,7 @@ package funky.advanced.editors;
 import funky.advanced.AdvLang;
 import funky.backend.converter.SparrowToAseprite;
 import funky.backend.converter.SpriteFolderConverter;
-import funky.core.Paths;
+import funky.backend.core.Paths;
 import funky.game.SpriteBuilder;
 import haxe.Json;
 import haxe.io.Bytes;

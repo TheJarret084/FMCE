@@ -12,11 +12,11 @@ import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import funky.api.DiscordClient;
-import funky.core.CoolUtil;
-import funky.core.KeyBinds;
-import funky.core.Paths;
-import funky.core.TouchNav;
-import funky.core.TransitionHandler;
+import funky.backend.utils.CoolUtil;
+import funky.backend.core.KeyBinds;
+import funky.backend.core.Paths;
+import funky.backend.core.TouchNav;
+import funky.backend.core.TransitionHandler;
 import funky.menus.options.BackButton;
 import funky.backend.utils.TranslationUtil as TU;
 

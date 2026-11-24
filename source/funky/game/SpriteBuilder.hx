@@ -2,8 +2,8 @@ package funky.game;
 
 import haxe.io.Path;
 import funky.backend.FunkinVideoSprite;
-import funky.core.Conductor;
-import funky.core.Log;
+import funky.backend.system.Conductor;
+import funky.backend.system.Log;
 
 #if sys
 import sys.FileSystem;
@@ -354,7 +354,7 @@ class SpriteBuilder
 		if (!FileSystem.exists(path)) return null;
 		try
 		{
-			return funky.core.JsonLoose.parse(File.getContent(path));
+			return funky.backend.core.JsonLoose.parse(File.getContent(path));
 		}
 		catch (e:Dynamic)
 		{

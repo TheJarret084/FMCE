@@ -139,7 +139,7 @@ class SceneEditorState extends UIState
 	{
 		super();
 		this.levelName = levelName;
-		this.levelDir = Path.join([funky.core.Paths.levelsRoot(), levelName]);
+		this.levelDir = Path.join([funky.backend.core.Paths.levelsRoot(), levelName]);
 		this.scenePath = Path.join([levelDir, "scene.json"]);
 	}
 

@@ -5,7 +5,7 @@ import haxe.Int32;
 import haxe.io.Bytes;
 import haxe.io.Path;
 import funky.backend.AtlasPager;
-import funky.core.Log;
+import funky.backend.system.Log;
 
 #if sys
 import flixel.FlxG;

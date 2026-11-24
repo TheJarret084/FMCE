@@ -3,8 +3,8 @@ package funky.backend;
 import haxe.Json;
 import haxe.io.Path;
 import haxe.io.Bytes;
-import funky.core.Log;
-import funky.core.Paths;
+import funky.backend.system.Log;
+import funky.backend.core.Paths;
 #if sys
 import haxe.zip.Reader;
 import sys.FileSystem;
@@ -252,7 +252,7 @@ class LevelCreator
 		var path = Path.join([target, "chart.json"]);
 		var chart:Dynamic = {};
 		if (FileSystem.exists(path))
-			try chart = funky.core.JsonLoose.parse(File.getContent(path)) catch (e:Dynamic) chart = {};
+			try chart = funky.backend.core.JsonLoose.parse(File.getContent(path)) catch (e:Dynamic) chart = {};
 		if (chart == null || !Reflect.isObject(chart) || Std.isOfType(chart, Array)) chart = {};
 
 		if (!Std.isOfType(Reflect.field(chart, "strumLines"), Array))

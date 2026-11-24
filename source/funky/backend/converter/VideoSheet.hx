@@ -5,8 +5,8 @@ import haxe.io.Path;
 import funky.backend.FunkinVideoSprite;
 import funky.backend.SpriteSheet;
 import funky.backend.converter.VideoStrip.VideoClip;
-import funky.core.JsonLoose;
-import funky.core.Log;
+import funky.backend.core.JsonLoose;
+import funky.backend.system.Log;
 #if sys
 import funky.backend.converter.VideoStrip.VideoStripTask;
 import sys.FileSystem;

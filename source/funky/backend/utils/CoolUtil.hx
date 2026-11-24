@@ -226,6 +226,27 @@ final class CoolUtil
 		}
 	}
 
+	public static var EDITOR_SONG:String = "breakfast";
+	static var currentMusic:String = null;
+	static var currentSound:flixel.sound.FlxSound = null;
+
+	public static function playEditorSong():Void {
+		if (FlxG.sound.music != null && FlxG.sound.music == currentSound && FlxG.sound.music.playing && currentMusic == EDITOR_SONG) return;
+		try {
+			currentMusic = EDITOR_SONG;
+			playMusic(EDITOR_SONG, true, 1, true);
+			currentSound = FlxG.sound.music;
+		} catch (e:Dynamic) {
+			Logs.warn('[CoolUtil] No se pudo cargar la musica de editores ($EDITOR_SONG): $e');
+		}
+	}
+
+	public static inline function playSound(name:String, volume:Float = 1):flixel.sound.FlxSound
+		return FlxG.sound.play(Paths.sound(name), volume);
+
+	public static inline function playMenuSound(name:String, volume:Float = 1):flixel.sound.FlxSound
+		return FlxG.sound.play(Paths.sound('menu/$name'), volume);
+
 	@:noUsing public static function preloadCharacter(name:String, ?spriteName:String) {
 		if (name == null) return;
 		if (spriteName == null)

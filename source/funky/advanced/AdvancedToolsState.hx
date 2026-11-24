@@ -10,9 +10,9 @@ import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
 import funky.backend.LevelArchive;
 import funky.backend.LevelVideoMigrator;
-import funky.core.KeyBinds;
-import funky.core.Paths;
-import funky.core.TransitionHandler;
+import funky.backend.core.KeyBinds;
+import funky.backend.core.Paths;
+import funky.backend.core.TransitionHandler;
 
 private typedef Tool =
 {
@@ -55,17 +55,17 @@ class AdvancedToolsState extends FlxState
 		{
 			var report = LevelVideoMigrator.scanLevel(Paths.levelsRoot() + levelName);
 			for (line in report.fixed)
-				funky.core.Log.info('[AdvancedTools] video arreglado: $line');
+				funky.backend.system.Log.info('[AdvancedTools] video arreglado: $line');
 			for (line in report.problems)
-				funky.core.Log.warn('[AdvancedTools] video: $line');
+				funky.backend.system.Log.warn('[AdvancedTools] video: $line');
 		}
 		catch (e:Dynamic)
 		{
-			funky.core.Log.warn('[AdvancedTools] no se pudieron revisar los videos: ' + Std.string(e));
+			funky.backend.system.Log.warn('[AdvancedTools] no se pudieron revisar los videos: ' + Std.string(e));
 		}
 		#end
 
-		funky.core.CoolUtil.playEditorSong();
+		funky.backend.utils.CoolUtil.playEditorSong();
 
 		FlxG.mouse.visible = true;
 		FlxG.mouse.enabled = true;
@@ -81,7 +81,7 @@ class AdvancedToolsState extends FlxState
 		title.alignment = FlxTextAlign.CENTER;
 		add(title);
 
-		var sub = new FlxText(0, 112, FlxG.width, funky.backend.LevelId.displayName(funky.core.Paths.levelsRoot(), levelName), 20);
+		var sub = new FlxText(0, 112, FlxG.width, funky.backend.LevelId.displayName(funky.backend.core.Paths.levelsRoot(), levelName), 20);
 		sub.color = MUTED;
 		sub.alignment = FlxTextAlign.CENTER;
 		add(sub);

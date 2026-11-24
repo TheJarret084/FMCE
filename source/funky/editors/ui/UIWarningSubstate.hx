@@ -1,6 +1,6 @@
 package funky.editors.ui;
 
-import funky.core.Log;
+import funky.backend.system.Log;
 import haxe.CallStack;
 
 class UIWarningSubstate extends UISubstateWindow {

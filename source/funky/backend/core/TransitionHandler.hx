@@ -1,4 +1,4 @@
-package funky.core;
+package funky.backend.core;
 
 import flixel.FlxCamera;
 import flixel.FlxG;

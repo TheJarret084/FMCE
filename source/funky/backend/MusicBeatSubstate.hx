@@ -27,7 +27,7 @@ class MusicBeatSubstate extends FlxSubState implements IBeatReceiver {
 	public override function openSubState(subState:FlxSubState) {
 		if (subState is MusicBeatSubstate)
 			cast(subState, MusicBeatSubstate).parent = this;
-		funky.core.Log.info('[Substate] ' + Type.getClassName(Type.getClass(this)) + ' abre ' + Type.getClassName(Type.getClass(subState)));
+		funky.backend.system.Log.info('[Substate] ' + Type.getClassName(Type.getClass(this)) + ' abre ' + Type.getClassName(Type.getClass(subState)));
 		super.openSubState(subState);
 	}
 

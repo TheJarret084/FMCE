@@ -7,8 +7,8 @@ import flixel.graphics.frames.FlxFramesCollection;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxGraphicAsset;
-import funky.core.Log;
-import funky.core.Paths;
+import funky.backend.system.Log;
+import funky.backend.core.Paths;
 import haxe.Json;
 import openfl.utils.Assets as OpenFlAssets;
 
@@ -182,7 +182,7 @@ class FunkinSprite extends FlxAnimate
 			{
 				var registered = animation.getByName(gameName);
 				if (registered != null)
-					registered.frameRate = Math.max(1, registered.numFrames) * funky.core.Conductor.bpm / (60 * Math.max(0.01, spdValue));
+					registered.frameRate = Math.max(1, registered.numFrames) * funky.backend.system.Conductor.bpm / (60 * Math.max(0.01, spdValue));
 			}
 
 			var off = entry.offset;

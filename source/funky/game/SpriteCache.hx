@@ -3,7 +3,7 @@ package funky.game;
 import flixel.FlxG;
 import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxAtlasFrames;
-import funky.core.Log;
+import funky.backend.system.Log;
 
 class SpriteCache
 {

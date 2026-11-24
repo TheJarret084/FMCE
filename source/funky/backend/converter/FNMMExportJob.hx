@@ -5,8 +5,8 @@ import haxe.io.Bytes;
 import haxe.io.Path;
 import funky.backend.converter.FMCEToFNMMExporter.FNMMExportPlan;
 import funky.backend.converter.FMCEToFNMMExporter.FNMMExportResult;
-import funky.core.JsonLoose;
-import funky.core.Log;
+import funky.backend.core.JsonLoose;
+import funky.backend.system.Log;
 
 #if sys
 import haxe.crypto.Crc32;

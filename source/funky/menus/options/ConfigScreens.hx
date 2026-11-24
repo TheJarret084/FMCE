@@ -4,11 +4,11 @@ import funky.advanced.AdvancedModeState;
 import flixel.FlxG;
 import funky.backend.system.LogOverlay;
 import funky.backend.system.framerate.Framerate;
-import funky.core.ClientPrefs;
-import funky.core.CoolUtil;
-import funky.core.NoteSkin;
-import funky.core.TouchNav;
-import funky.core.TransitionHandler;
+import funky.backend.core.ClientPrefs;
+import funky.backend.utils.CoolUtil;
+import funky.backend.core.NoteSkin;
+import funky.backend.core.TouchNav;
+import funky.backend.core.TransitionHandler;
 import flixel.util.FlxColor;
 
 import funky.backend.utils.TranslationUtil as TU;

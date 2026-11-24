@@ -1,7 +1,7 @@
 package funky.backend.system;
 
 import funky.backend.system.framerate.Framerate;
-import funky.core.Log.Severity;
+import funky.backend.system.Log.Severity;
 import openfl.Lib;
 import openfl.display.Sprite;
 import openfl.events.Event;

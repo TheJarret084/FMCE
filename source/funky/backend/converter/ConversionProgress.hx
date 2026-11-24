@@ -1,7 +1,7 @@
 package funky.backend.converter;
 
 import haxe.Json;
-import funky.core.Log;
+import funky.backend.system.Log;
 
 #if sys
 import sys.FileSystem;

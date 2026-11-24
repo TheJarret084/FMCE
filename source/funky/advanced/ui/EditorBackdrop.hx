@@ -2,7 +2,7 @@ package funky.advanced.ui;
 
 import flixel.addons.display.FlxBackdrop;
 import flixel.util.FlxAxes;
-import funky.core.Paths;
+import funky.backend.core.Paths;
 
 class EditorBackdrop extends FlxBackdrop
 {

@@ -4,7 +4,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.tweens.FlxTween;
 import funky.backend.chart.FNMMNote;
-import funky.core.NoteSkin;
+import funky.backend.core.NoteSkin;
 import funky.game.Note.QueueNote;
 import funky.scripting.Scripts;
 

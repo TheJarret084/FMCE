@@ -1,7 +1,7 @@
-package funky.core;
+package funky.backend.core;
 
 import haxe.io.Path;
-import funky.core.Log;
+import funky.backend.system.Log;
 import flixel.FlxG;
 import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxAtlasFrames;

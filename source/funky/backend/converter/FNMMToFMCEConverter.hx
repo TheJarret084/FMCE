@@ -3,7 +3,7 @@ package funky.backend.converter;
 import haxe.Json;
 import haxe.io.Bytes;
 import haxe.io.Path;
-import funky.core.Log;
+import funky.backend.system.Log;
 
 #if sys
 import haxe.zip.Reader;

@@ -1,6 +1,6 @@
 package funky.backend.system;
 
-import funky.core.Log;
+import funky.backend.system.Log;
 
 enum abstract LogLevel(Int) { var INFO; var WARNING; var ERROR; var TRACE; var VERBOSE; }
 

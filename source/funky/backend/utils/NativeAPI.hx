@@ -3,7 +3,7 @@ package funky.backend.utils;
 import openfl.ui.Mouse;
 import openfl.ui.MouseCursor;
 import funky.backend.utils.native.*;
-import funky.core.Log;
+import funky.backend.system.Log;
 
 class NativeAPI
 {

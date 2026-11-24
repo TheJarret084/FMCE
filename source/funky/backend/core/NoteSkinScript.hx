@@ -1,4 +1,4 @@
-package funky.core;
+package funky.backend.core;
 
 #if (!nme && !flash)
 import funky.backend.shaders.CustomShader;

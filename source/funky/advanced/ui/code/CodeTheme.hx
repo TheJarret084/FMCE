@@ -1,6 +1,6 @@
 package funky.advanced.ui.code;
 
-import funky.core.Paths;
+import funky.backend.core.Paths;
 
 class CodeTheme
 {

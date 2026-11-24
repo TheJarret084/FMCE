@@ -7,9 +7,9 @@ import flixel.group.FlxSpriteGroup;
 import flixel.text.FlxText;
 import funky.backend.FunkinSprite;
 import funky.backend.system.framerate.Framerate;
-import funky.core.Conductor;
-import funky.core.Log;
-import funky.core.Storage;
+import funky.backend.system.Conductor;
+import funky.backend.system.Log;
+import funky.backend.core.Storage;
 import funky.game.LevelSprite;
 import funky.game.SpriteBuilder;
 import funky.game.Stage;
@@ -276,10 +276,10 @@ class Scripts
 		globals.set("SpriteBuilder", SpriteBuilder);
 		globals.set("Stage", Stage);
 		globals.set("Storage", Storage);
-		globals.set("NoteSkin", funky.core.NoteSkin);
-		globals.set("Difficulty", funky.core.Difficulty);
-		globals.set("KeyBinds", funky.core.KeyBinds);
-		globals.set("CoolUtil", funky.core.CoolUtil);
+		globals.set("NoteSkin", funky.backend.core.NoteSkin);
+		globals.set("Difficulty", funky.backend.core.Difficulty);
+		globals.set("KeyBinds", funky.backend.core.KeyBinds);
+		globals.set("CoolUtil", funky.backend.utils.CoolUtil);
 
 		globals.set("Framerate", Framerate);
 

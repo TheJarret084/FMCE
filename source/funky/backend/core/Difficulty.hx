@@ -1,4 +1,4 @@
-package funky.core;
+package funky.backend.core;
 
 class Difficulty
 {

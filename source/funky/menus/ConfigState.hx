@@ -4,14 +4,14 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import funky.api.DiscordClient;
-import funky.core.Paths;
-import funky.core.TransitionHandler;
+import funky.backend.core.Paths;
+import funky.backend.core.TransitionHandler;
 import funky.menus.options.ConfigMenu;
 import funky.menus.options.ConfigScreens;
 import openfl.Assets as OpenFlAssets;
 
 import funky.advanced.AdvancedModeState;
-import funky.core.ClientPrefs;
+import funky.backend.core.ClientPrefs;
 
 class ConfigState extends FlxState
 {

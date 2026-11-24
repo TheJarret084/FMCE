@@ -1,4 +1,4 @@
-package funky.core.other;
+package funky.backend.core.other;
 
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
@@ -7,7 +7,7 @@ import haxe.zip.Reader;
 import lime.net.HTTPRequest;
 import sys.FileSystem;
 import sys.io.File;
-import funky.core.Addons;
+import funky.backend.core.Addons;
 
 using StringTools;
 

@@ -1,4 +1,4 @@
-package funky.core;
+package funky.backend.core;
 
 import flixel.system.FlxAssets.FlxShader;
 import flixel.util.FlxColor;

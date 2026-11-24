@@ -6,8 +6,8 @@ import flixel.util.FlxTimer;
 #if FMCE_VIDEO
 import hxvlc.flixel.FlxVideo;
 #end
-import funky.core.Log;
-import funky.core.Paths;
+import funky.backend.system.Log;
+import funky.backend.core.Paths;
 
 class JarretVideo extends FlxSubState
 {

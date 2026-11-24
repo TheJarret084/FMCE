@@ -3,7 +3,7 @@ package funky.game;
 import flixel.FlxSprite;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
-import funky.core.NoteSkin;
+import funky.backend.core.NoteSkin;
 
 class NoteSplash extends FlxSprite
 {

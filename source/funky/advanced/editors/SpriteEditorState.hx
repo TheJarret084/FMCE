@@ -107,7 +107,7 @@ class SpriteEditorState extends UIState
 	{
 		super();
 		this.levelName = levelName;
-		this.levelDir = Path.join([funky.core.Paths.levelsRoot(), levelName]);
+		this.levelDir = Path.join([funky.backend.core.Paths.levelsRoot(), levelName]);
 	}
 
 	function ui<T:FlxBasic>(object:T):T
@@ -908,7 +908,7 @@ class SpriteEditorState extends UIState
 			loadCurrent(animIdx);
 			return;
 		}
-		for (w in job.warnings) funky.core.Log.info('[SpriteEditor] ' + w);
+		for (w in job.warnings) funky.backend.system.Log.info('[SpriteEditor] ' + w);
 		notify(AdvLang.t("spriteEditor.sheetDone", [job.summary], "Listo: {0}"));
 		loadCurrent(0);
 	}
@@ -927,7 +927,7 @@ class SpriteEditorState extends UIState
 		if (cur != null && !atlas)
 		{
 			var spd = Math.max(0.05, JsonFile.num(Reflect.field(e, "spd"), 24));
-			cur.frameRate = Reflect.field(e, "spd_fps") == false ? Math.max(1, cur.numFrames) * funky.core.Conductor.bpm / (60 * spd) : spd;
+			cur.frameRate = Reflect.field(e, "spd_fps") == false ? Math.max(1, cur.numFrames) * funky.backend.system.Conductor.bpm / (60 * spd) : spd;
 			@:privateAccess cur.looped = Reflect.field(e, "loop") != false;
 		}
 		place();

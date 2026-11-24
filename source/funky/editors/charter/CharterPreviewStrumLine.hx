@@ -1,6 +1,6 @@
 package funky.editors.charter;
 
-import funky.core.NoteSkin;
+import funky.backend.core.NoteSkin;
 import funky.game.Note;
 
 class CharterPreviewStrumLine extends FlxTypedGroup<FlxSprite>

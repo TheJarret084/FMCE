@@ -5,10 +5,10 @@ import flixel.FlxState;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import funky.backend.FunkinVideoSprite;
-import funky.core.ClientPrefs;
-import funky.core.KeyBinds;
-import funky.core.Log;
-import funky.core.TouchNav;
+import funky.backend.core.ClientPrefs;
+import funky.backend.core.KeyBinds;
+import funky.backend.system.Log;
+import funky.backend.core.TouchNav;
 #if hxvlc
 import flixel.util.FlxAxes;
 import hxvlc.flixel.FlxVideo;

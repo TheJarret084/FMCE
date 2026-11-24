@@ -7,7 +7,7 @@ import flixel.group.FlxGroup;
 import flixel.util.FlxColor;
 import haxe.io.Path;
 import funky.backend.FunkinVideoSprite;
-import funky.core.Log;
+import funky.backend.system.Log;
 
 #if sys
 import sys.FileSystem;
@@ -897,7 +897,7 @@ class Stage extends FlxGroup
 
 		try
 		{
-			return funky.core.JsonLoose.parse(File.getContent(path));
+			return funky.backend.core.JsonLoose.parse(File.getContent(path));
 		}
 		catch (e:Dynamic)
 		{

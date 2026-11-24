@@ -1,7 +1,7 @@
 package funky.backend.chart;
 
 import funky.backend.chart.ChartImporter;
-import funky.core.Log;
+import funky.backend.system.Log;
 import haxe.Json;
 import haxe.io.Path;
 #if sys

@@ -9,11 +9,11 @@ import flixel.text.FlxText.FlxTextBorderStyle;
 import flixel.util.FlxAxes;
 import flixel.util.FlxColor;
 import flixel.util.FlxGradient;
-import funky.core.KeyBinds;
-import funky.core.Paths;
-import funky.core.Log;
-import funky.core.TouchNav;
-import funky.core.TransitionHandler;
+import funky.backend.core.KeyBinds;
+import funky.backend.core.Paths;
+import funky.backend.system.Log;
+import funky.backend.core.TouchNav;
+import funky.backend.core.TransitionHandler;
 import funky.backend.utils.TranslationUtil as TU;
 
 class TitleState extends FlxState
@@ -130,7 +130,7 @@ class TitleState extends FlxState
 		footerText.color = DIM_COLOR;
 		add(footerText);
 
-		funky.core.CoolUtil.playMenuSong();
+		funky.backend.utils.CoolUtil.playMenuSong();
 
 		Log.info('[TitleState] created');
 

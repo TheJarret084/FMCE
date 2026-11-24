@@ -22,7 +22,7 @@ class UISubstateWindow extends MusicBeatSubstate {
 			var _ = new CustomShader(Options.intensiveBlur ? "engine/editorBlur" : "engine/editorBlurFast");
 
 			if (Reflect.field(_.data, "_camSize") == null) {
-				funky.core.Log.warn('[UISubstateWindow] el shader de blur no tiene _camSize (revisa assets/shaders/engine/), se usa un fondo oscuro');
+				funky.backend.system.Log.warn('[UISubstateWindow] el shader de blur no tiene _camSize (revisa assets/shaders/engine/), se usa un fondo oscuro');
 				return null;
 			}
 			if(!Options.intensiveBlur) {
@@ -34,7 +34,7 @@ class UISubstateWindow extends MusicBeatSubstate {
 			}
 			return _;
 		} catch (e:Dynamic) {
-			funky.core.Log.warn('[UISubstateWindow] no se pudo crear el blur, se usa un fondo oscuro: ' + Std.string(e));
+			funky.backend.system.Log.warn('[UISubstateWindow] no se pudo crear el blur, se usa un fondo oscuro: ' + Std.string(e));
 			return null;
 		}
 		#end
@@ -53,7 +53,7 @@ class UISubstateWindow extends MusicBeatSubstate {
 			parent.persistentUpdate = false;
 			parent.persistentDraw = true;
 		} else
-			funky.core.Log.warn('[UISubstateWindow] ' + Type.getClassName(Type.getClass(this)) + ' se abrio sin parent');
+			funky.backend.system.Log.warn('[UISubstateWindow] ' + Type.getClassName(Type.getClass(this)) + ' se abrio sin parent');
 	}
 
 	var winWidth:Int = 560;
@@ -63,7 +63,7 @@ class UISubstateWindow extends MusicBeatSubstate {
 
 	public override function create() {
 		super.create();
-		funky.core.Log.info('[UISubstateWindow] create: ' + Type.getClassName(Type.getClass(this)));
+		funky.backend.system.Log.info('[UISubstateWindow] create: ' + Type.getClassName(Type.getClass(this)));
 
 		if(blurShader != null) {
 			try {
@@ -91,7 +91,7 @@ class UISubstateWindow extends MusicBeatSubstate {
 					c.addShader(blurShader);
 				}
 			} catch (e:Dynamic) {
-				funky.core.Log.warn('[UISubstateWindow] el blur fallo, se usa un fondo oscuro: ' + Std.string(e));
+				funky.backend.system.Log.warn('[UISubstateWindow] el blur fallo, se usa un fondo oscuro: ' + Std.string(e));
 				removeBlur();
 				blurShader = null;
 			}

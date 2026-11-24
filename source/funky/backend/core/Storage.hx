@@ -1,4 +1,4 @@
-package funky.core;
+package funky.backend.core;
 
 #if (sys && android)
 import extension.androidtools.Permissions as AndroidPermissions;
