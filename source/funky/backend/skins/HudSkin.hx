@@ -25,6 +25,17 @@ typedef HudSkinColor =
 	var rest:Null<Int>;
 }
 
+/** Estilo de un texto del HUD, declarado en <texts> del hudSkin.xml. */
+typedef HudTextStyle =
+{
+	var size:Int;
+	var color:Int;
+	var border:Int;
+	var borderSize:Float;
+	var align:String;
+	var alpha:Float;
+}
+
 enum abstract HudSkinType(String) to String
 {
 	var SPARROW = "sparrow";
