@@ -11,13 +11,13 @@ import flixel.text.FlxText.FlxTextBorderStyle;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
-import funky.backend.core.ClientPrefs;
+import funky.backend.system.ClientPrefs;
 import funky.backend.utils.CoolUtil;
-import funky.backend.core.KeyBinds;
+import funky.backend.system.KeyBinds;
 import funky.backend.system.Log;
 import funky.backend.assets.Paths;
 import funky.backend.utils.TranslationUtil as TU;
-import funky.backend.core.TouchNav;
+import funky.backend.ui.TouchNav;
 import funky.game.PlayState;
 import funky.menus.options.BackButton;
 

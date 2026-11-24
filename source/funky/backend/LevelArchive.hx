@@ -177,7 +177,7 @@ class LevelArchive
 			try
 			{
 				var metaText = Reader.unzip(item.entry).toString();
-				var metaData:Dynamic = funky.backend.core.JsonLoose.parse(metaText);
+				var metaData:Dynamic = funky.backend.utils.JsonLoose.parse(metaText);
 				var shown:Dynamic = metaData == null ? null : Reflect.field(metaData, "displayName");
 				if (shown != null && StringTools.trim(Std.string(shown)) != "") shownName = StringTools.trim(Std.string(shown));
 			}

@@ -219,7 +219,7 @@ class FNMMToFMCEConverter
 			for (item in (cast objects:Array<Dynamic>))
 			{
 				var name = text(Reflect.field(item, "spr"), "");
-				if (name != "" && number(Reflect.field(item, "strumLine"), -1) >= 0) roles.set(name, FNMMSpriteImporter.ROLE_CHARACTER);
+				if (name != "" && CoolUtil.number(Reflect.field(item, "strumLine"), -1) >= 0) roles.set(name, FNMMSpriteImporter.ROLE_CHARACTER);
 			}
 		var icons = Reflect.field(scene, "icons");
 		if (Std.isOfType(icons, Array))
@@ -247,7 +247,7 @@ class FNMMToFMCEConverter
 		try
 		{
 			var tmp = Path.join([outputDir, TMP_DIR]);
-			ensureDirectory(tmp);
+			CoolUtil.ensureDirectory(tmp);
 			var dest = Path.join([tmp, Path.withoutDirectory(archivePath)]);
 			var sameDir = Path.removeTrailingSlashes(Path.directory(archivePath)) == Path.removeTrailingSlashes(outputDir);
 			if (Path.normalize(archivePath) == Path.normalize(dest)) return;
@@ -443,7 +443,7 @@ class FNMMToFMCEConverter
 				else if (isRecord(line) && Std.isOfType(Reflect.field(line, "notes"), Array))
 				{
 
-					var type = Reflect.hasField(line, "type") ? Std.int(number(Reflect.field(line, "type"), 0)) : (index == 1 ? 1 : 0);
+					var type = Reflect.hasField(line, "type") ? Std.int(CoolUtil.number(Reflect.field(line, "type"), 0)) : (index == 1 ? 1 : 0);
 					var factor = msPerUnit(unit == null ? "ms" : unit, bpm);
 					var first = out.length;
 					for (item in (cast Reflect.field(line, "notes"):Array<Dynamic>)) pushAny(out, item, factor, stepMs, type == 1);
@@ -504,10 +504,10 @@ class FNMMToFMCEConverter
 		{
 			var values:Array<Dynamic> = cast value;
 			if (values.length < 2) return;
-			var lane = Std.int(number(values[1], 0));
+			var lane = Std.int(CoolUtil.number(values[1], 0));
 			if (lane < 0) return;
-			var length = values.length > 2 ? number(values[2], 0) * factor : 0;
-			out.push({t: number(values[0], 0) * factor, lane: lane, len: length > 0 ? length : 0, mustPress: mustPress});
+			var length = values.length > 2 ? CoolUtil.number(values[2], 0) * factor : 0;
+			out.push({t: CoolUtil.number(values[0], 0) * factor, lane: lane, len: length > 0 ? length : 0, mustPress: mustPress});
 			return;
 		}
 		if (!isRecord(value)) return;
@@ -648,7 +648,7 @@ class FNMMToFMCEConverter
 		}
 		for (candidate in candidates)
 		{
-			var value = number(candidate, 0);
+			var value = CoolUtil.number(candidate, 0);
 			if (value > 0) return value;
 		}
 		return 120;
@@ -689,28 +689,14 @@ class FNMMToFMCEConverter
 	static function fieldNumber(value:Dynamic, field:String, fallback:Float):Float
 	{
 		if (!Reflect.hasField(value, field)) return fallback;
-		return number(Reflect.field(value, field), fallback);
+		return CoolUtil.number(Reflect.field(value, field), fallback);
 	}
 
-	static function number(value:Dynamic, fallback:Float):Float
-	{
-		if (value == null) return fallback;
-		var parsed = Std.parseFloat(Std.string(value));
-		return Math.isNaN(parsed) ? fallback : parsed;
-	}
-
-	#if sys
-	static function ensureDirectory(path:String):Void
-	{
-		if (path == "" || path == "." || FileSystem.exists(path)) return;
-		ensureDirectory(Path.directory(path));
-		FileSystem.createDirectory(path);
-	}
 
 	static function saveAsset(target:String, relative:String, bytes:Bytes):Void
 	{
 		var path = Path.join([target, relative]);
-		ensureDirectory(Path.directory(path));
+		CoolUtil.ensureDirectory(Path.directory(path));
 		File.saveBytes(path, bytes);
 	}
 

@@ -19,13 +19,13 @@ import funky.backend.JarretVideo;
 import funky.backend.MusicBeatState;
 import funky.backend.chart.FNMMNote;
 import funky.backend.chart.LevelLoader;
-import funky.backend.core.ClientPrefs;
+import funky.backend.system.ClientPrefs;
 import funky.backend.system.Conductor;
-import funky.backend.core.ControlsCheck;
-import funky.backend.core.Difficulty;
-import funky.backend.core.KeyBinds;
+import funky.backend.system.ControlsCheck;
+import funky.backend.system.Difficulty;
+import funky.backend.system.KeyBinds;
 import funky.backend.system.Log;
-import funky.backend.core.NoteSkin;
+import funky.backend.skins.HudSkin;
 import funky.backend.assets.Paths;
 import funky.game.Note.NoteSharedTailState;
 import funky.game.PlayHUD.PressScore;
@@ -1054,7 +1054,7 @@ class PlayState extends MusicBeatState
 		if (Scripts.has)
 			Scripts.call("onUpdate", [elapsed]);
 
-		var noteSkin = NoteSkin.current();
+		var noteSkin = HudSkin.current();
 
 		if (noteSkin.script != null)
 			noteSkin.script.call("onUpdate", [elapsed]);
@@ -1269,7 +1269,7 @@ class PlayState extends MusicBeatState
 			return;
 
 		var accuracy = totalPlayed == 0 ? 0 : totalNotesHit / totalPlayed * 100;
-		funky.backend.core.Scores.submit(funky.backend.core.Scores.levelId(archivePath), Difficulty.current, score, accuracy, misses);
+		funky.backend.system.Scores.submit(funky.backend.system.Scores.levelId(archivePath), Difficulty.current, score, accuracy, misses);
 	}
 
 	// NOTAS
@@ -1626,7 +1626,10 @@ class PlayState extends MusicBeatState
 
 		try
 		{
-			funky.backend.utils.CoolUtil.playSound("missSFX" + Std.string(FlxG.random.int(0, 4)), FlxG.random.float(0.2, 0.8));
+			var volume = FlxG.random.float(0.2, 0.8);
+			var skinSound = HudSkin.current().sound("missnote" + Std.string(FlxG.random.int(1, 3)));
+			if (skinSound != null) FlxG.sound.play(skinSound, volume);
+			else funky.backend.utils.CoolUtil.playSound("missSFX" + Std.string(FlxG.random.int(0, 4)), volume);
 		}
 		catch (e:Dynamic) {}
 	}
@@ -1803,7 +1806,7 @@ class PlayState extends MusicBeatState
 	 */
 	public function openConfig():Void
 	{
-		funky.backend.core.ClientPrefs.save();
+		funky.backend.system.ClientPrefs.save();
 		startFromMs = launchStartMs;
 		seeking = false;
 		skipCountdown = false;
@@ -2135,19 +2138,30 @@ class PlayState extends MusicBeatState
 		if (spritePath == null)
 			return;
 
-		var file = countdownAsset(spritePath, true);
+		var skin = HudSkin.current();
+		var sprite = new FlxSprite();
+		var skinBmp = skin.countdownImage(spritePath);
 
-		if (file == null)
+		if (skinBmp != null)
 		{
-			Log.warn('[PlayState] countdown: falta la imagen ${Paths.image(spritePath)}');
-			return;
+			sprite.loadGraphic(skinBmp);
+			sprite.scale.set(skin.countdownScale, skin.countdownScale);
+			sprite.alpha = skin.countdownAlpha;
 		}
-
-		var sprite = new FlxSprite().loadGraphic(file);
+		else
+		{
+			var file = countdownAsset(spritePath, true);
+			if (file == null)
+			{
+				Log.warn('[PlayState] countdown: falta la imagen ${Paths.image(spritePath)}');
+				return;
+			}
+			sprite.loadGraphic(file);
+		}
 
 		if (sprite.graphic == null || sprite.frameWidth <= 1)
 		{
-			Log.warn('[PlayState] countdown: la imagen $file no se pudo cargar');
+			Log.warn('[PlayState] countdown: la imagen del countdown no se pudo cargar');
 			sprite.destroy();
 			return;
 		}
@@ -2175,7 +2189,8 @@ class PlayState extends MusicBeatState
 		if (soundName == null)
 			return;
 
-		var file = countdownAsset(soundName, false);
+		var skinSound = HudSkin.current().sound(soundName);
+		var file = skinSound != null ? skinSound : countdownAsset(soundName, false);
 
 		if (file == null)
 		{

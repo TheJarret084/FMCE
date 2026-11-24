@@ -69,8 +69,8 @@ class ConversionProgress
 				Log.info('[ConversionProgress] ' + archive + ' cambio desde la ultima vez: empiezo de cero');
 				return;
 			}
-			stage = text(Reflect.field(data, "stage"), "open");
-			var running = text(Reflect.field(data, "current"), "");
+			stage = CoolUtil.text(Reflect.field(data, "stage"), "open");
+			var running = CoolUtil.text(Reflect.field(data, "current"), "");
 			current = running == "" ? null : running;
 			assetsDone = Std.int(number(Reflect.field(data, "assetsDone")));
 			fill(attempts, Reflect.field(data, "attempts"), true);
@@ -91,7 +91,7 @@ class ConversionProgress
 		{
 			var value = Reflect.field(object, key);
 			if (numeric) into.set(key, Std.int(number(value)));
-			else into.set(key, text(value, ""));
+			else into.set(key, CoolUtil.text(value, ""));
 		}
 	}
 	#end
@@ -183,10 +183,4 @@ class ConversionProgress
 		return Math.isNaN(parsed) ? 0 : parsed;
 	}
 
-	static function text(value:Dynamic, fallback:String):String
-	{
-		if (value == null) return fallback;
-		var parsed = Std.string(value);
-		return parsed == "null" ? fallback : parsed;
-	}
 }

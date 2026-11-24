@@ -4,7 +4,7 @@ import haxe.Json;
 import haxe.crypto.Base64;
 import haxe.io.Bytes;
 import haxe.io.Path;
-import funky.backend.core.JsonLoose;
+import funky.backend.utils.JsonLoose;
 #if sys
 import sys.FileSystem;
 import sys.io.File;

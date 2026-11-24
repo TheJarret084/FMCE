@@ -231,9 +231,9 @@ class Stage extends FlxGroup
 				position = cam;
 
 			camPoints.push({
-				x: number(field(position, "x"), 0),
-				y: number(field(position, "y"), 0),
-				scale: number(field(cam, "scale"), 1)
+				x: CoolUtil.number(field(position, "x"), 0),
+				y: CoolUtil.number(field(position, "y"), 0),
+				scale: CoolUtil.number(field(cam, "scale"), 1)
 			});
 		}
 
@@ -248,7 +248,7 @@ class Stage extends FlxGroup
 
 		for (item in asArray(field(scene, "objects")))
 		{
-			var name = text(field(item, "spr"), "");
+			var name = CoolUtil.text(field(item, "spr"), "");
 			var transforms:Array<StageTransform> = [];
 			var itemFixed = field(item, "fixed") == true;
 
@@ -258,28 +258,28 @@ class Stage extends FlxGroup
 				var scale = field(t, "scale");
 				var scroll = field(t, "scrollFactor");
 
-				var scaleX = number(field(scale, "x"), 1);
+				var scaleX = CoolUtil.number(field(scale, "x"), 1);
 
 				transforms.push({
-					x: number(field(position, "x"), 0),
-					y: number(field(position, "y"), 0),
+					x: CoolUtil.number(field(position, "x"), 0),
+					y: CoolUtil.number(field(position, "y"), 0),
 					scale: scaleX,
-					scaleY: number(field(scale, "y"), scaleX),
-					scrollX: itemFixed ? 1 : number(field(scroll, "x"), 1),
-					scrollY: itemFixed ? 1 : number(field(scroll, "y"), 1)
+					scaleY: CoolUtil.number(field(scale, "y"), scaleX),
+					scrollX: itemFixed ? 1 : CoolUtil.number(field(scroll, "x"), 1),
+					scrollY: itemFixed ? 1 : CoolUtil.number(field(scroll, "y"), 1)
 				});
 			}
 
 			if (transforms.length == 0 && field(item, "x") != null)
 			{
 				var legacyScale = field(item, "scale");
-				var legacyX = number(legacyScale, number(field(legacyScale, "x"), 1));
+				var legacyX = CoolUtil.number(legacyScale, CoolUtil.number(field(legacyScale, "x"), 1));
 
 				transforms.push({
-					x: number(field(item, "x"), 0),
-					y: number(field(item, "y"), 0),
+					x: CoolUtil.number(field(item, "x"), 0),
+					y: CoolUtil.number(field(item, "y"), 0),
 					scale: legacyX,
-					scaleY: number(legacyScale, number(field(legacyScale, "y"), legacyX)),
+					scaleY: CoolUtil.number(legacyScale, CoolUtil.number(field(legacyScale, "y"), legacyX)),
 					scrollX: 1,
 					scrollY: 1
 				});
@@ -318,19 +318,19 @@ class Stage extends FlxGroup
 			if (color != null)
 			{
 				sprite.color = FlxColor.fromRGB(
-					Std.int(number(field(color, "r"), 255)),
-					Std.int(number(field(color, "g"), 255)),
-					Std.int(number(field(color, "b"), 255))
+					Std.int(CoolUtil.number(field(color, "r"), 255)),
+					Std.int(CoolUtil.number(field(color, "g"), 255)),
+					Std.int(CoolUtil.number(field(color, "b"), 255))
 				);
 			}
 
 			var object = new StageObject(
 				sprite,
-				Std.int(number(field(item, "strumLine"), -1)),
+				Std.int(CoolUtil.number(field(item, "strumLine"), -1)),
 				field(item, "fixed") == true,
 				transforms,
 				field(item, "visible") != false,
-				number(field(item, "opacity"), 1)
+				CoolUtil.number(field(item, "opacity"), 1)
 			);
 
 			objects.push(object);
@@ -367,7 +367,7 @@ class Stage extends FlxGroup
 	{
 		var index = Std.int(Math.max(
 			0,
-			Math.min(count - 1, number(field(item, "video"), 0))
+			Math.min(count - 1, CoolUtil.number(field(item, "video"), 0))
 		));
 
 		var video:FunkinVideoSprite = null;
@@ -401,9 +401,9 @@ class Stage extends FlxGroup
 		if (color != null)
 		{
 			video.color = FlxColor.fromRGB(
-				Std.int(number(field(color, "r"), 255)),
-				Std.int(number(field(color, "g"), 255)),
-				Std.int(number(field(color, "b"), 255))
+				Std.int(CoolUtil.number(field(color, "r"), 255)),
+				Std.int(CoolUtil.number(field(color, "g"), 255)),
+				Std.int(CoolUtil.number(field(color, "b"), 255))
 			);
 		}
 
@@ -412,11 +412,11 @@ class Stage extends FlxGroup
 
 		var object = new StageObject(
 			hole,
-			Std.int(number(field(item, "strumLine"), -1)),
+			Std.int(CoolUtil.number(field(item, "strumLine"), -1)),
 			field(item, "fixed") == true,
 			transforms,
 			field(item, "visible") != false,
-			number(field(item, "opacity"), 1)
+			CoolUtil.number(field(item, "opacity"), 1)
 		);
 
 		object.video = video;
@@ -882,7 +882,7 @@ class Stage extends FlxGroup
 
 	public function objectAt(value:Dynamic):Null<StageObject>
 	{
-		var index = Std.int(number(value, -1));
+		var index = Std.int(CoolUtil.number(value, -1));
 
 		return index >= 0 && index < objects.length
 			? objects[index]
@@ -897,7 +897,7 @@ class Stage extends FlxGroup
 
 		try
 		{
-			return funky.backend.core.JsonLoose.parse(File.getContent(path));
+			return funky.backend.utils.JsonLoose.parse(File.getContent(path));
 		}
 		catch (e:Dynamic)
 		{
@@ -917,23 +917,7 @@ class Stage extends FlxGroup
 		return Std.isOfType(value, Array) ? cast value : [];
 	}
 
-	static function text(value:Dynamic, fallback:String):String
-	{
-		if (value == null)
-			return fallback;
 
-		var parsed = Std.string(value);
-		return parsed == "null" ? fallback : parsed;
-	}
-
-	static function number(value:Dynamic, fallback:Float):Float
-	{
-		if (value == null)
-			return fallback;
-
-		var parsed = Std.parseFloat(Std.string(value));
-		return Math.isNaN(parsed) ? fallback : parsed;
-	}
 
 	public static function getList(?mods:Bool = false):Array<String>
 	{

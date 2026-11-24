@@ -53,8 +53,8 @@ class ConfigRepair
 		var spritePath = Path.join([dir, "sprite.json"]);
 		if (!FileSystem.exists(configPath) || !FileSystem.exists(spritePath)) return -1;
 
-		var config:Dynamic = funky.backend.core.JsonLoose.parse(File.getContent(configPath));
-		var atlas:Dynamic = funky.backend.SpriteSheet.expand(funky.backend.core.JsonLoose.parse(File.getContent(spritePath)));
+		var config:Dynamic = funky.backend.utils.JsonLoose.parse(File.getContent(configPath));
+		var atlas:Dynamic = funky.backend.SpriteSheet.expand(funky.backend.utils.JsonLoose.parse(File.getContent(spritePath)));
 		if (!Std.isOfType(config.data, Array) || atlas.meta == null || !Std.isOfType(atlas.meta.frameTags, Array)) return -1;
 
 		var tags:Array<Dynamic> = atlas.meta.frameTags;

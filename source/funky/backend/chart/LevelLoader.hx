@@ -37,22 +37,22 @@ class LevelLoader
 
 		chart = ChartNormalizer.ensure(dir, chartPath, chart, meta);
 
-		var name = text(Reflect.field(chart, "name"), "");
-		if (name == "") name = text(Reflect.field(meta, "songName"), "");
-		if (name == "") name = text(Reflect.field(meta, "displayName"), "");
-		if (name == "") name = text(Reflect.field(meta, "levelName"), "");
+		var name = CoolUtil.text(Reflect.field(chart, "name"), "");
+		if (name == "") name = CoolUtil.text(Reflect.field(meta, "songName"), "");
+		if (name == "") name = CoolUtil.text(Reflect.field(meta, "displayName"), "");
+		if (name == "") name = CoolUtil.text(Reflect.field(meta, "levelName"), "");
 		if (name == "") name = Path.withoutDirectory(Path.removeTrailingSlashes(dir));
-		var displayName = text(Reflect.field(meta, "displayName"), "");
+		var displayName = CoolUtil.text(Reflect.field(meta, "displayName"), "");
 		if (displayName == "") displayName = name;
 
-		var bpm:Float = number(Reflect.field(chart, "bpm"), number(Reflect.field(meta, "bpm"), 120));
+		var bpm:Float = CoolUtil.number(Reflect.field(chart, "bpm"), CoolUtil.number(Reflect.field(meta, "bpm"), 120));
 		if (bpm <= 0) bpm = 120;
 
 		var strumLines = Reflect.field(chart, "strumLines");
 		if (!Std.isOfType(strumLines, Array)) throw 'chart.json de $dir no tiene "strumLines"';
 
 		var notes:Array<FNMMNote> = [];
-		var unit = text(Reflect.field(chart, "timeUnit"), text(Reflect.field(meta, "timeUnit"), "seconds"));
+		var unit = CoolUtil.text(Reflect.field(chart, "timeUnit"), CoolUtil.text(Reflect.field(meta, "timeUnit"), "seconds"));
 		var factor = unitToMs(unit, bpm);
 		var lines:Array<Dynamic> = cast strumLines;
 		for (index in 0...lines.length)
@@ -61,7 +61,7 @@ class LevelLoader
 			for (item in (cast lines[index]:Array<Dynamic>)) appendNote(notes, item, factor, index);
 		}
 
-		var offset = number(Reflect.field(meta, "offset"), 0);
+		var offset = CoolUtil.number(Reflect.field(meta, "offset"), 0);
 		var highest = 0;
 		for (note in notes)
 		{
@@ -70,7 +70,7 @@ class LevelLoader
 		}
 		notes.sort(function(a, b) return a.time < b.time ? -1 : (a.time > b.time ? 1 : 0));
 
-		var declaredLanes = Std.int(number(Reflect.field(meta, "lanes"), 0));
+		var declaredLanes = Std.int(CoolUtil.number(Reflect.field(meta, "lanes"), 0));
 		var laneCount = declaredLanes > 0 ? declaredLanes : Std.int(Math.max(4, highest + 1));
 		if (laneCount > 9) laneCount = 9;
 
@@ -90,9 +90,9 @@ class LevelLoader
 		var music = findMusic(dir, Reflect.field(meta, "song"));
 		var voices = findVoices(dir, "", Reflect.field(meta, "voices"));
 
-		var stepsPerBeat = number(Reflect.field(meta, "stepsPerBeat"), number(Reflect.field(chart, "npb"), 4));
+		var stepsPerBeat = CoolUtil.number(Reflect.field(meta, "stepsPerBeat"), CoolUtil.number(Reflect.field(chart, "npb"), 4));
 		if (stepsPerBeat <= 0) stepsPerBeat = 4;
-		var beatsPerMeasure = number(Reflect.field(meta, "beatsPerMeasure"), number(Reflect.field(chart, "beatsPerMeasure"), 4));
+		var beatsPerMeasure = CoolUtil.number(Reflect.field(meta, "beatsPerMeasure"), CoolUtil.number(Reflect.field(chart, "beatsPerMeasure"), 4));
 		if (beatsPerMeasure <= 0) beatsPerMeasure = 4;
 
 		for (converted in funky.backend.converter.SpriteFolderConverter.convertTree(Path.join([dir, "sprites"]), false))
@@ -133,7 +133,7 @@ class LevelLoader
 	static function parseObject(raw:String, path:String):Dynamic
 	{
 		var parsed:Dynamic = null;
-		try parsed = funky.backend.core.JsonLoose.parse(raw) catch (e:Dynamic) throw 'JSON invalido en $path: ' + Std.string(e);
+		try parsed = funky.backend.utils.JsonLoose.parse(raw) catch (e:Dynamic) throw 'JSON invalido en $path: ' + Std.string(e);
 		if (parsed == null || !Reflect.isObject(parsed)) throw '$path no contiene un objeto JSON';
 		return parsed;
 	}
@@ -144,7 +144,7 @@ class LevelLoader
 		if (!FileSystem.exists(path)) return {};
 		try
 		{
-			var parsed:Dynamic = funky.backend.core.JsonLoose.parse(File.getContent(path));
+			var parsed:Dynamic = funky.backend.utils.JsonLoose.parse(File.getContent(path));
 			return Reflect.isObject(parsed) ? parsed : {};
 		}
 		catch (e:Dynamic)
@@ -172,10 +172,10 @@ class LevelLoader
 		if (!FileSystem.exists(path)) return [];
 		try
 		{
-			var parsed:Dynamic = funky.backend.core.JsonLoose.parse(File.getContent(path));
+			var parsed:Dynamic = funky.backend.utils.JsonLoose.parse(File.getContent(path));
 			var list = parsed == null ? null : Reflect.field(parsed, "icons");
 			if (!Std.isOfType(list, Array)) return [];
-			return [for (item in (cast list:Array<Dynamic>)) text(item, "")];
+			return [for (item in (cast list:Array<Dynamic>)) CoolUtil.text(item, "")];
 		}
 		catch (e:Dynamic)
 		{
@@ -210,7 +210,7 @@ class LevelLoader
 		if (!FileSystem.exists(path)) return null;
 		try
 		{
-			var parsed:Dynamic = funky.backend.core.JsonLoose.parse(File.getContent(path));
+			var parsed:Dynamic = funky.backend.utils.JsonLoose.parse(File.getContent(path));
 			return Reflect.isObject(parsed) && !Std.isOfType(parsed, Array) ? parsed : null;
 		}
 		catch (e:Dynamic)
@@ -276,11 +276,11 @@ class LevelLoader
 	static function appendNote(out:Array<FNMMNote>, value:Dynamic, factor:Float, line:Int):Void
 	{
 		if (!Reflect.isObject(value) || Std.isOfType(value, Array)) return;
-		var lane = Std.int(number(Reflect.field(value, "lane"), 0));
+		var lane = Std.int(CoolUtil.number(Reflect.field(value, "lane"), 0));
 		if (lane < 0) return;
-		var length = number(Reflect.field(value, "length"), 0);
+		var length = CoolUtil.number(Reflect.field(value, "length"), 0);
 		out.push({
-			time: number(Reflect.field(value, "time"), 0) * factor,
+			time: CoolUtil.number(Reflect.field(value, "time"), 0) * factor,
 			lane: lane,
 			length: length > 0 ? length * factor : 0,
 			mustPress: line == 0,
@@ -292,27 +292,15 @@ class LevelLoader
 
 	static function packOf(value:Dynamic, name:String):Int
 	{
-		var n = number(Reflect.field(value, name), -1);
+		var n = CoolUtil.number(Reflect.field(value, name), -1);
 		return n >= 0 ? Std.int(n) : -1;
 	}
 
-	static function number(value:Dynamic, fallback:Float):Float
-	{
-		if (value == null) return fallback;
-		var parsed = Std.parseFloat(Std.string(value));
-		return Math.isNaN(parsed) ? fallback : parsed;
-	}
 
-	static function text(value:Dynamic, fallback:String):String
-	{
-		if (value == null) return fallback;
-		var parsed = Std.string(value);
-		return parsed == "null" ? fallback : parsed;
-	}
 
 	static function nullableText(value:Dynamic):Null<String>
 	{
-		var parsed = text(value, "");
+		var parsed = CoolUtil.text(value, "");
 		return parsed == "" ? null : parsed;
 	}
 }

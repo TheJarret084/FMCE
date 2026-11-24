@@ -1,7 +1,10 @@
 package funky.game;
 
 import flixel.FlxSprite;
-import funky.backend.core.NoteSkin;
+import funky.backend.skins.HudSkin;
+#if (!nme && !flash)
+import funky.backend.skins.HudShaderUtil;
+#end
 
 class QueueNote
 {
@@ -146,11 +149,14 @@ class Note extends FlxSprite
 		alpha = 1;
 		flipY = false;
 
-		var skin = NoteSkin.current();
+		var skin = HudSkin.current();
 
 		if (frames == null || (usingAtlas && skinId != skin.id))
 		{
 			skinId = skin.id;
+			#if (!nme && !flash)
+			HudShaderUtil.clear(this);
+			#end
 			frames = skin.frames();
 			usingAtlas = frames != null;
 			animLane = -1;

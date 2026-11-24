@@ -1,7 +1,7 @@
 package funky.backend;
 
 import flixel.FlxState;
-import funky.backend.core.TransitionHandler;
+import funky.backend.system.TransitionHandler;
 
 class MusicBeatState extends FlxState
 {

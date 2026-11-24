@@ -5,7 +5,7 @@ import haxe.io.Bytes;
 import haxe.io.Path;
 import funky.backend.converter.FMCEToFNMMExporter.FNMMExportPlan;
 import funky.backend.converter.FMCEToFNMMExporter.FNMMExportResult;
-import funky.backend.core.JsonLoose;
+import funky.backend.utils.JsonLoose;
 import funky.backend.system.Log;
 
 #if sys

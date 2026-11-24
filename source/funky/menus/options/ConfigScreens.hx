@@ -4,11 +4,11 @@ import funky.advanced.AdvancedModeState;
 import flixel.FlxG;
 import funky.backend.system.LogOverlay;
 import funky.backend.system.framerate.Framerate;
-import funky.backend.core.ClientPrefs;
+import funky.backend.system.ClientPrefs;
 import funky.backend.utils.CoolUtil;
-import funky.backend.core.NoteSkin;
-import funky.backend.core.TouchNav;
-import funky.backend.core.TransitionHandler;
+import funky.backend.skins.HudSkin;
+import funky.backend.ui.TouchNav;
+import funky.backend.system.TransitionHandler;
 import flixel.util.FlxColor;
 
 import funky.backend.utils.TranslationUtil as TU;
@@ -86,24 +86,24 @@ class ConfigScreens
 
 	static function gameplay(menu:ConfigMenu):ConfigScreen
 	{
-		var noteSkin = ConfigItem.submenu("", TU.translate("options.gameplay.noteSkin.desc", null,
-			"Elige un skin de notas (noteSkin.xml). Se aplica al reiniciar"), () ->
+		var hudSkin = ConfigItem.submenu("", TU.translate("options.gameplay.hudSkin.desc", null,
+			"Elige un HUD skin (hudSkin.xml). Modifica HUD, notas y assets del HUD; barra de vida e iconos no se tocan."), () ->
 		{
-			var sub = new NoteSkinSubState();
+			var sub = new HudSkinSubState();
 			if (menu.openSubState != null) menu.openSubState(sub);
 			else FlxG.state.openSubState(sub);
 		});
-		noteSkin.dynamicLabel = () -> TU.translate("options.gameplay.noteSkin.name",
-			[NoteSkin.displayName(ClientPrefs.getNoteSkin())], "NOTAS: {0}");
+		hudSkin.dynamicLabel = () -> TU.translate("options.gameplay.hudSkin.name",
+			[HudSkin.displayName(ClientPrefs.getHudSkin())], "HUD SKIN: {0}");
 
-		var timeBar = ConfigItem.action("", TU.translate("options.gameplay.timeBar.desc", null,
-			"Colores de la barra de tiempo: rosa y lima, blanco y negro, o los colores de las notas"), ClientPrefs.cycleTimeBarStyle);
-		timeBar.dynamicLabel = () -> TU.translate("options.gameplay.timeBar.name", [timeBarLabel(ClientPrefs.getTimeBarStyle())], "BARRA DE TIEMPO: {0}");
+		var timeBarMode = ConfigItem.action("", TU.translate("options.gameplay.timeBarMode.desc", null,
+			"Legacy: estilo actual. AllowColor: usa el color de la barra de vida."), ClientPrefs.cycleTimeBarColorMode);
+		timeBarMode.dynamicLabel = () -> TU.translate("options.gameplay.timeBarMode.name", [timeBarModeLabel(ClientPrefs.getTimeBarColorMode())], "BARRA DE TIEMPO: {0}");
 
 		return new ConfigScreen(TU.translate("options.gameplay.title", null, "GAMEPLAY"),
 			TU.translate("options.gameplay.titleDesc", null, "Como se juega"), [
-			noteSkin,
-			timeBar,
+			hudSkin,
+			timeBarMode,
 			ConfigItem.separator(),
 			ConfigItem.check(TU.translate("options.gameplay.downscroll.name", null, "DOWNSCROLL"),
 				TU.translate("options.gameplay.downscroll.desc", null, "Las notas bajan en vez de subir (se aplica al reiniciar)"),
@@ -122,17 +122,20 @@ class ConfigScreens
 				ClientPrefs.isMissSound, ClientPrefs.setMissSound),
 			ConfigItem.check(TU.translate("options.gameplay.noteSplashes.name", null, "NOTE SPLASHES"),
 				TU.translate("options.gameplay.noteSplashes.desc", null, "Salpicadura al acertar con SICK"),
-				ClientPrefs.isNoteSplashes, ClientPrefs.setNoteSplashes)
+				ClientPrefs.isNoteSplashes, ClientPrefs.setNoteSplashes),
+			ConfigItem.check(TU.translate("options.gameplay.autoConvertVideos.name", null, "CONVERTIR VIDEOS"),
+				TU.translate("options.gameplay.autoConvertVideos.desc", null,
+					"Convierte videos de niveles a spritesheets al arrancar (paso a paso; no se puede jugar mientras se convierte)"),
+				ClientPrefs.isAutoConvertVideos, ClientPrefs.setAutoConvertVideos)
 		]);
 	}
 
-	static function timeBarLabel(style:String):String
+	static function timeBarModeLabel(mode:String):String
 	{
-		return switch (style)
+		return switch (mode)
 		{
-			case "mono": TU.translate("options.gameplay.timeBar.mono", null, "BLANCO Y NEGRO");
-			case "multi": TU.translate("options.gameplay.timeBar.multi", null, "MULTICOLOR");
-			default: TU.translate("options.gameplay.timeBar.pinklime", null, "ROSA Y LIMA");
+			case "allowColor": TU.translate("options.gameplay.timeBarMode.allowColor", null, "ALLOWCOLOR");
+			default: TU.translate("options.gameplay.timeBarMode.legacy", null, "LEGACY");
 		}
 	}
 

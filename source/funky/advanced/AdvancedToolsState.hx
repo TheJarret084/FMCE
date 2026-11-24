@@ -9,10 +9,9 @@ import flixel.math.FlxMath;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
 import funky.backend.LevelArchive;
-import funky.backend.LevelVideoMigrator;
-import funky.backend.core.KeyBinds;
+import funky.backend.system.KeyBinds;
 import funky.backend.assets.Paths;
-import funky.backend.core.TransitionHandler;
+import funky.backend.system.TransitionHandler;
 
 private typedef Tool =
 {
@@ -49,21 +48,7 @@ class AdvancedToolsState extends FlxState
 	{
 		super.create();
 
-		// Niveles importados despues de arrancar: el checker solo corre al inicio, asi que aqui se revisan/migran sus videos.
-		#if sys
-		try
-		{
-			var report = LevelVideoMigrator.scanLevel(Paths.levelsRoot() + levelName);
-			for (line in report.fixed)
-				funky.backend.system.Log.info('[AdvancedTools] video arreglado: $line');
-			for (line in report.problems)
-				funky.backend.system.Log.warn('[AdvancedTools] video: $line');
-		}
-		catch (e:Dynamic)
-		{
-			funky.backend.system.Log.warn('[AdvancedTools] no se pudieron revisar los videos: ' + Std.string(e));
-		}
-		#end
+		// La conversion de videos se hace en el Checker (paso a paso y solo si esta activada en opciones).
 
 		funky.backend.utils.CoolUtil.playEditorSong();
 

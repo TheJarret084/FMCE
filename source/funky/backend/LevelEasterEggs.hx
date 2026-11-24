@@ -48,7 +48,7 @@ class LevelEasterEggs
 		if (list.length == 0) return null;
 
 		var pick = list[Std.int(Math.random() * list.length)];
-		var bytes = assetBytes(TEMPLATE_DIR + pick);
+		var bytes = CoolUtil.assetBytes(TEMPLATE_DIR + pick);
 		if (bytes == null)
 		{
 			Log.warn('[LevelEasterEggs] no se pudo leer ' + TEMPLATE_DIR + pick);
@@ -68,16 +68,6 @@ class LevelEasterEggs
 	}
 
 	#if sys
-	static function assetBytes(path:String):Null<haxe.io.Bytes>
-	{
-		try
-		{
-			if (openfl.utils.Assets.exists(path)) return openfl.utils.Assets.getBytes(path);
-			if (FileSystem.exists(path)) return File.getBytes(path);
-		}
-		catch (e:Dynamic) {}
-		return null;
-	}
 
 	static function uniquePath(dir:String, fileName:String):String
 	{

@@ -3,7 +3,10 @@ package funky.game;
 import flixel.FlxSprite;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
-import funky.backend.core.NoteSkin;
+import funky.backend.skins.HudSkin;
+#if (!nme && !flash)
+import funky.backend.skins.HudShaderUtil;
+#end
 
 class NoteSplash extends FlxSprite
 {
@@ -17,10 +20,13 @@ class NoteSplash extends FlxSprite
 		kill();
 	}
 
-	public function burst(skin:NoteSkin, lane:Int, laneCount:Int, strum:Strum):Void
+	public function burst(skin:HudSkin, lane:Int, laneCount:Int, strum:Strum):Void
 	{
 		FlxTween.cancelTweensOf(this);
 		FlxTween.cancelTweensOf(scale);
+		#if (!nme && !flash)
+		HudShaderUtil.clear(this);
+		#end
 		revive();
 
 		var splashAtlas = skin.splashFrames();

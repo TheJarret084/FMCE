@@ -9,11 +9,11 @@ import flixel.text.FlxText.FlxTextBorderStyle;
 import flixel.util.FlxAxes;
 import flixel.util.FlxColor;
 import flixel.util.FlxGradient;
-import funky.backend.core.KeyBinds;
+import funky.backend.system.KeyBinds;
 import funky.backend.assets.Paths;
 import funky.backend.system.Log;
-import funky.backend.core.TouchNav;
-import funky.backend.core.TransitionHandler;
+import funky.backend.ui.TouchNav;
+import funky.backend.system.TransitionHandler;
 import funky.backend.utils.TranslationUtil as TU;
 
 class TitleState extends FlxState

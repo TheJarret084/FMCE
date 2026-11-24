@@ -2,9 +2,9 @@ package funky.game;
 
 import flixel.FlxG;
 import flixel.FlxSprite;
-import funky.backend.core.ClientPrefs;
-import funky.backend.core.NoteRGBShader;
-import funky.backend.core.NoteSkin;
+import funky.backend.system.ClientPrefs;
+import funky.backend.skins.HudRGBShader;
+import funky.backend.skins.HudSkin;
 
 class Strum extends FlxSprite
 {
@@ -12,7 +12,7 @@ class Strum extends FlxSprite
 	public var laneCount(default, null):Int;
 	public var lastHit:Float = -5000;
 
-	var skin:NoteSkin;
+	var skin:HudSkin;
 
 	var rgbPressed:Null<Bool> = null;
 
@@ -29,7 +29,7 @@ class Strum extends FlxSprite
 		super(x, y);
 		this.lane = lane;
 		this.laneCount = laneCount;
-		skin = NoteSkin.current();
+		skin = HudSkin.current();
 
 		var atlas = skin.frames();
 		if (atlas != null)
@@ -79,7 +79,7 @@ class Strum extends FlxSprite
 				color = pressed ? skin.tintFor(lane, true, laneCount) : skin.restTintFor(lane, laneCount);
 			case RGB:
 				var colors = pressed ? skin.rgbFor(lane, true, laneCount) : ClientPrefs.idleRgb();
-				shader = colors == null ? null : NoteRGBShader.forColors(colors);
+				shader = colors == null ? null : HudRGBShader.forColors(colors);
 		}
 
 		skin.notify("onReceptorColor", null, [this, lane, pressed]);

@@ -13,11 +13,10 @@ import flixel.ui.FlxBar.FlxBarFillDirection;
 import flixel.util.FlxColor;
 import flixel.util.FlxStringUtil;
 import funky.backend.assets.Paths;
-import funky.backend.core.ClientPrefs;
+import funky.backend.system.ClientPrefs;
 import funky.backend.system.Conductor;
-import funky.backend.core.NoteSkin;
+import funky.backend.skins.HudSkin;
 import funky.backend.utils.TranslationUtil as TU;
-import openfl.utils.Assets;
 
 typedef PressScore =
 {
@@ -62,7 +61,7 @@ class PlayHUD extends FlxGroup
 	public static inline var COMBO_POP:Float = 0.6 / 0.5;
 	public static inline var MIN_COMBO_DIGITS:Int = 3;
 
-	static inline var SCORE_DIR:String = "game/score/";
+	var scoreDir:String = "game/score";
 
 	static inline var COMBO_SLOTS:Int = 5;
 
@@ -75,11 +74,6 @@ class PlayHUD extends FlxGroup
 
 	public static var PINK:FlxColor = 0xFFFF8AFF;
 	public static var LIME:FlxColor = 0xFF8FFF8A;
-
-	static inline var TIME_BAR_WIDTH:Int = 400;
-	static inline var TIME_BAR_HEIGHT:Int = 18;
-
-	static inline var TIME_BAR_BG_PAD:Int = 4;
 
 	public var healthBar(default, null):HealthBar;
 	public var timeBar(default, null):FlxBar;
@@ -113,6 +107,11 @@ class PlayHUD extends FlxGroup
 
 	public var defaultFont:String;
 
+	var hudSkin:HudSkin;
+	var timeBarWidth:Int = 400;
+	var timeBarHeight:Int = 18;
+	var timeBarBgPad:Int = 4;
+
 	public var health:Float = START_HEALTH;
 	@:keep public var shownHealth:Float = START_HEALTH;
 	public var songTime:Float = 0;
@@ -126,6 +125,14 @@ class PlayHUD extends FlxGroup
 
 		if (laneCount != null) this.laneCount = laneCount;
 
+		hudSkin = HudSkin.current();
+		scoreDir = hudSkin.scoreDir;
+		timeBarWidth = hudSkin.timeBarWidth;
+		timeBarHeight = hudSkin.timeBarHeight;
+		timeBarBgPad = hudSkin.timeBarBgPad;
+
+		var skinFont = hudSkin.fontPath();
+		if (defaultFont == null || defaultFont == "") defaultFont = skinFont;
 		if (defaultFont == null || defaultFont == "") defaultFont = Paths.fontPath("PhantomMuff.ttf");
 
 		this.songLength = Math.max(songLength, 1);
@@ -149,49 +156,51 @@ class PlayHUD extends FlxGroup
 		var textX = healthBar.x - pad;
 		var textY = barY + 40;
 		var textWidth = Std.int(Math.max(1, healthBar.frameWidth + pad * 2));
-		scoreTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.RIGHT);
-		missesTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.CENTER);
-		accuracyTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.LEFT);
+		scoreTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.RIGHT, "score");
+		missesTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.CENTER, "misses");
+		accuracyTxt = makeStatText(textX, textY, textWidth, FlxTextAlign.LEFT, "accuracy");
 
-		timeText = new FlxText(0, down ? FlxG.height - 44 : 19, FlxG.width, "", 32);
-		timeText.setFormat(defaultFont, 32, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		timeText.borderSize = 2;
+		timeText = new FlxText(0, down ? FlxG.height - 44 : 19, FlxG.width, "", hudSkin.text("time").size);
+		applyTextStyle(timeText, "time", 32, FlxColor.WHITE, FlxTextAlign.CENTER, 2);
+		timeText.color = hudSkin.timeBarTextColor;
 		timeText.alpha = 0;
 
-		timeBar = new FlxBar(FlxG.width / 2 - TIME_BAR_WIDTH / 2, timeText.y + timeText.height / 4, FlxBarFillDirection.LEFT_TO_RIGHT, TIME_BAR_WIDTH, TIME_BAR_HEIGHT, null, "", 0, this.songLength);
+		timeBar = new FlxBar(FlxG.width / 2 - timeBarWidth / 2, timeText.y + timeText.height / 4, FlxBarFillDirection.LEFT_TO_RIGHT, timeBarWidth, timeBarHeight, null, "", 0, this.songLength);
 
-		timeBar.numDivisions = TIME_BAR_WIDTH;
-		setTimeBarStyle(TimeBarStyle.parse(ClientPrefs.getTimeBarStyle()));
+		timeBar.numDivisions = timeBarWidth;
+		setTimeBarStyle(TimeBarStyle.parse(hudSkin.timeBarStyle));
 		timeBar.alpha = 0;
 
-		timeBarBG = new FlxSprite().makeGraphic(TIME_BAR_WIDTH + TIME_BAR_BG_PAD * 2, TIME_BAR_HEIGHT + TIME_BAR_BG_PAD * 2, FlxColor.BLACK);
+		timeBarBG = new FlxSprite().makeGraphic(timeBarWidth + timeBarBgPad * 2, timeBarHeight + timeBarBgPad * 2, FlxColor.BLACK);
 		timeBarBG.alpha = 0;
 		syncTimeBarBG();
 		add(timeBarBG);
 		add(timeBar);
 		add(timeText);
 
-		ratingText = new FlxText(0, 0, 0, "", 64);
-		ratingText.setFormat(defaultFont, 64, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		ratingText.borderSize = 3;
+		ratingText = new FlxText(0, 0, 0, "", hudSkin.text("rating").size);
+		applyTextStyle(ratingText, "rating", 64, FlxColor.WHITE, FlxTextAlign.CENTER, 3);
 		ratingText.alpha = 0;
 		add(ratingText);
-		comboText = new FlxText(0, 0, 0, "", 64);
-		comboText.setFormat(defaultFont, 64, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		comboText.borderSize = 3;
+		comboText = new FlxText(0, 0, 0, "", hudSkin.text("combo").size);
+		applyTextStyle(comboText, "combo", 64, FlxColor.WHITE, FlxTextAlign.CENTER, 3);
 		comboText.alpha = 0;
 		add(comboText);
-		pressText = new FlxText(0, 0, 0, "", 22);
-		pressText.setFormat(defaultFont, 22, 0xFF5CF0DC, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		pressText.borderSize = 1.5;
+		pressText = new FlxText(0, 0, 0, "", hudSkin.text("press").size);
+		applyTextStyle(pressText, "press", 22, 0xFF5CF0DC, FlxTextAlign.CENTER, 1.5);
 		pressText.alpha = 0;
 		add(pressText);
 
+		var hudSkin = HudSkin.current();
+		hudSkin.notify("onHudCreate", null, [timeBar, timeBarBG, timeText, scoreTxt, missesTxt, accuracyTxt, ratingText, comboText, pressText]);
+		hudSkin.notify("onTimeBarCreate", null, [timeBar, timeBarBG, timeText]);
+		hudSkin.notify("onScoreTextCreate", null, [scoreTxt, missesTxt, accuracyTxt]);
+
 		for (name in ["sick", "good", "bad", "shit"])
 		{
-			var file = Paths.image(SCORE_DIR + name);
-			if (!Assets.exists(file)) continue;
-			var image = new FlxSprite().loadGraphic(file);
+			var bmp = scoreBitmap(name);
+			if (bmp == null) continue;
+			var image = new FlxSprite().loadGraphic(bmp);
 			image.alpha = 0;
 			ratingImages.set(name, image);
 			add(image);
@@ -199,7 +208,7 @@ class PlayHUD extends FlxGroup
 
 		var hasNumbers = true;
 		for (digit in 0...10)
-			if (!Assets.exists(Paths.image(SCORE_DIR + "num" + digit))) hasNumbers = false;
+			if (scoreBitmap("num" + digit) == null) hasNumbers = false;
 
 		if (hasNumbers)
 		{
@@ -214,9 +223,8 @@ class PlayHUD extends FlxGroup
 
 		if (ClientPrefs.isBotplay())
 		{
-			botplayText = new FlxText(0, 0, FlxG.width, TU.translate("game.botplay", null, "BOTPLAY"), 32);
-			botplayText.setFormat(defaultFont, 32, FlxColor.WHITE, FlxTextAlign.CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-			botplayText.borderSize = 2;
+			botplayText = new FlxText(0, 0, FlxG.width, TU.translate("game.botplay", null, "BOTPLAY"), hudSkin.text("botplay").size);
+			applyTextStyle(botplayText, "botplay", 32, FlxColor.WHITE, FlxTextAlign.CENTER, 2);
 			add(botplayText);
 		}
 
@@ -270,32 +278,63 @@ class PlayHUD extends FlxGroup
 		setBotplayRect(left, top, bottom, right - left);
 	}
 
-	function makeStatText(x:Float, y:Float, width:Int, align:FlxTextAlign):FlxText
+	function makeStatText(x:Float, y:Float, width:Int, align:FlxTextAlign, key:String):FlxText
 	{
-		var text = new FlxText(x, y, width, "", 20);
-		text.setFormat(defaultFont, 20, FlxColor.WHITE, align, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		text.borderSize = 1.25;
+		var text = new FlxText(x, y, width, "", hudSkin.text(key).size);
+		applyTextStyle(text, key, 20, FlxColor.WHITE, align, 1.25);
 		text.scrollFactor.set();
 		add(text);
 		return text;
 	}
 
+	function applyTextStyle(text:FlxText, key:String, fallbackSize:Int, fallbackColor:FlxColor, fallbackAlign:FlxTextAlign, fallbackBorder:Float):Void
+	{
+		var s = hudSkin.text(key);
+		var align:FlxTextAlign = switch (s.align.toLowerCase())
+		{
+			case "left": FlxTextAlign.LEFT;
+			case "right": FlxTextAlign.RIGHT;
+			default: fallbackAlign;
+		};
+		text.setFormat(defaultFont, s.size > 0 ? s.size : fallbackSize, s.color, align, FlxTextBorderStyle.OUTLINE, s.border);
+		text.borderSize = s.borderSize >= 0 ? s.borderSize : fallbackBorder;
+	}
+
+	function scoreBitmap(name:String):Null<openfl.display.BitmapData>
+	{
+		return hudSkin.image(scoreDir + "/" + name);
+	}
+
 	public function setTimeBarStyle(style:TimeBarStyle):Void
 	{
 		timeBarStyle = style;
+		refreshTimeBarColors();
+	}
 
-		switch (style)
+	public function refreshTimeBarColors():Void
+	{
+		if (timeBar == null) return;
+		var mode = ClientPrefs.getTimeBarColorMode();
+		if (mode != "allowColor") mode = hudSkin.timeBarMode;
+		if (mode == "allowColor" && healthBar != null)
+		{
+			var fill:FlxColor = healthBar.playerColor;
+			var empty:FlxColor = FlxColor.interpolate(fill, FlxColor.BLACK, 0.75);
+			timeBar.createFilledBar(empty, fill, true, FlxColor.BLACK);
+			timeBar.value = songTime;
+			return;
+		}
+
+		switch (timeBarStyle)
 		{
 			case TimeBarStyle.MONO:
-
 				timeBar.createFilledBar(FlxColor.BLACK, FlxColor.WHITE, true, FlxColor.WHITE);
 			case TimeBarStyle.MULTI:
 				var fill = laneColors();
 				var empty = [for (color in fill) FlxColor.interpolate(color, FlxColor.BLACK, 0.75)];
 				timeBar.createGradientBar(empty, fill, 1, 180, true, FlxColor.BLACK);
 			case TimeBarStyle.PINK_LIME:
-
-				timeBar.createFilledBar(LIME, PINK, true, FlxColor.BLACK);
+				timeBar.createFilledBar(hudSkin.timeBarEmpty, hudSkin.timeBarFill, true, hudSkin.timeBarBorder);
 		}
 
 		timeBar.value = songTime;
@@ -310,7 +349,7 @@ class PlayHUD extends FlxGroup
 
 	function laneColors():Array<FlxColor>
 	{
-		var skin = NoteSkin.current();
+		var skin = HudSkin.current();
 		var out:Array<FlxColor> = [];
 
 		for (lane in 0...laneCount)
@@ -327,7 +366,7 @@ class PlayHUD extends FlxGroup
 	function syncTimeBarBG():Void
 	{
 		if (timeBarBG == null || timeBar == null) return;
-		timeBarBG.setPosition(timeBar.x - TIME_BAR_BG_PAD, timeBar.y - TIME_BAR_BG_PAD);
+		timeBarBG.setPosition(timeBar.x - timeBarBgPad, timeBar.y - timeBarBgPad);
 		timeBarBG.alpha = timeBar.alpha;
 		timeBarBG.visible = timeBar.visible;
 	}
@@ -427,7 +466,8 @@ class PlayHUD extends FlxGroup
 			for (i in 0...digits.length)
 			{
 				var slot = comboImages[i];
-				slot.loadGraphic(Paths.image(SCORE_DIR + "num" + digits.charAt(i)));
+				var bmp = scoreBitmap("num" + digits.charAt(i));
+				if (bmp != null) slot.loadGraphic(bmp);
 				width += slot.frameWidth * COMBO_SCALE;
 			}
 

@@ -11,10 +11,10 @@ import funky.backend.converter.ConversionJob;
 import funky.backend.converter.FMCEToFNMMExporter;
 import funky.backend.converter.FNMMToFMCEConverter;
 import funky.backend.converter.FNMMToFMCEConverter.ConversionResult;
-import funky.backend.core.KeyBinds;
+import funky.backend.system.KeyBinds;
 import funky.backend.system.Log;
 import funky.backend.assets.Paths;
-import funky.backend.core.TransitionHandler;
+import funky.backend.system.TransitionHandler;
 import haxe.io.Path;
 
 using StringTools;

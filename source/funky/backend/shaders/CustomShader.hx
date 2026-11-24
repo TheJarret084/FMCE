@@ -1,7 +1,7 @@
 package funky.backend.shaders;
 
 import flixel.addons.display.FlxRuntimeShader;
-import funky.backend.core.Addons;
+import funky.backend.addons.Addons;
 import funky.backend.system.Log;
 import openfl.display.BitmapData;
 import openfl.display.ShaderInput;

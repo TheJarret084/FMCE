@@ -50,10 +50,10 @@
 			<assets path="assets" rename="assets" exclude="*.mp3" unless="web" />
 		</section>
 
-		<!-- addons/ (noteskins, videos...) NO entra en el .pack: son recursos externos (hxvlc necesita archivos reales).
+		<!-- addons/ (hudskins, videos...) NO entra en el .pack: son recursos externos (hxvlc necesita archivos reales).
 		     Escritorio: Lime los copia junto al ejecutable. Android: quedan en el APK (y se puede ademas poner una carpeta
-		     addons/ en .JarretLabs-FMCE/ que gana sobre la del APK). Ver funky.core.Addons y DOCS/addons-y-pack.md. -->
-		<assets path="addons" rename="addons" exclude="noteskins.zip" unless="mobile" /> <!-- para no escribir toda esta mrd en data/data/game/... -->
+		     addons/ en .JarretLabs-FMCE/ que gana sobre la del APK). Ver funky.backend.addons.Addons y docs/addons-y-pack.md. -->
+		<assets path="addons" rename="addons" exclude="hudskins.zip|videos.zip" unless="mobile" /> <!-- para no escribir toda esta mrd en data/data/game/... -->
 
 		<assets path="LICENSE" rename="LICENSE.txt" />
         <assets path="art/game.md" rename="README.txt" />

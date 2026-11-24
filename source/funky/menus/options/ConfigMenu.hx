@@ -13,12 +13,12 @@ import flixel.text.FlxText.FlxTextAlign;
 import flixel.text.FlxText.FlxTextBorderStyle;
 import flixel.tweens.FlxEase;
 import flixel.util.FlxColor;
-import funky.backend.core.ClientPrefs;
+import funky.backend.system.ClientPrefs;
 import funky.backend.utils.CoolUtil;
-import funky.backend.core.KeyBinds;
+import funky.backend.system.KeyBinds;
 import funky.backend.assets.Paths;
-import funky.backend.core.NavPad;
-import funky.backend.core.TouchNav;
+import funky.backend.ui.NavPad;
+import funky.backend.ui.TouchNav;
 import funky.menus.options.ConfigItem;
 
 import funky.backend.utils.TranslationUtil as TU;

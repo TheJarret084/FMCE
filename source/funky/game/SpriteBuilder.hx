@@ -62,12 +62,12 @@ class SpriteBuilder
 		var config:SpriteConfig = {name: name, type: "sprite", bilinear: false, anims: []};
 		#if sys
 		var fromConfig = readJson(Path.join([spriteDir(levelDir, name), "config.json"]));
-		config.type = text(field(fromConfig, "type"), "atlas");
-		config.bilinear = bool(field(fromConfig, "bilinear"), false);
+		config.type = CoolUtil.text(field(fromConfig, "type"), "atlas");
+		config.bilinear = CoolUtil.bool(field(fromConfig, "bilinear"), false);
 
 		for (entry in asArray(field(fromConfig, "data")))
 		{
-			var animName = text(field(entry, "name"), "");
+			var animName = CoolUtil.text(field(entry, "name"), "");
 			if (animName == "") continue;
 			var resolved = resolveAnim(animName, config.anims.length, [], entry, null);
 
@@ -170,9 +170,9 @@ class SpriteBuilder
 		var meta = field(fromSprite, "meta");
 		var fmce = field(meta, "fmce");
 
-		var type = text(field(fromConfig, "type"), text(field(fmce, "type"), ""));
+		var type = CoolUtil.text(field(fromConfig, "type"), CoolUtil.text(field(fmce, "type"), ""));
 		if (type != "") config.type = type;
-		config.bilinear = bool(field(fromConfig, "bilinear"), bool(field(fmce, "bilinear"), false));
+		config.bilinear = CoolUtil.bool(field(fromConfig, "bilinear"), CoolUtil.bool(field(fmce, "bilinear"), false));
 
 		var configAnims:Array<Dynamic> = asArray(field(fromConfig, "data"));
 		var fmceAnims = field(fmce, "animations");
@@ -190,8 +190,8 @@ class SpriteBuilder
 				continue;
 			}
 
-			var gameName = text(field(entry, "name"), "anim" + pos);
-			skipTags.push(text(field(entry, "anim"), gameName));
+			var gameName = CoolUtil.text(field(entry, "name"), "anim" + pos);
+			skipTags.push(CoolUtil.text(field(entry, "anim"), gameName));
 			config.anims.push(resolveAnim(gameName, pos, list, entry, null));
 		}
 		var extra = configAnims.length;
@@ -199,13 +199,13 @@ class SpriteBuilder
 		var tags:Array<Dynamic> = asArray(field(meta, "frameTags"));
 		for (tag in tags)
 		{
-			var animName = text(field(tag, "name"), "");
+			var animName = CoolUtil.text(field(tag, "name"), "");
 			if (animName == "" || skipTags.contains(animName)) continue;
-			var first = Std.int(number(field(tag, "from"), 0));
-			var last = Std.int(number(field(tag, "to"), first));
+			var first = Std.int(CoolUtil.number(field(tag, "from"), 0));
+			var last = Std.int(CoolUtil.number(field(tag, "to"), first));
 			if (last < first) last = first;
 			var indices = [for (index in first...last + 1) index];
-			if (text(field(tag, "direction"), "forward") == "reverse") indices.reverse();
+			if (CoolUtil.text(field(tag, "direction"), "forward") == "reverse") indices.reverse();
 			var entry = findByName(plain, animName);
 
 			var applied = animName;
@@ -213,7 +213,7 @@ class SpriteBuilder
 			if (entry != null)
 			{
 				pos = configAnims.indexOf(entry);
-				if (field(entry, "anim") != null) applied = text(field(entry, "name"), "anim" + pos);
+				if (field(entry, "anim") != null) applied = CoolUtil.text(field(entry, "name"), "anim" + pos);
 			}
 			else
 				extra++;
@@ -314,15 +314,15 @@ class SpriteBuilder
 	{
 
 		var hasFlag = fromConfig != null && Reflect.hasField(fromConfig, "spd_fps");
-		var spdFps = hasFlag ? bool(field(fromConfig, "spd_fps"), true) : true;
+		var spdFps = hasFlag ? CoolUtil.bool(field(fromConfig, "spd_fps"), true) : true;
 		var spd:Float = spdFps ? DEFAULT_FPS : 1;
 		if (fromConfig != null && Reflect.hasField(fromConfig, "spd"))
 		{
-			spd = number(field(fromConfig, "spd"), spd);
+			spd = CoolUtil.number(field(fromConfig, "spd"), spd);
 			if (!hasFlag) spd *= DEFAULT_FPS;
 		}
 		else if (fromFmce != null && Reflect.hasField(fromFmce, "fps"))
-			spd = number(field(fromFmce, "fps"), spd);
+			spd = CoolUtil.number(field(fromFmce, "fps"), spd);
 		if (spd <= 0) spd = spdFps ? DEFAULT_FPS : 1;
 
 		var fps = spdFps ? spd : Math.max(1, frames.length) * Conductor.bpm / (60 * spd);
@@ -330,22 +330,22 @@ class SpriteBuilder
 		var offset = fromConfig != null && Reflect.hasField(fromConfig, "offset") ? field(fromConfig, "offset") : field(fromFmce, "offset");
 		return {
 			name: name,
-			index: Std.int(number(field(fromConfig, "index"), position)),
+			index: Std.int(CoolUtil.number(field(fromConfig, "index"), position)),
 			frames: frames,
 			spd: spd,
 			spdFps: spdFps,
 			fps: fps,
-			loop: bool(field(fromConfig, "loop"), bool(field(fromFmce, "loop"), true)),
-			scale: Math.max(0.0001, number(field(fromConfig, "scale"), number(field(fromFmce, "scale"), 1))),
-			offsetX: number(field(offset, "x"), 0),
-			offsetY: number(field(offset, "y"), 0)
+			loop: CoolUtil.bool(field(fromConfig, "loop"), CoolUtil.bool(field(fromFmce, "loop"), true)),
+			scale: Math.max(0.0001, CoolUtil.number(field(fromConfig, "scale"), CoolUtil.number(field(fromFmce, "scale"), 1))),
+			offsetX: CoolUtil.number(field(offset, "x"), 0),
+			offsetY: CoolUtil.number(field(offset, "y"), 0)
 		};
 	}
 
 	static function findByName(list:Array<Dynamic>, name:String):Dynamic
 	{
 
-		for (item in list) if (text(field(item, "anim"), text(field(item, "name"), "")) == name) return item;
+		for (item in list) if (CoolUtil.text(field(item, "anim"), CoolUtil.text(field(item, "name"), "")) == name) return item;
 		return null;
 	}
 
@@ -354,7 +354,7 @@ class SpriteBuilder
 		if (!FileSystem.exists(path)) return null;
 		try
 		{
-			return funky.backend.core.JsonLoose.parse(File.getContent(path));
+			return funky.backend.utils.JsonLoose.parse(File.getContent(path));
 		}
 		catch (e:Dynamic)
 		{
@@ -372,7 +372,7 @@ class SpriteBuilder
 		var out:Array<Int> = [];
 		for (item in asArray(value))
 		{
-			var n = number(item, -1);
+			var n = CoolUtil.number(item, -1);
 			if (n >= 0) out.push(Std.int(n));
 		}
 		return out;
@@ -381,7 +381,7 @@ class SpriteBuilder
 	public static function migrateSpd(entry:Dynamic):Bool
 	{
 		if (entry == null || Reflect.hasField(entry, "spd_fps")) return false;
-		Reflect.setField(entry, "spd", Math.round(DEFAULT_FPS * number(field(entry, "spd"), 1) * 100) / 100);
+		Reflect.setField(entry, "spd", Math.round(DEFAULT_FPS * CoolUtil.number(field(entry, "spd"), 1) * 100) / 100);
 		Reflect.setField(entry, "spd_fps", true);
 		return true;
 	}
@@ -389,20 +389,6 @@ class SpriteBuilder
 	static function asArray(value:Dynamic):Array<Dynamic>
 		return Std.isOfType(value, Array) ? cast value : [];
 
-	static function text(value:Dynamic, fallback:String):String
-	{
-		if (value == null) return fallback;
-		var parsed = Std.string(value);
-		return parsed == "null" ? fallback : parsed;
-	}
 
-	static function number(value:Dynamic, fallback:Float):Float
-	{
-		if (value == null) return fallback;
-		var parsed = Std.parseFloat(Std.string(value));
-		return Math.isNaN(parsed) ? fallback : parsed;
-	}
 
-	static function bool(value:Dynamic, fallback:Bool):Bool
-		return value == null ? fallback : value == true;
 }

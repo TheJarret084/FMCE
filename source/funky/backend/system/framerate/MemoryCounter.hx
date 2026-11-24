@@ -5,7 +5,7 @@ import openfl.display.Sprite;
 import openfl.events.Event;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
-import funky.backend.core.MemoryUtil;
+import funky.backend.system.MemoryUtil;
 
 class MemoryCounter extends Sprite
 {

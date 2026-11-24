@@ -14,13 +14,13 @@ import funky.backend.FunkinVideoSprite;
 import funky.backend.Mp4Info;
 import funky.backend.MusicBeatState;
 import funky.backend.system.framerate.Framerate;
-import funky.backend.core.Addons;
-import funky.backend.core.AssetPack;
-import funky.backend.core.ClientPrefs;
+import funky.backend.addons.Addons;
+import funky.backend.addons.AssetPack;
+import funky.backend.system.ClientPrefs;
 import funky.backend.system.Log;
 import funky.backend.assets.Paths;
-import funky.backend.core.Storage;
-import funky.backend.core.other.AddonsDownloader;
+import funky.backend.system.Storage;
+import funky.backend.addons.AddonsDownloader;
 import funky.menus.SplashState;
 import funky.menus.TitleState;
 import haxe.io.Path;
@@ -61,40 +61,120 @@ class CheckerState extends MusicBeatState
 	static inline var COLOR_WARN:Int = 0xFFFFD166;
 	static inline var COLOR_BAD:Int = 0xFFFF6B6B;
 
-	// Ahora el repo tiene addons/ como carpetas sueltas: un archivo = una descarga (solo se bajan los que falten).
-	// Cuando pases a zips: una entrada SIN dest, con la URL del .zip y en check los archivos que trae
-	// (el zip se extrae dentro de addons/, asi que debe incluir sus carpetas, ej. noteskins/default/...).
-	static var files:Array<String> = [
-		"videos/splash.mp4",
-		"noteskins/default/data/noteSkin.xml",
-		"noteskins/default/images/NOTE_assets.png",
-		"noteskins/default/images/NOTE_assets.xml",
-		"noteskins/default/images/NOTE_splashes.png",
-		"noteskins/default/images/NOTE_splashes.xml",
-		"noteskins/codename/data/noteSkin.xml",
-		"noteskins/codename/images/NOTE_assets.png",
-		"noteskins/codename/images/NOTE_assets.xml",
-		"noteskins/codename/images/NOTE_splashes.png",
-		"noteskins/codename/images/NOTE_splashes.xml",
-		"noteskins/fmm/data/noteSkin.hx",
-		"noteskins/fmm/data/noteSkin.xml",
-		"noteskins/fmm/images/NOTE_assets.png",
-		"noteskins/fmm/images/NOTE_assets.xml",
-		"noteskins/fmm/images/NOTE_splashes.png",
-		"noteskins/fmm/images/NOTE_splashes.xml",
-		"noteskins/fmm/shaders/dropShadow.frag",
-		"videos/fatalerrorisocurred.mp4"
-	];
-
+	// Los HUD skins y los videos sueltos se entregan como zips (el unzip es recursivo); el video del error fatal queda fijo.
 	static var addons:Array<AddonFile> = [
-		for (rel in files)
-			{
-				name: rel,
-				url: BASE_URL + rel,
-				dest: rel,
-				check: [rel],
-				priority: rel != "videos/fatalerrorisocurred.mp4"
-			}
+		{
+			name: "hudskins.zip",
+			url: BASE_URL + "hudskins.zip",
+			check: [
+				"hudskins/default/data/hudSkin.xml",
+				"hudskins/default/fonts/PhantomMuff.ttf",
+				"hudskins/default/images/go.png",
+				"hudskins/default/images/ready.png",
+				"hudskins/default/images/restart.png",
+				"hudskins/default/images/set.png",
+				"hudskins/default/images/notes/default.png",
+				"hudskins/default/images/notes/default.xml",
+				"hudskins/default/images/score/bad.png",
+				"hudskins/default/images/score/epic.png",
+				"hudskins/default/images/score/good.png",
+				"hudskins/default/images/score/num0.png",
+				"hudskins/default/images/score/num1.png",
+				"hudskins/default/images/score/num2.png",
+				"hudskins/default/images/score/num3.png",
+				"hudskins/default/images/score/num4.png",
+				"hudskins/default/images/score/num5.png",
+				"hudskins/default/images/score/num6.png",
+				"hudskins/default/images/score/num7.png",
+				"hudskins/default/images/score/num8.png",
+				"hudskins/default/images/score/num9.png",
+				"hudskins/default/images/score/shit.png",
+				"hudskins/default/images/score/sick.png",
+				"hudskins/default/images/splashes/default.png",
+				"hudskins/default/images/splashes/default.xml",
+				"hudskins/default/sounds/gameOverEnd.ogg",
+				"hudskins/default/sounds/gameOverSFX.ogg",
+				"hudskins/default/sounds/intro1.ogg",
+				"hudskins/default/sounds/intro2.ogg",
+				"hudskins/default/sounds/intro3.ogg",
+				"hudskins/default/sounds/introGo.ogg",
+				"hudskins/default/sounds/missnote1.ogg",
+				"hudskins/default/sounds/missnote2.ogg",
+				"hudskins/default/sounds/missnote3.ogg",
+				"hudskins/codename/data/hudSkin.xml",
+				"hudskins/codename/fonts/vcr.ttf",
+				"hudskins/codename/images/go.png",
+				"hudskins/codename/images/ready.png",
+				"hudskins/codename/images/restart.png",
+				"hudskins/codename/images/set.png",
+				"hudskins/codename/images/notes/default.png",
+				"hudskins/codename/images/notes/default.xml",
+				"hudskins/codename/images/score/bad.png",
+				"hudskins/codename/images/score/combo.png",
+				"hudskins/codename/images/score/good.png",
+				"hudskins/codename/images/score/num0.png",
+				"hudskins/codename/images/score/num1.png",
+				"hudskins/codename/images/score/num2.png",
+				"hudskins/codename/images/score/num3.png",
+				"hudskins/codename/images/score/num4.png",
+				"hudskins/codename/images/score/num5.png",
+				"hudskins/codename/images/score/num6.png",
+				"hudskins/codename/images/score/num7.png",
+				"hudskins/codename/images/score/num8.png",
+				"hudskins/codename/images/score/num9.png",
+				"hudskins/codename/images/score/shit.png",
+				"hudskins/codename/images/score/sick.png",
+				"hudskins/codename/images/splashes/default.png",
+				"hudskins/codename/images/splashes/default.xml",
+				"hudskins/codename/sounds/gameOverEnd.ogg",
+				"hudskins/codename/sounds/gameOverSFX.ogg",
+				"hudskins/codename/sounds/intro1.ogg",
+				"hudskins/codename/sounds/intro2.ogg",
+				"hudskins/codename/sounds/intro3.ogg",
+				"hudskins/codename/sounds/introGo.ogg",
+				"hudskins/codename/sounds/missnote1.ogg",
+				"hudskins/codename/sounds/missnote2.ogg",
+				"hudskins/codename/sounds/missnote3.ogg",
+				"hudskins/fmm/data/hudSkin.hx",
+				"hudskins/fmm/data/hudSkin.xml",
+				"hudskins/fmm/fonts/milky.ttf",
+				"hudskins/fmm/images/go.png",
+				"hudskins/fmm/images/ready.png",
+				"hudskins/fmm/images/restart.png",
+				"hudskins/fmm/images/set.png",
+				"hudskins/fmm/images/notes/default.png",
+				"hudskins/fmm/images/notes/default.xml",
+				"hudskins/fmm/images/score/bad.png",
+				"hudskins/fmm/images/score/good.png",
+				"hudskins/fmm/images/score/sick.png",
+				"hudskins/fmm/images/splashes/default.png",
+				"hudskins/fmm/images/splashes/default.xml",
+				"hudskins/fmm/shaders/dropShadow.frag",
+				"hudskins/fmm/sounds/gameOverEnd.ogg",
+				"hudskins/fmm/sounds/gameOverSFX.ogg",
+				"hudskins/fmm/sounds/intro1.ogg",
+				"hudskins/fmm/sounds/intro2.ogg",
+				"hudskins/fmm/sounds/intro3.ogg",
+				"hudskins/fmm/sounds/introGo.ogg",
+				"hudskins/fmm/sounds/missnote1.ogg",
+				"hudskins/fmm/sounds/missnote2.ogg",
+				"hudskins/fmm/sounds/missnote3.ogg"
+			],
+			priority: true
+		},
+		{
+			name: "videos.zip",
+			url: BASE_URL + "videos.zip",
+			check: ["videos/splash.mp4"],
+			priority: true
+		},
+		{
+			name: "fatalerrorisocurred.mp4",
+			url: BASE_URL + "videos/fatalerrorisocurred.mp4",
+			dest: "videos/fatalerrorisocurred.mp4",
+			check: ["videos/fatalerrorisocurred.mp4"],
+			priority: false
+		}
 	];
 
 	var label:FlxText;
@@ -366,6 +446,12 @@ class CheckerState extends MusicBeatState
 	 */
 	function checkLevelVideos():Void
 	{
+		if (!ClientPrefs.isAutoConvertVideos())
+		{
+			Log.info('[Checker] conversion de videos desactivada en opciones');
+			stage = ScanAddons;
+			return;
+		}
 		#if sys
 		if (videoDirs.length == 0 && videoJob == null && videoIdx == 0 && videoTotal == 0)
 		{
@@ -655,11 +741,11 @@ class CheckerState extends MusicBeatState
 		Log.info('[Checker] videos: ${videosOk.length}/${videos.length}');
 
 		// Si la skin elegida ya no existe se vuelve a la default (si no, las notas salen sin textura).
-		var skin = ClientPrefs.getNoteSkin();
-		if (skin != "default" && !Addons.exists('noteskins/$skin/data/noteSkin.xml'))
+		var skin = ClientPrefs.getHudSkin();
+		if (skin != "default" && !Addons.exists('hudskins/$skin/data/hudSkin.xml') && !Addons.exists('noteskins/$skin/data/noteSkin.xml'))
 		{
 			Log.warn('[Checker] la noteskin "$skin" no existe: se usa "default"');
-			ClientPrefs.setNoteSkin("default");
+			ClientPrefs.setHudSkin("default");
 			fixed.push('noteskin "$skin" -> default');
 		}
 

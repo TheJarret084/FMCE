@@ -1,6 +1,6 @@
 package funky.backend.utils;
 
-import funky.backend.core.ClientPrefs;
+import funky.backend.system.ClientPrefs;
 import funky.backend.system.Flags;
 import haxe.xml.Access;
 import openfl.utils.Assets as OpenFlAssets;

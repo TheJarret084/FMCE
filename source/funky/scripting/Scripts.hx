@@ -9,7 +9,7 @@ import funky.backend.FunkinSprite;
 import funky.backend.system.framerate.Framerate;
 import funky.backend.system.Conductor;
 import funky.backend.system.Log;
-import funky.backend.core.Storage;
+import funky.backend.system.Storage;
 import funky.game.LevelSprite;
 import funky.game.SpriteBuilder;
 import funky.game.Stage;
@@ -276,9 +276,17 @@ class Scripts
 		globals.set("SpriteBuilder", SpriteBuilder);
 		globals.set("Stage", Stage);
 		globals.set("Storage", Storage);
-		globals.set("NoteSkin", funky.backend.core.NoteSkin);
-		globals.set("Difficulty", funky.backend.core.Difficulty);
-		globals.set("KeyBinds", funky.backend.core.KeyBinds);
+		globals.set("HudSkin", funky.backend.skins.HudSkin);
+		globals.set("NoteSkin", funky.backend.skins.HudSkin);
+		globals.set("HudRGBShader", funky.backend.skins.HudRGBShader);
+		globals.set("NoteRGBShader", funky.backend.skins.HudRGBShader);
+		#if (!nme && !flash)
+		globals.set("HudSkinShader", funky.backend.skins.HudSkinShader);
+		globals.set("NoteSkinShader", funky.backend.skins.HudSkinShader);
+		globals.set("HudShaderUtil", funky.backend.skins.HudShaderUtil);
+		#end
+		globals.set("Difficulty", funky.backend.system.Difficulty);
+		globals.set("KeyBinds", funky.backend.system.KeyBinds);
 		globals.set("CoolUtil", funky.backend.utils.CoolUtil);
 
 		globals.set("Framerate", Framerate);

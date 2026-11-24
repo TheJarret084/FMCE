@@ -4,7 +4,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.tweens.FlxTween;
 import funky.backend.chart.FNMMNote;
-import funky.backend.core.NoteSkin;
+import funky.backend.skins.HudSkin;
 import funky.game.Note.QueueNote;
 import funky.scripting.Scripts;
 
@@ -35,7 +35,7 @@ class StrumLine extends FlxTypedGroup<Strum>
 		spacing = lineWidth / Math.max(4, this.laneCount);
 		slotWidth = spacing * SLOT_FILL;
 
-		NoteSkin.current().splashFrames();
+		HudSkin.current().splashFrames();
 
 		for (lane in 0...this.laneCount)
 		{
@@ -150,7 +150,7 @@ class StrumLine extends FlxTypedGroup<Strum>
 
 		var splash = splashes.recycle(NoteSplash, NoteSplash.new);
 		splash.cameras = strum.cameras;
-		splash.burst(NoteSkin.current(), lane, laneCount, strum);
+		splash.burst(HudSkin.current(), lane, laneCount, strum);
 	}
 
 	public inline function receptor(lane:Int):Null<Strum> return lane >= 0 && lane < members.length ? members[lane] : null;

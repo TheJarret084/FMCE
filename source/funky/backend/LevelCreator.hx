@@ -225,34 +225,14 @@ class LevelCreator
 		return {ok: false, folder: "", name: "", error: error};
 
 	#if sys
-	static function assetText(path:String):Null<String>
-	{
-		try
-		{
-			if (openfl.utils.Assets.exists(path)) return openfl.utils.Assets.getText(path);
-			if (FileSystem.exists(path)) return File.getContent(path);
-		}
-		catch (e:Dynamic) {}
-		return null;
-	}
 
-	static function assetBytes(path:String):Null<haxe.io.Bytes>
-	{
-		try
-		{
-			if (openfl.utils.Assets.exists(path)) return openfl.utils.Assets.getBytes(path);
-			if (FileSystem.exists(path)) return File.getBytes(path);
-		}
-		catch (e:Dynamic) {}
-		return null;
-	}
 
 	static function writeNewChart(target:String, songName:String):Void
 	{
 		var path = Path.join([target, "chart.json"]);
 		var chart:Dynamic = {};
 		if (FileSystem.exists(path))
-			try chart = funky.backend.core.JsonLoose.parse(File.getContent(path)) catch (e:Dynamic) chart = {};
+			try chart = funky.backend.utils.JsonLoose.parse(File.getContent(path)) catch (e:Dynamic) chart = {};
 		if (chart == null || !Reflect.isObject(chart) || Std.isOfType(chart, Array)) chart = {};
 
 		if (!Std.isOfType(Reflect.field(chart, "strumLines"), Array))
@@ -268,14 +248,14 @@ class LevelCreator
 
 	static function writeTemplate(target:String, file:String, fallback:Null<String>):Void
 	{
-		var text = assetText(TEMPLATE_DIR + file);
+		var text = CoolUtil.assetText(TEMPLATE_DIR + file);
 		if (text == null) text = fallback;
 		if (text != null) File.saveContent(Path.join([target, file]), text);
 	}
 
 	static function extractTemplateZip(target:String, assetPath:String):Void
 	{
-		var bytes = assetBytes(assetPath);
+		var bytes = CoolUtil.assetBytes(assetPath);
 		if (bytes == null)
 		{
 			Log.info('[LevelCreator] sin ' + assetPath + ': el nivel queda vacio');

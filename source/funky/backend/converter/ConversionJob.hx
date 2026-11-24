@@ -132,7 +132,7 @@ class ConversionJob
 	{
 		label = "leyendo " + id + ".fnmm";
 		if (!FileSystem.exists(archivePath)) throw "no existe " + archivePath;
-		ensureDirectory(target);
+		CoolUtil.ensureDirectory(target);
 		state = ConversionProgress.open(Path.join([target, ConversionProgress.FILE_NAME]), archivePath);
 		result.resumed = state.resumed;
 
@@ -441,11 +441,5 @@ class ConversionJob
 		catch (_:Dynamic) {}
 	}
 
-	static function ensureDirectory(path:String):Void
-	{
-		if (path == "" || path == "." || FileSystem.exists(path)) return;
-		ensureDirectory(Path.directory(path));
-		FileSystem.createDirectory(path);
-	}
 	#end
 }

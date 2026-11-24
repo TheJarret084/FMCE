@@ -13,10 +13,10 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import funky.api.DiscordClient;
 import funky.backend.utils.CoolUtil;
-import funky.backend.core.KeyBinds;
+import funky.backend.system.KeyBinds;
 import funky.backend.assets.Paths;
-import funky.backend.core.TouchNav;
-import funky.backend.core.TransitionHandler;
+import funky.backend.ui.TouchNav;
+import funky.backend.system.TransitionHandler;
 import funky.menus.options.BackButton;
 import funky.backend.utils.TranslationUtil as TU;
 

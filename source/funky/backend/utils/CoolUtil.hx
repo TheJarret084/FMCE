@@ -1102,4 +1102,56 @@ enum abstract CoolSfx(Int) from Int {
 
 	public static inline function soundLoaded(sound:flixel.sound.FlxSound):Bool
 		return sound != null && sound.length > 0;
+
+	public static function number(value:Dynamic, fallback:Float):Float
+	{
+		if (value == null) return fallback;
+		var parsed = Std.parseFloat(Std.string(value));
+		return Math.isNaN(parsed) ? fallback : parsed;
+	}
+
+	public static function text(value:Dynamic, fallback:String):String
+	{
+		if (value == null) return fallback;
+		var parsed = Std.string(value);
+		return parsed == "null" ? fallback : parsed;
+	}
+
+	public static function bool(value:Dynamic, fallback:Bool):Bool
+		return value == null ? fallback : value == true;
+
+	public static function ensureDirectory(path:String):Void
+	{
+		#if sys
+		if (path == "" || path == "." || sys.FileSystem.exists(path)) return;
+		ensureDirectory(haxe.io.Path.directory(path));
+		sys.FileSystem.createDirectory(path);
+		#end
+	}
+
+	public static function assetBytes(path:String):Null<haxe.io.Bytes>
+	{
+		try
+		{
+			if (openfl.utils.Assets.exists(path)) return openfl.utils.Assets.getBytes(path);
+			#if sys
+			if (sys.FileSystem.exists(path)) return sys.io.File.getBytes(path);
+			#end
+		}
+		catch (e:Dynamic) {}
+		return null;
+	}
+
+	public static function assetText(path:String):Null<String>
+	{
+		try
+		{
+			if (openfl.utils.Assets.exists(path)) return openfl.utils.Assets.getText(path);
+			#if sys
+			if (sys.FileSystem.exists(path)) return sys.io.File.getContent(path);
+			#end
+		}
+		catch (e:Dynamic) {}
+		return null;
+	}
 }

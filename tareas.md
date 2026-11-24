@@ -115,3 +115,22 @@
 - [X] traducir avanced mode
 - [X] hacer más simple la navegación entre estados (creo que eso molestó a abelito)
 - [X] revisar el spritecache ya que pecela empieza a laguearle demaciado
+
+---
+
+(24 nov):
+
+- [X] ordenar `fmm` y `default` con la misma estructura de assets de `codename`:
+      [X] `images/notes/default.png|xml`
+      [X] `images/splashes/default.png|xml`
+      [X] `images/score/*`
+      [X] `images/ready.png`, `set.png`, `go.png`, `restart.png`
+      [X] `fonts/*` y `sounds/*`
+- [X] terminar de apuntar los XML de los 3 skins a esa estructura (`atlas`, `splash`, `font`, `scoreDir`, `countdown`) — FMM ya usa `<atlas path="notes/default" .../>`
+- [X] dejar el resolver de `HudSkin` derivado de esa carpeta (imagen, fuente, sonido, countdown y shader con fallback entre skins/legacy)
+- [X] revisar que `PlayHUD` y `PlayState` usen los assets del skin (score, countdown e intro/miss sounds) sin romper el fallback del engine
+- [X] corregir el script de FMM (`dropShadow`)
+- [ ] confirmar en juego que el tint de FMM no pierde el shader
+- [X] regenerar `addons/hudskins.zip` y actualizar el manifest de `CheckerState` con las rutas ya ordenadas
+- [X] amarrar el source: rutas con subdirectorio en atlas/splash, alias de script y limpieza de shaders al cambiar de estado
+- [ ] compilar en Actions y probar FMM/default/codename en juego antes de darlo por cerrado

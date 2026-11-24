@@ -27,8 +27,8 @@ class HealthBar extends FlxGroup
 	var insetY:Int;
 	var frame:FlxSprite;
 	var bar:FlxBar;
-	var opponentColor:FlxColor;
-	var playerColor:FlxColor;
+	public var opponentColor(default, null):FlxColor;
+	public var playerColor(default, null):FlxColor;
 	var lastSplit:Int = -1;
 
 	public var health(default, null):Float = 0.5;

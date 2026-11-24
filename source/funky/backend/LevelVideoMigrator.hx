@@ -2,7 +2,7 @@ package funky.backend;
 
 import haxe.Json;
 import haxe.io.Path;
-import funky.backend.core.JsonLoose;
+import funky.backend.utils.JsonLoose;
 import funky.backend.system.Log;
 import funky.backend.converter.VideoSheet;
 #if sys

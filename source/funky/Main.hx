@@ -4,12 +4,12 @@ import flixel.FlxG;
 import flixel.FlxGame;
 import openfl.display.Sprite;
 import funky.backend.system.Log;
-import funky.backend.core.CrashHandler;
-import funky.backend.core.MemoryUtil;
+import funky.backend.system.CrashHandler;
+import funky.backend.system.MemoryUtil;
 import funky.backend.utils.WindowUtils;
 import funky.backend.assets.Paths;
-import funky.backend.core.AssetPack;
-import funky.backend.core.ClientPrefs;
+import funky.backend.addons.AssetPack;
+import funky.backend.system.ClientPrefs;
 import funky.backend.utils.TranslationUtil;
 import funky.api.DiscordClient;
 import funky.backend.system.framerate.Framerate;
@@ -50,7 +50,7 @@ class Main extends Sprite
 
 		addChild(new FlxGame(1280, 720, CheckerState, 60, 60, true));
 		FlxG.signals.focusLost.add(function() ClientPrefs.save());
-		funky.backend.core.CursorManager.init();
+		funky.backend.system.CursorManager.init();
 		addChild(new Framerate());
 		addChild(new LogOverlay());
 		Log.info("Juego iniciado :happy:");

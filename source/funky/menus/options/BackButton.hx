@@ -2,9 +2,9 @@ package funky.menus.options;
 
 import flixel.FlxObject;
 import flixel.FlxSprite;
-import funky.backend.core.MenuButton;
+import funky.backend.ui.MenuButton;
 import funky.backend.assets.Paths;
-import funky.backend.core.TouchNav;
+import funky.backend.ui.TouchNav;
 import funky.backend.utils.TranslationUtil as TU;
 
 class BackButton extends FlxSprite

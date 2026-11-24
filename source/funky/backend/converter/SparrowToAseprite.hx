@@ -130,7 +130,7 @@ class SparrowToAseprite
 			var group = groups.get(prefix);
 			var cfg = animConfig.get(prefix);
 
-			var spd = cfg != null ? number(Reflect.field(cfg, "spd"), 1) : 1;
+			var spd = cfg != null ? CoolUtil.number(Reflect.field(cfg, "spd"), 1) : 1;
 			if (spd <= 0) spd = 1;
 			var fps = DEFAULT_FPS * spd;
 			var duration = Math.round(1000 / fps);
@@ -138,7 +138,7 @@ class SparrowToAseprite
 
 			if (cfg != null)
 			{
-				var declared = Std.int(number(Reflect.field(cfg, "num"), group.length));
+				var declared = Std.int(CoolUtil.number(Reflect.field(cfg, "num"), group.length));
 				if (declared != group.length)
 					warnings.push('$prefix: config.json dice ${declared} frames pero el XML tiene ${group.length}');
 			}
@@ -180,8 +180,8 @@ class SparrowToAseprite
 			if (cfg != null)
 			{
 				var offset = Reflect.field(cfg, "offset");
-				if (offset != null) Reflect.setField(meta, "offset", {x: number(Reflect.field(offset, "x"), 0), y: number(Reflect.field(offset, "y"), 0)});
-				if (Reflect.hasField(cfg, "scale")) Reflect.setField(meta, "scale", number(Reflect.field(cfg, "scale"), 1));
+				if (offset != null) Reflect.setField(meta, "offset", {x: CoolUtil.number(Reflect.field(offset, "x"), 0), y: CoolUtil.number(Reflect.field(offset, "y"), 0)});
+				if (Reflect.hasField(cfg, "scale")) Reflect.setField(meta, "scale", CoolUtil.number(Reflect.field(cfg, "scale"), 1));
 				if (Reflect.hasField(cfg, "bilinear")) Reflect.setField(meta, "bilinear", Reflect.field(cfg, "bilinear") == true);
 			}
 			Reflect.setField(fmceAnimations, prefix, meta);
@@ -196,7 +196,7 @@ class SparrowToAseprite
 		if (config != null)
 		{
 			if (Reflect.hasField(config, "type")) Reflect.setField(fmce, "type", Reflect.field(config, "type"));
-			if (Reflect.hasField(config, "scale")) Reflect.setField(fmce, "scale", number(Reflect.field(config, "scale"), 1));
+			if (Reflect.hasField(config, "scale")) Reflect.setField(fmce, "scale", CoolUtil.number(Reflect.field(config, "scale"), 1));
 			if (Reflect.hasField(config, "bilinear")) Reflect.setField(fmce, "bilinear", Reflect.field(config, "bilinear") == true);
 		}
 
@@ -270,10 +270,4 @@ class SparrowToAseprite
 		return parsed == null ? fallback : parsed;
 	}
 
-	static function number(value:Dynamic, fallback:Float):Float
-	{
-		if (value == null) return fallback;
-		var parsed = Std.parseFloat(Std.string(value));
-		return Math.isNaN(parsed) ? fallback : parsed;
-	}
 }

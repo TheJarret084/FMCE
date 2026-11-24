@@ -10,7 +10,7 @@ import funky.backend.converter.VideoStrip.VideoClip;
 #if sys
 import funky.backend.converter.VideoStrip.VideoStripTask;
 #end
-import funky.backend.core.JsonLoose;
+import funky.backend.utils.JsonLoose;
 
 #if sys
 import openfl.display.BitmapData;

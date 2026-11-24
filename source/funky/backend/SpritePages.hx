@@ -164,7 +164,7 @@ class SpritePages
 		{
 			try
 			{
-				ensureDir(cache);
+				CoolUtil.ensureDirectory(cache);
 				clearCache(cache);
 				for (k in 0...bitmaps.length)
 					File.saveBytes(Path.join([cache, pageFile(k)]), bitmaps[k].encode(bitmaps[k].rect, new PNGEncoderOptions(true)));
@@ -283,13 +283,6 @@ class SpritePages
 		};
 	}
 
-	static function ensureDir(path:String):Void
-	{
-		if (path == "" || FileSystem.exists(path)) return;
-		var parent = Path.directory(path);
-		if (parent != path) ensureDir(parent);
-		FileSystem.createDirectory(path);
-	}
 
 	static function clearCache(dir:String):Void
 	{

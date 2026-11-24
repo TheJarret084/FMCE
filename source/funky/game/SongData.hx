@@ -6,7 +6,7 @@ import funky.backend.chart.LevelLoader;
 import funky.backend.chart.ChartData;
 import funky.backend.chart.ChartData.ChartActionPack;
 import funky.backend.chart.ChartData.ChartBookmark;
-import funky.backend.core.ClientPrefs;
+import funky.backend.system.ClientPrefs;
 
 class SongData
 {

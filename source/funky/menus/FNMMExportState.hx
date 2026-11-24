@@ -10,7 +10,7 @@ import funky.editors.ui.UIWarningSubstate.WarningButton;
 import funky.backend.converter.FMCEToFNMMExporter;
 import funky.backend.converter.FNMMExportJob;
 import funky.backend.converter.FMCEToFNMMExporter.FNMMExportPlan;
-import funky.backend.core.KeyBinds;
+import funky.backend.system.KeyBinds;
 
 class FNMMExportState extends UIState
 {

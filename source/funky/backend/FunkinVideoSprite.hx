@@ -205,7 +205,7 @@ class FunkinVideoSprite extends VideoBase
 			if (!sys.FileSystem.exists(path)) continue;
 			try
 			{
-				var json:Dynamic = funky.backend.SpriteSheet.expand(funky.backend.core.JsonLoose.parse(sys.io.File.getContent(path)));
+				var json:Dynamic = funky.backend.SpriteSheet.expand(funky.backend.utils.JsonLoose.parse(sys.io.File.getContent(path)));
 				var video:Dynamic = json?.meta?.fmce?.video;
 				if (video == null) break;
 				var count = Std.parseInt(Std.string(video.count));
@@ -229,7 +229,7 @@ class FunkinVideoSprite extends VideoBase
 		{
 			try
 			{
-				config = funky.backend.core.JsonLoose.parse(sys.io.File.getContent(configPath));
+				config = funky.backend.utils.JsonLoose.parse(sys.io.File.getContent(configPath));
 			}
 			catch (e:Dynamic)
 			{
@@ -291,7 +291,7 @@ class FunkinVideoSprite extends VideoBase
 		if (!sys.FileSystem.exists(configPath)) return null;
 		try
 		{
-			var config:Dynamic = funky.backend.core.JsonLoose.parse(sys.io.File.getContent(configPath));
+			var config:Dynamic = funky.backend.utils.JsonLoose.parse(sys.io.File.getContent(configPath));
 			var data:Array<Dynamic> = config != null && Std.isOfType(config.data, Array) ? config.data : [];
 			if (index < 0 || index >= data.length || data[index] == null || data[index].anim == null) return null;
 			var anim = Std.string(data[index].anim);
