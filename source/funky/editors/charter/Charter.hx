@@ -1,5 +1,7 @@
 package funky.editors.charter;
 
+import funky.backend.utils.CoolUtil;
+import funky.backend.assets.Paths;
 import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxPoint;
 import flixel.sound.FlxSound;

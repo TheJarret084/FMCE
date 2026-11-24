@@ -1,5 +1,6 @@
 package funky.editors.ui;
 
+import funky.backend.assets.Paths;
 import flixel.graphics.frames.FlxFrame;
 
 class UISliceSprite extends UISprite {

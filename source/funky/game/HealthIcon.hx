@@ -1,5 +1,6 @@
 package funky.game;
 
+import funky.backend.assets.Paths;
 class HealthIcon extends LevelSprite
 {
 

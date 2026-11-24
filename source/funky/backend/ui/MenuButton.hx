@@ -1,5 +1,6 @@
 package funky.backend.ui;
 
+import funky.backend.assets.Paths;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;

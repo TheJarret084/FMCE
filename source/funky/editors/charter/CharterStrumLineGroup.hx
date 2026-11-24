@@ -1,5 +1,6 @@
 package funky.editors.charter;
 
+import funky.backend.utils.CoolUtil;
 import flixel.util.FlxSort;
 import funky.backend.chart.EventsData;
 

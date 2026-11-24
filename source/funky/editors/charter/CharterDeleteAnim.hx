@@ -1,5 +1,6 @@
 package funky.editors.charter;
 
+import funky.backend.assets.Paths;
 class CharterDeleteAnim extends CharterNote {
 	public var garbageIcon:FlxSprite;
 	public var garbageCircle:FlxSprite;

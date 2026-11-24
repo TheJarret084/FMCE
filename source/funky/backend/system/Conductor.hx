@@ -1,5 +1,6 @@
 package funky.backend.system;
 
+import funky.backend.utils.CoolUtil;
 import flixel.FlxState;
 import flixel.util.FlxSignal.FlxTypedSignal;
 import funky.backend.chart.ChartData;

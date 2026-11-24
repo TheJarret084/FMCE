@@ -1,5 +1,7 @@
 package funky.editors.charter;
 
+import funky.backend.utils.CoolUtil;
+import funky.backend.assets.Paths;
 import funky.backend.chart.SceneInfo;
 import flixel.group.FlxGroup;
 import flixel.util.FlxColor;

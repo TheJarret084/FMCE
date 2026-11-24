@@ -1,5 +1,7 @@
 package funky.editors.charter;
 
+import funky.backend.utils.CoolUtil;
+import funky.backend.assets.Paths;
 import flixel.addons.display.FlxBackdrop;
 import flixel.graphics.FlxGraphic;
 import funky.backend.system.Conductor;

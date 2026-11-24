@@ -1,5 +1,7 @@
 package funky.editors.charter;
 
+import funky.backend.utils.CoolUtil;
+import funky.backend.assets.Paths;
 import openfl.display.BitmapData;
 import openfl.geom.ColorTransform;
 import flixel.group.FlxSpriteGroup;

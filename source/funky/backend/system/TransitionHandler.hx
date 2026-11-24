@@ -1,5 +1,6 @@
 package funky.backend.system;
 
+import funky.backend.assets.Paths;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;

@@ -1,5 +1,6 @@
 package funky.backend;
 
+import funky.backend.utils.CoolUtil;
 import flixel.FlxG;
 import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxAtlasFrames;

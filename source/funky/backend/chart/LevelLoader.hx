@@ -1,5 +1,6 @@
 package funky.backend.chart;
 
+import funky.backend.utils.CoolUtil;
 import haxe.io.Path;
 import funky.backend.system.Log;
 

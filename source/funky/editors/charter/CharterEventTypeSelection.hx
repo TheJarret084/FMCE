@@ -1,5 +1,7 @@
 package funky.editors.charter;
 
+import funky.backend.utils.CoolUtil;
+import funky.backend.assets.Paths;
 import funky.backend.system.Conductor;
 import funky.backend.chart.EventsData;
 

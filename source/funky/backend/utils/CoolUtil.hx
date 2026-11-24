@@ -1,5 +1,6 @@
 package funky.backend.utils;
 
+import funky.backend.assets.Paths;
 #if cpp
 import cpp.Float64;
 #end

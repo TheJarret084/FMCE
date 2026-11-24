@@ -1,5 +1,6 @@
 package funky.game;
 
+import funky.backend.utils.CoolUtil;
 import haxe.io.Path;
 import funky.backend.FunkinVideoSprite;
 import funky.backend.system.Conductor;

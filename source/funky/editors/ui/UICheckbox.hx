@@ -1,5 +1,7 @@
 package funky.editors.ui;
 
+import funky.backend.utils.CoolUtil;
+import funky.backend.assets.Paths;
 class UICheckbox extends UISprite {
 	public var checked:Bool = false;
 	public var small:Bool = false;

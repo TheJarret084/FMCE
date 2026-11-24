@@ -1,5 +1,6 @@
 package funky.editors.charter;
 
+import funky.backend.assets.Paths;
 import funky.backend.chart.Chart;
 import funky.backend.chart.ChartData.ChartStrumLine;
 import funky.game.Character;

@@ -1,5 +1,6 @@
 package funky.backend.utils;
 
+import funky.backend.assets.Paths;
 import flixel.math.FlxRect;
 import flixel.util.FlxColor;
 import flixel.math.FlxAngle;

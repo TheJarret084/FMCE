@@ -1,5 +1,6 @@
 package funky.editors.ui;
 
+import funky.backend.assets.Paths;
 import openfl.Lib;
 import funky.editors.ui.notifications.UIBaseNotification;
 import flixel.math.FlxPoint;

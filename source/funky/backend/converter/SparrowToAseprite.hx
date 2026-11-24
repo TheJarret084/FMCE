@@ -1,6 +1,7 @@
 package funky.backend.converter;
 
 
+import funky.backend.utils.CoolUtil;
 typedef AsepriteConversion = {
 
 	var json:String;

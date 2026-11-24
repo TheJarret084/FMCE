@@ -1,5 +1,6 @@
 package funky.editors.charter;
 
+import funky.backend.assets.Paths;
 import flixel.FlxState;
 import funky.backend.chart.Chart;
 import haxe.io.Path;

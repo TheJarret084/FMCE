@@ -1,5 +1,7 @@
 package funky.editors.charter;
 
+import funky.backend.utils.CoolUtil;
+import funky.backend.assets.Paths;
 import flixel.math.FlxAngle;
 import flixel.math.FlxPoint;
 import flixel.tweens.FlxTween;

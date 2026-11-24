@@ -5,6 +5,8 @@ import haxe.io.Path;
 import lime.utils.Assets as LimeAssets;
 import sys.FileSystem;
 import sys.io.File;
+import funky.backend.system.Log;
+import funky.backend.system.Storage;
 #end
 
 class AssetPack

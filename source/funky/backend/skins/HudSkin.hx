@@ -1,5 +1,8 @@
 package funky.backend.skins;
 
+import funky.backend.system.Log;
+import funky.backend.addons.Addons;
+import funky.backend.assets.Paths;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.graphics.frames.FlxAtlasFrames;

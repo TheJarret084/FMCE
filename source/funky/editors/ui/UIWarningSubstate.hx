@@ -1,5 +1,7 @@
 package funky.editors.ui;
 
+import funky.backend.utils.CoolUtil;
+import funky.backend.assets.Paths;
 import funky.backend.system.Log;
 import haxe.CallStack;
 

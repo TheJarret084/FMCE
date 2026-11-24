@@ -1,5 +1,6 @@
 package funky.editors.charter;
 
+import funky.backend.utils.CoolUtil;
 class CharterNoteHoverer extends CharterNote {
 	public var showHoverer:Bool = false;
 

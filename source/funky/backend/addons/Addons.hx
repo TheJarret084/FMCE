@@ -1,5 +1,7 @@
 package funky.backend.addons;
 
+import funky.backend.system.Log;
+import funky.backend.system.Storage;
 import flixel.FlxG;
 import flixel.graphics.frames.FlxAtlasFrames;
 import haxe.io.Path;

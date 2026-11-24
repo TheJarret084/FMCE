@@ -1,5 +1,6 @@
 package funky.editors.charter;
 
+import funky.backend.assets.Paths;
 import flixel.math.FlxPoint;
 import funky.backend.chart.ChartData.ChartBookmark;
 

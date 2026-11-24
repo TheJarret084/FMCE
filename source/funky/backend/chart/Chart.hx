@@ -1,5 +1,6 @@
 package funky.backend.chart;
 
+import funky.backend.assets.Paths;
 import funky.backend.chart.ChartData;
 import funky.backend.chart.EventsData;
 import funky.backend.chart.LevelLoader;

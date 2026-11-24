@@ -1,5 +1,6 @@
 package funky.scripting;
 
+import funky.backend.utils.CoolUtil;
 import animate.FlxAnimateFrames;
 import flixel.FlxCamera;
 import flixel.group.FlxGroup;

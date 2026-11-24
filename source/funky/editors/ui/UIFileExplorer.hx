@@ -1,5 +1,6 @@
 package funky.editors.ui;
 
+import funky.backend.assets.Paths;
 import haxe.io.Bytes;
 import lime.ui.FileDialog;
 

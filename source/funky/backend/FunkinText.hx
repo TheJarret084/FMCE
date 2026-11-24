@@ -1,5 +1,6 @@
 package funky.backend;
 
+import funky.backend.assets.Paths;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 

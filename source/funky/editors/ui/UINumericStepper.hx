@@ -1,5 +1,6 @@
 package funky.editors.ui;
 
+import funky.backend.utils.CoolUtil;
 class UINumericStepper extends UITextBox {
 	public var value(default, set):Float;
 	public var precision:Int = 0;

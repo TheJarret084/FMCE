@@ -1,5 +1,6 @@
 package funky.game;
 
+import funky.backend.utils.CoolUtil;
 import flixel.FlxCamera;
 import flixel.FlxG;
 import flixel.FlxSprite;

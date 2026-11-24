@@ -1,5 +1,6 @@
 package funky.backend.converter;
 
+import funky.backend.utils.CoolUtil;
 import haxe.Json;
 import haxe.io.Bytes;
 import haxe.io.Path;

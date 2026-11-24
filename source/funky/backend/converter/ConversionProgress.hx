@@ -1,5 +1,6 @@
 package funky.backend.converter;
 
+import funky.backend.utils.CoolUtil;
 import haxe.Json;
 import funky.backend.system.Log;
 

@@ -1,5 +1,7 @@
 package funky.backend.skins;
 
+import funky.backend.system.Log;
+import funky.backend.addons.Addons;
 #if (!nme && !flash)
 import funky.backend.shaders.CustomShader;
 #end

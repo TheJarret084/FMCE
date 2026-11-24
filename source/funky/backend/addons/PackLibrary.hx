@@ -1,5 +1,6 @@
 package funky.backend.addons;
 
+import funky.backend.system.Log;
 #if sys
 import haxe.io.Bytes;
 import haxe.io.Path;

@@ -1,5 +1,6 @@
 package funky.editors.ui;
 
+import funky.backend.assets.Paths;
 import flixel.util.typeLimit.OneOfTwo;
 
 class UIDropDown extends UISliceSprite {
