@@ -46,6 +46,12 @@ class PlayState extends MusicBeatState
 	 */
 	public static var instance:PlayState;
 
+	/** Compat Codename charter: chart actual. */
+	public static var SONG(get, never):SongData;
+	static inline function get_SONG():SongData return instance != null ? instance.song : null;
+
+	public static function loadSong(name:String, difficulty:String = "normal", ?variant:String, ?fromMods:Bool):Void {}
+
 	var forceExit:Bool = #if (debug || mobile) true #else false #end;
 
 	// SESION

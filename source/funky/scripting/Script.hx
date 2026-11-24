@@ -161,7 +161,7 @@ class Script
 	function readSource(file:String):Null<String>
 		return null;
 
-	function onImportFailed(cl:Array<String>, ?asName:String):Bool
+	function onImportFailed(cl:Array<String>, ?asName:Null<String>, ?isPublic:Bool):Bool
 	{
 		var relative = cl.join("/");
 		for (root in importRoots())

@@ -185,8 +185,8 @@ class NoteSkin
 		if (framesTried) return null;
 		framesTried = true;
 
-		framesCache = Addons.getSparrowAtlas(atlasRel());
-		if (framesCache == null && Paths.framesExists(atlas)) framesCache = Paths.getSparrowAtlas(atlas);
+		framesCache = cast Addons.getSparrowAtlas(atlasRel());
+		if (framesCache == null && Paths.framesExists(atlas)) framesCache = cast Paths.getSparrowAtlas(atlas);
 		if (framesCache == null)
 			Log.error('[NoteSkin] no se pudo cargar el atlas de "$id": ' + atlasRel() + '.png/.xml (en addons/ externo o del build) ni assets/images/$atlas');
 		return framesCache;
@@ -205,8 +205,8 @@ class NoteSkin
 		splashTried = true;
 
 		var name = haxe.io.Path.withoutDirectory(splashAtlas);
-		splashFramesCache = Addons.getSparrowAtlas(ROOT + id + "/images/" + name);
-		if (splashFramesCache == null && splashAtlasDeclared && Paths.framesExists(splashAtlas)) splashFramesCache = Paths.getSparrowAtlas(splashAtlas);
+		splashFramesCache = cast Addons.getSparrowAtlas(ROOT + id + "/images/" + name);
+		if (splashFramesCache == null && splashAtlasDeclared && Paths.framesExists(splashAtlas)) splashFramesCache = cast Paths.getSparrowAtlas(splashAtlas);
 		if (splashFramesCache == null && splashAtlasDeclared)
 			Log.warn('[NoteSkin] no se pudo cargar el atlas de splash "$splashAtlas" de "$id": el splash usa el atlas principal');
 		return splashFramesCache;

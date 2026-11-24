@@ -935,6 +935,28 @@ class Stage extends FlxGroup
 		return Math.isNaN(parsed) ? fallback : parsed;
 	}
 
+	public static function getList(?mods:Bool = false):Array<String>
+	{
+		var list:Array<String> = [];
+		var seen:Map<String, Bool> = new Map();
+		function addDir(dir:String) {
+			#if sys
+			if (!sys.FileSystem.exists(dir) || !sys.FileSystem.isDirectory(dir)) return;
+			for (f in sys.FileSystem.readDirectory(dir)) {
+				var name = f;
+				if (name.endsWith('.json')) name = name.substr(0, name.length - 5);
+				else if (name.endsWith('.xml')) name = name.substr(0, name.length - 4);
+				else continue;
+				if (!seen.exists(name)) { seen.set(name, true); list.push(name); }
+			}
+			#end
+		}
+		addDir('assets/data/stages');
+		addDir('assets/stages');
+		addDir('assets/images/stages');
+		return list;
+	}
+
 	override public function destroy():Void
 	{
 		if (current == this) current = null;

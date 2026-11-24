@@ -33,6 +33,13 @@ class SongData
 
 	public var notes:Array<FNMMNote>;
 
+	// Compat Codename charter
+	public var strumLines:Array<Dynamic> = [];
+	public var meta:Dynamic = null;
+	public var scrollSpeed:Float = 2.0;
+	public var noteTypes:Array<String> = [];
+	public var codenameChart:Bool = false;
+
 	public var hasOpponentNotes:Bool = true;
 
 	public var playerNotes:Array<FNMMNote>;

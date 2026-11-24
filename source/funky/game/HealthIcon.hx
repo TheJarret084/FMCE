@@ -21,13 +21,23 @@ class HealthIcon extends LevelSprite
 	var winningAnim:Null<String> = null;
 	var levelDirectory:Null<String>;
 
-	public function new(levelDir:Null<String>, name:Null<String>, isPlayer:Bool)
+	public function new(?levelDir:Null<String>, ?name:Null<String>, ?isPlayer:Bool)
 	{
 		super();
-		this.isPlayer = isPlayer;
-		this.levelDirectory = levelDir;
+		// Compat Codename: new HealthIcon(iconName, ?isPlayer)
+		var iconName:Null<String> = name;
+		var dir:Null<String> = levelDir;
+		var player:Bool = isPlayer == true;
+		if (name == null && isPlayer == null && levelDir != null) {
+			// single-arg: treat as icon name
+			iconName = levelDir;
+			dir = (PlayState.instance != null && PlayState.instance.song != null) ? PlayState.instance.song.levelDir : null;
+		}
+		this.isPlayer = player;
+		this.levelDirectory = dir;
 		scrollFactor.set();
-		if (levelDir != null && name != null && name != "") load(levelDir, name);
+		if (dir != null && iconName != null && iconName != "") load(dir, iconName);
+		if (!loaded && iconName != null && iconName != "") loadIconAny(iconName);
 
 		if (loaded)
 		{
@@ -40,14 +50,35 @@ class HealthIcon extends LevelSprite
 		}
 		else
 		{
-
 			makeGraphic(Std.int(FIT), Std.int(FIT), 0x00000000); // icon transparente
 			baseScale = 1;
 		}
 
 		antialiasing = true;
-
 		setState("anim0");
+	}
+
+	function loadIconAny(iconName:String):Void {
+		// try common icon paths
+		for (p in ['icons/$iconName', 'characters/icons/$iconName', 'images/icons/$iconName']) {
+			if (Paths.imageExists(p)) { loadGraphic(Paths.image(p)); loaded = true; return; }
+		}
+	}
+
+	public function setIcon(icon:String):Void {
+		var dir = levelDirectory != null ? levelDirectory : (PlayState.instance != null && PlayState.instance.song != null ? PlayState.instance.song.levelDir : null);
+		loaded = false;
+		if (dir != null) load(dir, icon);
+		if (!loaded) loadIconAny(icon);
+		if (loaded) {
+			normalAnim = pick(NORMAL_NAMES);
+			if (normalAnim == null) normalAnim = firstAnim;
+			losingAnim = pick(LOSING_NAMES);
+			winningAnim = pick(WINNING_NAMES);
+			baseScale = FIT / Math.max(1, Math.max(frameWidth, frameHeight));
+			setSpriteScale(baseScale);
+			setState("anim0");
+		}
 	}
 
 	function pick(names:Array<String>):Null<String>

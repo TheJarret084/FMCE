@@ -662,11 +662,11 @@ class Charter extends MusicBeatSubstate {
 	 * El contador de FPS se atenua y baja un poco mientras el charter esta a la vista; al ocultarse o destruirse vuelve a como estaba.
 	 */
 	function setFramerateEditing(editing:Bool):Void {
-		if (!Framerate.isLoaded) return;
+		if (!Framerate.isLoaded || Framerate.instance == null) return;
 		var a = editing ? 0.4 : 1;
-		Framerate.fpsCounter.alpha = a;
-		Framerate.memoryCounter.alpha = a;
-		Framerate.codenameBuildField.alpha = a;
+		Framerate.instance.fpsCounter.alpha = a;
+		Framerate.instance.memoryCounter.alpha = a;
+		Framerate.instance.buildField.alpha = a;
 		Framerate.offset.y = editing ? 30 : fpsOffsetY;
 	}
 
