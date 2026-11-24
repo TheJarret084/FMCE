@@ -6,7 +6,7 @@ import flixel.ui.FlxBar;
 import flixel.ui.FlxBar.FlxBarFillDirection;
 import flixel.util.FlxColor;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 
 class HealthBar extends FlxGroup
 {

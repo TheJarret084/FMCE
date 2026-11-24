@@ -10,7 +10,7 @@ import haxe.io.Path;
 import funky.api.DiscordClient;
 import funky.backend.core.KeyBinds;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.TransitionHandler;
 import funky.scripting.Scripts;
 import funky.advanced.ui.code.CodeLang;

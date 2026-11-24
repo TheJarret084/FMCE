@@ -8,7 +8,7 @@ import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import haxe.Json;
 import openfl.utils.Assets as OpenFlAssets;
 

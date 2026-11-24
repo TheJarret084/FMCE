@@ -4,7 +4,7 @@ import haxe.Json;
 import haxe.io.Path;
 import haxe.io.Bytes;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 #if sys
 import haxe.zip.Reader;
 import sys.FileSystem;

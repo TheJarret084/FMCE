@@ -3,7 +3,7 @@ package funky.game;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import openfl.utils.Assets;
 
 class MobileControls extends FlxGroup

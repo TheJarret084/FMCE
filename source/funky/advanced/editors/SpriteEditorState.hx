@@ -107,7 +107,7 @@ class SpriteEditorState extends UIState
 	{
 		super();
 		this.levelName = levelName;
-		this.levelDir = Path.join([funky.backend.core.Paths.levelsRoot(), levelName]);
+		this.levelDir = Path.join([funky.backend.assets.Paths.levelsRoot(), levelName]);
 	}
 
 	function ui<T:FlxBasic>(object:T):T

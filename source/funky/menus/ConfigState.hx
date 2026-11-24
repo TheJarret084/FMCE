@@ -4,7 +4,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import funky.api.DiscordClient;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.TransitionHandler;
 import funky.menus.options.ConfigMenu;
 import funky.menus.options.ConfigScreens;

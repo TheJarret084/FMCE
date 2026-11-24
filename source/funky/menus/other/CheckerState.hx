@@ -18,7 +18,7 @@ import funky.backend.core.Addons;
 import funky.backend.core.AssetPack;
 import funky.backend.core.ClientPrefs;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.Storage;
 import funky.backend.core.other.AddonsDownloader;
 import funky.menus.SplashState;

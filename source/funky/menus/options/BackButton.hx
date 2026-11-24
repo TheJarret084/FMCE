@@ -3,7 +3,7 @@ package funky.menus.options;
 import flixel.FlxObject;
 import flixel.FlxSprite;
 import funky.backend.core.MenuButton;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.TouchNav;
 import funky.backend.utils.TranslationUtil as TU;
 

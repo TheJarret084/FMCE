@@ -13,7 +13,7 @@ import funky.backend.converter.FNMMToFMCEConverter;
 import funky.backend.converter.FNMMToFMCEConverter.ConversionResult;
 import funky.backend.core.KeyBinds;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.TransitionHandler;
 import haxe.io.Path;
 

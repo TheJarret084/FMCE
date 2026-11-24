@@ -4,7 +4,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;
 import flixel.util.FlxColor;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import openfl.Assets as OpenFlAssets;
 import openfl.display.BitmapData;
 import openfl.geom.Matrix;

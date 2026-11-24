@@ -40,7 +40,7 @@ class Chart {
 	public static function load(dir:String):ChartData {
 		levelDir = dir;
 		Paths.levelDir = dir;
-		funky.backend.core.Paths.currentLevel = dir;
+		funky.backend.assets.Paths.currentLevel = dir;
 
 		var chartFile = Path.join([dir, LevelLoader.CHART_FILE]);
 		if (FileSystem.exists(dir) && FileSystem.isDirectory(dir) && !FileSystem.exists(chartFile)) {

@@ -7,7 +7,7 @@ import flixel.util.FlxTimer;
 import hxvlc.flixel.FlxVideo;
 #end
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 
 class JarretVideo extends FlxSubState
 {

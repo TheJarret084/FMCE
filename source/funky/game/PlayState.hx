@@ -26,7 +26,7 @@ import funky.backend.core.Difficulty;
 import funky.backend.core.KeyBinds;
 import funky.backend.system.Log;
 import funky.backend.core.NoteSkin;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.game.Note.NoteSharedTailState;
 import funky.game.PlayHUD.PressScore;
 import funky.menus.FreeplayState;
@@ -532,7 +532,7 @@ class PlayState extends MusicBeatState
 			return;
 		}
 
-		funky.backend.core.Paths.currentLevel = song.levelDir;
+		funky.backend.assets.Paths.currentLevel = song.levelDir;
 		DiscordClient.playingPresence(songLabel(), Difficulty.name());
 		Scripts.load(song.levelDir, ["game" => this, "song" => song, "levelDir" => song.levelDir]);
 		Scripts.call("onLoad");

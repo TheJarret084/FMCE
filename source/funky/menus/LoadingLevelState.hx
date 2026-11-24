@@ -4,7 +4,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import funky.backend.MusicBeatState;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.game.PlayState;
 import funky.game.SongData;
 import funky.game.SpriteBuilder;

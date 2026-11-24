@@ -7,7 +7,7 @@ import haxe.Json;
 import haxe.Timer;
 import haxe.io.Path;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.AtlasPager;
 import openfl.display.BitmapData;
 import openfl.display.PNGEncoderOptions;

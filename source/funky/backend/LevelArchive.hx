@@ -1,7 +1,7 @@
 package funky.backend;
 
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import haxe.io.Path;
 
 #if sys

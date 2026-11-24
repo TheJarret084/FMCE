@@ -7,7 +7,7 @@ import funky.backend.system.Log;
 import funky.backend.core.CrashHandler;
 import funky.backend.core.MemoryUtil;
 import funky.backend.utils.WindowUtils;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.AssetPack;
 import funky.backend.core.ClientPrefs;
 import funky.backend.utils.TranslationUtil;

@@ -12,7 +12,7 @@ class CharterLauncher {
 			inited = true;
 			funky.backend.system.Conductor.init();
 		}
-		Chart.levelDir = Path.join([funky.backend.core.Paths.levelsRoot(), levelName]);
+		Chart.levelDir = Path.join([funky.backend.assets.Paths.levelsRoot(), levelName]);
 		Paths.levelDir = Chart.levelDir;
 		// El juego es la base y el charter se abre encima como substate (ver PlayState.editorHost).
 		funky.game.PlayState.editorHost = true;

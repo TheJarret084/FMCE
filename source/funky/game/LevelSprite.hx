@@ -3,7 +3,7 @@ package funky.game;
 import funky.backend.FunkinSprite;
 import funky.backend.system.Conductor;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.game.SpriteBuilder;
 
 class LevelSprite extends FunkinSprite

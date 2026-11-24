@@ -13,7 +13,7 @@ import funky.backend.LevelId;
 import funky.backend.chart.LevelLoader;
 import funky.backend.utils.CoolUtil;
 import funky.backend.core.KeyBinds;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.TouchNav;
 import funky.backend.core.TransitionHandler;
 import funky.game.HealthIcon;
@@ -231,7 +231,7 @@ class AdvancedModeState extends FlxState
 			dialog.browse(lime.ui.FileDialogType.OPEN, "fmce", null, AdvLang.t("modeMenu.importDialog", null, "Importar nivel .FMCE"));
 			return;
 			#else
-			setInfo(AdvLang.t("modeMenu.noArchives", [funky.backend.core.Paths.levelsRoot()], "No hay .FMCE en {0} (copialo ahi y vuelve a tocar IMPORTAR)"), false);
+			setInfo(AdvLang.t("modeMenu.noArchives", [funky.backend.assets.Paths.levelsRoot()], "No hay .FMCE en {0} (copialo ahi y vuelve a tocar IMPORTAR)"), false);
 			return;
 			#end
 		}

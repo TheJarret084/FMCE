@@ -3,7 +3,7 @@ package funky.backend;
 import flixel.FlxSprite;
 import flixel.util.FlxTimer;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 
 using StringTools;
 #if hxvlc

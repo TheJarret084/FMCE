@@ -68,7 +68,7 @@ class CharterMetaDataScreen extends UISubstateWindow {
 		addLabelOn(colorWheel, translate("color"));
 
 		var row3:Float = row2 + 130;
-		var sprites = funky.backend.core.Paths.levelSprites(funky.backend.chart.Chart.levelDir);
+		var sprites = funky.backend.assets.Paths.levelSprites(funky.backend.chart.Chart.levelDir);
 
 		playerIconDropDown = new UIDropDown(title.x, row3, 258, 32, iconItems(sprites, metadata.iconPlayer), iconIndex(sprites, metadata.iconPlayer));
 		add(playerIconDropDown);

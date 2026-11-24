@@ -10,7 +10,7 @@ import flixel.util.FlxAxes;
 import flixel.util.FlxColor;
 import flixel.util.FlxGradient;
 import funky.backend.core.KeyBinds;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.system.Log;
 import funky.backend.core.TouchNav;
 import funky.backend.core.TransitionHandler;

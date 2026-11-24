@@ -11,7 +11,7 @@ import flixel.text.FlxText.FlxTextAlign;
 import funky.backend.LevelArchive;
 import funky.backend.LevelVideoMigrator;
 import funky.backend.core.KeyBinds;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.TransitionHandler;
 
 private typedef Tool =
@@ -81,7 +81,7 @@ class AdvancedToolsState extends FlxState
 		title.alignment = FlxTextAlign.CENTER;
 		add(title);
 
-		var sub = new FlxText(0, 112, FlxG.width, funky.backend.LevelId.displayName(funky.backend.core.Paths.levelsRoot(), levelName), 20);
+		var sub = new FlxText(0, 112, FlxG.width, funky.backend.LevelId.displayName(funky.backend.assets.Paths.levelsRoot(), levelName), 20);
 		sub.color = MUTED;
 		sub.alignment = FlxTextAlign.CENTER;
 		add(sub);

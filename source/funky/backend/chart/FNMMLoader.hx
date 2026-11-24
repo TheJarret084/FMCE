@@ -2,7 +2,7 @@ package funky.backend.chart;
 
 import haxe.io.Path;
 import funky.backend.converter.FNMMToFMCEConverter;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.Storage;
 
 #if sys

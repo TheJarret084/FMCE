@@ -19,7 +19,7 @@ import funky.backend.core.MenuButton;
 import funky.backend.core.NavPad;
 import funky.backend.system.Log;
 import funky.backend.core.Scores;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.TouchNav;
 import funky.backend.core.TransitionHandler;
 import funky.game.HealthIcon;

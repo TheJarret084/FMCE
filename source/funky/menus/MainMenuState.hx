@@ -14,7 +14,7 @@ import flixel.tweens.FlxTween;
 import funky.api.DiscordClient;
 import funky.backend.utils.CoolUtil;
 import funky.backend.core.KeyBinds;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.TouchNav;
 import funky.backend.core.TransitionHandler;
 import funky.menus.options.BackButton;

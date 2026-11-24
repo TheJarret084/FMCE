@@ -9,7 +9,7 @@ import flixel.util.FlxTimer;
 import funky.backend.core.ClientPrefs;
 import funky.backend.system.Conductor;
 import funky.backend.system.Log;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import haxe.io.Path;
 import hscript.Expr;
 import hscript.Expr.Error;

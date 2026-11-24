@@ -12,7 +12,7 @@ import funky.backend.core.ClientPrefs;
 import funky.backend.utils.CoolUtil;
 import funky.backend.core.KeyBinds;
 import funky.backend.core.NoteSkin;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import funky.backend.core.TouchNav;
 import funky.backend.utils.TranslationUtil as TU;
 

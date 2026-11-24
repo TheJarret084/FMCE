@@ -6,7 +6,7 @@ import openfl.Lib;
 import openfl.display.Sprite;
 import openfl.events.Event;
 import openfl.text.TextFormat;
-import funky.backend.core.Paths;
+import funky.backend.assets.Paths;
 import flixel.util.FlxColor;
 import funky.backend.system.Log;
 import openfl.utils.Assets as OpenFlAssets;
