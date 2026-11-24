@@ -1,4 +1,7 @@
 package funky.editors.ui;
+import funky.backend.system.Flags;
+import funky.options.Options;
+import funky.backend.MusicBeatSubstate;
 
 import openfl.display.ShaderParameter;
 import openfl.display.ShaderInput;

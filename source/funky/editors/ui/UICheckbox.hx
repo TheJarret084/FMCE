@@ -1,4 +1,5 @@
 package funky.editors.ui;
+import funky.options.Options;
 
 import funky.backend.utils.CoolUtil;
 import funky.backend.assets.Paths;

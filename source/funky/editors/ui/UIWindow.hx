@@ -1,4 +1,5 @@
 package funky.editors.ui;
+import funky.backend.system.Flags;
 
 class UIWindow extends UISliceSprite {
 	public var titleSpr:UIText;

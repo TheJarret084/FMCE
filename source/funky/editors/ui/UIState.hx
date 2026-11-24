@@ -1,4 +1,8 @@
 package funky.editors.ui;
+import funky.backend.system.Flags;
+import funky.options.Options;
+import funky.backend.MusicBeatState;
+import funky.backend.utils.NativeAPI;
 
 import funky.backend.assets.Paths;
 import openfl.Lib;

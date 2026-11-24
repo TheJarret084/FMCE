@@ -1,4 +1,5 @@
 package funky.editors.ui;
+import funky.backend.system.Flags;
 
 import funky.backend.assets.Paths;
 import flixel.util.typeLimit.OneOfTwo;

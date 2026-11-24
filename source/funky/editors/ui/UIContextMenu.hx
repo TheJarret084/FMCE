@@ -1,4 +1,6 @@
 package funky.editors.ui;
+import funky.backend.system.Logs;
+import funky.backend.MusicBeatSubstate;
 
 import funky.backend.utils.CoolUtil;
 import funky.backend.assets.Paths;

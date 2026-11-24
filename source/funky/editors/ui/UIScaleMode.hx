@@ -1,4 +1,5 @@
 package funky.editors.ui;
+import funky.options.Options;
 
 import flixel.system.scaleModes.StageSizeScaleMode;
 

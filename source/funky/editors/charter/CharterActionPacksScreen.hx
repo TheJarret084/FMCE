@@ -1,4 +1,7 @@
 package funky.editors.charter;
+import funky.backend.system.Logs;
+import funky.game.PlayState;
+import funky.backend.chart.ChartEvent;
 
 import funky.backend.assets.Paths;
 import flixel.math.FlxPoint;

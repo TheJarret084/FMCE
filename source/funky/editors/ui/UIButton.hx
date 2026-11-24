@@ -1,4 +1,5 @@
 package funky.editors.ui;
+import funky.backend.system.Flags;
 
 class UIButton extends UISliceSprite {
 	public var callback:Void->Void = null;

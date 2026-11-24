@@ -1,4 +1,5 @@
 package funky.editors.ui;
+import funky.backend.system.Flags;
 
 import flixel.math.FlxPoint;
 import lime.ui.KeyCode;

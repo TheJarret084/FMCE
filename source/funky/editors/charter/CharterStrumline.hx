@@ -1,4 +1,5 @@
 package funky.editors.charter;
+import funky.game.PlayState;
 
 import funky.backend.utils.CoolUtil;
 import funky.backend.assets.Paths;

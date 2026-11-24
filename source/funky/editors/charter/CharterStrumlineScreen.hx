@@ -1,4 +1,5 @@
 package funky.editors.charter;
+import funky.backend.system.Flags;
 
 import funky.backend.assets.Paths;
 import funky.backend.chart.Chart;

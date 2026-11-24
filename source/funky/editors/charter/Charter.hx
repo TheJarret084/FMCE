@@ -1,4 +1,9 @@
 package funky.editors.charter;
+import funky.backend.system.Logs;
+import funky.backend.system.Flags;
+import funky.options.Options;
+import funky.backend.utils.NativeAPI;
+import funky.game.PlayState;
 
 import funky.backend.utils.CoolUtil;
 import funky.backend.assets.Paths;

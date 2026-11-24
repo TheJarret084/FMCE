@@ -1,4 +1,5 @@
 package funky.backend.skins;
+import funky.backend.system.ClientPrefs;
 
 import funky.backend.system.Log;
 import funky.backend.addons.Addons;

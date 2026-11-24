@@ -1,4 +1,5 @@
 package funky.backend.utils;
+import funky.backend.system.Flags;
 
 import funky.backend.assets.Paths;
 import openfl.Lib;

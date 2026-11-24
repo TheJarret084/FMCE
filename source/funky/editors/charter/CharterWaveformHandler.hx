@@ -1,4 +1,5 @@
 package funky.editors.charter;
+import funky.options.Options;
 
 import flixel.sound.FlxSound;
 import flixel.util.FlxColor;

@@ -1,4 +1,5 @@
 package funky.editors.charter;
+import funky.game.PlayState;
 
 import flixel.FlxCamera;
 import flixel.FlxG;

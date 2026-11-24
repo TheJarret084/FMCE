@@ -1,4 +1,5 @@
 package funky.advanced;
+import funky.game.PlayState;
 
 import flixel.FlxG;
 import flixel.FlxSprite;

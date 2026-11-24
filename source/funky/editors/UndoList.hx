@@ -1,4 +1,5 @@
 package funky.editors;
+import funky.options.Options;
 
 class UndoList<T> {
 	public var undoList:Array<T> = [];
