@@ -3,6 +3,9 @@ package funky.game;
 import funky.backend.chart.FNMMChart;
 import funky.backend.chart.FNMMNote;
 import funky.backend.chart.LevelLoader;
+import funky.backend.chart.ChartData;
+import funky.backend.chart.ChartData.ChartActionPack;
+import funky.backend.chart.ChartData.ChartBookmark;
 import funky.core.ClientPrefs;
 
 class SongData
@@ -23,7 +26,9 @@ class SongData
 
 	public var events:Array<Dynamic>;
 
-	public var actionPacks:Array<Array<Dynamic>>;
+	public var actionPacks:Array<ChartActionPack>;
+
+	public var bookmarks = [];
 
 	public var stepsPerBeat:Float;
 
@@ -39,6 +44,7 @@ class SongData
 	public var scrollSpeed:Float = 2.0;
 	public var noteTypes:Array<String> = [];
 	public var codenameChart:Bool = false;
+	public var chartVersion:String = "";
 
 	public var hasOpponentNotes:Bool = true;
 
@@ -75,7 +81,7 @@ class SongData
 		iconPlayer = chart.iconPlayer;
 		iconOpponent = chart.iconOpponent;
 		events = chart.events == null ? [] : chart.events;
-		actionPacks = chart.actionPacks == null ? [] : chart.actionPacks;
+		actionPacks = chart.actionPacks == null ? [] : cast chart.actionPacks;
 		stepsPerBeat = chart.stepsPerBeat != null && chart.stepsPerBeat > 0 ? chart.stepsPerBeat : 4;
 		stage = chart.stage;
 		color = chart.color;

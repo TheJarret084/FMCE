@@ -61,7 +61,12 @@ class HealthIcon extends LevelSprite
 	function loadIconAny(iconName:String):Void {
 		// try common icon paths
 		for (p in ['icons/$iconName', 'characters/icons/$iconName', 'images/icons/$iconName']) {
-			if (Paths.imageExists(p)) { loadGraphic(Paths.image(p)); loaded = true; return; }
+			var imgPath = Paths.image(p);
+			var exists = openfl.utils.Assets.exists(imgPath);
+			#if sys
+			if (!exists) exists = sys.FileSystem.exists(imgPath);
+			#end
+			if (exists) { loadGraphic(imgPath); loaded = (graphic != null && graphic.bitmap != null); if (loaded) return; }
 		}
 	}
 
