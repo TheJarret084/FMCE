@@ -271,7 +271,8 @@ class SpriteCache
 				for (action in (Reflect.field(event, "actions") : Array<Dynamic>)) scan(action);
 
 		for (pack in song.actionPacks)
-			for (action in pack) scan(action);
+			if (pack != null && pack.actions != null)
+				for (action in pack.actions) scan(action);
 
 		return out;
 	}

@@ -744,7 +744,7 @@ class Charter extends MusicBeatSubstate {
 
 		var notesCreated:Int = 0;
 		for (i => strL in PlayState.SONG.strumLines)
-			for (note in strL.notes) {
+			for (note in (cast strL.notes : Array<Dynamic>)) {
 				var n = new CharterNote();
 				var t = Conductor.getStepForTime(note.time);
 				n.updatePos(t, note.id, Conductor.getStepForTime(note.time + note.sLen) - t, strumLines.members[i]);

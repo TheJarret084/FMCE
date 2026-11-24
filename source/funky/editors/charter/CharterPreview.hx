@@ -438,7 +438,7 @@ class CharterPreview {
 			if (actions.length > 0) raw.push({time: Conductor.getTimeForStep(g.step) / 1000, actions: actions});
 		}
 		song.events = raw;
-		var packs:Array<Array<Dynamic>> = [];
+		var packs:Array<funky.backend.chart.ChartData.ChartActionPack> = [];
 		if (PlayState.SONG != null && PlayState.SONG.actionPacks != null)
 			for (p in PlayState.SONG.actionPacks) {
 				var list:Array<Dynamic> = [];
@@ -447,7 +447,7 @@ class CharterPreview {
 						var action = e == null ? null : Chart.eventToAction(e);
 						if (action != null) list.push(action);
 					}
-				packs.push(list);
+				packs.push({actions: cast list});
 			}
 		song.actionPacks = packs;
 

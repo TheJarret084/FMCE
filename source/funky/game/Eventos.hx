@@ -68,7 +68,7 @@ class Eventos
 	{
 		this.song = song;
 		this.stage = stage;
-		packs = song.actionPacks;
+		packs = [for (p in song.actionPacks) (p != null && p.actions != null ? cast p.actions : [])];
 
 		var indice = 0;
 		for (crudo in song.events)
