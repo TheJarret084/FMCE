@@ -283,7 +283,11 @@ final class Conductor
 
 	private static var elapsed:Float;
 
+	private static var initialized:Bool = false;
+
 	public static function init() {
+		if (initialized) return;
+		initialized = true;
 		FlxG.signals.preUpdate.add(update);
 		FlxG.signals.preStateCreate.add(onStateSwitch);
 		reset();

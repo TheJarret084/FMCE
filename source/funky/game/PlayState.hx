@@ -710,7 +710,7 @@ class PlayState extends MusicBeatState
 			}
 		}
 
-		Conductor.reset();
+		Conductor.init();
 		Conductor.changeBPM(song.bpm, 4, Math.round(song.stepsPerBeat));
 		Conductor.active = true;
 
