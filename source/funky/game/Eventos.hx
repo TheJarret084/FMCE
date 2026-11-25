@@ -104,6 +104,13 @@ class Eventos
 			siguiente++;
 	}
 
+	/** Cancela los tweens en curso (se usa junto a Stage.resetAll al reiniciar). */
+	public function limpiar():Void
+	{
+		transiciones = [];
+		siguiente = 0;
+	}
+
 	public function destroy():Void
 	{
 		lista = [];
@@ -131,6 +138,8 @@ class Eventos
 			case "CameraZoom": camaraZoom(props, inicio);
 			case "CameraShake", "CamaraShake": if (!atrasado) cameraShake(props);
 			case "ObjectPositionSet": objetoPosicion(props, inicio);
+			case "ObjectTransformSet": objetoTransform(props, inicio);
+			case "ObjectBlendColor": objetoColor(props);
 			case "ObjectVisibilitySet": objetoVisibilidad(props);
 			case "ObjectOpacitySet": objetoOpacidad(props, inicio);
 			case "ObjectAnimationSet": objetoAnimacion(props);
@@ -254,13 +263,22 @@ class Eventos
 	}
 
 	function objetoPosicion(props:Dynamic, inicio:Float):Void
+		moverObjeto("ObjectPositionSet", props, Std.int(numero(campo(props, "transform"))), inicio);
+
+	/**
+	 * ObjectTransformSet (FMP): cambia el transform activo del objeto, instantaneo o con tween de posicion + escala (+ scroll).
+	 * NO rota. El indice sale de `position` (nombre en FMP) o de `transform`.
+	 */
+	function objetoTransform(props:Dynamic, inicio:Float):Void
+		moverObjeto("ObjectTransformSet", props, Std.int(numeroDe(props, ["position", "transform"], 0)), inicio);
+
+	function moverObjeto(evento:String, props:Dynamic, indice:Int, inicio:Float):Void
 	{
 		var objeto = buscar(props);
 		if (objeto == null) return;
-		var indice = Std.int(numero(campo(props, "transform")));
 		if (indice < 0 || indice >= objeto.transforms.length)
 		{
-			avisar("tr:" + campo(props, "object") + ":" + indice, 'ObjectPositionSet: el objeto ' + campo(props, "object") + ' no tiene transform ' + indice);
+			avisar("tr:" + campo(props, "object") + ":" + indice, evento + ': el objeto ' + campo(props, "object") + ' no tiene transform ' + indice);
 			return;
 		}
 		var destino = objeto.transforms[indice];
@@ -279,6 +297,16 @@ class Eventos
 			objeto.scrollX = mezcla(sx0, destino.scrollX, k);
 			objeto.scrollY = mezcla(sy0, destino.scrollY, k);
 		});
+	}
+
+	/** ObjectBlendColor: color_r/g/b (0..255, con clamp) -> tinte del objeto. */
+	function objetoColor(props:Dynamic):Void
+	{
+		var objeto = buscar(props);
+		if (objeto == null || stage == null) return;
+		function canal(clave:String):Int
+			return Std.int(Math.max(0, Math.min(255, numero(campo(props, clave), 255))));
+		stage.setTint(objeto, FlxColor.fromRGB(canal("color_r"), canal("color_g"), canal("color_b")));
 	}
 
 	function objetoVisibilidad(props:Dynamic):Void
@@ -375,6 +403,7 @@ class Eventos
 		return resta;
 	}
 
+	/** Ejecuta un action pack. `indice` es 0-BASED (0 = primer pack). */
 	public function runPack(indice:Int, inicio:Float):Void
 	{
 		if (indice < 0) return;

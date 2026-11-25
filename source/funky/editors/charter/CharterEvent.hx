@@ -332,7 +332,7 @@ class CharterEvent extends UISliceSprite implements ICharterSelectable {
 		var amount:Null<Float> = null;
 		var unit:Dynamic = null;
 		switch (event.name) {
-			case "CameraSet", "CameraZoom", "ObjectPositionSet", "ObjectOpacitySet":
+			case "CameraSet", "CameraZoom", "ObjectPositionSet", "ObjectTransformSet", "ObjectOpacitySet":
 				amount = value("transitionTime");
 				unit = value("transitionTimeUnit");
 			case "ScreenFlash":

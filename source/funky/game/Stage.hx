@@ -75,6 +75,20 @@ class StageObject
 	public var scrollX:Float;
 	public var scrollY:Float;
 
+	/**
+	 * true si la animacion la puso un evento (ObjectAnimationSet con anim != 0). Mientras sea true las notas NO
+	 * sobreescriben la animacion (Stage.sing la salta). El idle (anim 0) no lo marca, para que las notas puedan cantar encima.
+	 */
+	public var setByEvent:Bool = false;
+
+	// Estado inicial (scene.json) para resetear el objeto completo.
+	public var initSprite:String = "";
+	public var initTint:FlxColor = 0xFFFFFFFF;
+	public var initShown:Bool = true;
+	public var initOpacity:Float = 1;
+	public var initFixed:Bool = false;
+	public var initStrumLine:Int = -1;
+
 	public function new(
 		sprite:LevelSprite,
 		strumLine:Int,
@@ -97,6 +111,13 @@ class StageObject
 		scaleY = transforms[0].scaleY;
 		scrollX = transforms[0].scrollX;
 		scrollY = transforms[0].scrollY;
+
+		initSprite = sprite.spriteName;
+		initTint = sprite.tintColor;
+		initShown = shown;
+		initOpacity = opacity;
+		initFixed = fixed;
+		initStrumLine = strumLine;
 	}
 }
 
@@ -318,11 +339,11 @@ class Stage extends FlxGroup
 
 			if (color != null)
 			{
-				sprite.color = FlxColor.fromRGB(
+				sprite.setTint(FlxColor.fromRGB(
 					Std.int(CoolUtil.number(field(color, "r"), 255)),
 					Std.int(CoolUtil.number(field(color, "g"), 255)),
 					Std.int(CoolUtil.number(field(color, "b"), 255))
-				);
+				));
 			}
 
 			var object = new StageObject(
@@ -421,6 +442,7 @@ class Stage extends FlxGroup
 		);
 
 		object.video = video;
+		object.initTint = video.color;
 		object.videoName = name;
 		object.videoIndex = index;
 		object.videoCount = count;
@@ -469,7 +491,7 @@ class Stage extends FlxGroup
 
 		for (object in objects)
 		{
-			if (object.strumLine != strumLine) continue;
+			if (object.strumLine != strumLine || object.setByEvent) continue;
 
 			object.holdUntil = 0;
 			object.revertAt = 0;
@@ -493,14 +515,6 @@ class Stage extends FlxGroup
 		return lane == null ? -1 : lane;
 	}
 
-	static inline var HOLD_LOOP_FRAMES:Int = 2;
-
-	static inline var HOLD_SHORT_ANIM:Int = 3;
-
-	static inline var HOLD_LOOP_LAST:Bool = false;
-
-	static inline var HOLD_SHORT_FREEZE:Bool = true;
-
 	static inline var HOLD_GRACE_MS:Float = 120;
 
 	/**
@@ -512,11 +526,8 @@ class Stage extends FlxGroup
 	static inline var NO_LOOP_REPEATS:Bool = false;
 
 	/** true si la animacion actual del sprite tiene loop false (no debe volver a idle). */
-	function holdsPose(sprite:LevelSprite):Bool
-	{
-		var data = sprite.currentAnim();
-		return data != null && !data.loop;
-	}
+	inline function holdsPose(sprite:LevelSprite):Bool
+		return sprite.holdsPose();
 
 	public function hold(strumLine:Int):Void
 	{
@@ -537,30 +548,20 @@ class Stage extends FlxGroup
 		singUntil.set(strumLine, songTime + holdMs);
 	}
 
-	function wrapHold(sprite:LevelSprite):Void
+	inline function wrapHold(sprite:LevelSprite):Void
+		sprite.holdLoop(NO_LOOP_REPEATS);
+
+	/**
+	 * Re-coloca cada objeto JUSTO antes de dibujar. Los eventos, sing() y ObjectAnimationSet cambian la animacion (y su frame
+	 * 0, con otro tamano/pivote) despues de que update() ya hizo apply(): sin esto ese frame se dibujaba con el pivote y
+	 * el hitbox de la animacion anterior y el sprite "saltaba" (se notaba en el charter, que dispara sing/eventos por su cuenta).
+	 */
+	override public function draw():Void
 	{
-		var cur = sprite.animation.curAnim;
-		if (cur == null) return;
-
-		// loop false: se reproduce una vez y se queda en el ultimo frame (salvo NO_LOOP_REPEATS).
-		if (!NO_LOOP_REPEATS && holdsPose(sprite)) return;
-
-		var total = cur.numFrames;
-		if (total <= 1) return;
-
-		var isShort = total <= HOLD_SHORT_ANIM;
-		var count = isShort ? (HOLD_SHORT_FREEZE ? 1 : total) : Std.int(Math.min(total, HOLD_LOOP_FRAMES));
-		var start = HOLD_LOOP_LAST ? total - count : 0;
-
-		if (cur.finished)
-		{
-
-			sprite.playAnim(cur.name, true, sprite.lastAnimContext, false, start);
-			return;
-		}
-
-		if (cur.curFrame >= start + count || cur.curFrame < start)
-			cur.curFrame = start;
+		if (loaded)
+			for (object in objects)
+				apply(object);
+		super.draw();
 	}
 
 	override public function update(elapsed:Float):Void
@@ -605,7 +606,10 @@ class Stage extends FlxGroup
 
 				object.revertAt = 0;
 				if (object.singAnim <= 0 && !holdsPose(object.sprite))
+				{
 					object.sprite.playIndex(0, true);
+					object.setByEvent = false;
+				}
 			}
 		}
 
@@ -754,12 +758,17 @@ class Stage extends FlxGroup
 		if (!sprite.loaded) return false;
 
 		sprite.scrollFactor.set();
-		sprite.color = old.color;
+		sprite.setTint(old.tintColor);
 		sprite.flipX = old.flipX;
 		sprite.flipY = old.flipY;
 		sprite.blend = old.blend;
 
-		sprite.playIndex(object.singAnim > 0 ? object.singAnim : object.baseAnim, true);
+		// Conserva la animacion actual (la de sing, la puesta por evento o el idle); posicion, escala, alpha, fixed,
+		// setByEvent y holdUntil viven en el StageObject y no se tocan.
+		var current = old.currentAnim();
+		var wanted = object.singAnim > 0 ? object.singAnim : (current != null ? current.index : object.baseAnim);
+		if (!sprite.playIndex(wanted, true) && !sprite.playIndex(object.baseAnim, true))
+			sprite.playIndex(0, true);
 
 		var index = members.indexOf(old);
 		if (index >= 0)
@@ -779,6 +788,64 @@ class Stage extends FlxGroup
 		#end
 	}
 
+	/** ObjectBlendColor: tinte base del objeto (sprite o video). */
+	public function setTint(object:StageObject, color:FlxColor):Void
+	{
+		if (object.video != null) object.video.color = color;
+		else object.sprite.setTint(color);
+	}
+
+	/**
+	 * Devuelve UN objeto a su estado de scene.json: sprite, posicion/escala/scroll (transform 0), visibilidad, opacidad,
+	 * tinte, fixed, strumline, animacion y camara (HUD o mundo).
+	 */
+	public function resetObject(object:StageObject):Void
+	{
+		if (object.video == null && object.initSprite != "" && object.sprite.spriteName != object.initSprite)
+			setSprite(object, object.initSprite);
+
+		var t = object.transforms[0];
+		object.x = t.x;
+		object.y = t.y;
+		object.scale = t.scale;
+		object.scaleY = t.scaleY;
+		object.scrollX = t.scrollX;
+		object.scrollY = t.scrollY;
+		object.shown = object.initShown;
+		object.opacity = object.initOpacity;
+		object.fixed = object.initFixed;
+		object.strumLine = object.initStrumLine;
+		object.singAnim = -1;
+		object.holdUntil = 0;
+		object.revertAt = 0;
+		object.setByEvent = false;
+
+		setTint(object, object.initTint);
+		if (object.video == null && !object.sprite.playIndex(object.baseAnim, true)) object.sprite.playIndex(0, true);
+
+		var cams = object.fixed && camHUD != null ? [camHUD] : null;
+		object.sprite.cameras = cams;
+		if (object.video != null) object.video.cameras = cams;
+		apply(object);
+	}
+
+	/** Reset completo del escenario: todos los objetos, camara, zoom, flash y estado de sing. */
+	public function resetAll():Void
+	{
+		for (object in objects) resetObject(object);
+
+		camX = camPoints[0].x;
+		camY = camPoints[0].y;
+		camScale = camPoints[0].scale;
+		zoomMul = 1;
+		if (flash != null) flash.alpha = 0;
+
+		singUntil = new Map<Int, Float>();
+		singing = new Map<Int, Bool>();
+		singLaneOf = new Map<Int, Int>();
+		singingAny = false;
+	}
+
 	public function setChart(object:StageObject, line:Int):Bool
 	{
 		if (line < -1) return false;
@@ -787,6 +854,8 @@ class Stage extends FlxGroup
 		object.strumLine = line;
 		object.singAnim = -1;
 		object.holdUntil = 0;
+		object.revertAt = 0;
+		object.setByEvent = false;
 		if (!object.sprite.playIndex(object.baseAnim, true))
 			object.sprite.playIndex(0, true);
 		return true;
@@ -799,6 +868,8 @@ class Stage extends FlxGroup
 
 		if (!object.sprite.playIndex(index, true))
 			return false;
+
+		object.setByEvent = index != 0;
 
 		if (object.strumLine >= 0)
 		{
@@ -814,6 +885,7 @@ class Stage extends FlxGroup
 		}
 
 		static inline var MISS_ANIM:Int = 5;
+
 
 		public function miss(strumLine:Int):Void
 		{

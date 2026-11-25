@@ -54,6 +54,8 @@ class EventsData {
 		"CameraZoom" => "Definir zoom de cámara",
 		"CameraShake" => "Sacudir cámara",
 		"ObjectPositionSet" => "Definir posición de objeto",
+		"ObjectTransformSet" => "Definir transform de objeto",
+		"ObjectBlendColor" => "Definir color de objeto",
 		"ObjectVisibilitySet" => "Definir visibilidad de objeto",
 		"ObjectOpacitySet" => "Definir opacidad de objeto",
 		"ObjectAnimationSet" => "Definir animación de objeto",
@@ -98,6 +100,16 @@ class EventsData {
 			p("object", "Objeto", TObject, 0),
 			p("transform", "Posicion del objeto", TObjectTransform, 0)
 		].concat(transition()));
+		add("ObjectTransformSet", [
+			p("object", "Objeto", TObject, 0),
+			p("position", "Transform del objeto", TObjectTransform, 0)
+		].concat(transition()));
+		add("ObjectBlendColor", [
+			p("object", "Objeto", TObject, 0),
+			p("color_r", "Rojo", TInt(0, 255, 1), 255),
+			p("color_g", "Verde", TInt(0, 255, 1), 255),
+			p("color_b", "Azul", TInt(0, 255, 1), 255)
+		]);
 		add("ObjectVisibilitySet", [
 			p("object", "Objeto", TObject, 0),
 			p("value", "Visible", TBool, true)

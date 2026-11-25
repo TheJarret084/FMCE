@@ -42,6 +42,21 @@ class SpriteBuilder
 {
 	public static inline var DEFAULT_FPS:Float = 24;
 
+	public static inline var MIN_FPS:Float = 0.1;
+	public static inline var MAX_FPS:Float = 240;
+
+	/**
+	 * UNICA formula de velocidad de una animacion.
+	 *   spdFps = true  -> `spd` son FPS crudos.
+	 *   spdFps = false -> `spd` son beats por vuelta: frames * bpm / (60 * spd).
+	 * Siempre limitado a MIN_FPS..MAX_FPS.
+	 */
+	public static function animFps(spd:Float, spdFps:Bool, frameCount:Int, bpm:Float):Float
+	{
+		var fps = spdFps ? spd : Math.max(1, frameCount) * bpm / (60 * Math.max(0.01, spd));
+		return Math.max(MIN_FPS, Math.min(MAX_FPS, fps));
+	}
+
 	public static function spriteDir(levelDir:String, name:String):String
 		return Path.join([levelDir, "sprites", name]);
 
@@ -326,7 +341,7 @@ class SpriteBuilder
 			spd = CoolUtil.number(field(fromFmce, "fps"), spd);
 		if (spd <= 0) spd = spdFps ? DEFAULT_FPS : 1;
 
-		var fps = spdFps ? spd : Math.max(1, frames.length) * Conductor.bpm / (60 * spd);
+		var fps = animFps(spd, spdFps, frames.length, Conductor.bpm);
 
 		var offset = fromConfig != null && Reflect.hasField(fromConfig, "offset") ? field(fromConfig, "offset") : field(fromFmce, "offset");
 		return {

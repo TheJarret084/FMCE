@@ -5,6 +5,7 @@ import funky.backend.system.Conductor;
 import funky.backend.system.Log;
 import funky.backend.assets.Paths;
 import funky.game.SpriteBuilder;
+import flixel.util.FlxColor;
 
 class LevelSprite extends FunkinSprite
 {
@@ -16,6 +17,16 @@ class LevelSprite extends FunkinSprite
 	var anims:Map<String, SpriteAnim> = new Map<String, SpriteAnim>();
 	var firstAnim:Null<String> = null;
 	var baseAntialiasing:Bool = false;
+
+	/** Tinte base (ObjectBlendColor / color de scene.json). */
+	public var tintColor(default, null):FlxColor = 0xFFFFFFFF;
+
+
+	// Hold loop (como SpriteAnimator.Update de FMP): mientras se mantiene la nota se repiten los primeros frames.
+	public static inline var HOLD_LOOP_FRAMES:Int = 2;
+	public static inline var HOLD_SHORT_ANIM:Int = 3;
+	public static inline var HOLD_LOOP_LAST:Bool = false;
+	public static inline var HOLD_SHORT_FREEZE:Bool = true;
 
 	public function new(x:Float = 0, y:Float = 0)
 	{
@@ -129,8 +140,8 @@ class LevelSprite extends FunkinSprite
 			var cur = animation.curAnim;
 			if (cur != null && cur.numFrames > 0)
 			{
-				var target = cur.numFrames * Conductor.bpm / (60 * Math.max(0.01, data.spd));
-				if (target > 0 && cur.frameRate != target) cur.frameRate = target;
+				var target = SpriteBuilder.animFps(data.spd, false, cur.numFrames, Conductor.bpm);
+				if (cur.frameRate != target) cur.frameRate = target;
 			}
 		}
 		super.update(elapsed);
@@ -138,8 +149,50 @@ class LevelSprite extends FunkinSprite
 
 	public function animNames():Array<String> return [for (key in anims.keys()) key];
 
+	/** Cambia el tinte base (ObjectBlendColor). */
+	public function setTint(value:FlxColor):Void
+	{
+		tintColor = value;
+		color = value;
+	}
+
+	/** true si la animacion actual tiene loop false: se queda en su ultimo frame y NO vuelve a idle. */
+	public inline function holdsPose():Bool
+	{
+		var data = currentAnim();
+		return data != null && !data.loop;
+	}
+
+	/**
+	 * Logica de hold (FMP `HOLD_LOOP_FRAMES`): mientras dura la nota repite los primeros frames de la animacion actual.
+	 * `repeatNoLoop` = false -> una animacion con loop false se reproduce una vez y se queda en el ultimo frame.
+	 */
+	public function holdLoop(repeatNoLoop:Bool = false):Void
+	{
+		var cur = animation.curAnim;
+		if (cur == null) return;
+		if (!repeatNoLoop && holdsPose()) return;
+
+		var total = cur.numFrames;
+		if (total <= 1) return;
+
+		var isShort = total <= HOLD_SHORT_ANIM;
+		var count = isShort ? (HOLD_SHORT_FREEZE ? 1 : total) : Std.int(Math.min(total, HOLD_LOOP_FRAMES));
+		var start = HOLD_LOOP_LAST ? total - count : 0;
+
+		if (cur.finished)
+		{
+			playAnim(cur.name, true, lastAnimContext, false, start);
+			return;
+		}
+
+		if (cur.curFrame >= start + count || cur.curFrame < start)
+			cur.curFrame = start;
+	}
+
 	public function recycle():Void
 	{
+		tintColor = 0xFFFFFFFF;
 		color = 0xFFFFFFFF;
 		alpha = 1;
 		visible = true;
