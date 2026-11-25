@@ -104,7 +104,7 @@ class Eventos
 			siguiente++;
 	}
 
-	/** Cancela los tweens en curso (se usa junto a Stage.resetAll al reiniciar). */
+	/** Cancela los tweens en curso (se usa junto a Stage.resetPoses al reiniciar). */
 	public function limpiar():Void
 	{
 		transiciones = [];

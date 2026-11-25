@@ -5,7 +5,6 @@ import funky.backend.system.Conductor;
 import funky.backend.system.Log;
 import funky.backend.assets.Paths;
 import funky.game.SpriteBuilder;
-import flixel.util.FlxColor;
 
 class LevelSprite extends FunkinSprite
 {
@@ -17,16 +16,7 @@ class LevelSprite extends FunkinSprite
 	var anims:Map<String, SpriteAnim> = new Map<String, SpriteAnim>();
 	var firstAnim:Null<String> = null;
 	var baseAntialiasing:Bool = false;
-
-	/** Tinte base (ObjectBlendColor / color de scene.json). */
-	public var tintColor(default, null):FlxColor = 0xFFFFFFFF;
-
-
-	// Hold loop (como SpriteAnimator.Update de FMP): mientras se mantiene la nota se repiten los primeros frames.
-	public static inline var HOLD_LOOP_FRAMES:Int = 2;
-	public static inline var HOLD_SHORT_ANIM:Int = 3;
-	public static inline var HOLD_LOOP_LAST:Bool = false;
-	public static inline var HOLD_SHORT_FREEZE:Bool = true;
+	var animTotal:Int = -1;
 
 	public function new(x:Float = 0, y:Float = 0)
 	{
@@ -39,6 +29,7 @@ class LevelSprite extends FunkinSprite
 		frames = null;
 		animation.destroyAnimations();
 		anims.clear();
+		animTotal = -1;
 		firstAnim = null;
 		loaded = false;
 		spriteName = "";
@@ -72,6 +63,7 @@ class LevelSprite extends FunkinSprite
 			if (anims.exists(anim.name)) Log.warn('[LevelSprite] ' + name + ': la animacion "' + anim.name + '" esta repetida en config.json (se queda la ultima)');
 			animation.add(anim.name, valid, anim.fps, anim.loop);
 			anims.set(anim.name, anim);
+			animTotal = -1;
 			if (firstAnim == null) firstAnim = anim.name;
 		}
 		if (firstAnim == null)
@@ -125,6 +117,7 @@ class LevelSprite extends FunkinSprite
 			Log.warn('[LevelSprite] "' + atlasName + '" no existe en el atlas de ' + spriteName);
 			return;
 		}
+		animTotal = -1;
 		anims.set(gameName, {
 			name: gameName, index: entry.index, frames: entry.frames, spd: entry.spd, spdFps: entry.spdFps, fps: entry.fps, loop: entry.loop,
 			scale: entry.scale, offsetX: entry.offsetX, offsetY: entry.offsetY
@@ -140,7 +133,8 @@ class LevelSprite extends FunkinSprite
 			var cur = animation.curAnim;
 			if (cur != null && cur.numFrames > 0)
 			{
-				var target = SpriteBuilder.animFps(data.spd, false, cur.numFrames, Conductor.bpm);
+				var target = cur.numFrames * Conductor.bpm / (60 * Math.max(0.01, data.spd));
+				target = Math.max(0.1, Math.min(240, target));
 				if (cur.frameRate != target) cur.frameRate = target;
 			}
 		}
@@ -149,50 +143,8 @@ class LevelSprite extends FunkinSprite
 
 	public function animNames():Array<String> return [for (key in anims.keys()) key];
 
-	/** Cambia el tinte base (ObjectBlendColor). */
-	public function setTint(value:FlxColor):Void
-	{
-		tintColor = value;
-		color = value;
-	}
-
-	/** true si la animacion actual tiene loop false: se queda en su ultimo frame y NO vuelve a idle. */
-	public inline function holdsPose():Bool
-	{
-		var data = currentAnim();
-		return data != null && !data.loop;
-	}
-
-	/**
-	 * Logica de hold (FMP `HOLD_LOOP_FRAMES`): mientras dura la nota repite los primeros frames de la animacion actual.
-	 * `repeatNoLoop` = false -> una animacion con loop false se reproduce una vez y se queda en el ultimo frame.
-	 */
-	public function holdLoop(repeatNoLoop:Bool = false):Void
-	{
-		var cur = animation.curAnim;
-		if (cur == null) return;
-		if (!repeatNoLoop && holdsPose()) return;
-
-		var total = cur.numFrames;
-		if (total <= 1) return;
-
-		var isShort = total <= HOLD_SHORT_ANIM;
-		var count = isShort ? (HOLD_SHORT_FREEZE ? 1 : total) : Std.int(Math.min(total, HOLD_LOOP_FRAMES));
-		var start = HOLD_LOOP_LAST ? total - count : 0;
-
-		if (cur.finished)
-		{
-			playAnim(cur.name, true, lastAnimContext, false, start);
-			return;
-		}
-
-		if (cur.curFrame >= start + count || cur.curFrame < start)
-			cur.curFrame = start;
-	}
-
 	public function recycle():Void
 	{
-		tintColor = 0xFFFFFFFF;
 		color = 0xFFFFFFFF;
 		alpha = 1;
 		visible = true;
@@ -209,6 +161,19 @@ class LevelSprite extends FunkinSprite
 		updateHitbox();
 		antialiasing = baseAntialiasing;
 		if (firstAnim != null) playAnim(firstAnim, true);
+	}
+
+	/** Cantidad de animaciones por indice (idle = 0, cantos = 1..4, miss = 5...). Los alias animN no cuentan doble. */
+	public function animCount():Int
+	{
+		if (animTotal < 0)
+		{
+			var top = -1;
+			for (anim in anims)
+				if (anim.index > top) top = anim.index;
+			animTotal = top + 1;
+		}
+		return animTotal;
 	}
 
 	public function playIndex(index:Int, force:Bool = true):Bool
@@ -248,11 +213,21 @@ class LevelSprite extends FunkinSprite
 		updateHitbox();
 	}
 
+	/**
+	 * Pone el ancla (offset de la animacion) en px, py. Con escala negativa (flip) el ancla se espeja:
+	 * (frame - offset), igual que el Player. Con escala positiva queda como antes.
+	 */
 	public function placePivot(px:Float, py:Float):Void
 	{
 		var anim = animation.name == null ? null : anims.get(animation.name);
-		var pivotX = anim == null ? width / 2 : anim.offsetX * Math.abs(scale.x);
-		var pivotY = anim == null ? height / 2 : anim.offsetY * Math.abs(scale.y);
+		if (anim == null)
+		{
+			setPosition(px - width / 2, py - height / 2);
+			return;
+		}
+
+		var pivotX = (scale.x < 0 ? frameWidth - anim.offsetX : anim.offsetX) * Math.abs(scale.x);
+		var pivotY = (scale.y < 0 ? frameHeight - anim.offsetY : anim.offsetY) * Math.abs(scale.y);
 		setPosition(px - pivotX, py - pivotY);
 	}
 
