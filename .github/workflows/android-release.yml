@@ -117,11 +117,41 @@ jobs:
       #    if-no-files-found: error
 
       - name: Publish build to release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          files: building/artifacts/FMCE-Android-release.apk
-          fail_on_unmatched_files: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          APK: building/artifacts/FMCE-Android-release.apk
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "$APK"
+
+          # Un create a medias deja un draft sin asset: lo limpiamos antes de publicar.
+          for id in $(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq ".[] | select(.tag_name == \"$TAG\" and .draft == true) | .id"); do
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$id" >/dev/null || true
+          done
+
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              echo "Publicando APK en el release $TAG (intento $attempt)..."
+              if gh release upload "$TAG" "$APK" --clobber; then
+                echo "APK publicado en $TAG"
+                exit 0
+              fi
+            else
+              echo "Creando release $TAG (intento $attempt)..."
+              if gh release create "$TAG" "$APK" --title "$TAG" --generate-notes; then
+                echo "Release $TAG publicado"
+                exit 0
+              fi
+            fi
+            echo "GitHub API fallo; reintentando en 45s..."
+            sleep 45
+          done
+
+          echo "No se pudo publicar el release $TAG despues de 8 intentos" >&2
+          exit 1
 
       - name: Remove temporary keystore
         if: always()
