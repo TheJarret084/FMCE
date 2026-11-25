@@ -179,11 +179,13 @@ class Eventos
 
 	function cameraShake(props:Dynamic):Void
 	{
+		if (stage == null) return;
 		var count = Std.int(numeroDe(props, ["shakes", "count"], 1));
 		var delayMs = song.unitToMs(numeroDe(props, ["delay"], 0.1), texto(campo(props, "timeUnit"), "seconds"));
-		var intensity = campo(props, "strength") != null ? numero(campo(props, "strength")) / FlxG.width : numeroDe(props, ["intensity"], 0.01);
-
-		shakeLoop(count, Math.max(0.02, delayMs / 1000), intensity);
+		var strength = campo(props, "strength") != null
+			? numero(campo(props, "strength"), 10)
+			: numeroDe(props, ["intensity"], 0.01) * FlxG.width;
+		stage.cameraShake(strength, Math.max(0.02, delayMs / 1000), count);
 	}
 
 	function shakeLoop(count:Int, delay:Float, intensity:Float):Void
@@ -233,33 +235,34 @@ class Eventos
 	function camaraSet(props:Dynamic, inicio:Float):Void
 	{
 		if (stage == null) return;
+		var modo = texto(campo(props, "mode"), "focus").toLowerCase();
+		if (modo == "auto")
+		{
+			stage.cameraAuto();
+			return;
+		}
 		var destino = Std.int(numero(campo(props, "target")));
 		if (destino < 0 || destino >= stage.camPoints.length)
 		{
 			avisar("cam:" + destino, 'CameraSet: no existe la camara ' + destino);
 			return;
 		}
-		var punto = stage.camPoints[destino];
 		Scripts.call("onMoveCamera", [destino]);
-		var x0 = stage.camX;
-		var y0 = stage.camY;
-		var s0 = stage.camScale;
-		var st = stage;
-		transicion("cam", inicio, duracion(props, "transitionTime", "transitionTimeUnit"), curvaDe(props), function(k)
-		{
-			st.camX = mezcla(x0, punto.x, k);
-			st.camY = mezcla(y0, punto.y, k);
-			st.camScale = mezcla(s0, punto.scale, k);
-		});
+		var unidad = texto(campo(props, "transitionTimeUnit"), "seconds").toLowerCase();
+		var beatMode = unidad == "beats" || unidad == "beat" || unidad == "steps" || unidad == "step";
+		var transSeconds = beatMode ? 0 : duracion(props, "transitionTime", "transitionTimeUnit") / 1000;
+		var durationBeats = beatMode ? numero(campo(props, "transitionTime"), 0) : 0;
+		stage.cameraSet(destino, transSeconds, texto(campo(props, "easingType"), "default"), beatMode, durationBeats);
 	}
 
 	function camaraZoom(props:Dynamic, inicio:Float):Void
 	{
 		if (stage == null) return;
-		var z0 = stage.zoomMul;
-		var z1 = numero(campo(props, "value"), 1);
-		var st = stage;
-		transicion("zoom", inicio, duracion(props, "transitionTime", "transitionTimeUnit"), curvaDe(props), function(k) st.zoomMul = mezcla(z0, z1, k));
+		var unidad = texto(campo(props, "transitionTimeUnit"), "seconds").toLowerCase();
+		var beatMode = unidad == "beats" || unidad == "beat" || unidad == "steps" || unidad == "step";
+		var transSeconds = beatMode ? 0 : duracion(props, "transitionTime", "transitionTimeUnit") / 1000;
+		var durationBeats = beatMode ? numero(campo(props, "transitionTime"), 0) : 0;
+		stage.cameraZoom(numero(campo(props, "value"), 1), transSeconds, texto(campo(props, "easingType"), "default"), beatMode, durationBeats);
 	}
 
 	function objetoPosicion(props:Dynamic, inicio:Float):Void

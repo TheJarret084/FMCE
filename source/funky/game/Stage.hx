@@ -27,8 +27,284 @@ private typedef StageTransform =
 	var scrollY:Float;
 }
 
+/** Estado de camara del Player: posicion, zoom, transiciones, shake y limites del mundo. */
+private class StageCamera
+{
+    public static inline var VIEWPORT_WIDTH:Float = 1920;
+    public static inline var VIEWPORT_HEIGHT:Float = 1080;
+
+    static inline var WORLD_WIDTH:Float = 2160;
+    static inline var WORLD_HEIGHT:Float = 1920;
+
+    public var x:Float = 0;
+    public var y:Float = 0;
+    public var scale:Float = 1;
+    public var baseScale:Float = 1;
+    public var shakeX:Float = 0;
+    public var shakeY:Float = 0;
+    public var targetX:Float = 0;
+    public var targetY:Float = 0;
+    public var targetScale:Float = 1;
+    public var posTime:Float = 0;
+    public var isZoomEvent:Bool = false;
+
+    var startX:Float = 0;
+    var startY:Float = 0;
+    var startScale:Float = 1;
+    var posElapsed:Float = 0;
+    var scaleElapsed:Float = 0;
+    var scaleDuration:Float = 0;
+    var posEasing:String = "default";
+    var scaleEasing:String = "default";
+    var beatPos:Bool = false;
+    var beatScale:Bool = false;
+    var startBeatPos:Float = 0;
+    var startBeatScale:Float = 0;
+    var durationBeatsPos:Float = 0;
+    var durationBeatsScale:Float = 0;
+    var shakeStrength:Float = 0;
+    var shakeDelay:Float = 0.05;
+    var shakeCount:Float = 0;
+    var shakeTimer:Float = 0;
+
+    public function new()
+    {
+        reset(0, 0, 1);
+    }
+
+    public function reset(px:Float, py:Float, pscale:Float):Void
+    {
+        x = targetX = px;
+        y = targetY = py;
+        scale = targetScale = baseScale = pscale;
+        startX = px;
+        startY = py;
+        startScale = pscale;
+        posTime = 0;
+        scaleDuration = 0;
+        posElapsed = 0;
+        scaleElapsed = 0;
+        posEasing = "default";
+        scaleEasing = "default";
+        beatPos = false;
+        beatScale = false;
+        startBeatPos = 0;
+        startBeatScale = 0;
+        durationBeatsPos = 0;
+        durationBeatsScale = 0;
+        shakeX = 0;
+        shakeY = 0;
+        shakeStrength = 0;
+        shakeCount = 0;
+        shakeTimer = 0;
+        isZoomEvent = false;
+        clampPosition();
+    }
+
+    public inline function isTransitioning():Bool
+        return posTime > 0 || scaleDuration > 0;
+
+    public inline function isScaling():Bool
+        return scaleDuration > 0;
+
+    public function cancelTransition():Void
+    {
+        posTime = 0;
+        scaleDuration = 0;
+        beatPos = false;
+        beatScale = false;
+        isZoomEvent = false;
+        targetX = x;
+        targetY = y;
+        targetScale = scale;
+    }
+
+    public function startTransition(tx:Float, ty:Float, ts:Float, time:Float, easing:String, beatMode:Bool, startBeat:Float, durationBeats:Float):Void
+    {
+        startX = x;
+        startY = y;
+        startScale = scale;
+        targetX = tx;
+        targetY = ty;
+        targetScale = ts;
+        posTime = time;
+        posElapsed = 0;
+        posEasing = easing == null || easing == "" ? "default" : easing;
+        scaleDuration = time;
+        scaleElapsed = 0;
+        scaleEasing = posEasing;
+        beatPos = beatMode;
+        beatScale = beatMode;
+        startBeatPos = startBeat;
+        startBeatScale = startBeat;
+        durationBeatsPos = durationBeats;
+        durationBeatsScale = durationBeats;
+        isZoomEvent = false;
+        if (time <= 0 && !beatMode)
+        {
+            x = tx;
+            y = ty;
+            scale = ts;
+            cancelTransition();
+        }
+    }
+
+    public function startScaleTransition(ts:Float, time:Float, easing:String, beatMode:Bool, startBeat:Float, durationBeats:Float, zoomEvent:Bool):Void
+    {
+        startScale = scale;
+        targetScale = ts;
+        scaleDuration = time;
+        scaleElapsed = 0;
+        scaleEasing = easing == null || easing == "" ? "default" : easing;
+        beatScale = beatMode;
+        startBeatScale = startBeat;
+        durationBeatsScale = durationBeats;
+        isZoomEvent = zoomEvent;
+        if (time <= 0 && !beatMode)
+        {
+            scale = ts;
+            scaleDuration = 0;
+            isZoomEvent = false;
+        }
+    }
+
+    public function startShake(strength:Float, delay:Float, shakes:Float):Void
+    {
+        shakeStrength = strength;
+        shakeDelay = delay > 0 ? delay : 0.05;
+        shakeCount = shakes > 0 ? shakes : 3;
+        shakeTimer = 0;
+        shakeX = 0;
+        shakeY = 0;
+    }
+
+    public function clampPosition():Void
+    {
+        var halfW = VIEWPORT_WIDTH * scale * 0.5;
+        var halfH = VIEWPORT_HEIGHT * scale * 0.5;
+        var minX = Math.min(halfW, WORLD_WIDTH * 0.5);
+        var maxX = Math.max(minX, WORLD_WIDTH - halfW);
+        var minY = Math.min(halfH, WORLD_HEIGHT * 0.5);
+        var maxY = Math.max(minY, WORLD_HEIGHT - halfH);
+        x = Math.max(minX, Math.min(maxX, x));
+        y = Math.max(minY, Math.min(maxY, y));
+        targetX = Math.max(minX, Math.min(maxX, targetX));
+        targetY = Math.max(minY, Math.min(maxY, targetY));
+    }
+
+    public function update(dt:Float, beat:Float):Void
+    {
+        if (shakeCount > 0)
+        {
+            shakeTimer += dt;
+            if (shakeTimer >= shakeDelay)
+            {
+                shakeTimer -= shakeDelay;
+                shakeCount -= 1;
+                if (shakeCount > 0)
+                {
+                    var angle = Math.random() * Math.PI * 2;
+                    var decay = shakeCount / Math.max(1, shakeCount + 1);
+                    shakeX = Math.cos(angle) * shakeStrength * decay;
+                    shakeY = Math.sin(angle) * shakeStrength * decay;
+                }
+                else
+                {
+                    shakeX = 0;
+                    shakeY = 0;
+                }
+            }
+        }
+
+        if (posTime > 0)
+        {
+            var elapsed = beatPos ? beat - startBeatPos : (posElapsed = Math.min(posElapsed + dt, posTime));
+            var duration = beatPos ? durationBeatsPos : posTime;
+            if (elapsed >= duration)
+            {
+                x = targetX;
+                y = targetY;
+                posTime = 0;
+                beatPos = false;
+            }
+            else if (posEasing == "default")
+            {
+                var alpha = 1 - Math.exp(-(duration > 0 ? 8 / duration : 60) * dt);
+                x += (targetX - x) * alpha;
+                y += (targetY - y) * alpha;
+            }
+            else
+            {
+                var k = ease(elapsed / Math.max(0.001, duration), posEasing);
+                x = startX + (targetX - startX) * k;
+                y = startY + (targetY - startY) * k;
+            }
+        }
+
+        if (scaleDuration > 0)
+        {
+            var elapsed = beatScale ? beat - startBeatScale : (scaleElapsed = Math.min(scaleElapsed + dt, scaleDuration));
+            var duration = beatScale ? durationBeatsScale : scaleDuration;
+            if (elapsed >= duration)
+            {
+                scale = targetScale;
+                scaleDuration = 0;
+                beatScale = false;
+                isZoomEvent = false;
+            }
+            else if (scaleEasing == "default")
+            {
+                var alpha = 1 - Math.exp(-(duration > 0 ? 8 / duration : 60) * dt);
+                scale += (targetScale - scale) * alpha;
+            }
+            else
+            {
+                var k = ease(elapsed / Math.max(0.001, duration), scaleEasing);
+                scale = startScale + (targetScale - startScale) * k;
+            }
+        }
+
+        clampPosition();
+    }
+
+    static function ease(t:Float, tipo:String):Float
+    {
+        var n = tipo == null ? "" : tipo.toLowerCase();
+        if (n == "" || n == "default") return t;
+        return switch (n)
+        {
+            case "linear": t;
+            case "circ": Math.sqrt(Math.max(0, 1 - Math.pow(t - 1, 2)));
+            case "quad": 1 - Math.pow(1 - t, 2);
+            case "cubic" | "cube": 1 - Math.pow(1 - t, 3);
+            case "sine": Math.sin(t * Math.PI * 0.5);
+            case "expo": t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
+            case "bounce": bounce(t);
+            default: t;
+        };
+    }
+
+    static function bounce(t:Float):Float
+    {
+        if (t < 1 / 2.75) return 7.5625 * t * t;
+        if (t < 2 / 2.75)
+        {
+            t -= 1.5 / 2.75;
+            return 7.5625 * t * t + 0.75;
+        }
+        if (t < 2.5 / 2.75)
+        {
+            t -= 2.25 / 2.75;
+            return 7.5625 * t * t + 0.9375;
+        }
+        t -= 2.625 / 2.75;
+        return 7.5625 * t * t + 0.984375;
+    }
+}
+
 class StageObject
 {
+
 	public var sprite:LevelSprite;
 
 	public var name:String = "";
