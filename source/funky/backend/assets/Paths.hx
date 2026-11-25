@@ -14,6 +14,7 @@ import openfl.utils.Assets as OpenFlAssets;
 
 class Paths
 {
+	public static var levelDir:String = null;
 	public static final ASSETS = "assets/";
 	public static var LEVELS(default, null):String = levelsRoot();
 
@@ -38,6 +39,14 @@ class Paths
 	public static inline function sound(name:String):String   return SOUNDS + name + ".ogg";
 	public static inline function music(name:String):String   return MUSIC + name + ".ogg";
 	public static inline function font(name:String):String return FONTS + name;
+	public static inline function data(name:String, ext:String):String return DATA + name + "." + ext;
+	public static inline function xml(name:String):String return data(name, "xml");
+	public static inline function json(name:String):String return data(name, "json");
+	public static inline function txt(name:String):String return data(name, "txt");
+	public static inline function ini(name:String):String return data(name, "ini");
+	public static inline function pack(name:String):String return data(name, "pack");
+	public static inline function script(name:String):String return name + ".hx";
+	public static inline function getFontName(path:String):String return path;
 
 	public static function video(name:String):String
 	{

@@ -731,5 +731,4 @@ class FNMMToFMCEConverter
 
 	static function readUInt32(bytes:Bytes, offset:Int):Int
 		return (bytes.get(offset) << 24) | (bytes.get(offset + 1) << 16) | (bytes.get(offset + 2) << 8) | bytes.get(offset + 3);
-	#end
 }

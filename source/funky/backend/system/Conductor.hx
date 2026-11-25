@@ -1,6 +1,6 @@
 package funky.backend.system;
 import funky.options.Options;
-import funky.backend.chart.ChartEvent;
+import funky.backend.chart.ChartData.ChartEvent;
 
 import funky.backend.utils.CoolUtil;
 import flixel.FlxState;
