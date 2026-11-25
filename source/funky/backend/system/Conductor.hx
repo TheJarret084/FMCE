@@ -108,6 +108,18 @@ final class Conductor
 
 	public static var curBeat:Int = 0;
 
+	public static var currentStep(get, never):Int;
+	private static inline function get_currentStep():Int return curStep;
+
+	public static var currentBeat(get, never):Int;
+	private static inline function get_currentBeat():Int return curBeat;
+
+	public static var justHitStep(get, never):Bool;
+	private static inline function get_justHitStep():Bool return __updateStep;
+
+	public static var justHitBeat(get, never):Bool;
+	private static inline function get_justHitBeat():Bool return __updateBeat;
+
 	public static var curMeasure:Int = 0;
 
 	public static var curStepFloat:Float = 0;

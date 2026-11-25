@@ -711,7 +711,8 @@ class PlayState extends MusicBeatState
 		}
 
 		Conductor.reset();
-		Conductor.bpm = song.bpm;
+		Conductor.changeBPM(song.bpm, 4, Math.round(song.stepsPerBeat));
+		Conductor.active = true;
 
 		// PUNTO DE INICIO
 		if (startFromMs > 0)
@@ -1103,8 +1104,6 @@ class PlayState extends MusicBeatState
 
 		if (eventos != null)
 			eventos.update(songTime);
-
-		Conductor.update(songTime);
 
 		// NOTAS Y BEATS
 		for (line in logicLines)

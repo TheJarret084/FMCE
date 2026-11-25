@@ -157,7 +157,7 @@ class ConversionJob
 		bpm = FNMMToFMCEConverter.readBpm(found.parsed, meta);
 		var raw = FNMMToFMCEConverter.parseChart(found.parsed, meta, bpm, result.warnings);
 		if (raw.length == 0) throw "chart parsed (" + found.path + ") but contained no readable notes";
-		var metaLanes = Std.int(FNMMToFMCEConverter.number(Reflect.field(meta, "lanes"), 0));
+		var metaLanes = Std.int(CoolUtil.number(Reflect.field(meta, "lanes"), 0));
 		laneCount = FNMMToFMCEConverter.detectLaneCount(raw, metaLanes);
 		notes = FNMMToFMCEConverter.mapNotes(raw, laneCount, result);
 		songName = FNMMToFMCEConverter.readName(found.parsed, meta, id);
@@ -335,8 +335,8 @@ class ConversionJob
 		var out:Dynamic = {};
 		Reflect.setField(out, "displayName", FNMMToFMCEConverter.text(Reflect.field(meta, "displayName"), songName));
 		Reflect.setField(out, "bpm", bpm);
-		var npb = FNMMToFMCEConverter.isRecord(found.parsed) ? Std.int(FNMMToFMCEConverter.number(Reflect.field(found.parsed, "npb"), 0)) : 0;
-		var stepsPerBeat = Std.int(FNMMToFMCEConverter.number(Reflect.field(meta, "stepsPerBeat"), npb));
+		var npb = FNMMToFMCEConverter.isRecord(found.parsed) ? Std.int(CoolUtil.number(Reflect.field(found.parsed, "npb"), 0)) : 0;
+		var stepsPerBeat = Std.int(CoolUtil.number(Reflect.field(meta, "stepsPerBeat"), npb));
 		if (stepsPerBeat > 0) Reflect.setField(out, "stepsPerBeat", stepsPerBeat);
 		var hasScene = FNMMToFMCEConverter.findByName(files, FNMMToFMCEConverter.SCENE_FILE) != null;
 		var stageName = FNMMToFMCEConverter.text(Reflect.field(meta, "stage"), hasScene ? "scene" : "");

@@ -473,7 +473,7 @@ final class CoolUtil
 	}
 
 	public static function loadAnimatedGraphic(spr:FlxSprite, path:String, fps:Float = 24.0) {
-		spr.frames = Paths.getFrames(path, true);
+		spr.frames = Paths.getFrames(path);
 
 		if (spr.frames != null && spr.frames.frames != null) {
 			spr.animation.add("idle", [for(i in 0...spr.frames.frames.length) i], fps, true);
