@@ -59,6 +59,9 @@ class StageObject
 	/** Animacion que se puso con loop true pero es pose de nota: toca una vez y espera al timer. */
 	public var loopFlag:Bool = true;
 
+	/** Camara de scene.json asignada al objeto (-1 = ninguna). Sirve para el auto-camera. */
+	public var camIndex:Int = -1;
+
 	public var wasHolding:Bool = false;
 	public var completingHold:Bool = false;
 
@@ -195,10 +198,37 @@ class Stage extends FlxGroup
 		}
 	}
 
-	public var camX:Float = 0;
-	public var camY:Float = 0;
-	public var camScale:Float = 1;
+	/** Camara (port de CameraState del Player): posicion, escala, transiciones, shake y limites del mundo. */
+	public var camera(default, null):StageCamera = new StageCamera();
+
+	public var camX(get, set):Float;
+	public var camY(get, set):Float;
+
+	/** Escala efectiva de la camara (ya incluye CameraZoom). Mas grande = ve mas mundo. */
+	public var camScale(get, set):Float;
+
+	inline function get_camX():Float return camera.x;
+	inline function set_camX(v:Float):Float return camera.x = v;
+	inline function get_camY():Float return camera.y;
+	inline function set_camY(v:Float):Float return camera.y = v;
+	inline function get_camScale():Float return camera.scale;
+	inline function set_camScale(v:Float):Float return camera.scale = v;
+
+	/** Multiplicador extra para scripts (los eventos ya no lo usan: CameraZoom mueve camera.scale como en el Player). */
 	public var zoomMul:Float = 1;
+
+	/** true = hay camara manual (un CameraSet la activo, o el nivel tiene una sola camara): el auto-camera no se mueve. */
+	public var manualCamera(default, null):Bool = true;
+
+	// Auto-camera (NotifyNoteHit / Update del Player): sigue a quien canta.
+	var autoX:Float = 0;
+	var autoY:Float = 0;
+	var autoScale:Float = 1;
+	var autoLast:Int = -1;
+	var autoLastTime:Float = 0;
+
+	static inline var AUTO_CAM_RATE:Float = 4.5;
+	static inline var AUTO_CAM_COOLDOWN_MS:Float = 500;
 
 	/**
 	 * Desplazamiento extra de la camara en unidades del mundo, encima de camX/camY. Los eventos de camara (CameraSet) escriben
@@ -267,9 +297,7 @@ class Stage extends FlxGroup
 		if (camPoints.length == 0)
 			camPoints.push({x: 0, y: 0, scale: 1});
 
-		camX = camPoints[0].x;
-		camY = camPoints[0].y;
-		camScale = camPoints[0].scale;
+		initCamera();
 
 		prepareFrame();
 
@@ -403,6 +431,7 @@ class Stage extends FlxGroup
 
 		object.id = objects.length;
 		object.name = name;
+		object.camIndex = Std.int(CoolUtil.number(field(item, "camera"), -1));
 		return object;
 	}
 
@@ -486,9 +515,16 @@ class Stage extends FlxGroup
 	}
 	#end
 
+	/**
+	 * Camara de los objetos fixed. false (como el Player) = TODOS los objetos del escenario van en la misma camara y se dibujan
+	 * en orden de indice de scene.json (un fixed puede quedar detras de un objeto del mundo y al reves); la HUD y las notas
+	 * (camHUD) quedan encima de todo. true = los fixed van a camHUD: siempre arriba de todo el escenario, sin importar el indice.
+	 */
+	public static var fixedOnHudCamera:Bool = false;
+
 	function assignCamera(object:StageObject):Void
 	{
-		if (!object.fixed || camHUD == null) return;
+		if (!fixedOnHudCamera || !object.fixed || camHUD == null) return;
 
 		object.sprite.cameras = [camHUD];
 
@@ -556,6 +592,8 @@ class Stage extends FlxGroup
 	public function sing(strumLine:Int, lane:Int, holdEnd:Float = -1):Void
 	{
 		if (strumLine < 0) return;
+
+		followSinger(strumLine);
 
 		for (object in objects)
 		{
@@ -694,6 +732,194 @@ class Stage extends FlxGroup
 			object.completingHold = false;
 	}
 
+	// ------------------------------------------------------------------ camara (EventProcessor del Player)
+
+	/** GetCameraScale del Player: la escala de una camara de scene.json nunca pasa de 1. */
+	inline function camPointScale(index:Int):Float
+		return Math.min(camPoints[index].scale, 1.0);
+
+	/**
+	 * Camara inicial del Player: la camara 1 (jugador) si hay 2 o mas, si no la 0. Con 2+ camaras arranca en auto-camera;
+	 * con una sola es camara fija.
+	 */
+	function initCamera():Void
+	{
+		var start = camPoints.length >= 2 ? 1 : 0;
+		var point = camPoints[start];
+
+		camera.reset(point.x, point.y, camPointScale(start));
+		autoX = point.x;
+		autoY = point.y;
+		autoScale = camera.scale;
+		manualCamera = camPoints.length < 2;
+		autoLast = -1;
+		autoLastTime = 0;
+	}
+
+	/** Vuelve la camara al estado inicial (reiniciar nivel / seek hacia atras). */
+	public function resetCamera():Void
+	{
+		if (camPoints.length > 0) initCamera();
+	}
+
+	inline function currentBeat():Float
+		return songTime / Math.max(1, holdMs);
+
+	function updateCamera(dt:Float):Void
+	{
+		if (!manualCamera)
+		{
+			// Auto-camera: suavizado hacia quien canta (4.5 = ~90% en medio segundo).
+			var speed = 1 - Math.exp(-AUTO_CAM_RATE * dt);
+			camera.x += (autoX - camera.x) * speed;
+			camera.y += (autoY - camera.y) * speed;
+
+			// No pelea con un CameraZoom en curso.
+			if (!camera.isScaling() && Math.abs(camera.scale - autoScale) > 0.001)
+				camera.scale += (autoScale - camera.scale) * speed;
+		}
+
+		camera.update(dt, currentBeat());
+	}
+
+	/** NotifyNoteHit del Player: apunta el auto-camera al personaje de esa strumLine (0 jugador, 1 oponente). */
+	function followSinger(strumLine:Int):Void
+	{
+		if (manualCamera || strumLine > 1 || camPoints.length == 0) return;
+
+		// Cooldown: no salta entre personajes demasiado rapido.
+		if (autoLast == strumLine)
+			autoLastTime = songTime;
+		else if (autoLast >= 0 && songTime - autoLastTime < AUTO_CAM_COOLDOWN_MS)
+			return;
+		else
+		{
+			autoLast = strumLine;
+			autoLastTime = songTime;
+		}
+
+		// Con varios personajes en la misma strumLine, el mas cercano a la camara (visibles primero).
+		var best:Null<StageObject> = null;
+		var bestDist = Math.POSITIVE_INFINITY;
+
+		for (pass in 0...2)
+		{
+			for (object in objects)
+			{
+				if (object.strumLine != strumLine || object.video != null) continue;
+				if (pass == 0 && !object.shown) continue;
+
+				var dx = object.x - camera.x;
+				var dy = object.y - camera.y;
+				var dist = dx * dx + dy * dy;
+				if (dist < bestDist)
+				{
+					bestDist = dist;
+					best = object;
+				}
+			}
+
+			if (best != null) break;
+		}
+
+		if (best == null) return;
+
+		// Camara asignada al objeto; si no tiene: convencion FNF (jugador = 1, oponente = 0).
+		var index = best.camIndex;
+		if (index < 0 || index >= camPoints.length)
+		{
+			index = strumLine == 0 ? 1 : 0;
+			if (index >= camPoints.length) index = 0;
+		}
+
+		autoX = camPoints[index].x;
+		autoY = camPoints[index].y;
+		autoScale = camPointScale(index);
+	}
+
+	/**
+	 * CameraSet. `transSeconds` = duracion en segundos; con `beatMode` la transicion se mide en beats (`durationBeats`).
+	 * `target` fuera de rango = auto-camera (como el Player).
+	 */
+	public function cameraSet(target:Int, transSeconds:Float, easing:String, beatMode:Bool = false, durationBeats:Float = 0):Bool
+	{
+		if (target < 0 || target >= camPoints.length)
+		{
+			cameraAuto();
+			return false;
+		}
+
+		manualCamera = true;
+
+		// El zoom de un CameraZoom en curso se conserva sobre la camara nueva; si no hay, se reinicia.
+		var ratio = 1.0;
+		if (camera.isZoomEvent && camera.isScaling() && camera.baseScale > 0.01)
+		{
+			ratio = camera.scale / camera.baseScale;
+			if (Math.abs(ratio - 1) <= 0.05) ratio = 1;
+		}
+
+		var scale = camPointScale(target);
+		camera.baseScale = scale;
+
+		var targetScale = scale * ratio;
+		var tx = camPoints[target].x;
+		var ty = camPoints[target].y;
+
+		var positionChanging = Math.abs(tx - camera.targetX) > 1 || Math.abs(ty - camera.targetY) > 1;
+		var scaleChanging = Math.abs(targetScale - camera.targetScale) > 0.01;
+
+		if (!positionChanging && scaleChanging && camera.posTime > 0)
+		{
+			// Solo escala: no corta el movimiento de posicion que ya va.
+			camera.startScaleTransition(targetScale, transSeconds, easing, beatMode, currentBeat(), durationBeats);
+		}
+		else
+		{
+			camera.startTransition(tx, ty, targetScale, transSeconds, easing, beatMode, currentBeat(), durationBeats);
+			camera.clampPosition();
+		}
+
+		return true;
+	}
+
+	/** CameraSet mode "auto": vuelve el auto-camera desde donde esta ahora (o desde el destino de la transicion en curso). */
+	public function cameraAuto():Void
+	{
+		manualCamera = false;
+
+		if (camera.isTransitioning())
+		{
+			autoX = camera.targetX;
+			autoY = camera.targetY;
+			autoScale = camera.targetScale;
+		}
+		else
+		{
+			autoX = camera.x;
+			autoY = camera.y;
+			autoScale = camera.scale;
+		}
+
+		camera.cancelTransition();
+	}
+
+	/**
+	 * CameraZoom: `value` es un porcentaje de la escala base (1 = sin zoom, 0.5 = el doble de cerca). No desactiva el auto-camera.
+	 */
+	public function cameraZoom(value:Float, transSeconds:Float, easing:String, beatMode:Bool = false, durationBeats:Float = 0):Void
+	{
+		var targetScale = camera.baseScale * Math.max(0.1, value);
+
+		if (!manualCamera) autoScale = targetScale;
+
+		camera.startScaleTransition(targetScale, transSeconds, easing, beatMode, currentBeat(), durationBeats, true);
+	}
+
+	/** CameraShake: `strength` en unidades del mundo, `delaySeconds` entre sacudidas. */
+	public function cameraShake(strength:Float, delaySeconds:Float, shakes:Float):Void
+		camera.startShake(strength, delaySeconds, shakes);
+
 	// ------------------------------------------------------------------ loop
 
 	override public function update(elapsed:Float):Void
@@ -702,6 +928,7 @@ class Stage extends FlxGroup
 
 		if (!loaded) return;
 
+		updateCamera(elapsed);
 		prepareFrame();
 
 		for (object in objects)
@@ -718,10 +945,12 @@ class Stage extends FlxGroup
 	{
 		fVw = vw();
 		fVh = vh();
-		fPpu = CAM_PRESET * fVw / (VIEW_WORLD_WIDTH * Math.max(0.001, camScale * zoomMul));
+		// pixelScale del Player: la vista de 1920 x 1080 * escala cabe entera en la pantalla (min de los dos lados).
+		var scale = Math.max(0.001, camera.scale * zoomMul);
+		fPpu = Math.min(fVw / (StageCamera.VIEWPORT_WIDTH * scale), fVh / (StageCamera.VIEWPORT_HEIGHT * scale));
 		fFixedUnit = fVw / HUD_REF_WIDTH * defaultHudZoom;
-		fCamX = camX + camOffsetX;
-		fCamY = camY + camOffsetY;
+		fCamX = camera.x + camera.shakeX + camOffsetX;
+		fCamY = camera.y + camera.shakeY + camOffsetY;
 	}
 
 	var placeX:Float = 0;
