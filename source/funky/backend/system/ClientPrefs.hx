@@ -82,7 +82,6 @@ class ClientPrefs
 			autoConvertVideos: true,
 
 			timeBarStyle: "pinklime",
-			timeBarColorMode: "legacy",
 
 			skipIntro: false,
 			splashSeen: false,
@@ -264,7 +263,6 @@ class ClientPrefs
 		data.noteSplashes = getBool(parsed, "noteSplashes", true);
 		data.autoConvertVideos = getBool(parsed, "autoConvertVideos", true);
 		if (Reflect.hasField(parsed, "timeBarStyle")) data.timeBarStyle = Std.string(Reflect.field(parsed, "timeBarStyle"));
-		if (Reflect.hasField(parsed, "timeBarColorMode")) data.timeBarColorMode = Std.string(Reflect.field(parsed, "timeBarColorMode"));
 		data.skipIntro = getBool(parsed, "skipIntro", false);
 		data.splashSeen = getBool(parsed, "splashSeen", false);
 		if (Reflect.hasField(parsed, "language"))
@@ -362,7 +360,6 @@ class ClientPrefs
 			data.noteSplashes = parseXmlBool(gameplay.get("noteSplashes"), true);
 			data.autoConvertVideos = parseXmlBool(gameplay.get("autoConvertVideos"), true);
 			if (gameplay.get("timeBarStyle") != null) data.timeBarStyle = gameplay.get("timeBarStyle");
-			if (gameplay.get("timeBarColorMode") != null) data.timeBarColorMode = gameplay.get("timeBarColorMode");
 			if (gameplay.get("hudSkin") != null) data.noteSkin = gameplay.get("hudSkin");
 			if (gameplay.get("noteSkin") != null) data.noteSkin = gameplay.get("noteSkin");
 			data.skipIntro = parseXmlBool(gameplay.get("skipIntro"), false);
@@ -579,7 +576,6 @@ class ClientPrefs
 			gameplay.set("noteSplashes", Std.string(isNoteSplashes()));
 			gameplay.set("autoConvertVideos", Std.string(isAutoConvertVideos()));
 			gameplay.set("timeBarStyle", getTimeBarStyle());
-			gameplay.set("timeBarColorMode", getTimeBarColorMode());
 			gameplay.set("skipIntro", Std.string(isSkipIntro()));
 			gameplay.set("splashSeen", Std.string(isSplashSeen()));
 			gameplay.set("masterVolume", Std.string(getMasterVolume()));
@@ -765,7 +761,6 @@ class ClientPrefs
 		Reflect.setField(data, "autoConvertVideos", v);
 
 	public static final TIME_BAR_STYLES:Array<String> = ["pinklime", "mono", "multi"];
-	public static final TIME_BAR_COLOR_MODES:Array<String> = ["legacy", "allowColor"];
 
 	public static function getTimeBarStyle():String
 	{
@@ -782,22 +777,6 @@ class ClientPrefs
 		var next = (TIME_BAR_STYLES.indexOf(getTimeBarStyle()) + 1) % TIME_BAR_STYLES.length;
 		setTimeBarStyle(TIME_BAR_STYLES[next]);
 	}
-
-	public static function getTimeBarColorMode():String
-	{
-		var v = Reflect.hasField(data, "timeBarColorMode") ? Std.string(Reflect.field(data, "timeBarColorMode")) : "legacy";
-		v = v == null ? "" : StringTools.trim(v).toLowerCase();
-		return (v == "allowcolor" || v == "healthbar" || v == "allow_color") ? "allowColor" : "legacy";
-	}
-
-	public static function setTimeBarColorMode(v:String):Void
-	{
-		var vv = v == null ? "" : StringTools.trim(v).toLowerCase();
-		Reflect.setField(data, "timeBarColorMode", (vv == "allowcolor" || vv == "healthbar" || vv == "allow_color") ? "allowColor" : "legacy");
-	}
-
-	public static function cycleTimeBarColorMode():Void
-		setTimeBarColorMode(getTimeBarColorMode() == "legacy" ? "allowColor" : "legacy");
 
 	public static function isSkipIntro():Bool
 		return getBool(data, "skipIntro", false);
@@ -932,6 +911,7 @@ class ClientPrefs
 		lanes[lane] = normalizeKeys(cast keys, []);
 		data.laneKeys = lanes;
 		syncLegacyLaneFields();
+		ControlsCheck.invalidate();
 	}
 
 	public static function getGamepadLaneButtons():Array<String>
@@ -946,6 +926,7 @@ class ClientPrefs
 		while (buttons.length <= lane) buttons.push("");
 		buttons[lane] = button == null ? "" : StringTools.trim(button).toUpperCase();
 		data.gamepadLaneButtons = buttons;
+		ControlsCheck.invalidate();
 	}
 
 	static function normalizeGamepadButtons(arr:Array<Dynamic>, fallback:Array<String>):Array<String>

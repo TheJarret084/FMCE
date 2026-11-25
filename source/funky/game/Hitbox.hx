@@ -3,8 +3,6 @@ package funky.game;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxSpriteGroup;
-import flixel.tweens.FlxEase;
-import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import openfl.display.BitmapData;
 import openfl.geom.Rectangle;
@@ -12,7 +10,6 @@ import openfl.geom.Rectangle;
 class Hitbox extends FlxSpriteGroup
 {
 	static inline var DOWN_ALPHA:Float = 0.75;
-	static inline var DOWN_TIME:Float = 0.075;
 	static inline var UP_TIME:Float = 0.1;
 	static inline var HINT_ALPHA:Float = 0.2;
 	static inline var GRADIENT_ROWS:Int = 128;
@@ -26,7 +23,6 @@ class Hitbox extends FlxSpriteGroup
 	public var zoneHeight(default, null):Float;
 
 	var glows:Array<FlxSprite> = [];
-	var tweens:Array<Null<FlxTween>> = [];
 	var isDown:Array<Bool> = [];
 
 	public function new(laneCount:Int)
@@ -62,7 +58,6 @@ class Hitbox extends FlxSpriteGroup
 			glow.setPosition(Std.int(lane * columnWidth), zoneTop);
 			glow.alpha = 0;
 			glows.push(glow);
-			tweens.push(null);
 			isDown.push(false);
 			add(glow);
 		}
@@ -75,9 +70,23 @@ class Hitbox extends FlxSpriteGroup
 	{
 		if (lane < 0 || lane >= laneCount || isDown[lane] == down) return;
 		isDown[lane] = down;
-		var glow = glows[lane];
-		if (tweens[lane] != null) tweens[lane].cancel();
-		tweens[lane] = FlxTween.num(glow.alpha, down ? DOWN_ALPHA : 0, down ? DOWN_TIME : UP_TIME, {ease: FlxEase.circInOut}, function(a:Float) glow.alpha = a);
+
+		// Al tocar el brillo aparece al instante (antes habia un tween de 75 ms que se sentia como delay).
+		if (down) glows[lane].alpha = DOWN_ALPHA;
+	}
+
+	override public function update(elapsed:Float):Void
+	{
+		super.update(elapsed);
+
+		// El fade de salida se hace aca, sin crear tweens por cada toque.
+		var step = DOWN_ALPHA / UP_TIME * elapsed;
+		for (lane in 0...laneCount)
+		{
+			var glow = glows[lane];
+			if (isDown[lane] || glow.alpha <= 0) continue;
+			glow.alpha = Math.max(0, glow.alpha - step);
+		}
 	}
 
 	static function gradient(color:FlxColor):BitmapData
@@ -103,8 +112,6 @@ class Hitbox extends FlxSpriteGroup
 
 	override public function destroy():Void
 	{
-		for (tween in tweens) if (tween != null) tween.cancel();
-		tweens = [];
 		glows = [];
 		super.destroy();
 	}

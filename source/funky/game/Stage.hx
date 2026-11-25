@@ -503,6 +503,21 @@ class Stage extends FlxGroup
 
 	static inline var HOLD_GRACE_MS:Float = 120;
 
+	/**
+	 * Que hace una animacion con `loop: false` mientras se mantiene la nota. En los dos casos NUNCA vuelve a idle
+	 * (como en FNMM original): se queda en la pose hasta que otra animacion la reemplace.
+	 *   false -> se reproduce una vez y se queda en el ultimo frame.
+	 *   true  -> se repite mientras dura la nota, pero tampoco vuelve a idle.
+	 */
+	static inline var NO_LOOP_REPEATS:Bool = false;
+
+	/** true si la animacion actual del sprite tiene loop false (no debe volver a idle). */
+	function holdsPose(sprite:LevelSprite):Bool
+	{
+		var data = sprite.currentAnim();
+		return data != null && !data.loop;
+	}
+
 	public function hold(strumLine:Int):Void
 	{
 		if (strumLine < 0) return;
@@ -526,6 +541,9 @@ class Stage extends FlxGroup
 	{
 		var cur = sprite.animation.curAnim;
 		if (cur == null) return;
+
+		// loop false: se reproduce una vez y se queda en el ultimo frame (salvo NO_LOOP_REPEATS).
+		if (!NO_LOOP_REPEATS && holdsPose(sprite)) return;
 
 		var total = cur.numFrames;
 		if (total <= 1) return;
@@ -569,6 +587,9 @@ class Stage extends FlxGroup
 					object.singAnim = -1;
 					object.holdUntil = 0;
 
+					// loop false: no vuelve a idle, se queda en la pose.
+					if (holdsPose(object.sprite)) continue;
+
 					if (!object.sprite.playIndex(object.baseAnim, true))
 						object.sprite.playIndex(0, true);
 				}
@@ -583,7 +604,7 @@ class Stage extends FlxGroup
 				if (object.revertAt <= 0 || songTime < object.revertAt) continue;
 
 				object.revertAt = 0;
-				if (object.singAnim <= 0)
+				if (object.singAnim <= 0 && !holdsPose(object.sprite))
 					object.sprite.playIndex(0, true);
 			}
 		}

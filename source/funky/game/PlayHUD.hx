@@ -314,9 +314,9 @@ class PlayHUD extends FlxGroup
 	public function refreshTimeBarColors():Void
 	{
 		if (timeBar == null) return;
-		var mode = ClientPrefs.getTimeBarColorMode();
-		if (mode != "allowColor") mode = hudSkin.timeBarMode;
-		if (mode == "allowColor" && healthBar != null)
+		// El tipo de barra sale solo del hudSkin.xml (<timeBar mode="legacy|allowColor">). HudSkin lo guarda en minusculas.
+		var mode = hudSkin.timeBarMode;
+		if ((mode == "allowcolor" || mode == "allow_color" || mode == "healthbar") && healthBar != null)
 		{
 			var fill:FlxColor = healthBar.playerColor;
 			var empty:FlxColor = FlxColor.interpolate(fill, FlxColor.BLACK, 0.75);

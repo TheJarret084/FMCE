@@ -13,7 +13,9 @@
 
     <countdown ready="ready" set="set" go="go" scale="1" alpha="1"/>
 
-    <timeBar mode="legacy" style="pinklime" width="400" height="18" bgPad="4"
+    <!-- Tipo de barra de tiempo (ya no esta en Opciones): mode="legacy" usa empty/fill de aca; mode="allowColor" usa el color de la barra de vida.
+         style: pinklime | mono | multi (solo aplica con mode="legacy"). -->
+    <timeBar mode="legacy" style="multi" width="400" height="18" bgPad="4"
              empty="0xFF101016" fill="0xFFFF8AFF" border="0xFF000000" textColor="0xFFFFFFFF"/>
 
     <texts>

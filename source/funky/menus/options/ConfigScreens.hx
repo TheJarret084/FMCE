@@ -96,14 +96,9 @@ class ConfigScreens
 		hudSkin.dynamicLabel = () -> TU.translate("options.gameplay.hudSkin.name",
 			[HudSkin.displayName(ClientPrefs.getHudSkin())], "HUD SKIN: {0}");
 
-		var timeBarMode = ConfigItem.action("", TU.translate("options.gameplay.timeBarMode.desc", null,
-			"Legacy: estilo actual. AllowColor: usa el color de la barra de vida."), ClientPrefs.cycleTimeBarColorMode);
-		timeBarMode.dynamicLabel = () -> TU.translate("options.gameplay.timeBarMode.name", [timeBarModeLabel(ClientPrefs.getTimeBarColorMode())], "BARRA DE TIEMPO: {0}");
-
 		return new ConfigScreen(TU.translate("options.gameplay.title", null, "GAMEPLAY"),
 			TU.translate("options.gameplay.titleDesc", null, "Como se juega"), [
 			hudSkin,
-			timeBarMode,
 			ConfigItem.separator(),
 			ConfigItem.check(TU.translate("options.gameplay.downscroll.name", null, "DOWNSCROLL"),
 				TU.translate("options.gameplay.downscroll.desc", null, "Las notas bajan en vez de subir (se aplica al reiniciar)"),
@@ -128,15 +123,6 @@ class ConfigScreens
 					"Convierte videos de niveles a spritesheets al arrancar (paso a paso; no se puede jugar mientras se convierte)"),
 				ClientPrefs.isAutoConvertVideos, ClientPrefs.setAutoConvertVideos)
 		]);
-	}
-
-	static function timeBarModeLabel(mode:String):String
-	{
-		return switch (mode)
-		{
-			case "allowColor": TU.translate("options.gameplay.timeBarMode.allowColor", null, "ALLOWCOLOR");
-			default: TU.translate("options.gameplay.timeBarMode.legacy", null, "LEGACY");
-		}
 	}
 
 	static function audio():ConfigScreen

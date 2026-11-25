@@ -12,7 +12,7 @@
 
     <countdown ready="ready" set="set" go="go" scale="1" alpha="1"/>
 
-    <timeBar mode="legacy" style="pinklime" width="400" height="18" bgPad="4"
+    <timeBar mode="legacy" style="mono" width="400" height="18" bgPad="4"
              empty="0xFF101016" fill="0xFFFF8AFF" border="0xFF000000" textColor="0xFFFFFFFF"/>
 
     <texts>

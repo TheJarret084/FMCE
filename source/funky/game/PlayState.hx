@@ -475,6 +475,7 @@ class PlayState extends MusicBeatState
 	{
 		super.create();
 		instance = this;
+		ControlsCheck.invalidate();
 		SpriteCache.attach();
 
 		if (editorHost)
@@ -813,6 +814,7 @@ class PlayState extends MusicBeatState
 		warningInstanced = false;
 		transitioning = false;
 		heldNow = [];
+		pressedNow = [];
 		prevHeld = [];
 	}
 
@@ -1125,6 +1127,9 @@ class PlayState extends MusicBeatState
 			}
 		}
 
+		// Una sola lectura del input por frame: todo lo demas (strums, notas, scripts) lee este snapshot.
+		refreshHeld();
+
 		for (line in hudLines)
 		{
 			if (line == playerLine)
@@ -1134,8 +1139,6 @@ class PlayState extends MusicBeatState
 		}
 
 		scrollDirection = ClientPrefs.isDownScroll() ? -1 : 1;
-
-		refreshHeld();
 
 		for (line in logicLines)
 			updateNotes(line);
@@ -1717,6 +1720,7 @@ class PlayState extends MusicBeatState
 
 	/** Una sola consulta de teclas/botones por carril y por frame (antes era una por nota activa). */
 	var heldNow:Array<Bool> = [];
+	var pressedNow:Array<Bool> = [];
 
 	static function noInput(_:Int):Bool
 		return false;
@@ -1725,18 +1729,29 @@ class PlayState extends MusicBeatState
 	{
 		var count = song.laneCount;
 		while (heldNow.length < count) heldNow.push(false);
-		for (lane in 0...count) heldNow[lane] = laneHeld(lane);
+		while (pressedNow.length < count) pressedNow.push(false);
+		for (lane in 0...count)
+		{
+			heldNow[lane] = readHeld(lane);
+			pressedNow[lane] = readPressed(lane);
+		}
 	}
 
-	function lanePressed(lane:Int):Bool
+	function readPressed(lane:Int):Bool
 	{
 		return (mobileControls != null && mobileControls.justPressed(lane)) || ControlsCheck.justPressed(lane);
 	}
 
-	function laneHeld(lane:Int):Bool
+	function readHeld(lane:Int):Bool
 	{
 		return (mobileControls != null && mobileControls.isHeld(lane)) || ControlsCheck.pressed(lane);
 	}
+
+	function lanePressed(lane:Int):Bool
+		return lane >= 0 && lane < pressedNow.length ? pressedNow[lane] : readPressed(lane);
+
+	function laneHeld(lane:Int):Bool
+		return lane >= 0 && lane < heldNow.length ? heldNow[lane] : readHeld(lane);
 
 	// AUDIO
 
