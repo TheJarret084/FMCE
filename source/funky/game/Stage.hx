@@ -524,7 +524,7 @@ class Stage extends FlxGroup
 		var poseOnce = character && !byEvent && !idle && loop;
 
 		object.loopFlag = loop && !poseOnce;
-		if (cur != null) cur.looped = object.loopFlag;
+		if (cur != null) @:privateAccess cur.looped = object.loopFlag;
 
 		object.setByEvent = byEvent;
 		object.completingHold = false;
@@ -670,7 +670,7 @@ class Stage extends FlxGroup
 			{
 				sprite.playAnim(cur.name, true, sprite.lastAnimContext, false, 0);
 				cur = sprite.animation.curAnim;
-				if (cur != null) cur.looped = object.loopFlag;
+				if (cur != null) @:privateAccess cur.looped = object.loopFlag;
 			}
 			else if (cur.curFrame >= HOLD_LOOP_FRAMES)
 				cur.curFrame = cur.curFrame % HOLD_LOOP_FRAMES;
