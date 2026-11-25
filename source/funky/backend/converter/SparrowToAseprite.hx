@@ -133,7 +133,12 @@ class SparrowToAseprite
 
 			var spd = cfg != null ? CoolUtil.number(Reflect.field(cfg, "spd"), 1) : 1;
 			if (spd <= 0) spd = 1;
+
+			// spd_fps true: spd ya son fps. spd_fps false: spd son beats (la velocidad real depende del bpm, aca va el fps base).
+			// Sin bandera: formato viejo, spd multiplica los fps base.
+			var spdFlag = cfg != null && Reflect.hasField(cfg, "spd_fps");
 			var fps = DEFAULT_FPS * spd;
+			if (spdFlag) fps = Reflect.field(cfg, "spd_fps") == false ? DEFAULT_FPS : spd;
 			var duration = Math.round(1000 / fps);
 			var loop = cfg != null && Reflect.hasField(cfg, "loop") ? Reflect.field(cfg, "loop") == true : true;
 

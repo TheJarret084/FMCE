@@ -28,6 +28,8 @@
 
     <holdAlpha value="0.65"/>
 
+    <shadow enabled="false"/>
+
     <!-- Splash en imagen aparte (NOTE_splashes.png/xml). Cada lane usa su color: "note impact 1 <color>" (la variante 2 tambien existe). -->
     <splash atlas="splashes/default" scale="1" alpha="0.8" fps="24"/>
 

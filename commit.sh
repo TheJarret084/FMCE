@@ -9,6 +9,10 @@ CUR="$(tr -d '\r\n' < "$CURFILE")"
 
 NEXT="$(printf '%s' "$CUR" | awk -F. 'BEGIN{OFS="."} {$NF=$NF+1; print}')"
 
+# Los addons viajan dentro de sus zips: regenerarlos antes de mirar el diff
+# para que los cambios de assets nunca se queden fuera del commit.
+python3 building/update_addon_zips.py
+
 git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ] && echo "Nada que commitear." && exit 0
 
 printf '%s\n' "$NEXT" > "$CURFILE"

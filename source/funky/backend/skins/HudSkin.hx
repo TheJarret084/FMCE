@@ -129,6 +129,13 @@ class HudSkin
 	inline function get_rgb():Bool
 		return type == RGB;
 	public var holdAlpha:Float = 0.65;
+
+	/** Sombra de notas y receptores (<shadow> en hudSkin.xml). x e y son fracciones del ancho del sprite. */
+	public var shadowEnabled:Bool = false;
+	public var shadowX:Float = 0.025;
+	public var shadowY:Float = 0.07;
+	public var shadowAlpha:Float = 0.55;
+	public var shadowColor:Int = 0xFF000000;
 	public var anims:Array<HudSkinLane>;
 	public var colors:Array<Null<HudSkinColor>>;
 
@@ -527,6 +534,16 @@ class HudSkin
 
 			var holdNode = firstElement(root, "holdAlpha");
 			if (holdNode != null) skin.holdAlpha = parseFloat(attr(holdNode, "value", "0.65"), 0.65);
+
+			var shadowNode = firstElement(root, "shadow");
+			if (shadowNode != null)
+			{
+				skin.shadowEnabled = parseBool(attr(shadowNode, "enabled", "true"), true);
+				skin.shadowX = parseFloat(attr(shadowNode, "x", null), skin.shadowX);
+				skin.shadowY = parseFloat(attr(shadowNode, "y", null), skin.shadowY);
+				skin.shadowAlpha = Math.max(0, Math.min(1, parseFloat(attr(shadowNode, "alpha", null), skin.shadowAlpha)));
+				skin.shadowColor = parseColor(attr(shadowNode, "color", null), skin.shadowColor);
+			}
 
 			var animsNode = firstElement(root, "animations");
 			if (animsNode != null) parseAnimations(skin, animsNode);

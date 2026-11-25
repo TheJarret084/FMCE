@@ -15,7 +15,7 @@
 
     <!-- Tipo de barra de tiempo (ya no esta en Opciones): mode="legacy" usa empty/fill de aca; mode="allowColor" usa el color de la barra de vida.
          style: pinklime | mono | multi (solo aplica con mode="legacy"). -->
-    <timeBar mode="legacy" style="multi" width="400" height="18" bgPad="4"
+    <timeBar mode="legacy" style="pinklime" width="400" height="18" bgPad="4"
              empty="0xFF101016" fill="0xFFFF8AFF" border="0xFF000000" textColor="0xFFFFFFFF"/>
 
     <texts>
@@ -30,6 +30,10 @@
     </texts>
 
     <holdAlpha value="0.7"/>
+
+    <!-- Sombra de notas y receptores (la dibuja el motor, sin shader). x/y: fraccion del ancho de la flecha
+         (y positivo = hacia abajo); alpha: 0 a 1; color: el de la sombra. enabled="false" la apaga. -->
+    <shadow x="0.025" y="0.07" alpha="0.55" color="0xFF000000"/>
 
     <!-- El receptor / confirm crece a esta escala al apretar y vuelve a la base al soltar (tint: 1.15 por defecto). -->
     <pressedScale value="1.15"/>

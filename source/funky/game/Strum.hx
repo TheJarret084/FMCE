@@ -48,7 +48,7 @@ class Strum extends FlxSprite
 
 		if (atlas != null)
 		{
-			confirmSprite = new FlxSprite(x, y);
+			confirmSprite = new ShadowSprite(x, y, skin);
 			confirmSprite.frames = atlas;
 			confirmSprite.animation.addByPrefix("confirm", skin.animFor("confirm", lane), 24, false);
 
@@ -62,6 +62,17 @@ class Strum extends FlxSprite
 
 		skin.notify("onReceptorCreate", "onReceptor", [this, lane]);
 		if (confirmSprite != null) skin.notify("onConfirmCreate", "onConfirm", [confirmSprite, lane]);
+	}
+
+	override public function draw():Void
+	{
+		if (SpriteShadow.active(skin, this))
+		{
+			SpriteShadow.enter(this, skin);
+			super.draw();
+			SpriteShadow.leave(this);
+		}
+		super.draw();
 	}
 
 	function applyColor(pressed:Bool):Void

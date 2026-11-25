@@ -320,12 +320,21 @@ class SpriteImportTask
 		tags.push({name: atlasName, from: from, to: frames.length - 1, direction: "forward"});
 
 		var offset:Dynamic = Reflect.field(entry, "offset");
+
+		// Misma regla que SpriteBuilder.resolveAnim: spd_fps false = spd son beats (se mantiene asi, sin pasarlo a fps);
+		// spd_fps true = spd ya son fps; sin bandera = formato viejo, spd multiplica los 24 fps base.
+		var hasSpdFlag = Reflect.hasField(entry, "spd_fps");
+		var spdFps = hasSpdFlag ? Reflect.field(entry, "spd_fps") != false : true;
+		var rawSpd = FNMMSpriteImporter.number(Reflect.field(entry, "spd"), spdFps && hasSpdFlag ? 24 : 1);
+		if (rawSpd <= 0) rawSpd = spdFps && hasSpdFlag ? 24 : 1;
+		var spd = hasSpdFlag ? rawSpd : rawSpd * 24;
+
 		configData.push({
 			anim: atlasName,
 			num: count,
 
-			spd: Math.round(24 * FNMMSpriteImporter.number(Reflect.field(entry, "spd"), 1) * 100) / 100,
-			spd_fps: true,
+			spd: Math.round(spd * 100) / 100,
+			spd_fps: spdFps,
 			indices: ([] : Array<Int>),
 			loop: Reflect.field(entry, "loop") != false,
 			bilinear: Reflect.field(entry, "bilinear") == true,

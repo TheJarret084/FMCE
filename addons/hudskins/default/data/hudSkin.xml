@@ -32,6 +32,8 @@
     <holdAlpha value="0.65"/>
     <splash atlas="splashes/default" scale="0.8" alpha="0.85" fps="24"/>
 
+    <shadow enabled="false"/>
+
     <animations>
         <lane dir="left"  note="left note"  hold="left hold piece"  holdEnd="left hold tail"  receptor="left receptor"  press="left press"  confirm="left confirm" splash="splash 1"/>
         <lane dir="down"  note="down note"  hold="down hold piece"  holdEnd="down hold tail"  receptor="down receptor"  press="down press"  confirm="down confirm" splash="splash 1"/>

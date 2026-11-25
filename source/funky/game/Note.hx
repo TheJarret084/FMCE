@@ -85,10 +85,23 @@ class Note extends FlxSprite
 	var animLane:Int = -1;
 	var usingAtlas:Bool = false;
 	var skinId:String = "";
+	var shadowSkin:Null<HudSkin> = null;
 
 	public function new()
 	{
 		super();
+	}
+
+	override public function draw():Void
+	{
+		// Sombra solo en la cabeza de la nota (en los holds se apilaria pieza sobre pieza).
+		if (!isSustainNote && SpriteShadow.active(shadowSkin, this))
+		{
+			SpriteShadow.enter(this, shadowSkin);
+			super.draw();
+			SpriteShadow.leave(this);
+		}
+		super.draw();
 	}
 
 	public inline function endTime():Float
@@ -150,6 +163,7 @@ class Note extends FlxSprite
 		flipY = false;
 
 		var skin = HudSkin.current();
+		shadowSkin = skin;
 
 		if (frames == null || (usingAtlas && skinId != skin.id))
 		{

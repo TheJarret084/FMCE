@@ -2,6 +2,7 @@ package funky.game;
 
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.graphics.FlxGraphic;
 import flixel.group.FlxGroup;
 import flixel.text.FlxText;
 import flixel.text.FlxText.FlxTextAlign;
@@ -101,6 +102,13 @@ class PlayHUD extends FlxGroup
 	var comboText:FlxText;
 	var ratingImages:Map<String, FlxSprite> = new Map();
 	var comboImages:Array<FlxSprite> = [];
+
+	/** Digitos del combo ya decodificados (antes se leian del disco y se subian a la GPU en cada acierto). */
+	var digitGraphics:Array<FlxGraphic> = [];
+
+	/** Sprites casi transparentes que obligan a subir las texturas a la GPU antes del primer acierto. */
+	var warmDigits:Array<FlxSprite> = [];
+	var warmFrames:Int = 0;
 	var songLength:Float;
 	var barY:Float;
 	var shownSecond:Int = -1;
@@ -208,7 +216,18 @@ class PlayHUD extends FlxGroup
 
 		var hasNumbers = true;
 		for (digit in 0...10)
-			if (scoreBitmap("num" + digit) == null) hasNumbers = false;
+		{
+			var bmp = scoreBitmap("num" + digit);
+			if (bmp == null)
+			{
+				hasNumbers = false;
+				break;
+			}
+			var graphic = FlxG.bitmap.add(bmp, true);
+			graphic.destroyOnNoUse = false; // el warm-up y los slots cargan/sueltan el mismo grafico: que no se destruya al bajar a 0 usos.
+			digitGraphics.push(graphic);
+		}
+		if (!hasNumbers) digitGraphics = [];
 
 		if (hasNumbers)
 		{
@@ -230,6 +249,46 @@ class PlayHUD extends FlxGroup
 
 		onUpdateScore(0, -1, 0);
 		updateTime(0);
+		warmUp();
+	}
+
+	/**
+	 * Dibuja un par de frames las imagenes de rating y los digitos con alpha casi 0. Asi la textura ya esta en la GPU
+	 * cuando llega el primer acierto y no hay trabadon justo al tocar.
+	 */
+	function warmUp():Void
+	{
+		for (graphic in digitGraphics)
+		{
+			var warm = new FlxSprite();
+			warm.loadGraphic(graphic);
+			warm.scale.set(0.02, 0.02);
+			warm.alpha = 0.004;
+			warmDigits.push(warm);
+			add(warm);
+		}
+
+		var hasRatings = false;
+		for (image in ratingImages)
+		{
+			image.alpha = 0.004;
+			hasRatings = true;
+		}
+
+		warmFrames = (warmDigits.length > 0 || hasRatings) ? 3 : 0;
+	}
+
+	function finishWarmUp():Void
+	{
+		for (warm in warmDigits)
+		{
+			remove(warm, true);
+			warm.destroy();
+		}
+		warmDigits = [];
+
+		for (image in ratingImages)
+			image.alpha = 0;
 	}
 
 	public function placeBotplay(lineX:Float, lineY:Float, lineWidth:Float):Void
@@ -466,8 +525,9 @@ class PlayHUD extends FlxGroup
 			for (i in 0...digits.length)
 			{
 				var slot = comboImages[i];
-				var bmp = scoreBitmap("num" + digits.charAt(i));
-				if (bmp != null) slot.loadGraphic(bmp);
+				var digit = Std.parseInt(digits.charAt(i));
+				var graphic = digit == null ? null : digitGraphics[digit];
+				if (graphic != null && slot.graphic != graphic) slot.loadGraphic(graphic);
 				width += slot.frameWidth * COMBO_SCALE;
 			}
 
@@ -565,6 +625,9 @@ class PlayHUD extends FlxGroup
 		shownHealth += (health - shownHealth) * Math.min(1, elapsed * 8);
 		super.update(elapsed);
 		syncTimeBarBG();
+
+		if (warmFrames > 0 && --warmFrames == 0)
+			finishWarmUp();
 
 		if (botplayText != null)
 		{
