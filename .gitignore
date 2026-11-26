@@ -13,6 +13,9 @@ building/android.keystore
 .haxelib/
 .vs/
 .vscode/
+# toolchains que baja setup-haxe en el workspace del CI
+haxe-*-linux64/
+neko-*-linux64/
 
 # Stray build output
 *.log
