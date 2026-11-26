@@ -35,13 +35,28 @@ PY="$(command -v python3 || command -v python || true)"
 [ -n "$PY" ] || { echo "build.sh: falta python3 (necesario para leer building/libs.json)" >&2; exit 127; }
 HAXELIB_REPO="$(haxelib config 2>/dev/null | head -n1)"
 HAXELIB_REPO="${HAXELIB_REPO:-$HOME/haxelib}"
+
+# Un haxelib git puede estar en un commit viejo aunque la URL coincida. Si libs.json
+# pide un ref (tag o rama), exigimos que el checkout este realmente ahi.
+git_ref_matches() {
+	local dir="$1" ref="$2" head
+	[ -z "$ref" ] && return 0
+	[ -d "$dir" ] || return 1
+	head="$(git -C "$dir" describe --tags --exact-match HEAD 2>/dev/null || true)"
+	[ "$head" = "$ref" ] && return 0
+	head="$(git -C "$dir" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+	[ "$head" = "$ref" ] && return 0
+	return 1
+}
+
 while IFS=$'\t' read -r type name ver url ref; do
 	# '-' marca campos vacios (el tab es whitespace en IFS y read los colapsaria, corriendo version/url/ref)
 	[ "$ver" = "-" ] && ver=""; [ "$url" = "-" ] && url=""; [ "$ref" = "-" ] && ref=""
 	case "$name" in ""|-|\#*) continue;; esac
 	if [ "$type" = "git" ]; then
 		if haxelib list "$name" 2>/dev/null </dev/null | grep -q '\[git\]' \
-			&& git -C "$HAXELIB_REPO/$name/git" remote get-url origin 2>/dev/null | grep -qxF "$url"; then
+			&& git -C "$HAXELIB_REPO/$name/git" remote get-url origin 2>/dev/null | grep -qxF "$url" \
+			&& git_ref_matches "$HAXELIB_REPO/$name/git" "$ref"; then
 			continue
 		fi
 		echo "   instalando $name (git)"

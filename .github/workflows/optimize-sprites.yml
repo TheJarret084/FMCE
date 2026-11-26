@@ -1,0 +1,42 @@
+name: Optimizar sprites
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+
+      - name: Instalar FunkFMPEG 1.4.10 (git fijado)
+        run: haxelib git funkfmpeg https://github.com/TheJarret084/FunkFMPEG 1.4.10 --always --quiet
+
+      - name: Optimizar PNG con FunkFMPEG
+        run: |
+          SRC="$(haxelib path funkfmpeg | head -n1)"
+          haxe -cp building -cp "$SRC" --run OptimizeSprites
+
+      - name: Regenerar zips de addons
+        run: python3 building/update_addon_zips.py
+
+      - name: Commitear resultados
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Sin cambios: los PNG ya estan optimizados."
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -m "optimizar sprites con FunkFMPEG 1.4.10"
+          git push

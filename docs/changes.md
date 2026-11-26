@@ -20,7 +20,7 @@
 - Stage: sin Map.keys() cuando nadie canta; sin objeto nuevo por objeto/frame en apply(); updateHitbox solo si cambia.
 - SpritePages: acepta frames que reusan celdas de otra pagina (orden original de frames).
 - Video -> spritesheet: VideoSheet.hx + modo sheet en VideoStripTask + menu Sprite > "Convertir video a spritesheet..." en el editor.
-- Requiere FunkFMPEG 1.2.0 (haxelib dev funkfmpeg <carpeta>).
+- Requiere FunkFMPEG 1.4.10 (git fijado al tag en `building/libs.json`).
 
 # Charter en vivo (Seamless Charter nativo) + logs
 - Nuevo funkin/editors/charter/CharterPreview.hx: escenario (scene.json), objetos y eventos en vivo detras de la grilla; las notas hacen cantar a su strumline. Sin PlayState, sin cambiar de pantalla.

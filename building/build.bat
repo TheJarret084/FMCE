@@ -26,9 +26,22 @@ for /f "usebackq tokens=1,2,3,4,5 delims=|" %%a in (`%PY% -c "import json; d=jso
 	if "!V!"=="-" set "V="
 	if "!R!"=="-" set "R="
 	if /i "!T!"=="git" (
-		haxelib list !N! 2>nul | findstr /c:"[git]" >nul && git -C "%HAXELIB_REPO%\!N!\git" remote get-url origin 2>nul | findstr /x /c:"!U!" >nul && (
-			rem ya instalado
-		) || (
+		rem Instalado solo si la URL coincide y el checkout esta en el ref pedido (tag o rama).
+		set "INSTALAR=1"
+		set "REFOK="
+		haxelib list !N! 2>nul | findstr /c:"[git]" >nul && (
+			git -C "%HAXELIB_REPO%\!N!\git" remote get-url origin 2>nul | findstr /x /c:"!U!" >nul && (
+				set "INSTALAR="
+				if not "!R!"=="" (
+					for /f "delims=" %%r in ('git -C "%HAXELIB_REPO%\!N!\git" describe --tags --exact-match HEAD 2^>nul') do if "%%r"=="!R!" set "REFOK=1"
+					if not defined REFOK (
+						for /f "delims=" %%r in ('git -C "%HAXELIB_REPO%\!N!\git" rev-parse --abbrev-ref HEAD 2^>nul') do if "%%r"=="!R!" set "REFOK=1"
+					)
+					if not defined REFOK set "INSTALAR=1"
+				)
+			)
+		)
+		if defined INSTALAR (
 			echo    instalando !N! ^(git^)
 			if "!R!"=="" (haxelib git !N! !U! --always --quiet) else (haxelib git !N! !U! !R! --always --quiet)
 			if errorlevel 1 (
