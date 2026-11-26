@@ -24,7 +24,10 @@ jobs:
       - name: Optimizar PNG con FunkFMPEG
         run: |
           SRC="$(haxelib path funkfmpeg | head -n1)"
-          haxe -cp building -cp "$SRC" --run OptimizeSprites
+          haxelib install hxcpp --quiet
+          OPTDIR="$RUNNER_TEMP/fmce-opt"
+          haxe -cp building -cp "$SRC" -cpp "$OPTDIR" -main OptimizeSprites
+          "$OPTDIR/OptimizeSprites"
 
       - name: Regenerar zips de addons
         run: python3 building/update_addon_zips.py

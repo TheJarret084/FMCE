@@ -53,7 +53,7 @@ class OptimizeSprites {
 			options.colors = 256;    // cuantizacion permitida
 			options.keepAlpha = true;
 			options.compression = 9;
-			options.refine = 4;
+			options.refine = 0;   // median-cut solo; las pasadas k-means son lentas en atlas gigantes
 
 			var result = Tape.create([path], tmp, options);
 			if (result.width != original.width || result.height != original.height) {
