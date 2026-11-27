@@ -135,10 +135,16 @@ case "$PLATFORM" in
 		# binario principal para que funkfmpeg_register_prims() (llamado desde Main.hx) y
 		# todas las funciones CFFI vivan en el mismo modulo que el runtime de hxcpp.
 		FF_LIB_ABS="$PWD/ndll/Android/libfunkfmpeg-64.a"
+		FF_HEADER="$PWD/building/.funkfmpeg_android.h"
+		# La llamada @:native de Main.hx genera la funcion, pero no su declaracion C++ en Android.
+		printf 'extern "C" int funkfmpeg_register_prims();\n' > "$FF_HEADER"
 		HXCPP_CONF="$PWD/building/.hxcpp-android-funkfmpeg.xml"
 		cat > "$HXCPP_CONF" <<EOF
 <xml>
   <section id="exes">
+    <compiler id="android-gcc" if="android">
+      <flag value="-include $FF_HEADER" />
+    </compiler>
     <linker id="dll" if="android">
       <flag value="-Wl,--whole-archive" />
       <flag value="$FF_LIB_ABS" />
