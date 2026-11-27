@@ -490,6 +490,28 @@ class PlayState extends MusicBeatState
 			camHUD.bgColor = FlxColor.TRANSPARENT;
 			FlxG.cameras.add(camHUD, false);
 
+			// El charter necesita la cancion cargada aunque la escena de abajo este vacia. Antes se abria
+			// sin song y Conductor/Charter reventaban con Null Object Reference al primer update.
+			#if sys
+			try
+			{
+				var dir = funky.backend.chart.Chart.levelDir;
+				if (dir == null && hostLevel != null)
+					dir = haxe.io.Path.join([funky.backend.assets.Paths.levelsRoot(), hostLevel]);
+				if (dir != null)
+				{
+					var chartData = funky.backend.chart.Chart.load(dir);
+					song = SongData.fromPath(dir);
+					song.strumLines = cast chartData.strumLines;
+					song.meta = chartData.meta;
+				}
+			}
+			catch (error:Dynamic)
+			{
+				pendingError = Std.string(error);
+			}
+			#end
+
 			pendingCharter = true;
 			return;
 		}

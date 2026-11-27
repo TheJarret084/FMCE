@@ -563,8 +563,9 @@ class Charter extends MusicBeatSubstate {
 
 		playBackSlider = new UISlider(FlxG.width - 160 - 26 - 20, (23/2) - (12/2), 160, 1, [{start: 0.25, end: 1, size: 0.5}, {start: 1, end: 2, size: 0.5}], true);
 		playBackSlider.onChange = function (v) {
-			FlxG.sound.music.pitch = vocals.pitch = v;
-			for (strumLine in strumLines.members) strumLine.vocals.pitch = v;
+			if (FlxG.sound.music != null) FlxG.sound.music.pitch = v;
+			if (vocals != null) vocals.pitch = v;
+			for (strumLine in strumLines.members) if (strumLine.vocals != null) strumLine.vocals.pitch = v;
 		};
 		uiGroup.add(playBackSlider);
 
@@ -720,6 +721,20 @@ class Charter extends MusicBeatSubstate {
 
 		var song = PlayState.SONG;
 		if (song == null) return;
+		if (song.meta == null)
+			song.meta = {
+				name: song.name,
+				displayName: song.displayName,
+				bpm: song.bpm,
+				beatsPerMeasure: 4,
+				stepsPerBeat: song.stepsPerBeat,
+				vocalsSuffix: "",
+				instSuffix: "",
+				needsVoices: false,
+				color: song.color,
+				iconPlayer: song.iconPlayer,
+				iconOpponent: song.iconOpponent
+			};
 		Conductor.setupSong(song);
 
 		{
@@ -1789,9 +1804,9 @@ class Charter extends MusicBeatSubstate {
 		Conductor.songPosition = CoolUtil.bound(Conductor.songPosition + Conductor.songOffset, 0, songLength);
 
 		if (Conductor.songPosition >= songLength - Conductor.songOffset) {
-			FlxG.sound.music.pause();
-			vocals.pause();
-			for (strumLine in strumLines.members) strumLine.vocals.pause();
+			if (FlxG.sound.music != null) FlxG.sound.music.pause();
+			if (vocals != null) vocals.pause();
+			for (strumLine in strumLines.members) if (strumLine.vocals != null) strumLine.vocals.pause();
 		}
 
 		var curChange = Conductor.curChange;
@@ -2192,23 +2207,41 @@ class Charter extends MusicBeatSubstate {
 
 	function chart_edit_data(_)
 		openSubState(new ChartDataScreen(PlayState.SONG));
-	function chart_edit_metadata(_)
-		openSubState(new CharterMetaDataScreen(PlayState.SONG.meta));
+	function chart_edit_metadata(_) {
+		var song = PlayState.SONG;
+		if (song == null) return;
+		if (song.meta == null)
+			song.meta = {
+				name: song.name,
+				displayName: song.displayName,
+				bpm: song.bpm,
+				beatsPerMeasure: 4,
+				stepsPerBeat: song.stepsPerBeat,
+				vocalsSuffix: "",
+				instSuffix: "",
+				needsVoices: false,
+				color: song.color,
+				iconPlayer: song.iconPlayer,
+				iconOpponent: song.iconOpponent
+			};
+		openSubState(new CharterMetaDataScreen(song.meta));
+	}
 	function chart_edit_actionpacks(_)
 		openSubState(new CharterActionPacksScreen());
 
 	function _playback_play(_) {
+		if (FlxG.sound.music == null) return;
 		if (Conductor.songPosition >= FlxG.sound.music.getDefault(vocals).length - Conductor.songOffset) return;
 
 		if (FlxG.sound.music.playing) {
 			FlxG.sound.music.pause();
-			vocals.pause();
-			for (strumLine in strumLines.members) strumLine.vocals.pause();
+			if (vocals != null) vocals.pause();
+			for (strumLine in strumLines.members) if (strumLine.vocals != null) strumLine.vocals.pause();
 		} else {
 			FlxG.sound.music.play(true, Conductor.songPosition + Conductor.songOffset);
-			vocals.play(true, FlxG.sound.music.time);
+			if (vocals != null) vocals.play(true, FlxG.sound.music.time);
 			for (strumLine in strumLines.members) {
-				strumLine.vocals.play(true, FlxG.sound.music.time);
+				if (strumLine.vocals != null) strumLine.vocals.play(true, FlxG.sound.music.time);
 			}
 		}
 	}

@@ -8,6 +8,8 @@ building/_pack/
 
 # Release signing key - never commit this, see building/README.md
 building/android.keystore
+# Config de hxcpp generada por build.sh para enlazar FunkFMPEG en Android
+building/.hxcpp-android-funkfmpeg.xml
 
 # Tooling caches
 .haxelib/

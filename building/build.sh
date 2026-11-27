@@ -118,18 +118,52 @@ case "$PLATFORM" in
 	android)
 		mkdir -p "$FF_NDLL/Android"
 		cp -f ndll/Android/libfunkfmpeg-64.a "$FF_NDLL/Android/libfunkfmpeg-64.a"
-		# Lime siempre busca libfunkfmpeg-64.so en Android. El release da el .a estatico
-		# (FunkFMPEG + FFmpeg), asi que lo enlazamos como modulo dinamico con el NDK.
+		# Lime/Java siempre carga libfunkfmpeg-64.so antes que libApplicationMain.so. Un .so
+		# enlazado desde el .a tendria simbolos hxcpp sin resolver (alloc_int, ...) porque
+		# el runtime vive en ApplicationMain y Android no lo exporta. Por eso el codigo real
+		# se mete en ApplicationMain con --whole-archive y aqui solo queda un modulo vacio.
 		NDK="${ANDROID_NDK_ROOT:-${ANDROID_NDK_HOME:-}}"
 		[ -n "$NDK" ] || { echo "build.sh: falta ANDROID_NDK_ROOT para enlazar funkfmpeg" >&2; exit 1; }
 		CXX="$(ls "$NDK"/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android*-clang++ 2>/dev/null | head -n1 || true)"
 		[ -n "$CXX" ] || { echo "build.sh: no hay clang++ arm64 en $NDK" >&2; exit 1; }
+		STUB="$FF_NDLL/Android/funkfmpeg_stub.cpp"
+		printf 'extern "C" int funkfmpeg_android_static_stub() { return 1; }\n' > "$STUB"
 		"$CXX" -shared -fPIC -static-libstdc++ \
-			-Wl,--whole-archive "$FF_NDLL/Android/libfunkfmpeg-64.a" -Wl,--no-whole-archive \
-			-Wl,--exclude-libs,ALL -Wl,--allow-shlib-undefined \
 			-Wl,-soname,libfunkfmpeg-64.so \
-			-llog -lz -ldl -lm \
-			-o "$FF_NDLL/Android/libfunkfmpeg-64.so"
+			-o "$FF_NDLL/Android/libfunkfmpeg-64.so" "$STUB"
+		# Hxcpp permite añadir flags al enlazador desde HXCPP_CONFIG. Metemos el .a en el
+		# binario principal para que funkfmpeg_register_prims() (llamado desde Main.hx) y
+		# todas las funciones CFFI vivan en el mismo modulo que el runtime de hxcpp.
+		FF_LIB_ABS="$PWD/ndll/Android/libfunkfmpeg-64.a"
+		HXCPP_CONF="$PWD/building/.hxcpp-android-funkfmpeg.xml"
+		cat > "$HXCPP_CONF" <<EOF
+<xml>
+  <section id="exes">
+    <linker id="dll" if="android">
+      <flag value="-Wl,--whole-archive" />
+      <flag value="$FF_LIB_ABS" />
+      <flag value="-Wl,--no-whole-archive" />
+      <flag value="-Wl,--exclude-libs,ALL" />
+      <flag value="-llog" />
+      <flag value="-lz" />
+      <flag value="-ldl" />
+      <flag value="-lm" />
+    </linker>
+    <linker id="exe" if="android">
+      <flag value="-Wl,--whole-archive" />
+      <flag value="$FF_LIB_ABS" />
+      <flag value="-Wl,--no-whole-archive" />
+      <flag value="-Wl,--exclude-libs,ALL" />
+      <flag value="-llog" />
+      <flag value="-lz" />
+      <flag value="-ldl" />
+      <flag value="-lm" />
+    </linker>
+  </section>
+</xml>
+EOF
+		export HXCPP_CONFIG="$HXCPP_CONF"
+		echo "==> Android: FunkFMPEG enlazado dentro de ApplicationMain"
 		;;
 	html5) ;;
 	*)
