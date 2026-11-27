@@ -10,7 +10,7 @@ building/_pack/
 building/android.keystore
 # Config de hxcpp generada por build.sh para enlazar FunkFMPEG en Android
 building/.hxcpp-android-funkfmpeg.xml
-building/.funkfmpeg_android.h
+building/.funkfmpeg_android_init.cpp
 
 # Tooling caches
 .haxelib/

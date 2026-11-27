@@ -1,7 +1,7 @@
-# Fix 0.1.38
+# Fix 0.1.39
 - Charter: al abrir desde el menu se carga el chart en el PlayState host (antes arrancaba sin cancion y reventaba con `Null Object Reference` en `Conductor.mapBPMChanges` / `vocals.pause()`).
 - `Conductor`: acepta charts con `meta` (ChartData) y con BPM plano (SongData), y el charter rellena `meta` cuando falta.
-- Android: FunkFMPEG ya no se carga como `.so` con simbolos hxcpp sin resolver (`dlopen failed: cannot locate symbol "alloc_int"`). El `.a` se enlaza dentro de `libApplicationMain.so`, se registran sus prims al arrancar y el `.so` que espera Lime queda como modulo vacio.
+- Android: FunkFMPEG ya no se carga como `.so` con simbolos hxcpp sin resolver (`dlopen failed: cannot locate symbol "alloc_int"`). El `.a` se enlaza dentro de `libApplicationMain.so`, se registran sus prims con un modulo estatico al cargar la libreria y el `.so` que espera Lime queda como modulo vacio.
 
 # Input en ventanas de UI y Android sin Java propio
 - `UIState`: el tick "headless" (pantallas que no son un UIState, como la ventana de NUEVO NIVEL del modo avanzado) ahora activa `textInputEnabled` al enfocar un `UITextBox`/`UINumericStepper`. Antes se podia hacer clic pero el teclado no escribia nada.

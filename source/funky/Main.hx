@@ -18,13 +18,6 @@ import funky.menus.other.CheckerState;
 
 import flixel.system.FlxSplash;
 
-#if android
-extern class FunkFmpegNative {
-	@:native("funkfmpeg_register_prims")
-	public static function registerPrims():Int;
-}
-#end
-
 class Main extends Sprite
 {
 	public static var instance:Main;
@@ -33,12 +26,6 @@ class Main extends Sprite
 	{
 		super();
 		instance = this;
-
-		#if android
-		// En Android FunkFMPEG se enlaza dentro de libApplicationMain.so. Registramos sus
-		// prims antes de que cualquier video los pida por CFFI.
-		FunkFmpegNative.registerPrims();
-		#end
 
 		Log.init();
 		CrashHandler.init();
