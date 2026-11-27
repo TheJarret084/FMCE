@@ -1,9 +1,9 @@
-# Fix 0.1.47
-- Android: FunkFMPEG 1.4.17 es un ndll real (`libfunkfmpeg.so`) como el de Lime, con FFmpeg completo dentro y cargado por el loader estándar de hxcpp. Se eliminaron el stub, el `.cpp` de registro y el `--whole-archive` metido en `ApplicationMain`.
-- El ndll se enlaza con el clang del NDK (no con el del runner) y se publica con el nombre correcto.
+# Fix 0.1.48
+- Android: FunkFMPEG 1.4.18 es un ndll real (`libfunkfmpeg.so`) como el de Lime, con FFmpeg completo dentro y cargado por el loader estándar de hxcpp. Se eliminaron el stub, el `.cpp` de registro y el `--whole-archive` metido en `ApplicationMain`.
+- El ndll se enlaza con el clang del NDK (no con el del runner) y se publica con la extensión `.so` correcta (`libfunkfmpeg-64.so` -> `libfunkfmpeg.so`).
 - La conversión de videos usa la API C (solo enteros y `const char*`), así que el probe ya no depende del marshalling de `String` que devolvía `0`. El error nativo se lee byte a byte y se muestra completo.
 - FunkFMPEG compila FFmpeg 7.1 sin `--disable-everything`: todos los demuxers, decoders, parsers y protocolos internos disponibles.
-- build.sh/batch solo descarga los ndll del tag fijado (ahora 1.4.17); la guardia de outline atomics vive en el CI de FunkFMPEG.
+- build.sh/batch solo descarga los ndll del tag fijado (ahora 1.4.18); la guardia de outline atomics vive en el CI de FunkFMPEG.
 
 # Fix 0.1.41
 - Android: los videos de nivel ya se pueden convertir a spritesheet. FunkFMPEG 1.4.12 tolera `avformat_find_stream_info` parcial (mp4 cortos) y propaga el error nativo real en vez de `0`.
