@@ -38,7 +38,8 @@ class Main extends Sprite
 		TranslationUtil.init();
 
 		#if desktop
-		WindowUtils.init("FMCE");
+		WindowUtils.init();
+		WindowUtils.title = "FMCE";
 		#end
 
 		#if (desktop || android)

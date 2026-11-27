@@ -118,7 +118,18 @@ case "$PLATFORM" in
 	android)
 		mkdir -p "$FF_NDLL/Android"
 		cp -f ndll/Android/libfunkfmpeg-64.a "$FF_NDLL/Android/libfunkfmpeg-64.a"
-		ARGS+=(-Dstatic_link)
+		# Lime siempre busca libfunkfmpeg-64.so en Android. El release da el .a estatico
+		# (FunkFMPEG + FFmpeg), asi que lo enlazamos como modulo dinamico con el NDK.
+		NDK="${ANDROID_NDK_ROOT:-${ANDROID_NDK_HOME:-}}"
+		[ -n "$NDK" ] || { echo "build.sh: falta ANDROID_NDK_ROOT para enlazar funkfmpeg" >&2; exit 1; }
+		CXX="$(ls "$NDK"/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android*-clang++ 2>/dev/null | head -n1 || true)"
+		[ -n "$CXX" ] || { echo "build.sh: no hay clang++ arm64 en $NDK" >&2; exit 1; }
+		"$CXX" -shared -fPIC -static-libstdc++ \
+			-Wl,--whole-archive "$FF_NDLL/Android/libfunkfmpeg-64.a" -Wl,--no-whole-archive \
+			-Wl,--exclude-libs,ALL -Wl,--allow-shlib-undefined \
+			-Wl,-soname,libfunkfmpeg-64.so \
+			-llog -lz -ldl -lm \
+			-o "$FF_NDLL/Android/libfunkfmpeg-64.so"
 		;;
 	html5) ;;
 	*)
