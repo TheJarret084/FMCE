@@ -129,7 +129,7 @@ case "$PLATFORM" in
 		NDK_="${ANDROID_NDK_ROOT:-${ANDROID_NDK_HOME:-}}"
 		NM_="$(ls "$NDK_"/toolchains/llvm/prebuilt/*/bin/llvm-nm 2>/dev/null | head -n1 || true)"
 		if [ -n "$NM_" ] && "$NM_" -A "$FF_NDLL/Android/libfunkfmpeg-64.a" 2>/dev/null | grep -qE '__aarch64_(ldadd|ldset|ldclr|ldeor|swp|cas)'; then
-			echo "build.sh: libfunkfmpeg-64.a usa outline atomics (FunkFMPEG viejo). Sube funkfmpeg a >= 1.4.14 en building/libs.json." >&2
+			echo "build.sh: libfunkfmpeg-64.a usa outline atomics (FunkFMPEG viejo). Sube funkfmpeg a >= 1.4.15 en building/libs.json." >&2
 			exit 1
 		fi
 		# Lime/Java siempre carga libfunkfmpeg-64.so antes que libApplicationMain.so. Un .so
