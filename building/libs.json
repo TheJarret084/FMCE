@@ -54,7 +54,7 @@
     {
       "name": "funkfmpeg",
       "type": "git",
-      "ref": "1.4.15",
+      "ref": "1.4.16",
       "url": "https://github.com/TheJarret084/FunkFMPEG"
     },
     {

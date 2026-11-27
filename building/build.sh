@@ -124,75 +124,9 @@ case "$PLATFORM" in
 		;;
 	android)
 		ff_get android-arm64 Android
-		# Guardia: el .a no puede traer outline atomics (__aarch64_ldadd8_acq_rel...): el NDK 21 no los tiene y
-		# la app muere al abrir con "dlopen failed: cannot locate symbol". Hace falta FunkFMPEG >= 1.4.11.
-		NDK_="${ANDROID_NDK_ROOT:-${ANDROID_NDK_HOME:-}}"
-		NM_="$(ls "$NDK_"/toolchains/llvm/prebuilt/*/bin/llvm-nm 2>/dev/null | head -n1 || true)"
-		if [ -n "$NM_" ] && "$NM_" -A "$FF_NDLL/Android/libfunkfmpeg-64.a" 2>/dev/null | grep -qE '__aarch64_(ldadd|ldset|ldclr|ldeor|swp|cas)'; then
-			echo "build.sh: libfunkfmpeg-64.a usa outline atomics (FunkFMPEG viejo). Sube funkfmpeg a >= 1.4.15 en building/libs.json." >&2
-			exit 1
-		fi
-		# Lime/Java siempre carga libfunkfmpeg-64.so antes que libApplicationMain.so. Un .so
-		# enlazado desde el .a tendria simbolos hxcpp sin resolver (alloc_int, ...) porque
-		# el runtime vive en ApplicationMain y Android no lo exporta. Por eso el codigo real
-		# se mete en ApplicationMain con --whole-archive y aqui solo queda un modulo vacio.
-		NDK="${ANDROID_NDK_ROOT:-${ANDROID_NDK_HOME:-}}"
-		[ -n "$NDK" ] || { echo "build.sh: falta ANDROID_NDK_ROOT para enlazar funkfmpeg" >&2; exit 1; }
-		CXX="$(ls "$NDK"/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android*-clang++ 2>/dev/null | head -n1 || true)"
-		[ -n "$CXX" ] || { echo "build.sh: no hay clang++ arm64 en $NDK" >&2; exit 1; }
-		STUB="$FF_NDLL/Android/funkfmpeg_stub.cpp"
-		printf 'extern "C" int funkfmpeg_android_static_stub() { return 1; }\n' > "$STUB"
-		"$CXX" -shared -fPIC -static-libstdc++ \
-			-Wl,-soname,libfunkfmpeg-64.so \
-			-o "$FF_NDLL/Android/libfunkfmpeg-64.so" "$STUB"
-		# Hxcpp permite añadir flags al enlazador desde HXCPP_CONFIG. Metemos el .a en el
-		# binario principal para que funkfmpeg_register_prims() (llamado desde Main.hx) y
-		# todas las funciones CFFI vivan en el mismo modulo que el runtime de hxcpp.
-		FF_LIB_ABS="$FF_NDLL/Android/libfunkfmpeg-64.a"
-		FF_INIT_CPP="$PWD/building/.funkfmpeg_android_init.cpp"
-		# Registro estatico: se ejecuta cuando Android carga libApplicationMain.so, antes de que
-		# el juego pida cualquier funcion CFFI de FunkFMPEG. Asi evitamos declaraciones @:native
-		# que hxcpp no genera para el modulo principal en Android.
-		cat > "$FF_INIT_CPP" <<EOF
-extern "C" int funkfmpeg_register_prims();
-namespace {
-struct FunkFmpegStaticPrims {
-	FunkFmpegStaticPrims() { funkfmpeg_register_prims(); }
-} funkFmpegStaticPrims;
-}
-EOF
-		HXCPP_CONF="$PWD/building/.hxcpp-android-funkfmpeg.xml"
-		cat > "$HXCPP_CONF" <<EOF
-<xml>
-  <section id="exes">
-    <files id="main">
-      <file name="$FF_INIT_CPP" />
-    </files>
-    <linker id="dll" if="android">
-      <flag value="-Wl,--whole-archive" />
-      <flag value="$FF_LIB_ABS" />
-      <flag value="-Wl,--no-whole-archive" />
-      <flag value="-Wl,--exclude-libs,ALL" />
-      <flag value="-llog" />
-      <flag value="-lz" />
-      <flag value="-ldl" />
-      <flag value="-lm" />
-    </linker>
-    <linker id="exe" if="android">
-      <flag value="-Wl,--whole-archive" />
-      <flag value="$FF_LIB_ABS" />
-      <flag value="-Wl,--no-whole-archive" />
-      <flag value="-Wl,--exclude-libs,ALL" />
-      <flag value="-llog" />
-      <flag value="-lz" />
-      <flag value="-ldl" />
-      <flag value="-lm" />
-    </linker>
-  </section>
-</xml>
-EOF
-		export HXCPP_CONFIG="$HXCPP_CONF"
-		echo "==> Android: FunkFMPEG enlazado dentro de ApplicationMain"
+		# ndll real de Android: libfunkfmpeg.so trae FFmpeg y los prims dentro.
+		# Lime lo carga con dlopen como cualquier otro ndll; nada de parches en ApplicationMain.
+		[ -f "$FF_NDLL/Android/libfunkfmpeg.so" ] || { echo "build.sh: falta libfunkfmpeg.so en el release de FunkFMPEG" >&2; exit 1; }
 		;;
 	html5) ;;
 	*)
