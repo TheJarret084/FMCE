@@ -1,7 +1,7 @@
-# Fix 0.1.42
-- Android: la conversión de videos usa la API C de FunkFMPEG 1.4.13 (solo enteros y `const char*`), así que el probe ya no depende del marshalling de `String` que devolvía `0`. El error nativo se lee byte a byte y se muestra completo.
-- FunkFMPEG compila FFmpeg con `--enable-everything`: todos los demuxers, decoders, parsers y protocolos disponibles, para spritesheetear cualquier video.
-- build.sh/batch descarga los ndll del tag fijado (ahora 1.4.13) y mantiene la guardia de outline atomics.
+# Fix 0.1.43
+- Android: la conversión de videos usa la API C de FunkFMPEG 1.4.14 (solo enteros y `const char*`), así que el probe ya no depende del marshalling de `String` que devolvía `0`. El error nativo se lee byte a byte y se muestra completo.
+- FunkFMPEG compila FFmpeg 7.1 sin `--disable-everything`: todos los demuxers, decoders, parsers y protocolos internos disponibles, para spritesheetear cualquier video.
+- build.sh/batch descarga los ndll del tag fijado (ahora 1.4.14) y mantiene la guardia de outline atomics.
 
 # Fix 0.1.41
 - Android: los videos de nivel ya se pueden convertir a spritesheet. FunkFMPEG 1.4.12 tolera `avformat_find_stream_info` parcial (mp4 cortos) y propaga el error nativo real en vez de `0`.
