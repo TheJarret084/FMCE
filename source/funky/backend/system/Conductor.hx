@@ -172,15 +172,32 @@ final class Conductor
 		return curChange;
 	}
 
+	static function chartBpm(song:Dynamic, meta:Dynamic):Float {
+		var v:Dynamic = meta != null ? meta.bpm : song.bpm;
+		return v != null ? (v:Float) : 100;
+	}
+
+	static function chartBeatsPerMeasure(song:Dynamic, meta:Dynamic):Float {
+		var v:Dynamic = meta != null ? meta.beatsPerMeasure : song.beatsPerMeasure;
+		return v != null ? (v:Float) : 4;
+	}
+
+	static function chartStepsPerBeat(song:Dynamic, meta:Dynamic):Int {
+		var v:Dynamic = meta != null ? meta.stepsPerBeat : song.stepsPerBeat;
+		return CoolUtil.floorInt(v != null ? (v:Float) : 4);
+	}
+
 	public static function mapBPMChanges(song:ChartData) {
+		var d:Dynamic = song;
+		var meta:Dynamic = d.meta;
 		var curChange:BPMChangeEvent = {
 			songTime: 0,
 			stepTime: 0,
 			beatTime: 0,
 			measureTime: 0,
-			bpm: song.meta.bpm,
-			beatsPerMeasure: song.meta.beatsPerMeasure.getDefault(4),
-			stepsPerBeat: CoolUtil.floorInt(song.meta.stepsPerBeat.getDefault(4))
+			bpm: chartBpm(d, meta),
+			beatsPerMeasure: chartBeatsPerMeasure(d, meta),
+			stepsPerBeat: chartStepsPerBeat(d, meta)
 		};
 		curChangeIndex = 0;
 		bpmChangeMap = [curChange];
@@ -231,14 +248,16 @@ final class Conductor
 	}
 
 	public static function mapCharterBPMChanges(song:ChartData) {
+		var d:Dynamic = song;
+		var meta:Dynamic = d.meta;
 		var curChange:BPMChangeEvent = {
 			songTime: 0,
 			stepTime: 0,
 			beatTime: 0,
 			measureTime: 0,
-			bpm: song.meta.bpm,
-			beatsPerMeasure: song.meta.beatsPerMeasure.getDefault(4),
-			stepsPerBeat: CoolUtil.floorInt(song.meta.stepsPerBeat.getDefault(4))
+			bpm: chartBpm(d, meta),
+			beatsPerMeasure: chartBeatsPerMeasure(d, meta),
+			stepsPerBeat: chartStepsPerBeat(d, meta)
 		};
 		bpmChangeMap = [curChange];
 		invalidEvents = [];

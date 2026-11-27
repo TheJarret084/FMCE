@@ -718,7 +718,9 @@ class Charter extends MusicBeatSubstate {
 		}
 		__ensureStatics();
 
-		Conductor.setupSong(PlayState.SONG);
+		var song = PlayState.SONG;
+		if (song == null) return;
+		Conductor.setupSong(song);
 
 		{
 			var music = new FlxSound();
