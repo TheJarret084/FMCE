@@ -107,17 +107,31 @@ ARGS=(build "$PLATFORM")
 [ "$KIND" = hl ] && ARGS+=(-hl)
 EFFECTIVE="$MODE"
 
-# FunkFMPEG se instala por git (solo codigo). Los ndll precompilados del release 1.4.10
-# viajan en ndll/ y se copian al checkout de haxelib antes de compilar.
+# FunkFMPEG se instala por git (solo codigo). Los ndll precompilados se bajan del release
+# del mismo tag (building/fetch-funkfmpeg.sh) al checkout de haxelib: no se compila FFmpeg aqui.
+# FUNKFMPEG_LOCAL=1 usa ndll/ local en vez de bajarlo.
 FF_NDLL="$HAXELIB_REPO/funkfmpeg/git/ndll"
+ff_get() { # $1=plataforma del release, $2=carpeta dentro de ndll/
+	if [ "${FUNKFMPEG_LOCAL:-0}" = "1" ]; then
+		mkdir -p "$FF_NDLL/$2"; cp -rf "ndll/$2/." "$FF_NDLL/$2/"
+	else
+		bash building/fetch-funkfmpeg.sh "$1" "$FF_NDLL"
+	fi
+}
 case "$PLATFORM" in
 	linux)
-		mkdir -p "$FF_NDLL/Linux64"
-		cp -f ndll/Linux64/funkfmpeg.ndll "$FF_NDLL/Linux64/funkfmpeg.ndll"
+		ff_get linux-x64 Linux64
 		;;
 	android)
-		mkdir -p "$FF_NDLL/Android"
-		cp -f ndll/Android/libfunkfmpeg-64.a "$FF_NDLL/Android/libfunkfmpeg-64.a"
+		ff_get android-arm64 Android
+		# Guardia: el .a no puede traer outline atomics (__aarch64_ldadd8_acq_rel...): el NDK 21 no los tiene y
+		# la app muere al abrir con "dlopen failed: cannot locate symbol". Hace falta FunkFMPEG >= 1.4.11.
+		NDK_="${ANDROID_NDK_ROOT:-${ANDROID_NDK_HOME:-}}"
+		NM_="$(ls "$NDK_"/toolchains/llvm/prebuilt/*/bin/llvm-nm 2>/dev/null | head -n1 || true)"
+		if [ -n "$NM_" ] && "$NM_" -A "$FF_NDLL/Android/libfunkfmpeg-64.a" 2>/dev/null | grep -qE '__aarch64_(ldadd|ldset|ldclr|ldeor|swp|cas)'; then
+			echo "build.sh: libfunkfmpeg-64.a usa outline atomics (FunkFMPEG viejo). Sube funkfmpeg a >= 1.4.11 en building/libs.json." >&2
+			exit 1
+		fi
 		# Lime/Java siempre carga libfunkfmpeg-64.so antes que libApplicationMain.so. Un .so
 		# enlazado desde el .a tendria simbolos hxcpp sin resolver (alloc_int, ...) porque
 		# el runtime vive en ApplicationMain y Android no lo exporta. Por eso el codigo real
@@ -134,7 +148,7 @@ case "$PLATFORM" in
 		# Hxcpp permite añadir flags al enlazador desde HXCPP_CONFIG. Metemos el .a en el
 		# binario principal para que funkfmpeg_register_prims() (llamado desde Main.hx) y
 		# todas las funciones CFFI vivan en el mismo modulo que el runtime de hxcpp.
-		FF_LIB_ABS="$PWD/ndll/Android/libfunkfmpeg-64.a"
+		FF_LIB_ABS="$FF_NDLL/Android/libfunkfmpeg-64.a"
 		FF_INIT_CPP="$PWD/building/.funkfmpeg_android_init.cpp"
 		# Registro estatico: se ejecuta cuando Android carga libApplicationMain.so, antes de que
 		# el juego pida cualquier funcion CFFI de FunkFMPEG. Asi evitamos declaraciones @:native

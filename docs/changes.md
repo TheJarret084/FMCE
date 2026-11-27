@@ -1,3 +1,5 @@
+- Android: arreglado `dlopen failed: cannot locate symbol "__aarch64_ldadd8_acq_rel"` al abrir la app. FunkFMPEG se compilaba con un NDK nuevo (outline atomics) y el juego enlaza con NDK 21. FunkFMPEG 1.4.11 se compila con `-mno-outline-atomics` y `build.sh` lo verifica con `llvm-nm`.
+- El engine ya no necesita `ndll/` propio: `building/fetch-funkfmpeg.sh` (y `build.bat`) bajan el ndll del release de FunkFMPEG del tag fijado en `libs.json`. `FUNKFMPEG_LOCAL=1` usa `ndll/` local.
 # Fix 0.1.39
 - Charter: al abrir desde el menu se carga el chart en el PlayState host (antes arrancaba sin cancion y reventaba con `Null Object Reference` en `Conductor.mapBPMChanges` / `vocals.pause()`).
 - `Conductor`: acepta charts con `meta` (ChartData) y con BPM plano (SongData), y el charter rellena `meta` cuando falta.
@@ -25,7 +27,7 @@
 - Stage: sin Map.keys() cuando nadie canta; sin objeto nuevo por objeto/frame en apply(); updateHitbox solo si cambia.
 - SpritePages: acepta frames que reusan celdas de otra pagina (orden original de frames).
 - Video -> spritesheet: VideoSheet.hx + modo sheet en VideoStripTask + menu Sprite > "Convertir video a spritesheet..." en el editor.
-- Requiere FunkFMPEG 1.4.10 (git fijado al tag en `building/libs.json`).
+- Requiere FunkFMPEG 1.4.11 (git fijado al tag en `building/libs.json`).
 
 # Charter en vivo (Seamless Charter nativo) + logs
 - Nuevo funkin/editors/charter/CharterPreview.hx: escenario (scene.json), objetos y eventos en vivo detras de la grilla; las notas hacen cantar a su strumline. Sin PlayState, sin cambiar de pantalla.

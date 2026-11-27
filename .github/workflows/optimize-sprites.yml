@@ -18,8 +18,8 @@ jobs:
         with:
           haxe-version: 4.3.7
 
-      - name: Instalar FunkFMPEG 1.4.10 (git fijado)
-        run: haxelib git funkfmpeg https://github.com/TheJarret084/FunkFMPEG 1.4.10 --always --quiet
+      - name: Instalar FunkFMPEG 1.4.11 (git fijado)
+        run: haxelib git funkfmpeg https://github.com/TheJarret084/FunkFMPEG 1.4.11 --always --quiet
 
       - name: Optimizar PNG con FunkFMPEG
         run: |
@@ -41,5 +41,5 @@ jobs:
           fi
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-              commit -m "optimizar sprites con FunkFMPEG 1.4.10"
+              commit -m "optimizar sprites con FunkFMPEG 1.4.11"
           git push

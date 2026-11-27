@@ -81,13 +81,13 @@ shift
 shift
 set "EXTRA=%1 %2 %3 %4 %5 %6 %7 %8 %9"
 
-rem FunkFMPEG se instala por git (solo codigo): copiamos el ndll del release 1.4.10 que viaja en ndll\
+rem FunkFMPEG se instala por git (solo codigo): el ndll se baja del release del mismo tag (no se compila).
 if /i "%KIND%"=="cpp" (
 	set "FFDIR=%HAXELIB_REPO%\funkfmpeg\git\ndll\Windows64"
 	if not exist "!FFDIR!" mkdir "!FFDIR!"
-	copy /y "%CD%\ndll\Windows64\funkfmpeg-19.ndll" "!FFDIR!\funkfmpeg-19.ndll" >nul || exit /b 1
+	powershell -NoProfile -Command "$ErrorActionPreference='Stop'; $t=(Get-Content building\libs.json -Raw | ConvertFrom-Json).dependencies | Where-Object name -eq 'funkfmpeg' | ForEach-Object ref; $z=Join-Path $env:TEMP 'ff.zip'; Invoke-WebRequest \"https://github.com/TheJarret084/FunkFMPEG/releases/download/$t/funkfmpeg-ndll-windows-x64.zip\" -OutFile $z; Expand-Archive $z -DestinationPath '!FFDIR!\..' -Force" || exit /b 1
 	rem Build.xml nombra el modulo con sufijo MSVC -19; lime busca funkfmpeg.ndll.
-	copy /y "%CD%\ndll\Windows64\funkfmpeg-19.ndll" "!FFDIR!\funkfmpeg.ndll" >nul || exit /b 1
+	copy /y "!FFDIR!\funkfmpeg-19.ndll" "!FFDIR!\funkfmpeg.ndll" >nul || exit /b 1
 )
 
 echo =^> FMCE %KIND% %MODE% ^(windows^)
