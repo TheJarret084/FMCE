@@ -1,3 +1,8 @@
+# Fix 0.1.41
+- Android: los videos de nivel ya se pueden convertir a spritesheet. FunkFMPEG 1.4.12 tolera `avformat_find_stream_info` parcial (mp4 cortos) y propaga el error nativo real en vez de `0`.
+- Checker: `hudskins.zip` ya no exige `hudskins/fmm/data/hudSkin.hx`; la skin se define solo con `hudSkin.xml`, que sí está en el zip.
+- Menu principal: la opción "advanced" no trae atlas; ahora se usa directamente el texto y no se emite el warning de `advanced.png/xml`.
+
 - Android: arreglado `dlopen failed: cannot locate symbol "__aarch64_ldadd8_acq_rel"` al abrir la app. FunkFMPEG se compilaba con un NDK nuevo (outline atomics) y el juego enlaza con NDK 21. FunkFMPEG 1.4.11 se compila con `-mno-outline-atomics` y `build.sh` lo verifica con `llvm-nm`.
 - El engine ya no necesita `ndll/` propio: `building/fetch-funkfmpeg.sh` (y `build.bat`) bajan el ndll del release de FunkFMPEG del tag fijado en `libs.json`. `FUNKFMPEG_LOCAL=1` usa `ndll/` local.
 # Fix 0.1.39

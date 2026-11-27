@@ -71,7 +71,9 @@ class MainMenuState extends FlxState
 		{
 			var option = items[i];
 			var item:FlxSprite;
-			var frames = Paths.getSparrowAtlas("menus/mainmenu/" + option);
+			// "advanced" no trae atlas: se usa el texto del menu sin ensuciar el log con un warning.
+			var atlas = "menus/mainmenu/" + option;
+			var frames = Paths.framesExists(atlas) ? Paths.getSparrowAtlas(atlas) : null;
 			if (frames != null)
 			{
 				item = new FlxSprite(0, 60 + i * 160);

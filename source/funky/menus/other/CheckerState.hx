@@ -135,7 +135,6 @@ class CheckerState extends MusicBeatState
 				"hudskins/codename/sounds/missnote1.ogg",
 				"hudskins/codename/sounds/missnote2.ogg",
 				"hudskins/codename/sounds/missnote3.ogg",
-				"hudskins/fmm/data/hudSkin.hx",
 				"hudskins/fmm/data/hudSkin.xml",
 				"hudskins/fmm/fonts/milky.ttf",
 				"hudskins/fmm/images/go.png",
