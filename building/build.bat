@@ -81,14 +81,13 @@ shift
 shift
 set "EXTRA=%1 %2 %3 %4 %5 %6 %7 %8 %9"
 
-rem funkfmpeg: ndll nativo para cpp desktop (no viene precompilado en el repo git)
+rem FunkFMPEG se instala por git (solo codigo): copiamos el ndll del release 1.4.10 que viaja en ndll\
 if /i "%KIND%"=="cpp" (
-	echo =^> Recompilando ndll funkfmpeg ^(windows^)
-	haxelib run lime rebuild funkfmpeg windows -64 || exit /b 1
-	rem Si el Build.xml de funkfmpeg aun nombra el ndll con sufijo MSVC -19, lime busca funkfmpeg.ndll: se copia con el nombre correcto.
 	set "FFDIR=%HAXELIB_REPO%\funkfmpeg\git\ndll\Windows64"
-	if not exist "!FFDIR!\funkfmpeg.ndll" if exist "!FFDIR!\funkfmpeg-19.ndll" (echo =^> funkfmpeg-19.ndll a funkfmpeg.ndll & copy /y "!FFDIR!\funkfmpeg-19.ndll" "!FFDIR!\funkfmpeg.ndll" >nul)
-	if not exist "!FFDIR!\funkfmpeg.ndll" (echo build.bat: no se genero !FFDIR!\funkfmpeg.ndll & dir "!FFDIR!" & exit /b 1)
+	if not exist "!FFDIR!" mkdir "!FFDIR!"
+	copy /y "%CD%\ndll\Windows64\funkfmpeg-19.ndll" "!FFDIR!\funkfmpeg-19.ndll" >nul || exit /b 1
+	rem Build.xml nombra el modulo con sufijo MSVC -19; lime busca funkfmpeg.ndll.
+	copy /y "%CD%\ndll\Windows64\funkfmpeg-19.ndll" "!FFDIR!\funkfmpeg.ndll" >nul || exit /b 1
 )
 
 echo =^> FMCE %KIND% %MODE% ^(windows^)

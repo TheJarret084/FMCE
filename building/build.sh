@@ -107,6 +107,26 @@ ARGS=(build "$PLATFORM")
 [ "$KIND" = hl ] && ARGS+=(-hl)
 EFFECTIVE="$MODE"
 
+# FunkFMPEG se instala por git (solo codigo). Los ndll precompilados del release 1.4.10
+# viajan en ndll/ y se copian al checkout de haxelib antes de compilar.
+FF_NDLL="$HAXELIB_REPO/funkfmpeg/git/ndll"
+case "$PLATFORM" in
+	linux)
+		mkdir -p "$FF_NDLL/Linux64"
+		cp -f ndll/Linux64/funkfmpeg.ndll "$FF_NDLL/Linux64/funkfmpeg.ndll"
+		;;
+	android)
+		mkdir -p "$FF_NDLL/Android"
+		cp -f ndll/Android/libfunkfmpeg-64.a "$FF_NDLL/Android/libfunkfmpeg-64.a"
+		ARGS+=(-Dstatic_link)
+		;;
+	html5) ;;
+	*)
+		echo "build.sh: no hay ndll de FunkFMPEG para $PLATFORM" >&2
+		exit 1
+		;;
+esac
+
 if [ "$KIND" = android ] && [ "$MODE" = release ]; then
     # Solo se firma con la llave si existe y se puede leer de verdad (building/check-keystore.sh).
     # Si falta, esta danada o los secrets no coinciden, no se aborta: se compila firmado en debug.
@@ -129,12 +149,6 @@ elif [ "$MODE" = debug ]; then
 fi
 
 echo "==> FMCE $KIND $MODE ($PLATFORM)"
-
-# funkfmpeg: ndll nativo para cpp desktop (no viene precompilado en el repo git).
-if [ "$KIND" = "cpp" ]; then
-	echo "==> Recompilando ndll funkfmpeg ($PLATFORM)"
-	haxelib run lime rebuild funkfmpeg "$PLATFORM" -64 || { echo "build.sh: fallo al recompilar funkfmpeg ndll" >&2; exit 1; }
-fi
 
 # Android: hxcpp reutiliza export/<modo>/android/obj entre arquitecturas. Si un build viejo dejo
 # Options.txt/HxcppConfig-v7.h de armv7, el siguiente intento arm64 arrastra HXCPP_ARMV7 y acaba
